@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Real Quantum Hardware](https://img.shields.io/badge/Quantum%20Hardware-Homebrew__S2-brightgreen)](https://www.tyxonq.com/)
 
-TyxonQ​​ is a full-stack quantum software framework for quantum simulation, optimization, and quantum machine learning. Forked from the open-source project ​[​TensorCircuit](https://github.com/tencent-quantum-lab/tensorcircuit)​​ and licensed under Apache License 2.0, it integrates modern quantum programming paradigms including automatic differentiation, just-in-time compilation, and hardware acceleration. 
+TyxonQ​​ 太玄量子 is a full-stack quantum software framework for quantum simulation, optimization, and quantum machine learning. Forked from the open-source project ​[​TensorCircuit](https://github.com/tencent-quantum-lab/tensorcircuit)​​ and licensed under Apache License 2.0, it integrates modern quantum programming paradigms including automatic differentiation, just-in-time compilation, and hardware acceleration. 
 
 **🚀 REAL QUANTUM HARDWARE READY**: TyxonQ supports **real quantum machine execution** through our quantum cloud services powered by **QureGenAI**. Currently featuring the **Homebrew_S2** quantum processor, enabling you to run your quantum algorithms on actual quantum hardware, not just simulators.
 
