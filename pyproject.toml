@@ -1,0 +1,44 @@
+[project]
+name = "tyxonq"
+version = "0.1.0"
+description = "Quantum computing framework with multi-backend support"
+readme = "README.md"
+requires-python = "==3.11.*"
+authors = [
+    { name = "Albert Lee", email = "hanzhupeng@gmail.com" },
+]
+license = "Apache-2.0"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "cirq>=1.5.0",
+    "jax>=0.6.2",
+    "numpy>=2.0.2",
+    "opt-einsum>=3.4.0",
+    "python-dotenv>=1.1.1",
+    "qiskit>=2.1.0",
+    "requests>=2.32.4",
+    "ruff>=0.12.2",
+    "scipy>=1.13.1",
+    "symengine>=0.14.1",
+    "sympy>=1.14.0",
+    "tensorflow>=2.19.0",
+    "tensornetwork>=0.4.6",
+    "torch>=2.7.1",
+]
+
+[project.urls]
+#Homepage = "https://github.com/your-repo/tyxonq"
+#Documentation = "https://tyxonq.readthedocs.io"
+#Repository = "https://github.com/your-repo/tyxonq"
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "pytest-lazy-fixtures>=1.1.4",
+]
+[tool.setuptools.packages.find]
+where = ["tyxonq"]
