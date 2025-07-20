@@ -1,6 +1,6 @@
 [project]
 name = "tyxonq"
-version = "0.1.0"
+version = "0.1.1"
 description = "Quantum computing framework with multi-backend support"
 readme = "README.md"
 requires-python = "==3.11.*"
@@ -31,17 +31,22 @@ dependencies = [
 ]
 
 [project.urls]
-#Homepage = "https://github.com/your-repo/tyxonq"
-#Documentation = "https://tyxonq.readthedocs.io"
-#Repository = "https://github.com/your-repo/tyxonq"
+Homepage = "https://github.com/QureGenAI-Biotech/TyxonQ"
+Documentation = "hhttps://github.com/QureGenAI-Biotech/TyxonQ"
+Repository = "https://github.com/QureGenAI-Biotech/TyxonQ"
 
 [dependency-groups]
 dev = [
     "jupyter>=1.1.1",
     "pytest-lazy-fixtures>=1.1.4",
 ]
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools.packages.find]
-where = ["tyxonq"]
+where = ["src"]
+
 
 [[tool.uv.index]]
 url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
