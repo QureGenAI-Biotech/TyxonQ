@@ -114,7 +114,16 @@ graph TB
 - [ ] Materials discovery acceleration frameworks
 
 ## Installation
-The package now is written in pure Python and can be obtained via `pip` or `uv` as:
+The package now is written in pure Python and can be obtained via `pip` or 
+
+Install from source:
+
+```bash
+uv build
+uv pip install dist/tyxonq-0.1.1-py3-none-any.whl
+```
+
+`uv` as:
 ```bash
 pip install tyxonq
 ```
@@ -163,7 +172,7 @@ Code:
 
 ```python
 import sys
-sys.path.append("../tyxonq")
+sys.path.append("./")
 
 import tyxonq as tq
 import getpass

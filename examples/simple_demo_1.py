@@ -1,6 +1,3 @@
-import sys
-sys.path.append("../tyxonq")
-
 import tyxonq as tq
 import getpass
 from tyxonq.cloud import apis
