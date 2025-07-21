@@ -123,8 +123,11 @@ uv build
 uv pip install dist/tyxonq-0.1.1-py3-none-any.whl
 ```
 
-`uv` as:
+`pip` as:
 ```bash
+# use a python virtual environment
+python -m venv pyv_tyxonq
+source pyv_tyxonq/bin/activate
 pip install tyxonq
 ```
 or
