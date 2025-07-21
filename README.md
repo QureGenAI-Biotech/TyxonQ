@@ -169,9 +169,6 @@ python examples/simple_demo_1.py
 Code:
 
 ```python
-import sys
-sys.path.append("./")
-
 import tyxonq as tq
 import getpass
 from tyxonq.cloud import apis
