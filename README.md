@@ -9,6 +9,8 @@ TyxonQ​​ 太玄量子 is a full-stack quantum software framework for quantum
 
 **🚀 REAL QUANTUM HARDWARE READY**: TyxonQ supports **real quantum machine execution** through our quantum cloud services powered by **QureGenAI**. Currently featuring the **Homebrew_S2** quantum processor, enabling you to run your quantum algorithms on actual quantum hardware, not just simulators.
 
+***Try Real Quantum Computer Right Now！***: [Getting a Key](https://www.tyxonq.com/) to register and obtain your API key
+
 Innovatively combining generative AI, heterogeneous computing architectures, TyxonQ delivers ​​end-to-end solutions​​ for quantum chemistry, drug discovery, and materials science.
 
 ## 🏗️ Quantum-Classical Hybrid Architecture

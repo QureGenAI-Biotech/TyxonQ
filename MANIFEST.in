@@ -1,0 +1,37 @@
+# Include the license file
+include LICENSE
+
+# Include the readme
+include README.md
+
+# Include important docs
+include CONTRIBUTING.md
+
+# Include examples (用户可能需要这些示例)
+recursive-include examples *.py *.ipynb *.md
+prune examples/.gitignore
+
+# Include tests for people who want to run them
+recursive-include tests *.py
+include tests/conftest.py
+
+# Exclude unnecessary files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude __pycache__
+global-exclude .git*
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude .pytest_cache
+
+# Exclude development and build artifacts
+exclude .gitignore
+exclude .github
+recursive-exclude .github *
+exclude build
+recursive-exclude build *
+exclude dist
+recursive-exclude dist *
+exclude *.egg-info
+recursive-exclude *.egg-info * 
