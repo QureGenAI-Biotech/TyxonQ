@@ -114,6 +114,8 @@ graph TB
 - [ ] Materials discovery acceleration frameworks
 
 ## Installation
+Currently supported operating systems: Linux and Mac.
+
 The package now is written in pure Python and can be obtained via `pip` or 
 
 Install from source:
