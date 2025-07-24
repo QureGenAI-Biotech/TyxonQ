@@ -256,10 +256,24 @@ print(g(theta))
 - **Documentation (beta version)**: [docs.tyxonq.com](https://tensorcircuit.readthedocs.io/)
 - **Issue**:[github issue](https://github.com/QureGenAI-Biotech/TyxonQ/issues)
 
+
+#### 微信公众号 | Official WeChat
+<img src="docs/images/wechat_offical_qrcode.jpg" alt="TyxonQ 微信公众号" width="200">
+
+#### 开发者交流群 | Developer Community
+<img src="docs/images/developer_group_qrcode.png" alt="TyxonQ 开发者交流群" width="200">
+
+*扫码关注公众号获取最新资讯 | Scan to follow for latest updates*  
+*扫码加入开发者群进行技术交流 | Scan to join developer community*
+
+</div>
+
 ### Development Team
 - **QureGenAI**: Quantum hardware infrastructure and services
 - **TyxonQ Core Team**: Framework development and optimization
 - **Community Contributors**: Open source development and testing
+
+
 
 ## License
 TyxonQ is open source, released under the Apache License, Version 2.0.
