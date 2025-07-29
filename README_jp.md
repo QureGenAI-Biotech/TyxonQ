@@ -17,32 +17,10 @@ TyxonQ​​ 太玄量子 は、量子シミュレーション・最適化・量
 
 TyxonQ は、量子と古典を統合した完全なハイブリッドワークフローを実現し、高レベルの量子アルゴリズムをハードウェア上で実行可能な量子プログラムへとマッピングします：
 
-```mermaid
-graph TB
-    subgraph "現実課題"
-        A[量子アルゴリズム] --> B[回路構造]
-    end
-    
-    subgraph "量子回路設計"
-        B --> C[サンプリング<br/>ヒューリスティックアルゴリズム<br/>強化学習<br/>機械学習]
-        C --> D[ユニタリ行列]
-        D --> E[論理回路合成<br/>論理回路最適化]
-        E --> F[論理回路]
-    end
-    
-    subgraph "量子コンパイル"
-        F --> G[ゲート数<br/>回路深さ<br/>実行時間<br/>忠実度]
-        G --> H[動的計画法<br/>ヒューリスティックアルゴリズム<br/>リダクション<br/>機械学習]
-    end
-    
-    subgraph "ハードウェア設計"
-        H --> I[量子ビットマッピング最適化<br/>量子ビットルーティング]
-        I --> J[実行可能プログラム<br/>Homebrew_S2]
-    end
-    
-    style J fill:#e1f5fe
-    style A fill:#f3e5f5
-```
+<p align="center">
+  <img src="./docs/images/architect.png" alt="Architect of TyxonQ" width="100%">
+</p
+
 
 ### アーキテクチャ構成要素:
 - **🧮 量子アルゴリズム層**: 高レベルの量子アルゴリズム仕様

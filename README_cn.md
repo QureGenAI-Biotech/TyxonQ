@@ -17,32 +17,9 @@ TyxonQ​​ 太玄量子 是一个面向量子模拟、优化和量子机器学
 
 TyxonQ 实现了一个完整的量子-经典混合工作流，将高层量子算法映射为可在硬件上执行的量子程序：
 
-```mermaid
-graph TB
-    subgraph "真实问题"
-        A[量子算法] --> B[电路结构]
-    end
-    
-    subgraph "量子电路设计"
-        B --> C[采样<br/>启发式算法<br/>强化学习<br/>机器学习]
-        C --> D[酉矩阵]
-        D --> E[逻辑电路合成<br/>逻辑电路优化]
-        E --> F[逻辑电路]
-    end
-    
-    subgraph "量子编译"
-        F --> G[门数<br/>电路深度<br/>执行时间<br/>保真度]
-        G --> H[动态规划<br/>启发式算法<br/>归约<br/>机器学习]
-    end
-    
-    subgraph "硬件设计"
-        H --> I[量子比特映射<br/>量子比特路由]
-        I --> J[可执行程序<br/>Homebrew_S2]
-    end
-    
-    style J fill:#e1f5fe
-    style A fill:#f3e5f5
-```
+<p align="center">
+  <img src="./docs/images/architect.png" alt="Architect of TyxonQ" width="100%">
+</p
 
 ### 架构组成:
 - **🧮 量子算法层**: 高层量子算法描述
