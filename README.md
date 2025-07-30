@@ -21,32 +21,10 @@ Innovatively combining generative AI, heterogeneous computing architectures, Tyx
 
 TyxonQ implements a comprehensive quantum-classical hybrid workflow that bridges high-level quantum algorithms to executable quantum programs:
 
-```mermaid
-graph TB
-    subgraph "Real Problems"
-        A[Quantum Algorithm] --> B[Circuit Structure]
-    end
-    
-    subgraph "Quantum Circuit Design"
-        B --> C[Sampling<br/>Heuristic Algorithm<br/>RL<br/>Machine Learning]
-        C --> D[Unitary Matrix]
-        D --> E[Logic Circuit Synthesis<br/>Logic Circuit Optimization]
-        E --> F[Logic Circuit]
-    end
-    
-    subgraph "Quantum Compilation"
-        F --> G[Gate Count<br/>Circuit Depth<br/>Execution Time<br/>Fidelity]
-        G --> H[Dynamic Programming<br/>Heuristic Algorithm<br/>Reduction<br/>Machine Learning]
-    end
-    
-    subgraph "Hardware Design"
-        H --> I[Qubit Mapping<br/>Qubit Routing]
-        I --> J[Executable Program<br/>Homebrew_S2]
-    end
-    
-    style J fill:#e1f5fe
-    style A fill:#f3e5f5
-```
+<p align="center">
+  <img src="./docs/images/architect.png" alt="Architect of TyxonQ" width="100%">
+</p
+
 
 ### Architecture Components:
 - **🧮 Quantum Algorithm Layer**: High-level quantum algorithm specification
@@ -169,6 +147,7 @@ import getpass
 API_KEY = getpass.getpass("Input your TyxonQ API_KEY:")
 apis.set_token(API_KEY) # Get from https://www.tyxonq.com
 ```
+
 
 ### Real Hardware Example
 
