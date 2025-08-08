@@ -263,6 +263,14 @@ print(g(theta))
 - **Community Contributors**: Open source development and testing
 
 
+## Changelog
+
+- See the full changelog:[`CHANGELOG.md`](./CHANGELOG.md)
+
+### Recent Updates（Summary）
+- v0.2.1 — Official Python 3.10+ support; updated Chinese and Japanese READMEs; Homebrew_S2 HTTP API and documentation updated for multi-tool invocation and MCP service integration.
+- v0.1.1 — Initial public release; support for real quantum hardware Homebrew_S2 integration; added cloud task management examples; improved multi-backend and automatic differentiation experience.
+- v0.1.0 — Internal preview; framework skeleton with basic circuit/compiler/backend modules.
 
 ## License
 TyxonQ is open source, released under the Apache License, Version 2.0.
