@@ -3,7 +3,7 @@ name = "tyxonq"
 version = "0.1.1"
 description = "Quantum computing framework with multi-backend support"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
     { name = "Albert Lee", email = "code@quregenai.com" },
 ]
