@@ -14,7 +14,7 @@ shots_const = 1000
 
 token = getpass.getpass("Enter your token: ")
 apis.set_token(token)
-apis.set_provider("tencent")
+apis.set_provider("tyxonq")
 
 ds = apis.list_devices()
 print(ds)
@@ -112,10 +112,6 @@ def run_rabi():
     print("-------------------------------- QC TQASM END --------------------------------")
 
     result = run_circuit(qc)
-# data: , duration: 1, 3
-# 1: {'0': 970, '1': 30, 'duration': 1}
-# 3: {'0': 979, '1': 21, 'duration': 3}
+    print(result)
 
-
-{'0': 970, '1': 30, 'duration': 1}
-{'0': 979, '1': 21, 'duration': 3}
+run_rabi()
