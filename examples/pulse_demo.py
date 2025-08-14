@@ -10,7 +10,7 @@ from tyxonq import Circuit, Param, gates, waveforms
 from tyxonq.cloud import apis
 import re
 
-shots_const = 1000
+shots_const = 100
 
 token = getpass.getpass("Enter your token: ")
 apis.set_token(token)
@@ -51,7 +51,7 @@ def gen_parametric_waveform_circuit(t):
     return qc
 
 def run_circuit(qc):
-    device_name = "tianji_m2"
+    device_name = "homebrew_s2"
     t = apis.submit_task(
         circuit=qc,
         shots=shots_const,
@@ -60,6 +60,8 @@ def run_circuit(qc):
         enable_qos_qubit_mapping=False,
     )
     print(t)
+    import time
+    time.sleep(30)
     rf = t.results()
     return rf
 
@@ -105,7 +107,7 @@ def draw_rabi(result_lst):
 
 
 def run_rabi():
-    qc =gen_parametric_waveform_circuit(1)
+    qc =gen_parametric_waveform_circuit(50)
     print(qc)
     print("-------------------------------- QC TQASM --------------------------------")
     print(qc.to_tqasm())
