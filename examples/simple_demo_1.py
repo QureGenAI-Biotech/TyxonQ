@@ -17,6 +17,7 @@ def quantum_hello_world():
     
     # Execute on real quantum hardware
 
+    print(c.to_openqasm())
     print("Submit task to TyxonQ")
 
     task = apis.submit_task(provider = provider,

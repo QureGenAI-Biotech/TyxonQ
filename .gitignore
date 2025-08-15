@@ -194,3 +194,4 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 uv.lock
+local_docs/
