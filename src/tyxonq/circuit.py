@@ -38,7 +38,7 @@ class Circuit(BaseCircuit):
     """
 
     is_dm = False
-
+    is_use_pulse = False
     def __init__(
         self,
         nqubits: int,
@@ -119,6 +119,8 @@ class Circuit(BaseCircuit):
         self._qir: List[Dict[str, Any]] = []
         self._extra_qir: List[Dict[str, Any]] = []
 
+    def use_pulse(self) -> None:
+        self.is_use_pulse = True
 
     def def_calibration(
         self, name: str, parameters: List[str], instructions: List[Dict]
