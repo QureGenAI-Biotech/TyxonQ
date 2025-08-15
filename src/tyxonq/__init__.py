@@ -1,6 +1,6 @@
-__version__ = "0.1.1"
-__author__ = "TensorCircuit Authors"
-__creator__ = "refraction-ray"
+__version__ = "0.3.0"
+__author__ = "TyxonQ Authors"
+__creator__ = "TyxonQ Authors"
 
 from .utils import gpu_memory_share
 
@@ -24,8 +24,9 @@ from .cons import (
 )  # prerun of set hooks
 from . import gates
 from . import basecircuit
+from . import waveforms
 from .gates import Gate
-from .circuit import Circuit, expectation
+from .circuit import Circuit, expectation, Param
 from .mpscircuit import MPSCircuit
 from .densitymatrix import DMCircuit as DMCircuit_reference
 from .densitymatrix import DMCircuit2

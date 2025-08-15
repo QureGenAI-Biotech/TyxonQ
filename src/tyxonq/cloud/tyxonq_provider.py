@@ -35,10 +35,11 @@ def error_handling(r: Dict[str, Any]) -> Dict[str, Any]:
 
 def api_post(cmd: str, json: Dict[Any, Any], token: Optional[str] = None) -> Dict[str, Any]:
     url = f"{tyxonq_base_url}api/{tyxonq_api_version}/{cmd}"
-    #print("API_POST:")
+    #print("API_POST dummy:")
     #print(url)
     #print(json)
     #print(tyxonq_headers(token))
+    
     return rpost_json(url, json=json, headers=tyxonq_headers(token))
 
 
@@ -200,7 +201,10 @@ def submit_task(
                     s = c.qasm()
                     # nq = c.num_qubits
                 else:
-                    s = c.to_openqasm()
+                    if c.is_use_pulse:
+                        s = c.to_tqasm()
+                    else:
+                        s = c.to_openqasm()
                     # nq = c._nqubits
             # s = _free_pi(s) # tQuk translation now supports this
             # if measure is not None:  # ad hoc partial measurement
