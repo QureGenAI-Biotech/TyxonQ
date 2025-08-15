@@ -43,6 +43,7 @@ TyxonQ implements a comprehensive quantum-classical hybrid workflow that bridges
 - **Pulse-Level Control**: Support for both gate-level operations and **pulse-level signals** for advanced quantum control
 - **Real-Time Quantum Computing**: Execute your quantum algorithms on actual quantum hardware with low latency
 - **Quantum-Classical Hybrid Workflows**: Seamlessly combine classical preprocessing with quantum execution
+- **Microwave Pulse Support**: Advanced pulse-level control interface for complex quantum experiments. Supports 8 waveform types including Gaussian, DRAG, CosineDrag, and more. Features parameterized waveforms and TQASM 0.2 generation. [Learn more →](docs/pulse_support_en.md)
 
 ### 🚀 Upcoming API & MCP Services (Coming Soon)
 - **🔗 Quantum API Gateway**: RESTful APIs for direct quantum hardware access
@@ -56,6 +57,7 @@ TyxonQ implements a comprehensive quantum-classical hybrid workflow that bridges
 
 ### Multi-Level Hardware Support​​
 ​​- **Direct Quantum Hardware Integration​​**: Compatible with mainstream quantum processors (e.g., superconducting), supporting low-level control from ​​gate-level operations​​ to **​​pulse-level signals** :fire: :fire: :fire:​.
+- **Advanced Pulse Control**: Comprehensive pulse-level interface supporting 8 waveform types (Gaussian, DRAG, CosineDrag, Flattop, Sine, Cosine, Constant, GaussianSquare) with parameterized control and TQASM 0.2 generation for precise quantum manipulation.
 - ​​**Heterogeneous Computing Optimization​​**: Enhances simulation throughput via ​​GPU vectorization​​ and quantum instruction compilation.
 
 ### Generative AI Integration​​
@@ -71,6 +73,7 @@ TyxonQ implements a comprehensive quantum-classical hybrid workflow that bridges
 ### ✅ Current Features (v1.x)
 - [x] Quantum circuit simulation and optimization
 - [x] **Real quantum hardware execution** (Homebrew_S2)
+- [x] **Advanced pulse-level control interface** with 8 waveform types and TQASM 0.2 support
 - [x] Automatic differentiation engine
 - [x] Multi-backend support (NumPy, PyTorch, TensorFlow, JAX)
 - [ ] Variational quantum algorithms (VQE,GQE,QAOA)
@@ -80,7 +83,7 @@ TyxonQ implements a comprehensive quantum-classical hybrid workflow that bridges
 - [ ] **Quantum API Gateway** - RESTful APIs for quantum hardware access
 - [ ] **MCP Services** - Large language model integration protocols  
 - [ ] Advanced quantum error correction protocols
-- [ ] Enhanced pulse-level control interface
+- [ ] **Enhanced pulse-level control interface** - Additional waveform types and advanced calibration features
 - [ ] Real-time quantum job monitoring dashboard
 - [ ] Quantum circuit optimization using machine learning
 
@@ -195,6 +198,44 @@ def quantum_hello_world():
 quantum_hello_world()
 
 ```
+
+## 🎛️ Advanced Pulse Support
+
+TyxonQ provides comprehensive pulse-level control capabilities for advanced quantum experiments and precise quantum manipulation.
+
+### Key Features
+- **8 Waveform Types**: Gaussian, DRAG, CosineDrag, Flattop, Sine, Cosine, Constant, GaussianSquare
+- **Parameterized Control**: Dynamic waveform generation with mathematical precision
+- **TQASM 0.2 Generation**: Industry-standard pulse-level circuit representation
+- **Hardware Integration**: Direct execution on quantum processors like Homebrew_S2
+
+### Quick Example
+```python
+import tyxonq as tq
+from tyxonq import waveforms
+
+# Create pulse-enabled circuit
+qc = tq.Circuit(1)
+qc.use_pulse()
+
+# Define parameterized waveform
+param_t = tq.Param("t")
+builder = qc.calibrate("rabi_experiment", [param_t])
+builder.new_frame("drive_frame", param_t)
+builder.play("drive_frame", waveforms.CosineDrag(param_t, 0.2, 0.0, 0.0))
+builder.build()
+
+# Generate TQASM code
+tqasm_code = qc.to_tqasm()
+print(tqasm_code)
+```
+
+### Documentation
+- **[English Documentation](docs/pulse_support_en.md)** - Complete pulse interface guide
+- **[Chinese Documentation](docs/pulse_support_cn.md)** - 中文脉冲接口指南
+- **[Japanese Documentation](docs/pulse_support_jp.md)** - 日本語パルスインターフェースガイド
+
+---
 
 ## Basic Usage and Guide
 Considering that the features and documentation related to ​​TyxonQ characteristics​​ are currently under development, you can refer to the upstream library ​​[Tensorcircuit](https://github.com/tencent-quantum-lab/tensorcircuit)​​ for usage guidance in the interim: [Quick Start](https://github.com/tencent-quantum-lab/tensorcircuit/blob/master/docs/source/quickstart.rst) and [full documentation](https://tensorcircuit.readthedocs.io/). We will promptly update the ​​TyxonQ documentation and tutorials in [English](), [Chinese]() and [Japanese]()​​.
