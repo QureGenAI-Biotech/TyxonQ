@@ -2,7 +2,8 @@
 <h3><p align="center">Full-stack Quantum Software Framework on Real Machine</p></h3>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+
 [![Real Quantum Hardware](https://img.shields.io/badge/Quantum%20Hardware-Homebrew__S2-brightgreen)](https://www.tyxonq.com/)
 
 For Chinese Introduction, see: [中文README](README_cn.md).
@@ -273,8 +274,8 @@ print(g(theta))
 ```
 
 ## Dependencies
-- Python >= 3.7 (supports Python 3.7, 3.8, 3.9, 3.10, 3.11, 3.12+)
-- PyTorch >= 1.8.0
+- Python >= 3.10, <3.13 (supports Python 3.10, 3.11, 3.12)
+
 
 ## 📧 Contact & Support
 
@@ -303,6 +304,14 @@ print(g(theta))
 - **Community Contributors**: Open source development and testing
 
 
+## Changelog
+
+- See the full changelog:[`CHANGELOG.md`](./CHANGELOG.md)
+
+### Recent Updates（Summary）
+- v0.2.1 — Official Python 3.10+ support; updated Chinese and Japanese READMEs; Homebrew_S2 HTTP API and documentation updated for multi-tool invocation and MCP service integration.
+- v0.1.1 — Initial public release; support for real quantum hardware Homebrew_S2 integration; added cloud task management examples; improved multi-backend and automatic differentiation experience.
+- v0.1.0 — Internal preview; framework skeleton with basic circuit/compiler/backend modules.
 
 ## License
 TyxonQ is open source, released under the Apache License, Version 2.0.
