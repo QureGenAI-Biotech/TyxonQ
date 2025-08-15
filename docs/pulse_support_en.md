@@ -604,11 +604,3 @@ def create_optimized_drag_pulse():
 
 TyxonQ's Pulse interface provides powerful microwave pulse control capabilities. Through reasonable use of waveform types, parameterization, and calibration builders, you can implement various complex quantum control experiments. It's recommended to start with simple examples and gradually build more complex applications.
 
----
-
-### Key Points
-
-1. **Mathematical Precision**: Each waveform has precise mathematical definitions ensuring accurate physical implementation
-2. **Parameter Constraints**: Strictly adhere to parameter constraint conditions to avoid hardware errors
-3. **Application-Oriented**: Choose appropriate waveform types based on specific quantum control requirements
-4. **Experimental Design**: Utilize parameterization features for systematic parameter scanning and optimization 
