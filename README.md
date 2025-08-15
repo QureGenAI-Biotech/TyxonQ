@@ -309,6 +309,7 @@ print(g(theta))
 - See the full changelog:[`CHANGELOG.md`](./CHANGELOG.md)
 
 ### Recent Updates（Summary）
+- v0.3.0 - Add comprehensive pulse-level control capabilities for advanced quantum experiments and precise quantum manipulation.
 - v0.2.1 — Official Python 3.10+ support; updated Chinese and Japanese READMEs; Homebrew_S2 HTTP API and documentation updated for multi-tool invocation and MCP service integration.
 - v0.1.1 — Initial public release; support for real quantum hardware Homebrew_S2 integration; added cloud task management examples; improved multi-backend and automatic differentiation experience.
 - v0.1.0 — Internal preview; framework skeleton with basic circuit/compiler/backend modules.
