@@ -81,11 +81,11 @@ TyxonQ implements a comprehensive quantum-classical hybrid workflow that bridges
 - [ ] Quantum chemistry toolkit integration
 
 ### 🔄 In Progress (v2.x)
-- [ ] **Quantum API Gateway** - RESTful APIs for quantum hardware access
-- [ ] **MCP Services** - Large language model integration protocols  
-- [ ] Advanced quantum error correction protocols
-- [ ] **Enhanced pulse-level control interface** - Additional waveform types and advanced calibration features
-- [ ] Real-time quantum job monitoring dashboard
+- [x] **Quantum API Gateway** - RESTful APIs for quantum hardware access
+- [x] **MCP Services** - Large language model integration protocols  
+- [ ] Advanced quantum error mitgation protocols
+- [x] **Enhanced pulse-level control interface** - Additional waveform types and advanced calibration features
+- [x] Real-time quantum job monitoring dashboard
 - [ ] Quantum circuit optimization using machine learning
 
 ### 🎯 Future Plans (v3.x+)
