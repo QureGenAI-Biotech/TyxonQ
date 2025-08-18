@@ -298,6 +298,18 @@ print(g(theta))
 
 </div>
 
+### Discord
+Welcome to join our TyxonQ server on Discord: https://discord.gg/jmaV6Zaz
+
+We hope this space will become a practical resource for you to learn and contribute to the open source quantum computing project TyxonQ.
+
+Our original intention for establishing this server:
+1. Discuss and exchange quantum computing development, usage, and cutting-edge information with friends from around the world.
+2. Welcome everyone to use TyxonQ! Your valuable feedback will be the source of our progress!
+3. Recruit documentation editing volunteers for TyxonQ worldwide, hoping we can work together to make quantum computing an accessible reality!
+
+You will witness us building a higher quality quantum computing software framework. If you are willing, you are also welcome to become a contributor and work together to create an even more excellent open source quantum computing project based on real machines! 🖥️
+
 ### Development Team
 - **QureGenAI**: Quantum hardware infrastructure and services
 - **TyxonQ Core Team**: Framework development and optimization
