@@ -5,9 +5,9 @@ Quick Start
 Installation
 --------------
 
-- For x86 Linux, 
+- For x86 Linux, MacOS
 
-``pip install tensorcircuit`` 
+``pip install tyxonq`` 
 
 is in general enough. 
 Either pip from conda or other python env managers is fine.
@@ -17,41 +17,30 @@ the users may need to install more pip packages when required.
 
 - For Linux with Nvidia GPU,
 please refer to the GPU aware installation guide of corresponding machine learning frameworks: 
-`TensorFlow <https://www.tensorflow.org/install/gpu>`_, 
-`Jax <https://github.com/google/jax#pip-installation-gpu-cuda>`_, 
-or `PyTorch <https://pytorch.org/get-started/locally/>`_.
+`PyTorch <https://pytorch.org/get-started/locally/>`_,
+`cuPyNumeric <https://docs.nvidia.com/cupynumeric/latest/>`_.
 
-Docker is also recommended (especially Linux + Nvidia GPU setup): 
 
-``sudo docker run -it --network host --gpus all tensorcircuit/tensorcircuit``.
+- For Windows, we recommend to use WSL.
 
-For more details on docker setup, please refer to `docker readme <https://github.com/tencent-quantum-lab/tensorcircuit/tree/master/docker>`_.
 
-- For Windows, due to the lack of support for Jax, we recommend to use docker or WSL, please refer to `TC via windows docker <contribs/development_windows.html>`_ or `TC via WSL <contribs/development_wsl2.html>`_.
+Overall, the installation of TyxonQ is simple, since it is purely in Python and hence very portable. 
+As long as the users can take care of the installation of ML frameworks on the corresponding system, TyxonQ will work as expected.
 
-- For MacOS, please refer to `TC on Mac <contribs/development_Mac.html>`_.
+To debug the installation issue or report bugs, please check the environment information by ``tq.about()``.
 
-Overall, the installation of TensorCircuit is simple, since it is purely in Python and hence very portable. 
-As long as the users can take care of the installation of ML frameworks on the corresponding system, TensorCircuit will work as expected.
-
-To debug the installation issue or report bugs, please check the environment information by ``tc.about()``.
-
-.. Note::
-    We also provide a nightly build of tensorcircuit via PyPI which can be accessed by
-    ``pip uninstall tensorcircuit``, then
-    ``pip install tensorcircuit-nightly``
 
 
 Circuit Object
 ------------------
 
-The basic object for TensorCircuit is ``tc.Circuit``. 
+The basic object for TyxonQ is ``tq.Circuit``. 
 
-Initialize the circuit with the number of qubits ``c=tc.Circuit(n)``.
+Initialize the circuit with the number of qubits ``c=tq.Circuit(n)``.
 
 **Input States:**
 
-The default input function for the circuit is :math:`\vert 0^n \rangle`. One can change this to other wavefunctions by directly feeding the inputs state vectors w: ``c=tc.Circuit(n, inputs=w)``.
+The default input function for the circuit is :math:`\vert 0^n \rangle`. One can change this to other wavefunctions by directly feeding the inputs state vectors w: ``c=tq.Circuit(n, inputs=w)``.
 
 One can also feed matrix product states as input states for the circuit, but we leave MPS/MPO usage for future sections.
 
@@ -83,21 +72,21 @@ See the example below:
 
 .. code-block:: python
 
-    K = tc.set_backend("jax")
+    K = tq.set_backend("pytorch")
     @K.jit
     def sam(key):
         K.set_random_state(key)
         n = 50
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for i in range(n):
             c.H(i)
         return c.perfect_sampling()
 
-    sam(jax.random.PRNGKey(42))
-    sam(jax.random.PRNGKey(43))
+    sam(torch.Generator().manual_seed(42))
+    sam(torch.Generator().manual_seed(43))
 
 
-To compute expectation values for local observables, we have ``c.expectation([tc.gates.z(), [0]], [tc.gates.z(), [1]])`` for :math:`\langle Z_0Z_1 \rangle` or ``c.expectation([tc.gates.x(), [0]])`` for :math:`\langle X_0 \rangle`.
+To compute expectation values for local observables, we have ``c.expectation([tq.gates.z(), [0]], [tq.gates.z(), [1]])`` for :math:`\langle Z_0Z_1 \rangle` or ``c.expectation([tq.gates.x(), [0]])`` for :math:`\langle X_0 \rangle`.
 
 This expectation API is rather flexible, as one can measure an m on several qubits as ``c.expectation([m, [0, 1, 2]])``.
 
@@ -106,9 +95,9 @@ We can also extract the unitary matrix underlying the whole circuit as follows:
 .. code-block:: python
 
     >>> n = 2
-    >>> c = tc.Circuit(n, inputs=tc.backend.eye(2**n))
+    >>> c = tq.Circuit(n, inputs=tq.backend.eye(2**n))
     >>> c.X(1)
-    >>> tc.backend.reshapem(c.state())
+    >>> tq.backend.reshapem(c.state())
     array([[0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],
         [1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],
         [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j],
@@ -116,11 +105,11 @@ We can also extract the unitary matrix underlying the whole circuit as follows:
 
 **Circuit Transformations:**
 
-We currently support transform ``tc.Circuit`` from and to Qiskit ``QuantumCircuit`` object.
+We currently support transform ``tq.Circuit`` from and to Qiskit ``QuantumCircuit`` object.
 
 Export to Qiskit (possible for further hardware experiment, compiling, and visualization): ``c.to_qiskit()``.
 
-Import from Qiskit: ``c = tc.Circuit.from_qiskit(QuantumCircuit, n)``.
+Import from Qiskit: ``c = tq.Circuit.from_qiskit(QuantumCircuit, n)``.
 Parameterized Qiskit circuit is supported by passing the parameters to the ``binding_parameters`` argument
 of the ``from_qiskit`` function, similar to the ``assign_parameters`` function in Qiskit.
 
@@ -132,17 +121,17 @@ There are also some automatic pipeline helper functions to directly generate fig
 
 ``render_pdf(tex)`` function requires full installation of LaTeX locally. And in the Jupyter environment, we may prefer ``render_pdf(tex, notebook=True)`` to return jpg figures, which further require wand magicwand library installed, see `here <https://docs.wand-py.org/en/latest/>`__.
 
-Or since we can transform ``tc.Circuit`` into QuantumCircuit easily, we have a simple pipeline to first transform ``tc.Circuit`` into Qiskit and then call the visualization built in Qiskit. Namely, we have ``c.draw()`` API.
+Or since we can transform ``tq.Circuit`` into QuantumCircuit easily, we have a simple pipeline to first transform ``tq.Circuit`` into Qiskit and then call the visualization built in Qiskit. Namely, we have ``c.draw()`` API.
 
 **Circuit Intermediate Representation:**
 
-TensorCircuit provides its own circuit IR as a python list of dicts. This IR can be further utilized to run compiling, generate serialization qasm, or render circuit figures.
+TyxonQ provides its own circuit IR as a python list of dicts. This IR can be further utilized to run compiling, generate serialization qasm, or render circuit figures.
 
 The IR is given as a list, each element is a dict containing information on one gate that is applied to the circuit. Note gate attr in the dict is a python function that returns the gate's node.
 
 .. code-block:: python
 
-    >>> c = tc.Circuit(2)
+    >>> c = tq.Circuit(2)
     >>> c.cnot(0, 1)
     >>> c.crx(1, 0, theta=0.2)
     >>> c.to_qir()
@@ -154,26 +143,26 @@ We can also create new copied circuit via ``c.copy()`` which internally utilize 
 Programming Paradigm
 -------------------------
 
-The most common case and the most typical programming paradigm for TensorCircuit are to evaluate the circuit output and the corresponding quantum gradients, which is common in variational quantum algorithms.
+The most common case and the most typical programming paradigm for TyxonQ are to evaluate the circuit output and the corresponding quantum gradients, which is common in variational quantum algorithms.
 
 .. code-block:: python
 
-    import tensorcircuit as tc
+    import tyxonq as tq
 
-    K = tc.set_backend("tensorflow")
+    K = tq.set_backend("pytorch")
 
     n = 1
 
 
     def loss(params, n):
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for i in range(n):
             c.rx(i, theta=params[0, i])
         for i in range(n):
             c.rz(i, theta=params[1, i])
         loss = 0.0
         for i in range(n):
-            loss += c.expectation([tc.gates.z(), [i]])
+            loss += c.expectation([tq.gates.z(), [i]])
         return K.real(loss)
 
 
@@ -181,49 +170,49 @@ The most common case and the most typical programming paradigm for TensorCircuit
     params = K.implicit_randn([2, n])
     print(vgf(params, n))  # get the quantum loss and the gradient
 
-Also for a non-quantum example (linear regression) demonstrating the backend agnostic feature, variables with pytree support, AD/jit/vmap usage, and variational optimization loops. Please refer to the example script: `linear regression example <https://github.com/tencent-quantum-lab/tensorcircuit/blob/master/examples/universal_lr.py>`_.
-This example might be more friendly to the machine learning community since it is purely classical while also showcasing the main features and paradigms of tensorcircuit.
 
-If the user has no intention to maintain the application code in a backend agnostic fashion, the API for ML frameworks can be more handily used and interleaved with the TensorCircuit API.
+If the user has no intention to maintain the application code in a backend agnostic fashion, the API for ML frameworks can be more handily used and interleaved with the TyxonQ API.
 
 .. code-block:: python
 
-    import tensorcircuit as tc
-    import tensorflow as tf
+    import tyxonq as tq
+    import torch
 
-    K = tc.set_backend("tensorflow")
+    K = tq.set_backend("pytorch")
 
     n = 1
 
 
     def loss(params, n):
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for i in range(n):
             c.rx(i, theta=params[0, i])
         for i in range(n):
             c.rz(i, theta=params[1, i])
         loss = 0.0
         for i in range(n):
-            loss += c.expectation([tc.gates.z(), [i]])
-        return tf.math.real(loss)
-
-    def vgf(params, n):
-        with tf.GradientTape() as tape:
-            tape.watch(params)
-            l = loss(params, n)
-        return l, tape.gradient(l, params)
-
-    vgf = tf.function(vgf)
-    params = tf.random.normal([2, n])
-    print(vgf(params, n))  # get the quantum loss and the gradient
+            loss += c.expectation([tq.gates.z(), [i]])
+        return torch.real(loss)
 
 
-Automatic Differentiation, JIT, and Vectorized Parallelism
+    def vgf(params: torch.Tensor, n: int):
+        """Returns (loss_value, gradient_wrt_params)"""
+        params.requires_grad_(True)        # enable gradient tracking
+
+        l = loss(params, n)                # forward pass, assuming `loss` is your PyTorch function
+
+        (grad,) = torch.autograd.grad(l, params, create_graph=False)
+        return l, grad
+    
+    n = 4
+    params = torch.randn(2, n)
+
+    print(vgf(params, n))
+
+
+Automatic Differentiation
 -------------------------------------------------------------
 
-For concepts of AD, JIT and VMAP, please refer to `Jax documentation <https://jax.readthedocs.io/en/latest/jax-101/index.html>`__ .
-
-The related API design in TensorCircuit closely follows the functional programming design pattern in Jax with some slight differences. So we strongly recommend users learn some basics about Jax no matter which ML backend they intend to use.
 
 **AD Support:**
 
@@ -234,49 +223,45 @@ AD is the base for all modern machine learning libraries.
 **JIT Support:**
 
 Parameterized quantum circuits can run in a blink. Always use jit if the circuit will get evaluations multiple times, it can greatly boost the simulation with two or three order time reduction. But also be cautious, users need to be familiar with jit, otherwise, the jitted function may return unexpected results or recompile on every hit (wasting lots of time).
-To learn more about the jit mechanism, one can refer to documentation or blogs on ``tf.function`` or ``jax.jit``, though these two still have subtle differences.
+To learn more about the jit mechanism, one can refer to documentation or blogs on ``torch.compile``, though these two still have subtle differences.
 
 
 **VMAP Support:**
 
 Inputs, parameters, measurements, circuit structures, and Monte Carlo noise can all be evaluated in parallel.
-To learn more about vmap mechanism, one can refer to documentation or blogs on ``tf.vectorized_map`` or ``jax.vmap``.
+To learn more about vmap mechanism, one can refer to documentation or blogs on ``torch.vmap``.
 
 
 Backend Agnosticism
 -------------------------
 
-TensorCircuit supports TensorFlow, Jax, and PyTorch backends. We recommend using TensorFlow or Jax backend since PyTorch lacks advanced jit and vmap features.
+TyxonQ supports numpy (Native CPU), GPU (aka cuPyNumeric/cupy) and PyTorch backends. We recommend using PyTorch or GPU.
 
-The backend can be set as ``K=tc.set_backend("jax")`` and ``K`` is the backend with a full set of APIs as a conventional ML framework, which can also be accessed by ``tc.backend``.
+The backend can be set as ``K=tq.set_backend("pytorch")`` and ``K`` is the backend with a full set of APIs as a conventional ML framework, which can also be accessed by ``tq.backend``.
 
 .. code-block:: python
 
-    >>> import tensorcircuit as tc
-    >>> K = tc.set_backend("tensorflow")
+    >>> import tyxonq as tq
+    >>> K = tq.set_backend("pytorch")
     >>> K.ones([2,2])
-    <tf.Tensor: shape=(2, 2), dtype=complex64, numpy=
-    array([[1.+0.j, 1.+0.j],
-        [1.+0.j, 1.+0.j]], dtype=complex64)>
-    >>> tc.backend.eye(3)
-    <tf.Tensor: shape=(3, 3), dtype=complex64, numpy=
-    array([[1.+0.j, 0.+0.j, 0.+0.j],
-        [0.+0.j, 1.+0.j, 0.+0.j],
-        [0.+0.j, 0.+0.j, 1.+0.j]], dtype=complex64)>
-    >>> tc.set_backend("jax")
-    <tensorcircuit.backends.jax_backend.JaxBackend object at 0x7fb00e0fd6d0>
-    >>> tc.backend.name
-    'jax'
-    >>> tc.backend.implicit_randu()
-    WARNING:absl:No GPU/TPU found, falling back to CPU. (Set TF_CPP_MIN_LOG_LEVEL=0 and rerun for more info.)
-    DeviceArray([0.7400521], dtype=float32)
+        tensor([[1.+0.j, 1.+0.j],
+                [1.+0.j, 1.+0.j]])
+    >>> tq.backend.eye(3)
+        tensor([[1.+0.j, 0.+0.j, 0.+0.j],
+                [0.+0.j, 1.+0.j, 0.+0.j],
+                [0.+0.j, 0.+0.j, 1.+0.j]])
+    >>> K=tq.set_backend("numpy")
+    >>> tq.backend.name
+        'numpy'
+    >>> tq.backend.implicit_randu()
+        array([0.36426818], dtype=float32)
 
 The supported APIs in the backend come from two sources, one part is implemented in `TensorNetwork package <https://github.com/google/TensorNetwork/blob/master/tensornetwork/backends/abstract_backend.py>`__
-and the other part is implemented in `TensorCircuit package <modules.html#module-tensorcircuit.backends>`__. To see all the backend agnostic APIs, try:
+and the other part is implemented in `TyxonQ package <modules.html#module-tyxonq.backends>`__. To see all the backend agnostic APIs, try:
 
 .. code-block:: python
 
-    >>> [s for s in dir(tc.backend) if not s.startswith("_")]
+    >>> [s for s in dir(tq.backend) if not s.startswith("_")]
     ['abs',
     'acos',
     'acosh',
@@ -431,16 +416,16 @@ and the other part is implemented in `TensorCircuit package <modules.html#module
 Switch the Dtype
 --------------------
 
-TensorCircuit supports simulation using 32/64 bit precession. The default dtype is 32-bit as "complex64".
-Change this by ``tc.set_dtype("complex128")``.
+TyxonQ supports simulation using 32/64 bit precession. The default dtype is 32-bit as "complex64".
+Change this by ``tq.set_dtype("complex128")``.
 
-``tc.dtypestr`` always returns the current dtype string: either "complex64" or "complex128".
+``tq.dtypestr`` always returns the current dtype string: either "complex64" or "complex128".
 
 
 Setup the Contractor
 ------------------------
 
-TensorCircuit is a tensornetwork contraction-based quantum circuit simulator. A contractor is for searching for the optimal contraction path of the circuit tensornetwork.
+TyxonQ is a tensornetwork contraction-based quantum circuit simulator. A contractor is for searching for the optimal contraction path of the circuit tensornetwork.
 
 There are various advanced contractors provided by third-party packages, such as `opt-einsum <https://github.com/dgasmith/opt_einsum>`__ and `cotengra <https://github.com/jcmgray/cotengra>`__.
 
@@ -450,7 +435,7 @@ Some setup cases:
 
 .. code-block:: python
 
-    import tensorcircuit as tc
+    import tyxonq as tq
     
     # 1. cotengra contractors, have better and consistent performance for large circuit simulation
     import cotengra as ctg
@@ -463,16 +448,16 @@ Some setup cases:
         max_repeats=4096,
         progbar=True,
     )
-    tc.set_contractor("custom", optimizer=optr, preprocessing=True)
-    # by preprocessing set as True, tensorcircuit will automatically merge all single-qubit gates into entangling gates
+    tq.set_contractor("custom", optimizer=optr, preprocessing=True)
+    # by preprocessing set as True, tyxonq will automatically merge all single-qubit gates into entangling gates
 
     # 2.  RandomGreedy contractor
-    tc.set_contractor("custom_stateful", optimizer=oem.RandomGreedy, max_time=60, max_repeats=128, minimize="size")
+    tq.set_contractor("custom_stateful", optimizer=oem.RandomGreedy, max_time=60, max_repeats=128, minimize="size")
 
-    # 3. state simulator like contractor provided by tensorcircuit, maybe better when there is ring topology for two-qubit gate layout
-    tc.set_contractor("plain-experimental")
+    # 3. state simulator like contractor provided by tyxonq, maybe better when there is ring topology for two-qubit gate layout
+    tq.set_contractor("plain-experimental")
 
-For advanced configurations on cotengra contractors, please refer to cotengra `doc <https://cotengra.readthedocs.io/en/latest/advanced.html>`__ and more fancy examples can be found at `contractor tutorial <https://github.com/tencent-quantum-lab/tensorcircuit-tutorials/blob/master/tutorials/contractors.ipynb>`__.
+For advanced configurations on cotengra contractors, please refer to cotengra `doc <https://cotengra.readthedocs.io/en/latest/advanced.html>`__.
 
 **Setup in Function or Context Level**
 
@@ -480,16 +465,16 @@ Beside global level setup, we can also setup the backend, the dtype, and the con
 
 .. code-block:: python
 
-    with tc.runtime_backend("tensorflow"):
-        with tc.runtime_dtype("complex128"):
-            m = tc.backend.eye(2)
-    n = tc.backend.eye(2)
+    with tq.runtime_backend("pytorch"):
+        with tq.runtime_dtype("complex128"):
+            m = tq.backend.eye(2)
+    n = tq.backend.eye(2)
     print(m, n) # m is tf tensor while n is numpy array
 
-    @tc.set_function_backend("tensorflow")
-    @tc.set_function_dtype("complex128")
+    @tq.set_function_backend("pytorch")
+    @tq.set_function_dtype("complex128")
     def f():
-        return tc.backend.eye(2)
+        return tq.backend.eye(2)
     print(f()) # complex128 tf tensor
 
 
@@ -498,12 +483,12 @@ Noisy Circuit Simulation
 
 **Monte Carlo State Simulator:**
 
-For the Monte Carlo trajectory noise simulator, the unitary Kraus channel can be handled easily. TensorCircuit also supports fully jittable and differentiable general Kraus channel Monte Carlo simulation, though.
+For the Monte Carlo trajectory noise simulator, the unitary Kraus channel can be handled easily. TyxonQ also supports fully jittable and differentiable general Kraus channel Monte Carlo simulation, though.
 
 .. code-block:: python
 
     def noisecircuit(random):
-        c = tc.Circuit(1)
+        c = tq.Circuit(1)
         c.x(0)
         c.thermalrelaxation(
             0,
@@ -517,7 +502,7 @@ For the Monte Carlo trajectory noise simulator, the unitary Kraus channel can be
         return c.expectation_ps(z=[0])
 
 
-    K = tc.set_backend("tensorflow")
+    K = tq.set_backend("pytorch")
     noisec_vmap = K.jit(K.vmap(noisecircuit, vectorized_argnums=0))
     nmc = 10000
     random = K.implicit_randu(nmc)
@@ -527,12 +512,12 @@ For the Monte Carlo trajectory noise simulator, the unitary Kraus channel can be
 
 **Density Matrix Simulator:**
 
-Density matrix simulator ``tc.DMCircuit`` simulates the noise in a full form, but takes twice qubits to do noiseless simulation. The API is the same as ``tc.Circuit``.
+Density matrix simulator ``tq.DMCircuit`` simulates the noise in a full form, but takes twice qubits to do noiseless simulation. The API is the same as ``tq.Circuit``.
 
 .. code-block:: python
 
     def noisecircuitdm():
-        dmc = tc.DMCircuit(1)
+        dmc = tq.DMCircuit(1)
         dmc.x(0)
         dmc.thermalrelaxation(
             0, t1=300, t2=400, time=1000, method="ByChoi", excitedstatepopulation=0
@@ -540,7 +525,7 @@ Density matrix simulator ``tc.DMCircuit`` simulates the noise in a full form, bu
         return dmc.expectation_ps(z=[0])
 
 
-    K = tc.set_backend("tensorflow")
+    K = tq.set_backend("pytorch")
     noisec_jit = K.jit(noisecircuitdm)
     valuedm = noisec_jit()
     # (0.931+0j)
@@ -552,7 +537,7 @@ Multiple quantum errors can be added on circuit.
 
 .. code-block:: python
 
-    c = tc.Circuit(1)
+    c = tq.Circuit(1)
     c.x(0)
     c.thermalrelaxation(
         0, t1=300, t2=400, time=1000, method="ByChoi", excitedstatepopulation=0
@@ -570,35 +555,30 @@ Readout error can be added in experiments for sampling and expectation value cal
 
 .. code-block:: python
 
-    c = tc.Circuit(3)
+    c = tq.Circuit(3)
     c.X(0)
     readout_error = []
     readout_error.append([0.9, 0.75])  # readout error of qubit 0   p0|0=0.9, p1|1=0.75
     readout_error.append([0.4, 0.7])  # readout error of qubit 1
     readout_error.append([0.7, 0.9])  # readout error of qubit 2
     value = c.sample_expectation_ps(z=[0, 1, 2], readout_error=readout_error)
-    # tf.Tensor(0.039999977, shape=(), dtype=float32)
     instances = c.sample(
         batch=3,
         allow_state=True,
         readout_error=readout_error,
-        random_generator=tc.backend.get_random_state(42),
+        random_generator=tq.backend.get_random_state(42),
         format_="sample_bin"
     )
-    # tf.Tensor(
-    # [[1 0 0]
-    # [1 0 0]
-    # [1 0 1]], shape=(3, 3), dtype=int32)
 
 
 MPS and MPO
 ----------------
 
-TensorCircuit has its class for MPS and MPO originally defined in TensorNetwork as ``tc.QuVector``, ``tc.QuOperator``.
+TyxonQ has its class for MPS and MPO originally defined in TensorNetwork as ``tq.QuVector``, ``tq.QuOperator``.
 
-``tc.QuVector`` can be extracted from ``tc.Circuit`` as the tensor network form for the output state (uncontracted) by ``c.quvector()``.
+``tq.QuVector`` can be extracted from ``tq.Circuit`` as the tensor network form for the output state (uncontracted) by ``c.quvector()``.
 
-The QuVector forms a wavefunction w, which can also be fed into Circuit as the inputs state as ``c=tc.Circuit(n, mps_inputs=w)``.
+The QuVector forms a wavefunction w, which can also be fed into Circuit as the inputs state as ``c=tq.Circuit(n, mps_inputs=w)``.
 
 - MPS as input state for circuit
 
@@ -607,9 +587,9 @@ The MPS/QuVector representation of the input state has a more efficient and comp
 .. code-block:: python
 
     n = 3
-    nodes = [tc.gates.Gate(np.array([0.0, 1.0])) for _ in range(n)]
-    mps = tc.quantum.QuVector([nd[0] for nd in nodes])
-    c = tc.Circuit(n, mps_inputs=mps)
+    nodes = [tq.gates.Gate(np.array([0.0, 1.0])) for _ in range(n)]
+    mps = tq.quantum.QuVector([nd[0] for nd in nodes])
+    c = tq.Circuit(n, mps_inputs=mps)
     c.x(0)
     c.expectation_ps(z=[0])
     # 1.0
@@ -620,11 +600,11 @@ For example, a quick way to calculate the wavefunction overlap without explicitl
 
 .. code-block:: python
 
-    >>> c = tc.Circuit(3)
+    >>> c = tq.Circuit(3)
     >>> [c.H(i) for i in range(3)]
     [None, None, None]
     >>> c.cnot(0, 1)
-    >>> c2 = tc.Circuit(3)
+    >>> c2 = tq.Circuit(3)
     >>> [c2.H(i) for i in range(3)]
     [None, None, None]
     >>> c2.cnot(1, 0)
@@ -639,9 +619,9 @@ Instead of a common quantum gate in matrix/node format, we can directly apply a 
 
 .. code-block:: python
 
-    >>> x0, x1 = tc.gates.x(), tc.gates.x()
-    >>> mpo = tc.quantum.QuOperator([x0[0], x1[0]], [x0[1], x1[1]])
-    >>> c = tc.Circuit(2)
+    >>> x0, x1 = tq.gates.x(), tq.gates.x()
+    >>> mpo = tq.quantum.QuOperator([x0[0], x1[0]], [x0[1], x1[1]])
+    >>> c = tq.Circuit(2)
     >>> c.mpo(0, 1, mpo=mpo)
     >>> c.state()
     array([0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j], dtype=complex64)
@@ -654,11 +634,11 @@ We can also measure operator expectation on the circuit output state where the o
 
 .. code-block:: python
 
-    >>> z0, z1 = tc.gates.z(), tc.gates.z()
-    >>> mpo = tc.quantum.QuOperator([z0[0], z1[0]], [z0[1], z1[1]])
-    >>> c = tc.Circuit(2)
+    >>> z0, z1 = tq.gates.z(), tq.gates.z()
+    >>> mpo = tq.quantum.QuOperator([z0[0], z1[0]], [z0[1], z1[1]])
+    >>> c = tq.Circuit(2)
     >>> c.X(0)
-    >>> tc.templates.measurements.mpo_expectation(c, mpo)
+    >>> tq.templates.measurements.mpo_expectation(c, mpo)
     -1.0
 
 Interfaces
@@ -666,22 +646,21 @@ Interfaces
 
 **PyTorch Interface to Hybrid with PyTorch Modules:**
 
-As we have mentioned in the backend section, the PyTorch backend may lack advanced features. This doesn't mean we cannot hybrid the advanced circuit module with PyTorch neural module. We can run the quantum function on TensorFlow or Jax backend while wrapping it with a Torch interface.
 
 .. code-block:: python
 
-    import tensorcircuit as tc
-    from tensorcircuit.interfaces import torch_interface
+    import tyxonq as tq
+    from tyxonq.interfaces import torch_interface
     import torch
 
-    tc.set_backend("tensorflow")
+    tq.set_backend("pytorch")
 
 
     def f(params):
-        c = tc.Circuit(1)
+        c = tq.Circuit(1)
         c.rx(0, theta=params[0])
         c.ry(0, theta=params[1])
-        return c.expectation([tc.gates.z(), [0]])
+        return c.expectation([tq.gates.z(), [0]])
 
 
     f_torch = torch_interface(f, jit=True)
@@ -693,7 +672,7 @@ As we have mentioned in the backend section, the PyTorch backend may lack advanc
 
     print(a.grad)
 
-For a GPU/CPU, torch/tensorflow, quantum/classical hybrid machine learning pipeline enabled by tensorcircuit, see `example script <https://github.com/tencent-quantum-lab/tensorcircuit/blob/master/examples/hybrid_gpu_pipeline.py>`__.
+For a GPU/CPU, torch/numpy, quantum/classical hybrid machine learning pipeline enabled by tyxonq, see `example script <https://github.com/QureGenAI-Biotech/TyxonQ/blob/master/examples/hybrid_gpu_pipeline.py>`__.
 
 There is also a more flexible torch interface that support static non-tensor inputs as keyword arguments, which can be utilized as below:
 
@@ -705,13 +684,13 @@ There is also a more flexible torch interface that support static non-tensor inp
             s += a
         return s
 
-    f_torch = tc.interfaces.torch_interface_kws(f)
+    f_torch = tq.interfaces.torch_interface_kws(f)
     f_torch(torch.ones([2]), i=3)
 
 
-We also provider wrapper of quantum function for torch module as :py:meth:`tensorcircuit.TorchLayer` alias to :py:meth:`tensorcircuit.torchnn.QuantumNet`.
+We also provider wrapper of quantum function for torch module as :py:meth:`tyxonq.TorchLayer` alias to :py:meth:`tyxonq.torchnn.QuantumNet`.
 
-For ``TorchLayer``, ``use_interface=True`` is by default, which natively allow the quantum function defined on other tensorcircuit backends, such as jax or tf for speed consideration.
+For ``TorchLayer``, ``use_interface=True`` is by default, which natively allow the quantum function defined on other tyxonq backends, such as cpu or gpu for other consideration.
 
 ``TorchLayer`` can process multiple input arguments as multiple function inputs, following torch practice.
 
@@ -719,18 +698,18 @@ For ``TorchLayer``, ``use_interface=True`` is by default, which natively allow t
 
     n = 3
     p = 0.1
-    K = tc.backend
-    torchb = tc.get_backend("pytorch")
+    K = tq.backend
+    torchb = tq.get_backend("pytorch")
 
     def f(state, noise, weights):
-        c = tc.Circuit(n, inputs=state)
+        c = tq.Circuit(n, inputs=state)
         for i in range(n):
             c.rz(i, theta=weights[i])
         for i in range(n):
             c.depolarizing(i, px=p, py=p, pz=p, status=noise[i])
         return K.real(c.expectation_ps(x=[0]))
 
-    layer = tc.TorchLayer(f, [n], use_vmap=True, vectorized_argnums=[0, 1])
+    layer = tq.TorchLayer(f, [n], use_vmap=True, vectorized_argnums=[0, 1])
     state = torchb.ones([2, 2**n]) / 2 ** (n / 2)
     noise = 0.2 * torchb.ones([2, n], dtype="float32")
     l = layer(state,noise)
@@ -740,36 +719,6 @@ For ``TorchLayer``, ``use_interface=True`` is by default, which natively allow t
     for p in layer.parameters():
         print(p.grad)
 
-
-**TensorFlow interfaces:**
-
-Similar rules apply similar as torch interface. The interface can even be used within jit environment outside.
-See :py:meth:`tensorcircuit.interfaces.tensorflow.tensorflow_interface`.
-
-We also provider ``enable_dlpack=True`` option in torch and tf interfaces, which allow the tensor transformation happen without memory transfer via dlpack,
-higher version of tf or torch package required.
-
-We also provider wrapper of quantum function for keras layer as :py:meth:`tensorcircuit.KerasLayer` alias to :py:meth:`tensorcircuit.keras.KerasLayer`.
-
-``KerasLayer`` can process multiple input arguments with the input as a dict, following the common keras practice, see example below.
-
-.. code-block:: python
-
-    def f(inputs, weights):
-        state = inputs["state"]
-        noise = inputs["noise"]
-        c = tc.Circuit(n, inputs=state)
-        for i in range(n):
-            c.rz(i, theta=weights[i])
-        for i in range(n):
-            c.depolarizing(i, px=p, py=p, pz=p, status=noise[i])
-        return K.real(c.expectation_ps(x=[0]))
-
-    layer = tc.KerasLayer(f, [n])
-    v = {"state": K.ones([1, 2**n]) / 2 ** (n / 2), "noise": 0.2 * K.ones([1, n])}
-    with tf.GradientTape() as tape:
-        l = layer(v)
-    grad = tape.gradient(l, layer.trainable_variables)
 
 
 
@@ -782,21 +731,21 @@ Automatically transform quantum functions as scipy-compatible values and grad fu
     n = 3
 
     def f(param):
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for i in range(n):
             c.rx(i, theta=param[0, i])
             c.rz(i, theta=param[1, i])
         loss = c.expectation(
             [
-                tc.gates.y(),
+                tq.gates.y(),
                 [
                     0,
                 ],
             ]
         )
-        return tc.backend.real(loss)
+        return tq.backend.real(loss)
 
-    f_scipy = tc.interfaces.scipy_optimize_interface(f, shape=[2, n])
+    f_scipy = tq.interfaces.scipy_optimize_interface(f, shape=[2, n])
     r = optimize.minimize(f_scipy, np.zeros([2 * n]), method="L-BFGS-B", jac=True)
 
 
@@ -807,25 +756,25 @@ Templates as Shortcuts
 
 * Ising type Hamiltonian defined on a general graph
 
-See :py:meth:`tensorcircuit.templates.measurements.spin_glass_measurements`
+See :py:meth:`tyxonq.templates.measurements.spin_glass_measurements`
 
 * Heisenberg Hamiltonian on a general graph with possible external fields
 
-See :py:meth:`tensorcircuit.templates.measurements.heisenberg_measurements`
+See :py:meth:`tyxonq.templates.measurements.heisenberg_measurements`
 
 **Circuit Blocks:**
 
 .. code-block:: python
 
-    c = tc.Circuit(4)
-    c = tc.templates.blocks.example_block(c, tc.backend.ones([16]))
+    c = tq.Circuit(4)
+    c = tq.templates.blocks.example_block(c, tq.backend.ones([16]))
 
 .. figure:: statics/example_block.png
 
 .. code-block:: python
 
-    c = tc.Circuit(4)
-    c = tc.templates.blocks.Bell_pair_block(c)
+    c = tq.Circuit(4)
+    c = tq.templates.blocks.Bell_pair_block(c)
 
 .. figure:: statics/bell_pair_block.png
     :scale: 50%
