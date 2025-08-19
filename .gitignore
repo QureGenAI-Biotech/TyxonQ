@@ -197,3 +197,5 @@ uv.lock
 
 .DS_Store
 
+#pytorch minst dataset
+examples/data
