@@ -4,16 +4,16 @@ slicing the output wavefunction to save the memory in VQA context
 
 from itertools import product
 import numpy as np
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("jax")
+K = tq.set_backend("pytorch")
 
 
 def circuit(param, n, nlayers):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
         c.h(i)
-    c = tc.templates.blocks.example_block(c, param, nlayers)
+    c = tq.templates.blocks.example_block(c, param, nlayers)
     return c
 
 
@@ -22,9 +22,9 @@ def sliced_state(c, cut, mask):
     # cut = [0, 1, 2]
     n = c._nqubits
     ncut = len(cut)
-    end0 = tc.array_to_tensor(np.array([1.0, 0.0]))
-    end1 = tc.array_to_tensor(np.array([0.0, 1.0]))
-    ends = [tc.Gate(mask[i] * end1 + (1 - mask[i]) * end0) for i in range(ncut)]
+    end0 = tq.array_to_tensor(np.array([1.0, 0.0]))
+    end1 = tq.array_to_tensor(np.array([0.0, 1.0]))
+    ends = [tq.Gate(mask[i] * end1 + (1 - mask[i]) * end0) for i in range(ncut)]
     nodes, front = c._copy()
     for j, i in enumerate(cut):
         front[i] ^ ends[j][0]
@@ -32,7 +32,7 @@ def sliced_state(c, cut, mask):
     for i in range(n):
         if i not in cut:
             oeo.append(front[i])
-    ss = tc.contractor(nodes + ends, output_edge_order=oeo)
+    ss = tq.contractor(nodes + ends, output_edge_order=oeo)
     return ss
 
 
@@ -40,22 +40,22 @@ def sliced_op(ps, cut, mask1, mask2):
     # ps: Tensor([0, 0, 1, 1])
     n = K.shape_tuple(ps)[-1]
     ncut = len(cut)
-    end0 = tc.array_to_tensor(np.array([1.0, 0.0]))
-    end1 = tc.array_to_tensor(np.array([0.0, 1.0]))
-    endsr = [tc.Gate(mask1[i] * end1 + (1 - mask1[i]) * end0) for i in range(ncut)]
-    endsl = [tc.Gate(mask2[i] * end1 + (1 - mask2[i]) * end0) for i in range(ncut)]
+    end0 = tq.array_to_tensor(np.array([1.0, 0.0]))
+    end1 = tq.array_to_tensor(np.array([0.0, 1.0]))
+    endsr = [tq.Gate(mask1[i] * end1 + (1 - mask1[i]) * end0) for i in range(ncut)]
+    endsl = [tq.Gate(mask2[i] * end1 + (1 - mask2[i]) * end0) for i in range(ncut)]
 
     structuresc = K.cast(ps, dtype="int32")
     structuresc = K.onehot(structuresc, num=4)
-    structuresc = K.cast(structuresc, dtype=tc.dtypestr)
+    structuresc = K.cast(structuresc, dtype=tq.dtypestr)
     obs = []
     for i in range(n):
         obs.append(
-            tc.Gate(
+            tq.Gate(
                 sum(
                     [
                         structuresc[i, k] * g.tensor
-                        for k, g in enumerate(tc.gates.pauli_gates)
+                        for k, g in enumerate(tq.gates.pauli_gates)
                     ]
                 )
             )
@@ -78,7 +78,7 @@ def sliced_core(param, n, nlayers, ps, cut, mask1, mask2):
     c = circuit(param, n, nlayers)
     ss = sliced_state(c, cut, mask1)
     ssc = sliced_state(c, cut, mask2)
-    ssc, _ = tc.Circuit.copy([ssc], conj=True)
+    ssc, _ = tq.Circuit.copy([ssc], conj=True)
     op_nodes, op_edges = sliced_op(ps, cut, mask1, mask2)
     nodes = [ss] + ssc + op_nodes
     ssc = ssc[0]
@@ -87,15 +87,17 @@ def sliced_core(param, n, nlayers, ps, cut, mask1, mask2):
     for i in range(nleft):
         op_edges[i + nleft] ^ ss[i]
         op_edges[i] ^ ssc[i]
-    scalar = tc.contractor(nodes)
+    scalar = tq.contractor(nodes)
     return K.real(scalar.tensor)
 
 
+# warning pytorch might be unable to do this exactly
 sliced_core_vvg = K.jit(
     K.vectorized_value_and_grad(sliced_core, argnums=0, vectorized_argnums=(5, 6)),
     static_argnums=(1, 2, 4),
 )  # vmap version if memory is enough
 
+# warning pytorch might be unable to do this exactly
 sliced_core_vg = K.jit(
     K.value_and_grad(sliced_core, argnums=0),
     static_argnums=(1, 2, 4),
@@ -103,18 +105,18 @@ sliced_core_vg = K.jit(
 
 
 def sliced_expectation_and_grad(param, n, nlayers, ps, cut, is_vmap=True):
-    pst = tc.array_to_tensor(ps)
+    pst = tq.array_to_tensor(ps)
     res = 0.0
     mask1s = []
     mask2s = []
     for mask1 in product(*[(0, 1) for _ in cut]):
-        mask1t = tc.array_to_tensor(np.array(mask1))
+        mask1t = tq.array_to_tensor(np.array(mask1))
         mask1s.append(mask1t)
         mask2 = list(mask1)
         for j, i in enumerate(cut):
             if ps[i] in [1, 2]:
                 mask2[j] = 1 - mask1[j]
-        mask2t = tc.array_to_tensor(np.array(mask2))
+        mask2t = tq.array_to_tensor(np.array(mask2))
         mask2s.append(mask2t)
     if is_vmap:
         mask1s = K.stack(mask1s)
@@ -145,16 +147,16 @@ def sliced_expectation_ref(c, ps, cut):
     # ps: [0, 2, 1]
     res = 0.0
     for mask1 in product(*[(0, 1) for _ in cut]):
-        mask1t = tc.array_to_tensor(np.array(mask1))
+        mask1t = tq.array_to_tensor(np.array(mask1))
         ss = sliced_state(c, cut, mask1t)
         mask2 = list(mask1)
         for j, i in enumerate(cut):
             if ps[i] in [1, 2]:
                 mask2[j] = 1 - mask1[j]
-        mask2t = tc.array_to_tensor(np.array(mask2))
+        mask2t = tq.array_to_tensor(np.array(mask2))
         ssc = sliced_state(c, cut, mask2t)
-        ssc, _ = tc.Circuit.copy([ssc], conj=True)
-        ps = tc.array_to_tensor(ps)
+        ssc, _ = tq.Circuit.copy([ssc], conj=True)
+        ps = tq.array_to_tensor(ps)
         op_nodes, op_edges = sliced_op(ps, cut, mask1t, mask2t)
         nodes = [ss] + ssc + op_nodes
         ssc = ssc[0]
@@ -163,7 +165,7 @@ def sliced_expectation_ref(c, ps, cut):
         for i in range(nleft):
             op_edges[i + nleft] ^ ss[i]
             op_edges[i] ^ ssc[i]
-        scalar = tc.contractor(nodes)
+        scalar = tq.contractor(nodes)
         res += scalar.tensor
     return res
 
@@ -174,22 +176,23 @@ if __name__ == "__main__":
     param = K.ones([n, 2 * nlayers], dtype="float32")
     cut = (0, 2, 5, 9)
     ops = [2, 0, 3, 1, 0, 0, 1, 2, 0, 1]
-    ops_dict = tc.quantum.ps2xyz(ops)
+    ops_dict = tq.quantum.ps2xyz(ops)
 
     def trivial_core(param, n, nlayers):
         c = circuit(param, n, nlayers)
         return K.real(c.expectation_ps(**ops_dict))
 
+    # warning pytorch might be unable to do this exactly
     trivial_vg = K.jit(K.value_and_grad(trivial_core, argnums=0), static_argnums=(1, 2))
 
     print("reference impl")
-    r0 = tc.utils.benchmark(trivial_vg, param, n, nlayers)
+    r0 = tq.utils.benchmark(trivial_vg, param, n, nlayers)
     print("vmapped slice")
-    r1 = tc.utils.benchmark(
+    r1 = tq.utils.benchmark(
         sliced_expectation_and_grad, param, n, nlayers, ops, cut, True
     )
     print("naive for slice")
-    r2 = tc.utils.benchmark(
+    r2 = tq.utils.benchmark(
         sliced_expectation_and_grad, param, n, nlayers, ops, cut, False
     )
 

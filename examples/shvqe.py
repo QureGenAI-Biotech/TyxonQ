@@ -9,13 +9,13 @@ import sys
 sys.path.insert(0, "../")
 
 import numpy as np
-import tensorflow as tf
+import torch
 
-import tensorcircuit as tc
-from tensorcircuit.applications.vqes import construct_matrix_v3
+import tyxonq as tq
+from tyxonq.applications.vqes import construct_matrix_v3
 
-ctype, rtype = tc.set_dtype("complex64")
-K = tc.set_backend("tensorflow")
+ctype, rtype = tq.set_dtype("complex64")
+K = tq.set_backend("pytorch")
 
 n = 10  # the number of qubits (must be even for consistency later)
 ncz = 2  # number of cz layers in Schrodinger circuit
@@ -47,7 +47,7 @@ def hybrid_ansatz(structure, paramq, preprocess="direct", train=True):
     K.Tensor, [1,]
         loss value
     """
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     if preprocess == "softmax":
         structure = K.softmax(structure, axis=-1)
     elif preprocess == "most":
@@ -56,7 +56,7 @@ def hybrid_ansatz(structure, paramq, preprocess="direct", train=True):
         pass
 
     structure = K.cast(structure, ctype)
-    structure = tf.reshape(structure, shape=[n // 2, 2])
+    structure = torch.reshape(structure, shape=[n // 2, 2])
 
     # quantum variational in Schrodinger part, first consider a ring topol
     for j in range(nlayersq):
@@ -76,16 +76,16 @@ def hybrid_ansatz(structure, paramq, preprocess="direct", train=True):
                 c.unitary(
                     i,
                     (i + dis) % n,
-                    unitary=structure[j, 0] * tc.gates.ii().tensor
-                    + structure[j, 1] * tc.gates.cz().tensor,
+                    unitary=structure[j, 0] * tq.gates.ii().tensor
+                    + structure[j, 1] * tq.gates.cz().tensor,
                 )
 
         for i in range(0, n // 2):
             c.unitary(
                 i,
                 i + n // 2,
-                unitary=structure[n // 2 - 1, 0] * tc.gates.ii().tensor
-                + structure[n // 2 - 1, 1] * tc.gates.cz().tensor,
+                unitary=structure[n // 2 - 1, 0] * tq.gates.ii().tensor
+                + structure[n // 2 - 1, 1] * tq.gates.cz().tensor,
             )
     else:  # if not for training, we just put nontrivial gates
         for j in range(0, n // 2 - 1):
@@ -119,7 +119,7 @@ def hybrid_vqe(structure, paramq, preprocess="direct"):
         loss value
     """
     c = hybrid_ansatz(structure, paramq, preprocess)
-    return tc.templates.measurements.operator_expectation(c, hamiltonian)
+    return tq.templates.measurements.operator_expectation(c, hamiltonian)
 
 
 def sampling_from_structure(structures, batch=1):
@@ -135,7 +135,7 @@ def sampling_from_structure(structures, batch=1):
     return r.transpose()
 
 
-@K.jit
+@K.jit  # warning pytorch might be unable to do this exactly
 def best_from_structure(structures):
     return K.argmax(structures, axis=-1)
 
@@ -158,25 +158,26 @@ def nmf_gradient(structures, oh):
     choice = K.argmax(oh, axis=-1)
     prob = K.softmax(K.real(structures), axis=-1)
     indices = K.transpose(
-        K.stack([K.cast(tf.range(structures.shape[0]), "int64"), choice])
+        K.stack([K.cast(torch.arange(structures.shape[0]), "int64"), choice])
     )
-    prob = tf.gather_nd(prob, indices)
+    prob = torch.gather(prob, 0, indices.unsqueeze(1)).squeeze(1)
     prob = K.reshape(prob, [-1, 1])
     prob = K.tile(prob, [1, structures.shape[-1]])
 
-    return K.real(
-        tf.tensor_scatter_nd_add(
-            tf.cast(-prob, dtype=ctype),
-            indices,
-            tf.ones([structures.shape[0]], dtype=ctype),
-        )
-    )  # in oh : 1-p, not in oh : -p
+    # warning: pytorch scatter operation is different from tensorflow
+    result = -prob.clone()
+    for i, idx in enumerate(indices):
+        result[idx[0], idx[1]] = 1 - prob[idx[0], idx[1]]
+    
+    return K.real(result)  # in oh : 1-p, not in oh : -p
 
 
 # vmap for a batch of structures
+# warning pytorch might be unable to do this exactly
 nmf_gradient_vmap = K.jit(K.vmap(nmf_gradient, vectorized_argnums=1))
 
 # vvag for a batch of structures
+# warning pytorch might be unable to do this exactly
 vvag_hybrid = K.jit(
     K.vectorized_value_and_grad(hybrid_vqe, vectorized_argnums=(0,), argnums=(1,)),
     static_argnums=(2,),
@@ -190,8 +191,9 @@ def train_hybrid(
     params = K.ones([n // 2, 2], dtype=float)
     paramq = K.implicit_randn([nlayersq, n, 3], stddev=stddev) * 2 * np.pi
     if lr is None:
-        lr = tf.keras.optimizers.schedules.ExponentialDecay(0.6, 100, 0.8)
-    structure_opt = K.optimizer(tf.keras.optimizers.Adam(lr))
+        # warning: pytorch scheduler is different from tensorflow
+        lr = 0.6
+    structure_opt = torch.optim.Adam([torch.nn.Parameter(params), torch.nn.Parameter(paramq)], lr=lr)
 
     avcost = 0
     avcost2 = 0
@@ -211,7 +213,12 @@ def train_hybrid(
         # avcost2 is averaged cost in the last epoch
         avcost2 = avcost
 
-        [params, paramq] = structure_opt.update([gs, gq], [params, paramq])
+        # warning: pytorch optimizer usage is different
+        structure_opt.zero_grad()
+        params.grad = gs
+        paramq.grad = gq
+        structure_opt.step()
+        
         if epoch % debug_step == 0 or epoch == epochs - 1:
             print("----------epoch %s-----------" % epoch)
             print(
@@ -222,14 +229,14 @@ def train_hybrid(
             )
 
             # max over choices, min over layers and qubits
-            minp = tf.math.reduce_min(
-                tf.math.reduce_max(tf.math.softmax(params), axis=-1)
+            minp = torch.min(
+                torch.max(torch.softmax(params, dim=-1), dim=-1)[0]
             )
             if minp > 0.5:
                 print("probability converged")
 
             if verbose:
-                print("strcuture parameter: \n", params.numpy())
+                print("strcuture parameter: \n", params.detach().cpu().numpy())
 
             cand_preset = best_from_structure(params)
             print(cand_preset)

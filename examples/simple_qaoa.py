@@ -6,10 +6,11 @@ import sys
 
 sys.path.insert(0, "../")
 import networkx as nx
-import tensorflow as tf
-import tensorcircuit as tc
+import torch
+import tyxonq as tq
 
-K = tc.set_backend("tensorflow")
+# expose backend handle for unified programming model
+K = tq.set_backend("pytorch")
 
 ## 1. define the graph
 
@@ -44,15 +45,15 @@ nlayers = 3
 
 def QAOAansatz(gamma, beta, g=example_graph):
     n = len(g.nodes)
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for e in g.edges:
             c.exp1(
                 e[0],
                 e[1],
-                unitary=tc.gates._zz_matrix,
+                unitary=tq.gates._zz_matrix,
                 theta=g[e[0]][e[1]].get("weight", 1.0) * gamma[j],
             )
         for i in range(n):
@@ -68,16 +69,21 @@ def QAOAansatz(gamma, beta, g=example_graph):
 
 # 3. get compiled function for QAOA ansatz and its gradient
 
+# warning pytorch might be unable to do this exactly
 QAOA_vg = K.jit(K.value_and_grad(QAOAansatz, argnums=(0, 1)), static_argnums=2)
 
 
 # 4. optimization loop
 
-beta = K.implicit_randn(shape=[nlayers], stddev=0.1)
-gamma = K.implicit_randn(shape=[nlayers], stddev=0.1)
-opt = K.optimizer(tf.keras.optimizers.Adam(1e-2))
+beta = torch.nn.Parameter(torch.randn(nlayers) * 0.1)
+gamma = torch.nn.Parameter(torch.randn(nlayers) * 0.1)
+optimizer = torch.optim.Adam([gamma, beta], lr=1e-2)
 
 for i in range(100):
-    loss, grads = QAOA_vg(gamma, beta, example_graph)
-    print(K.numpy(loss))
-    gamma, beta = opt.update(grads, [gamma, beta])  # gradient descent
+    # value and gradients
+    loss, (g_gamma, g_beta) = QAOA_vg(gamma, beta, example_graph)
+    print(loss.detach().cpu().item())
+    optimizer.zero_grad()
+    gamma.grad = g_gamma
+    beta.grad = g_beta
+    optimizer.step()

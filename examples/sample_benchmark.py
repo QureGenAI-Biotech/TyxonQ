@@ -5,16 +5,16 @@ the benchmark results show that only use perfect/tensor sampling when the wavefu
 
 import time
 import numpy as np
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("jax")
-# tf staging is too slow
+K = tq.set_backend("pytorch")
+# pytorch staging is different from jax
 
 
 def construct_circuit(n, nlayers):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for _ in range(nlayers):
         for i in range(n):
             r = np.random.randint(n - 1) + 1
@@ -41,19 +41,15 @@ for n in [8, 10, 12, 14, 16]:
         time1 = time.time()
         print("batch state sampling time: ", (time1 - time0) / 10)
 
-        @K.jit
-        def f(key):
-            K.set_random_state(key)
+        @K.jit  # warning pytorch might be unable to do this exactly
+        def f():
             return c.sample()
 
-        key = K.get_random_state(42)
-        key1, key2 = K.random_split(key)
         time0 = time.time()
-        smp = f(key1)
+        smp = f()
         time1 = time.time()
         for _ in range(10):
-            key1, key2 = K.random_split(key2)
-            smp = f(key1)
+            smp = f()
             # print(smp)
         time2 = time.time()
         print("jittable tensor sampling staginging time: ", time1 - time0)

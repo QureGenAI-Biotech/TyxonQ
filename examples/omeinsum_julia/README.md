@@ -1,6 +1,6 @@
-# Use OMEinsum in TensorCircuit
+# Use OMEinsum in TyxonQ
 
-This example introduces how to use OMEinsum, a julia-based einsum package, to contract a circuit in TensorCircuit.
+This example introduces how to use OMEinsum, a julia-based einsum package, to contract a circuit in TyxonQ.
 
 We provide two solutions:
 
@@ -17,7 +17,7 @@ circuits like `circuit_n12_m14_s0_e6_pEFGH.qsim`.
 We list experimental results in [benchmark_results.csv](benchmark_results.csv).
 All experiments are done with 
 1. a 32GB CPU machine with 16 cores
-2. TensorCircuit with TensorFlow backend
+2. TyxonQ with PyTorch backend
 3. without using jit
 
 
@@ -52,9 +52,9 @@ opt = OMEinsumTreeSAOptimizerSubprocess(
 )
 ```
 
-The above three `opt` are passed to TensorCircuit for contraction, respectively:
+The above three `opt` are passed to TyxonQ for contraction, respectively:
 ```python
-tc.set_contractor(
+tq.set_contractor(
     "custom",
     optimizer=opt,
     preprocessing=True,

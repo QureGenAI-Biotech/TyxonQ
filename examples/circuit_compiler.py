@@ -1,11 +1,11 @@
 """
-compilation utilities in tensorcircuit
+compilation utilities in tyxonq
 """
 
-import tensorcircuit as tc
+import tyxonq as tq
 
 
-c = tc.Circuit(3)
+c = tq.Circuit(3)
 c.rx(0, theta=0.2)
 c.rz(0, theta=-0.3)
 c.ry(1, theta=0.1)
@@ -17,24 +17,24 @@ c.y(0)
 c.rxx(1, 2, theta=1.7)
 
 
-c0, _ = tc.compiler.qiskit_compiler.qiskit_compile(
+c0, _ = tq.compiler.qiskit_compiler.qiskit_compile(
     c,
     compiled_options={"optimization_level": 0, "basis_gates": ["cx", "cz", "h", "rz"]},
 )
 
-c1, _ = tc.compiler.qiskit_compiler.qiskit_compile(
+c1, _ = tq.compiler.qiskit_compiler.qiskit_compile(
     c,
     compiled_options={"optimization_level": 1, "basis_gates": ["cx", "cz", "h", "rz"]},
 )
 
 
-c2, _ = tc.compiler.qiskit_compiler.qiskit_compile(
+c2, _ = tq.compiler.qiskit_compiler.qiskit_compile(
     c,
     compiled_options={"optimization_level": 2, "basis_gates": ["cx", "cz", "h", "rz"]},
 )
 
 
-c3, _ = tc.compiler.qiskit_compiler.qiskit_compile(
+c3, _ = tq.compiler.qiskit_compiler.qiskit_compile(
     c,
     compiled_options={"optimization_level": 3, "basis_gates": ["cx", "cz", "h", "rz"]},
 )
@@ -52,14 +52,14 @@ print("level 3:\n")
 print(c3.draw())
 
 
-compiler_wo_mapping = tc.compiler.DefaultCompiler()
+compiler_wo_mapping = tq.compiler.DefaultCompiler()
 c4, _ = compiler_wo_mapping(c)
 print(
-    "compiled with tc default compiler: combining the good from qiskit and our tc own"
+    "compiled with tq default compiler: combining the good from qiskit and our tq own"
 )
 # we always uuggest using DefaultCompiler for tasks on qcloud
 # internally we run optimized compiling using U3 basis with qiskit which has good performance
-# and we unroll u3 with rz and apply replace/prune/merge loop developed in tc to further optimize the circuit
+# and we unroll u3 with rz and apply replace/prune/merge loop developed in tq to further optimize the circuit
 print(c4.draw())
 
 print("gate number comparison (last ours vs before qiskit (0, 1, 2, 3))")
@@ -68,7 +68,7 @@ for c in [c0, c1, c2, c3, c4]:
 
 # if we want to apply routing/qubit mapping
 
-compiler_w_mapping = tc.compiler.DefaultCompiler(
+compiler_w_mapping = tq.compiler.DefaultCompiler(
     {"coupling_map": [[0, 2], [2, 0], [1, 0], [0, 1]]}
 )
 c5, info = compiler_w_mapping(c)

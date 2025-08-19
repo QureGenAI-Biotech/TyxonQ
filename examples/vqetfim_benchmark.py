@@ -4,27 +4,26 @@ Time comparison for different evaluation approach on spin VQE
 
 import os
 
-os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
-# one need this for jax+gpu combination in some cases
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 import time
 from functools import partial
 import numpy as np
 import tensornetwork as tn
 
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("tensorflow")
+K = tq.set_backend("pytorch")
 
 
 n = 20
 nlayers = 1
 j, h = 1, -1
-xx = tc.gates._xx_matrix  # xx gate matrix to be utilized
+xx = tq.gates._xx_matrix  # xx gate matrix to be utilized
 enable_dense = False
 
 
 def ansatz(param):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for j in range(nlayers):
         for i in range(n - 1):
             c.exp1(i, i + 1, unitary=xx, theta=param[2 * j, i])
@@ -37,6 +36,7 @@ def benchmark(vqef, tries=3):
     if tries < 0:
         vagf = K.value_and_grad(vqef)
     else:
+        # warning pytorch might be unable to do this exactly
         vagf = K.jit(K.value_and_grad(vqef))
     time0 = time.time()
     v, g = vagf(K.zeros([2 * nlayers, n]))
@@ -67,12 +67,13 @@ def vqe1(param):
 
 
 def measurement(s, structure):
-    c = tc.Circuit(n, inputs=s)
-    return tc.templates.measurements.parameterized_measurements(
+    c = tq.Circuit(n, inputs=s)
+    return tq.templates.measurements.parameterized_measurements(
         c, structure, onehot=True
     )
 
 
+# warning pytorch might be unable to do this exactly
 measurement = K.jit(K.vmap(measurement, vectorized_argnums=1))
 
 structures = []
@@ -86,8 +87,8 @@ for i in range(n):
     s[i] = 3
     structures.append(s)
 
-structures = tc.array_to_tensor(structures)
-weights = tc.array_to_tensor(
+structures = tq.array_to_tensor(structures)
+weights = tq.array_to_tensor(
     np.array([1.0 for _ in range(n - 1)] + [-1.0 for _ in range(n)])
 )
 
@@ -104,12 +105,12 @@ def vqe2(param):
 
 def vqe_template(param, op):
     c = ansatz(param)
-    e = tc.templates.measurements.operator_expectation(c, op)
+    e = tq.templates.measurements.operator_expectation(c, op)
     # in operator_expectation, the "hamiltonian" can be sparse matrix, dense matrix or mpo
     return e
 
 
-hamiltonian_sparse_numpy = tc.quantum.PauliStringSum2COO_numpy(structures, weights)
+hamiltonian_sparse_numpy = tq.quantum.PauliStringSum2COO_numpy(structures, weights)
 hamiltonian_sparse = K.coo_sparse_matrix(
     np.transpose(
         np.stack([hamiltonian_sparse_numpy.row, hamiltonian_sparse_numpy.col])
@@ -142,7 +143,7 @@ Bz = np.array([1.0 for _ in range(n)])  # strength of transverse field
 hamiltonian_mpo = tn.matrixproductstates.mpo.FiniteTFI(
     Jx, Bz, dtype=np.complex64
 )  # matrix product operator in TensorNetwork
-hamiltonian_mpo = tc.quantum.tn2qop(hamiltonian_mpo)  # QuOperator in TensorCircuit
+hamiltonian_mpo = tq.quantum.tn2qop(hamiltonian_mpo)  # QuOperator in TyxonQ
 
 vqe5 = partial(vqe_template, op=hamiltonian_mpo)
 
@@ -168,7 +169,12 @@ if __name__ == "__main__":
         r1, _ = benchmark(vqef[i], tries=tries[i])
         # plain approach takes too long to jit
         if r0 is not None:
-            np.testing.assert_allclose(r0[0], r1[0], atol=1e-5)
-            np.testing.assert_allclose(r0[1], r1[1], atol=1e-5)
+            # PyTorch tensors -> numpy
+            a0 = r0[0].detach().cpu().numpy()
+            a1 = r1[0].detach().cpu().numpy()
+            b0 = r0[1].detach().cpu().numpy()
+            b1 = r1[1].detach().cpu().numpy()
+            np.testing.assert_allclose(a0, a1, atol=1e-5)
+            np.testing.assert_allclose(b0, b1, atol=1e-5)
         r0 = r1
         print("------------------")

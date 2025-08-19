@@ -1,17 +1,18 @@
 """
-demo example of mipt in tc style
+demo example of mipt in tq style
 """
 
 from functools import partial
 import time
 import numpy as np
 from scipy import stats
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("jax")
-# tf backend is slow (at least on cpu)
+K = tq.set_backend("pytorch")
+# pytorch backend is fast and flexible
 
 
+# warning pytorch might be unable to do this exactly
 @partial(K.jit, static_argnums=(2, 3, 4))
 def circuit_output(random_matrix, status, n, d, p):
     """
@@ -34,15 +35,15 @@ def circuit_output(random_matrix, status, n, d, p):
     inputs = None
     for j in range(d):
         if inputs is None:
-            c = tc.Circuit(n)
+            c = tq.Circuit(n)
         else:
-            c = tc.Circuit(n, inputs=inputs)
+            c = tq.Circuit(n, inputs=inputs)
         for i in range(0, n, 2):
             c.unitary(i, (i + 1) % n, unitary=random_matrix[j, i])
         for i in range(1, n, 2):
             c.unitary(i, (i + 1) % n, unitary=random_matrix[j, i])
         inputs = c.state()
-        c = tc.Circuit(n, inputs=inputs)
+        c = tq.Circuit(n, inputs=inputs)
         for i in range(n):
             c.general_kraus(
                 [
@@ -54,17 +55,18 @@ def circuit_output(random_matrix, status, n, d, p):
                 status=status[j, i],
             )
             inputs = c.state()
-            c = tc.Circuit(n, inputs=inputs)
+            c = tq.Circuit(n, inputs=inputs)
         inputs = c.state()
         inputs /= K.norm(inputs)
     return inputs
 
 
+# warning pytorch might be unable to do this exactly
 @partial(K.jit, static_argnums=(2, 3, 4))
 def cals(random_matrix, status, n, d, p):
     state = circuit_output(random_matrix, status, n, d, p)
-    rho = tc.quantum.reduced_density_matrix(state, cut=[i for i in range(n // 2)])
-    return tc.quantum.entropy(rho), tc.quantum.renyi_entropy(rho, k=2)
+    rho = tq.quantum.reduced_density_matrix(state, cut=[i for i in range(n // 2)])
+    return tq.quantum.entropy(rho), tq.quantum.renyi_entropy(rho, k=2)
 
 
 if __name__ == "__main__":

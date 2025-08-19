@@ -6,13 +6,14 @@ rewrite matrix product in a vmap style
 from functools import partial
 
 import numpy as np
-import tensorcircuit as tc
+import tyxonq as tq
 
-for bk in ["jax", "tensorflow"]:
-    with tc.runtime_backend(bk) as K:
+for bk in ["pytorch"]:
+    with tq.runtime_backend(bk) as K:
         print("~~~~~~~~~~~~~~~~~~~~~")
         print(f"using {K.name} backend")
 
+        # warning pytorch might be unable to do this exactly
         @partial(K.jit, jit_compile=True)
         def mul(a, b):
             return a @ b
@@ -26,6 +27,7 @@ for bk in ["jax", "tensorflow"]:
         vij = K.vmap(ij, vectorized_argnums=1)
         vvij = K.vmap(vij, vectorized_argnums=0)
 
+        # warning pytorch might be unable to do this exactly
         @partial(K.jit, jit_compile=True)
         def mul2(a, b):
             b = K.transpose(b)
@@ -36,7 +38,7 @@ for bk in ["jax", "tensorflow"]:
             a = K.implicit_randn(shape)
             b = K.implicit_randn([shape[1], shape[0]])
             print("plain matprod")
-            r1, _, _ = tc.utils.benchmark(mul, a, b, tries=10)
+            r1, _, _ = tq.utils.benchmark(mul, a, b, tries=10)
             print("vmap matprod")
-            r2, _, _ = tc.utils.benchmark(mul2, a, b, tries=10)
-            np.testing.assert_allclose(r1, r2, atol=1e-5)
+            r2, _, _ = tq.utils.benchmark(mul2, a, b, tries=10)
+            np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=1e-5)

@@ -1,5 +1,5 @@
 """
-Gradient evaluation comparison between qiskit and tensorcircut
+Gradient evaluation comparison between qiskit and tyxonq
 """
 
 import time
@@ -13,8 +13,8 @@ from qiskit.opflow import X, StateFn
 from qiskit.circuit import QuantumCircuit, ParameterVector
 from qiskit.opflow.gradients import Gradient, QFI, Hessian
 
-import tensorcircuit as tc
-from tensorcircuit import experimental
+import tyxonq as tq
+from tyxonq import experimental
 
 
 def benchmark(f, *args, trials=10):
@@ -110,9 +110,9 @@ def hessian_qiskit(n, l, trials=0):
     return benchmark(get_hs_qiskit, np.ones([3 * n * l]), trials=trials)
 
 
-def grad_tc(n, l, trials=10):
+def grad_tq(n, l, trials=10):
     def f(params):
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for j in range(l):
             for i in range(n - 1):
                 c.cnot(i, i + 1)
@@ -122,15 +122,16 @@ def grad_tc(n, l, trials=10):
                 c.rz(i, theta=params[3 * n * j + i + n])
             for i in range(n):
                 c.rx(i, theta=params[3 * n * j + i + 2 * n])
-        return tc.backend.real(c.expectation(*[[tc.gates.x(), [i]] for i in range(n)]))
+        return tq.backend.real(c.expectation(*[[tq.gates.x(), [i]] for i in range(n)]))
 
-    get_grad_tc = tc.backend.jit(tc.backend.grad(f))
-    return benchmark(get_grad_tc, tc.backend.ones([3 * n * l], dtype="float32"))
+    # warning pytorch might be unable to do this exactly
+    get_grad_tq = tq.backend.jit(tq.backend.grad(f))
+    return benchmark(get_grad_tq, tq.backend.ones([3 * n * l], dtype="float32"))
 
 
-def qfi_tc(n, l, trials=10):
+def qfi_tq(n, l, trials=10):
     def s(params):
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for j in range(l):
             for i in range(n - 1):
                 c.cnot(i, i + 1)
@@ -142,13 +143,14 @@ def qfi_tc(n, l, trials=10):
                 c.rx(i, theta=params[3 * n * j + i + 2 * n])
         return c.state()
 
-    get_qfi_tc = tc.backend.jit(experimental.qng(s, mode="fwd"))
-    return benchmark(get_qfi_tc, tc.backend.ones([3 * n * l], dtype="float32"))
+    # warning pytorch might be unable to do this exactly
+    get_qfi_tq = tq.backend.jit(experimental.qng(s, mode="fwd"))
+    return benchmark(get_qfi_tq, tq.backend.ones([3 * n * l], dtype="float32"))
 
 
-def hessian_tc(n, l, trials=10):
+def hessian_tq(n, l, trials=10):
     def f(params):
-        c = tc.Circuit(n)
+        c = tq.Circuit(n)
         for j in range(l):
             for i in range(n - 1):
                 c.cnot(i, i + 1)
@@ -158,10 +160,11 @@ def hessian_tc(n, l, trials=10):
                 c.rz(i, theta=params[3 * n * j + i + n])
             for i in range(n):
                 c.rx(i, theta=params[3 * n * j + i + 2 * n])
-        return tc.backend.real(c.expectation(*[[tc.gates.x(), [i]] for i in range(n)]))
+        return tq.backend.real(c.expectation(*[[tq.gates.x(), [i]] for i in range(n)]))
 
-    get_hs_tc = tc.backend.jit(tc.backend.hessian(f))
-    return benchmark(get_hs_tc, tc.backend.ones([3 * n * l], dtype="float32"))
+    # warning pytorch might be unable to do this exactly
+    get_hs_tq = tq.backend.jit(tq.backend.hessian(f))
+    return benchmark(get_hs_tq, tq.backend.ones([3 * n * l], dtype="float32"))
 
 
 results = {}
@@ -174,20 +177,13 @@ for n in [4, 6, 8, 10, 12]:
         results[str(n) + "-" + str(l) + "-" + "qfi" + "-qiskit"] = ts[0]
         _, ts = hessian_qiskit(n, l)
         results[str(n) + "-" + str(l) + "-" + "hs" + "-qiskit"] = ts[0]
-        with tc.runtime_backend("tensorflow"):
-            _, ts = grad_tc(n, l)
-            results[str(n) + "-" + str(l) + "-" + "grad" + "-tc-tf"] = ts
-            _, ts = qfi_tc(n, l)
-            results[str(n) + "-" + str(l) + "-" + "qfi" + "-tc-tf"] = ts
-            _, ts = hessian_tc(n, l)
-            results[str(n) + "-" + str(l) + "-" + "hs" + "-tc-tf"] = ts
-        with tc.runtime_backend("jax"):
-            _, ts = grad_tc(n, l)
-            results[str(n) + "-" + str(l) + "-" + "grad" + "-tc-jax"] = ts
-            _, ts = qfi_tc(n, l)
-            results[str(n) + "-" + str(l) + "-" + "qfi" + "-tc-jax"] = ts
-            _, ts = hessian_tc(n, l)
-            results[str(n) + "-" + str(l) + "-" + "hs" + "-tc-jax"] = ts
+        with tq.runtime_backend("pytorch"):
+            _, ts = grad_tq(n, l)
+            results[str(n) + "-" + str(l) + "-" + "grad" + "-tq-pytorch"] = ts
+            _, ts = qfi_tq(n, l)
+            results[str(n) + "-" + str(l) + "-" + "qfi" + "-tq-pytorch"] = ts
+            _, ts = hessian_tq(n, l)
+            results[str(n) + "-" + str(l) + "-" + "hs" + "-tq-pytorch"] = ts
 
 print(results)
 

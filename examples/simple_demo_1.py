@@ -11,8 +11,8 @@ device = "homebrew_s2"
 # Create and execute quantum circuit on real hardware
 def quantum_hello_world():
     c = tq.Circuit(2)
-    c.H(0)                    # Hadamard gate on qubit 0
-    c.CNOT(0, 1)             # CNOT gate between qubits 0 and 1
+    c.h(0)                    # Hadamard gate on qubit 0
+    c.cnot(0, 1)             # CNOT gate between qubits 0 and 1
     c.rx(1, theta=0.2)       # Rotation around x-axis
     
     # Execute on real quantum hardware

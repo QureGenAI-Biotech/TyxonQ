@@ -7,7 +7,7 @@ import logging
 import sys
 import numpy as np
 
-logger = logging.getLogger("tensorcircuit")
+logger = logging.getLogger("tyxonq")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -15,11 +15,11 @@ logger.addHandler(ch)
 
 sys.setrecursionlimit(10000)
 
-import tensorflow as tf
+import torch
 import cotengra as ctg
 
-import tensorcircuit as tc
-from tensorcircuit import keras
+import tyxonq as tq
+from tyxonq import keras
 
 optr = ctg.ReusableHyperOptimizer(
     methods=["greedy", "kahypar"],
@@ -29,10 +29,10 @@ optr = ctg.ReusableHyperOptimizer(
     max_repeats=4096,
     progbar=True,
 )
-tc.set_contractor("custom", optimizer=optr, preprocessing=True)
-# tc.set_contractor("custom_stateful", optimizer=oem.RandomGreedy, max_time=60, max_repeats=128, minimize="size")
-tc.set_dtype("complex64")
-tc.set_backend("tensorflow")
+tq.set_contractor("custom", optimizer=optr, preprocessing=True)
+# tq.set_contractor("custom_stateful", optimizer=oem.RandomGreedy, max_time=60, max_repeats=128, minimize="size")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex64")
 dtype = np.complex64
 
 nwires, nlayers = 50, 7
@@ -43,18 +43,18 @@ def vqe_forward(param, structures):
         "max_singular_values": 2,
         "fixed_choice": 1,
     }
-    structuresc = tc.backend.cast(structures, dtype="complex64")
-    paramc = tc.backend.cast(param, dtype="complex64")
-    c = tc.Circuit(nwires, split=split_conf)
+    structuresc = K.cast(structures, dtype="complex64")
+    paramc = K.cast(param, dtype="complex64")
+    c = tq.Circuit(nwires, split=split_conf)
     for i in range(nwires):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for i in range(0, nwires - 1):
             c.exp1(
                 i,
                 (i + 1) % nwires,
                 theta=paramc[2 * j, i],
-                unitary=tc.gates._zz_matrix,
+                unitary=tq.gates._zz_matrix,
             )
 
         for i in range(nwires):
@@ -64,11 +64,11 @@ def vqe_forward(param, structures):
     for i in range(nwires):
         obs.append(
             [
-                tc.gates.Gate(
+                tq.gates.Gate(
                     sum(
                         [
                             structuresc[i, k] * g.tensor
-                            for k, g in enumerate(tc.gates.pauli_gates)
+                            for k, g in enumerate(tq.gates.pauli_gates)
                         ]
                     )
                 ),
@@ -76,7 +76,7 @@ def vqe_forward(param, structures):
             ]
         )
     loss = c.expectation(*obs, reuse=False)
-    return tc.backend.real(loss)
+    return K.real(loss)
 
 
 slist = []
@@ -90,20 +90,15 @@ for i in range(nwires):
     t[(i + 1) % nwires] = 3
     slist.append(t)
 structures = np.array(slist, dtype=np.int32)
-structures = tc.backend.onehot(structures, num=4)
-structures = tc.backend.reshape(structures, [-1, nwires, 4])
+structures = K.onehot(structures, num=4)
+structures = K.reshape(structures, [-1, nwires, 4])
 print(structures.shape)
 time0 = time.time()
 
 batch = 50
-tc_vg = tf.function(
-    tc.backend.vectorized_value_and_grad(vqe_forward, argnums=0, vectorized_argnums=1),
-    input_signature=[
-        tf.TensorSpec([2 * nlayers, nwires], tf.float32),
-        tf.TensorSpec([batch, nwires, 4], tf.float32),
-    ],
-)
-param = tf.Variable(tf.random.normal(stddev=0.1, shape=[2 * nlayers, nwires]))
+# warning pytorch might be unable to do this exactly
+tc_vg = K.vectorized_value_and_grad(vqe_forward, argnums=0, vectorized_argnums=1)
+param = torch.nn.Parameter(torch.randn(2 * nlayers, nwires) * 0.1)
 
 print(tc_vg(param, structures[:batch]))
 
@@ -120,15 +115,17 @@ def train_step(param):
     vg_list = []
     for i in range(2):
         vg_list.append(tc_vg(param, structures[i * nwires : i * nwires + nwires]))
-    loss = tc.backend.sum(vg_list[0][0] - vg_list[1][0])
+    loss = K.sum(vg_list[0][0] - vg_list[1][0])
     gr = vg_list[0][1] - vg_list[1][1]
     return loss, gr
 
 
 if __name__ == "__main__":
-    opt = tf.keras.optimizers.Adam(0.02)
+    optimizer = torch.optim.Adam([param], lr=0.02)
     for j in range(5000):
         loss, gr = train_step(param)
-        opt.apply_gradients([(gr, param)])
+        optimizer.zero_grad()
+        param.grad = gr
+        optimizer.step()
         if j % 20 == 0:
-            print("loss", loss.numpy())
+            print("loss", loss.detach().cpu().item())

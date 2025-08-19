@@ -2,13 +2,13 @@
 For hardware simlation, only sample interface is available and Monte Carlo simulation is enough
 """
 
-import tensorcircuit as tc
+import tyxonq as tq
 
 n = 6
 m = 4
 pn = 0.003
 
-K = tc.set_backend("jax")
+K = tq.set_backend("pytorch")
 
 
 def make_noise_circuit(c, weights, status=None):
@@ -26,16 +26,16 @@ def make_noise_circuit(c, weights, status=None):
     return c
 
 
-@K.jit
-def noise_measurement(weights, status, key):
-    c = tc.Circuit(n)
+@K.jit  # warning pytorch might be unable to do this exactly
+def noise_measurement(weights, status):
+    c = tq.Circuit(n)
     c = make_noise_circuit(c, weights, status)
-    return c.sample(allow_state=True, random_generator=key)
+    return c.sample(allow_state=True)
 
 
-@K.jit
+@K.jit  # warning pytorch might be unable to do this exactly
 def exact_result(weights):
-    c = tc.DMCircuit(n)
+    c = tq.DMCircuit(n)
     c = make_noise_circuit(c, weights)
     return K.real(c.expectation_ps(z=[0, 1]))
 
@@ -46,18 +46,16 @@ z0z1_exact = exact_result(weights)
 
 tries = 2**15
 status = K.implicit_randu([tries, 2, n, m])
-subkey = K.get_random_state(42)
 
 # a micro benchmarking
 
-tc.utils.benchmark(noise_measurement, weights, status[0], subkey)
+tq.utils.benchmark(noise_measurement, weights, status[0])
 
 
 rs = []
 for i in range(tries):
     # can also be vmapped, but a tradeoff between number of trials here for further jit
-    key, subkey = K.random_split(subkey)
-    r = noise_measurement(weights, status[i], key)
+    r = noise_measurement(weights, status[i])
     rs.append(r[0])
 
 rs = (K.stack(rs) - 0.5) * 2

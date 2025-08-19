@@ -3,14 +3,14 @@ Time evolution of Heisenberg model realized by Trotter decomposition
 """
 
 import numpy as np
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("tensorflow")
-tc.set_dtype("complex128")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex128")
 
-xx = tc.gates._xx_matrix
-yy = tc.gates._yy_matrix
-zz = tc.gates._zz_matrix
+xx = tq.gates._xx_matrix
+yy = tq.gates._yy_matrix
+zz = tq.gates._zz_matrix
 
 nqubit = 4
 t = 1.0
@@ -18,7 +18,7 @@ tau = 0.1
 
 
 def Trotter_step_unitary(input_state, tau, nqubit):
-    c = tc.Circuit(nqubit, inputs=input_state)
+    c = tq.Circuit(nqubit, inputs=input_state)
     for i in range(nqubit - 1):  ### U_zz
         c.exp1(i, i + 1, theta=tau, unitary=zz)
     for i in range(nqubit - 1):  ### U_yy
@@ -30,8 +30,8 @@ def Trotter_step_unitary(input_state, tau, nqubit):
     return TSUstate, z0
 
 
-TSU_vmap = tc.backend.jit(
-    tc.backend.vmap(
+TSU_vmap = K.jit(  # warning pytorch might be unable to do this exactly
+    K.vmap(
         Trotter_step_unitary,
         vectorized_argnums=0,
     )

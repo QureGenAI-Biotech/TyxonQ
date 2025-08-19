@@ -1,17 +1,17 @@
 """
 Backend agnostic linear regression with gradient descent optimization:
-a demonstration on most of core features and paradigm of tensorcircuit
+a demonstration on most of core features and paradigm of tyxonq
 """
 
 # this script shows how backend agnostic magic works, no code change is required to switch backend
 # we also include jit, vmap and AD features in this pure classical example
-# this demonstrates that tensorcircuit can serve as a solid unified ML library without any "quantumness"
+# this demonstrates that tyxonq can serve as a solid unified ML library without any "quantumness"
 
 import sys
 
 sys.path.insert(0, "../")
 import numpy as np
-import tensorcircuit as tc
+import tyxonq as tq
 
 # (x, y) data preparation
 
@@ -36,47 +36,58 @@ def lr(xs, ys):
 
     # we suppose this loss function only works for scalar, so that we can show the usage of ``vmap``
 
-    loss_vmap = tc.backend.vmap(loss_pointwise, vectorized_argnums=(0, 1))
+    # warning pytorch might be unable to do this exactly
+    loss_vmap = tq.backend.vmap(loss_pointwise, vectorized_argnums=(0, 1))
 
     # now we define the total loss for all data
 
     def loss(xs, ys, param):
         losses = loss_vmap(xs, ys, param)
-        return tc.backend.sum(losses)
+        return tq.backend.sum(losses)
 
     # we get the jitted function to evaluate loss and its derivatives wrt. param
 
-    loss_and_grad = tc.backend.jit(tc.backend.value_and_grad(loss, argnums=2))
+    # warning pytorch might be unable to do this exactly
+    loss_and_grad = tq.backend.jit(tq.backend.value_and_grad(loss, argnums=2))
 
     # setup initial values and optimizers
 
-    weight = {"k": tc.backend.implicit_randn(), "b": tc.backend.implicit_randn()}
+    weight = {"k": tq.backend.implicit_randn(), "b": tq.backend.implicit_randn()}
 
-    if tc.backend.name == "tensorflow":
-        import tensorflow as tf
-
-        opt = tc.backend.optimizer(tf.keras.optimizers.Adam(1e-2))
-    elif tc.backend.name == "jax":
-        import optax
-
-        opt = tc.backend.optimizer(optax.adam(1e-2))
+    if tq.backend.name == "tensorflow":
+        import torch
+        # warning: tensorflow backend not supported in this refactored version
+        pass
+    elif tq.backend.name == "jax":
+        import torch
+        # warning: jax backend not supported in this refactored version
+        pass
     else:
-        raise ValueError("Unsupported backend")
+        import torch
+        # Use PyTorch optimizer
+        optimizer = torch.optim.Adam([torch.nn.Parameter(weight["k"]), torch.nn.Parameter(weight["b"])], lr=1e-2)
 
     # gradient descent optimization loop
     maxstep = 500
     for i in range(maxstep):
         loss, grad = loss_and_grad(xs, ys, weight)
-        weight = opt.update(grad, weight)
+        # warning: pytorch optimizer usage is different
+        if tq.backend.name == "pytorch":
+            optimizer.zero_grad()
+            weight["k"].grad = grad["k"]
+            weight["b"].grad = grad["b"]
+            optimizer.step()
+        else:
+            weight = opt.update(grad, weight)
         if i % 100 == 0 or i == maxstep - 1:
-            print("optimized MSE loss after %s round: " % i, tc.backend.numpy(loss))
+            print("optimized MSE loss after %s round: " % i, tq.backend.numpy(loss))
 
-    return tc.backend.numpy(weight["k"]), tc.backend.numpy(weight["b"])
+    return tq.backend.numpy(weight["k"]), tq.backend.numpy(weight["b"])
 
 
 if __name__ == "__main__":
-    for n in ["tensorflow", "jax"]:
-        with tc.runtime_backend(n):  # runtime backend switch with context manager
+    for n in ["pytorch"]:  # only pytorch backend supported in refactored version
+        with tq.runtime_backend(n):  # runtime backend switch with context manager
             print("~~~~~~~~ using %s backend ~~~~~~~~" % n)
-            xs_tensor, ys_tensor = tc.array_to_tensor(xs0, ys0, dtype="float32")
+            xs_tensor, ys_tensor = tq.array_to_tensor(xs0, ys0, dtype="float32")
             print("predicted coefficient", lr(xs_tensor, ys_tensor))

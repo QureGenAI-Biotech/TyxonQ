@@ -5,7 +5,7 @@
 
 import numpy as np
 from scipy.optimize import minimize, curve_fit
-import tensorcircuit as tc
+import tyxonq as tq
 
 
 # Add readout error and mitigate readout error with two methods.
@@ -14,10 +14,10 @@ def miti_readout_circ(nqubit):
     for i in range(2**nqubit):
         name = "{:0" + str(nqubit) + "b}"
         lisbs = [int(x) for x in name.format(i)]
-        c = tc.Circuit(nqubit)
+        c = tq.Circuit(nqubit)
         for k in range(nqubit):
             if lisbs[k] == 1:
-                c.X(k)
+                c.x(k)
         miticirc.append(c)
     return miticirc
 
@@ -50,13 +50,7 @@ def mitigate_probability(probability_noise, calmatrix, method="inverse"):
 
 
 def mitigate_readout(nqubit, circ, readout_error):
-    K = tc.set_backend("tensorflow")
-
-    key = K.get_random_state(42)
-    keys = []
-    for _ in range(2**nqubit):
-        key, subkey = tc.backend.random_split(key)
-        keys.append(subkey)
+    K = tq.set_backend("pytorch")
 
     # calibration matrix
     miticirc = miti_readout_circ(nqubit)
@@ -69,25 +63,21 @@ def mitigate_readout(nqubit, circ, readout_error):
             allow_state=True,
             readout_error=readout_error,
             format_="count_dict_bin",
-            random_generator=keys[i],
         )
         for s in bs:
             calmatrix[int(s, 2)][i] = bs[s] / shots
 
-    key, subkey = tc.backend.random_split(key)
     bs = circ.sample(
-        batch=shots, allow_state=True, format_="count_dict_bin", random_generator=subkey
+        batch=shots, allow_state=True, format_="count_dict_bin"
     )
     probability_perfect = probability_bs(bs)
     print("probability_without_readouterror", probability_perfect)
 
-    key, subkey = tc.backend.random_split(key)
     bs = circ.sample(
         batch=shots,
         allow_state=True,
         readout_error=readout_error,
         format_="count_dict_bin",
-        random_generator=subkey,
     )
     probability_noise = probability_bs(bs)
     print("probability_with_readouterror", probability_noise)
@@ -105,10 +95,10 @@ def mitigate_readout(nqubit, circ, readout_error):
 
 def example_readout_mitigate():
     nqubit = 3
-    c = tc.Circuit(nqubit)
-    c.H(0)
+    c = tq.Circuit(nqubit)
+    c.h(0)
     c.cnot(0, 1)
-    c.X(2)
+    c.x(2)
 
     readout_error = []
     readout_error.append([0.9, 0.75])  # readout error of qubit 0
@@ -129,7 +119,7 @@ def T1_cali(t1, t2, time, method, excitedstatepopulation):
     nstep = int(4 * t1 / time)
     pex = []
     for i in range(nstep):
-        dmc = tc.DMCircuit(1)
+        dmc = tq.DMCircuit(1)
         dmc.x(0)
         for _ in range(i):
             dmc.i(0)
@@ -157,7 +147,7 @@ def T2_cali(t1, t2, time, method, excitedstatepopulation):
     nstep = int(4 * t2 / time)
     pex = []
     for i in range(nstep):
-        dmc = tc.DMCircuit(1)
+        dmc = tq.DMCircuit(1)
         dmc.h(0)
         for _ in range(0, i):
             dmc.i(0)

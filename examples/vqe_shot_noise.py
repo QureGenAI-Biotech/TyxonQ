@@ -5,12 +5,11 @@ VQE with finite measurement shot noise
 from functools import partial
 import numpy as np
 from scipy import optimize
-import optax
-import tensorcircuit as tc
-from tensorcircuit import experimental as E
+import torch
+import tyxonq as tq
+from tyxonq import experimental as E
 
-K = tc.set_backend("jax")
-# note this script only supports jax backend
+K = tq.set_backend("pytorch")
 
 n = 6
 nlayers = 4
@@ -34,9 +33,9 @@ w = [-1.0 for _ in range(n)] + [1.0 for _ in range(n - 1)]
 
 def generate_circuit(param):
     # construct the circuit ansatz
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for i in range(n - 1):
             c.rzz(i, i + 1, theta=param[i, j, 0])
@@ -58,8 +57,8 @@ def ps2xyz(psi):
     return xyz
 
 
-@partial(K.jit, static_argnums=(2))
-def exp_val(param, key, shots=1024):
+@partial(K.jit, static_argnums=(1))  # warning pytorch might be unable to do this exactly
+def exp_val(param, shots=1024):
     # expectation with shot noise
     # ps, w: H = \sum_i w_i ps_i
     # describing the system Hamiltonian as a weighted sum of Pauli string
@@ -68,13 +67,12 @@ def exp_val(param, key, shots=1024):
         shots = [shots for _ in range(len(ps))]
     loss = 0
     for psi, wi, shot in zip(ps, w, shots):
-        key, subkey = K.random_split(key)
         xyz = ps2xyz(psi)
-        loss += wi * c.sample_expectation_ps(**xyz, shots=shot, random_generator=subkey)
+        loss += wi * c.sample_expectation_ps(**xyz, shots=shot)
     return K.real(loss)
 
 
-@K.jit
+@K.jit  # warning pytorch might be unable to do this exactly
 def exp_val_analytical(param):
     c = generate_circuit(param)
     loss = 0
@@ -86,7 +84,7 @@ def exp_val_analytical(param):
 
 # 0. Exact result
 
-hm = tc.quantum.PauliStringSum2COO(ps, w, numpy=True)
+hm = tq.quantum.PauliStringSum2COO_numpy(ps, w)
 hm = K.to_dense(hm)
 e, v = np.linalg.eigh(hm)
 print("exact ground state energy: ", e[0])
@@ -95,7 +93,7 @@ print("exact ground state energy: ", e[0])
 
 print("VQE without shot noise")
 
-exp_val_analytical_sp = tc.interfaces.scipy_interface(
+exp_val_analytical_sp = tq.interfaces.scipy_interface(
     exp_val_analytical, shape=[n, nlayers, 2], gradient=False
 )
 
@@ -110,17 +108,20 @@ print(r)
 
 # 1.2 VQE with numerically exact expectation: gradient based
 
-exponential_decay_scheduler = optax.exponential_decay(
-    init_value=1e-2, transition_steps=500, decay_rate=0.9
-)
-opt = K.optimizer(optax.adam(exponential_decay_scheduler))
-param = K.implicit_randn([n, nlayers, 2], stddev=0.1)  # zeros stall the gradient
+param = torch.nn.Parameter(torch.randn(n, nlayers, 2) * 0.1)
+# warning pytorch might be unable to do this exactly
 exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))
+optimizer = torch.optim.Adam([param], lr=1e-2)
+scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 for i in range(1000):
     e, g = exp_val_grad_analytical(param)
-    param = opt.update(g, param)
+    optimizer.zero_grad()
+    param.grad = g
+    optimizer.step()
     if i % 100 == 99:
-        print(e)
+        print(e.detach().cpu().item())
+    if (i + 1) % 500 == 0:
+        scheduler.step()
 
 
 # 2.1 VQE with finite shot noise: gradient free
@@ -128,17 +129,11 @@ for i in range(1000):
 print("VQE with shot noise")
 
 
-rkey = K.get_random_state(42)
-
-
 def exp_val_wrapper(param):
-    global rkey
-    rkey, skey = K.random_split(rkey)
-    # maintain stateless randomness in scipy optimize interface
-    return exp_val(param, skey, shots=1024)
+    return exp_val(param, shots=1024)
 
 
-exp_val_sp = tc.interfaces.scipy_interface(
+exp_val_sp = tq.interfaces.scipy_interface(
     exp_val_wrapper, shape=[n, nlayers, 2], gradient=False
 )
 
@@ -157,22 +152,21 @@ print("converged as: ", exp_val_analytical_sp(r["x"]))
 
 # 2.2 VQE with finite shot noise: gradient based
 
-exponential_decay_scheduler = optax.exponential_decay(
-    init_value=1e-2, transition_steps=500, decay_rate=0.9
-)
-opt = K.optimizer(optax.adam(exponential_decay_scheduler))
-param = K.implicit_randn([n, nlayers, 2], stddev=0.1)  # zeros stall the gradient
-exp_grad = E.parameter_shift_grad_v2(exp_val, argnums=0, random_argnums=1)
-rkey = K.get_random_state(42)
+param = torch.nn.Parameter(torch.randn(n, nlayers, 2) * 0.1)
+exp_grad = E.parameter_shift_grad_v2(exp_val, argnums=0)
+optimizer = torch.optim.Adam([param], lr=1e-2)
+scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
 for i in range(1000):
-    rkey, skey = K.random_split(rkey)
-    g = exp_grad(param, skey)
-    param = opt.update(g, param)
+    g = exp_grad(param)
+    optimizer.zero_grad()
+    param.grad = g
+    optimizer.step()
     if i % 100 == 99:
-        rkey, skey = K.random_split(rkey)
-        print(exp_val(param, skey))
+        print(exp_val(param, shots=1024).detach().cpu().item())
+    if (i + 1) % 500 == 0:
+        scheduler.step()
 
 # the real energy position after optimization
 
-print("converged as:", exp_val_analytical(param))
+print("converged as:", exp_val_analytical(param).detach().cpu().item())

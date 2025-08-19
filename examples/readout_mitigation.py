@@ -4,8 +4,8 @@ Demonstration on readout error mitigation usage
 
 import numpy as np
 
-import tensorcircuit as tc
-from tensorcircuit.results.readout_mitigation import ReadoutMit
+import tyxonq as tq
+from tyxonq.results.readout_mitigation import ReadoutMit
 
 
 def partial_sample(c, batch, readout_error=None):
@@ -22,7 +22,7 @@ def partial_sample(c, batch, readout_error=None):
         readout_error=readout_error,
         format="count_dict_bin",
     )
-    return tc.results.counts.marginal_count(ct, measure_index)
+    return tq.results.counts.marginal_count(ct, measure_index)
 
 
 def simulator(c, shots, logical_physical_mapping=None):
@@ -54,8 +54,8 @@ def run(cs, shots):
 
 def apply_readout_mitigation():
     nqubit = 4
-    c = tc.Circuit(nqubit)
-    c.H(0)
+    c = tq.Circuit(nqubit)
+    c.h(0)
     c.cnot(0, 1)
     c.x(3)
 
@@ -68,14 +68,14 @@ def apply_readout_mitigation():
 
     # idea_value = c.expectation_ps(z=[0,1])
     idea_count = partial_sample(c, batch=shots)
-    idea_count = tc.results.counts.marginal_count(idea_count, use_qubits)
-    idea_value = tc.results.counts.expectation(idea_count, z=[0, 1])
+    idea_count = tq.results.counts.marginal_count(idea_count, use_qubits)
+    idea_value = tq.results.counts.expectation(idea_count, z=[0, 1])
 
     # use case 1
     mit = ReadoutMit(execute=run)
     mit.cals_from_system(cal_qubits, shots=shots, method="local")
     mit_count = mit.apply_correction(raw_count, use_qubits, method="inverse")
-    mit_value1 = tc.results.counts.expectation(mit_count, z=[0, 1])
+    mit_value1 = tq.results.counts.expectation(mit_count, z=[0, 1])
 
     # use case 2: directly mitigation on expectation
     mit = ReadoutMit(execute=run)

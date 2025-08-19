@@ -11,7 +11,7 @@ import networkx as nx
 import numpy as np
 
 sys.path.insert(0, "../")
-import tensorcircuit as tc
+import tyxonq as tq
 
 try:
     import kahypar
@@ -28,16 +28,16 @@ warnings.filterwarnings(
     "ordered indices corresponding to array axes.",
 )
 
-K = tc.set_backend("jax")
+K = tq.set_backend("pytorch")
 
 
 def generate_circuit(param, g, n, nlayers):
     # construct the circuit ansatz
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
-        c = tc.templates.blocks.QAOA_block(c, g, param[j, 0], param[j, 1])
+        c = tq.templates.blocks.QAOA_block(c, g, param[j, 0], param[j, 1])
     return c
 
 
@@ -55,6 +55,7 @@ def trigger_cotengra_optimization(n, nlayers, graph):
     params = K.implicit_randn(shape=[nlayers, 2])
 
     # run only once to trigger the compilation
+    # warning pytorch might be unable to do this exactly
     K.jit(
         loss_f,
         static_argnums=(1, 2),
@@ -151,7 +152,7 @@ if __name__ == "__main__":
             f"graph: {graph}, method: {method}, optlib: {optlib}, "
             f"post_processing: {post_processing}, minimize: {minimize}"
         )
-        tc.set_contractor(
+        tq.set_contractor(
             "custom",
             optimizer=get_optimizer(method, optlib, post_processing, minimize),
             contraction_info=True,

@@ -6,16 +6,16 @@ import sys
 
 sys.path.insert(0, "../")
 
-import tensorcircuit as tc
-from tensorcircuit.applications.dqas import (
+import tyxonq as tq
+from tyxonq.applications.dqas import (
     parallel_qaoa_train,
     single_generator,
     set_op_pool,
 )
-from tensorcircuit.applications.layers import *  # pylint: disable=wildcard-import
-from tensorcircuit.applications.graphdata import get_graph
+from tyxonq.applications.layers import *  # pylint: disable=wildcard-import
+from tyxonq.applications.graphdata import get_graph
 
-tc.set_backend("tensorflow")
+tq.set_backend("pytorch")
 
 set_op_pool([Hlayer, rxlayer, rylayer, rzlayer, xxlayer, yylayer, zzlayer])
 

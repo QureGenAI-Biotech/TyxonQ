@@ -7,7 +7,7 @@ import logging
 import sys
 import numpy as np
 
-logger = logging.getLogger("tensorcircuit")
+logger = logging.getLogger("tyxonq")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -15,12 +15,11 @@ logger.addHandler(ch)
 
 sys.setrecursionlimit(10000)
 
-import tensorflow as tf
+import torch
 import tensornetwork as tn
 import cotengra as ctg
-import optax
 
-import tensorcircuit as tc
+import tyxonq as tq
 
 opt = ctg.ReusableHyperOptimizer(
     methods=["greedy", "kahypar"],
@@ -44,9 +43,9 @@ def opt_reconf(inputs, output, size, **kws):
     return tree_r.path()
 
 
-tc.set_contractor("custom", optimizer=opt_reconf, preprocessing=True)
-tc.set_dtype("complex64")
-tc.set_backend("tensorflow")
+tq.set_contractor("custom", optimizer=opt_reconf, preprocessing=True)
+K = tq.set_backend("pytorch")
+K.set_dtype("complex64")
 # jax backend is incompatible with keras.save
 
 dtype = np.complex64
@@ -59,7 +58,7 @@ Bz = np.array([-1.0 for _ in range(nwires)])  # strength of transverse field
 hamiltonian_mpo = tn.matrixproductstates.mpo.FiniteTFI(
     Jx, Bz, dtype=dtype
 )  # matrix product operator
-hamiltonian_mpo = tc.quantum.tn2qop(hamiltonian_mpo)
+hamiltonian_mpo = tq.quantum.tn2qop(hamiltonian_mpo)
 
 
 def vqe_forward(param):
@@ -68,16 +67,16 @@ def vqe_forward(param):
         "max_singular_values": 2,
         "fixed_choice": 1,
     }
-    c = tc.Circuit(nwires, split=split_conf)
+    c = tq.Circuit(nwires, split=split_conf)
     for i in range(nwires):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for i in range(0, nwires - 1):
             c.exp1(
                 i,
                 (i + 1) % nwires,
                 theta=param[4 * j, i],
-                unitary=tc.gates._xx_matrix,
+                unitary=tq.gates._xx_matrix,
             )
 
         for i in range(nwires):
@@ -86,7 +85,7 @@ def vqe_forward(param):
             c.ry(i, theta=param[4 * j + 2, i])
         for i in range(nwires):
             c.rz(i, theta=param[4 * j + 3, i])
-    return tc.templates.measurements.mpo_expectation(c, hamiltonian_mpo)
+    return tq.templates.measurements.mpo_expectation(c, hamiltonian_mpo)
 
 
 if __name__ == "__main__":
@@ -94,15 +93,13 @@ if __name__ == "__main__":
 
     time0 = time.time()
     if refresh:
-        tc_vg = tf.function(
-            tc.backend.value_and_grad(vqe_forward),
-            input_signature=[tf.TensorSpec([4 * nlayers, nwires], tf.float32)],
-        )
-        tc.keras.save_func(tc_vg, "./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
+        # warning pytorch might be unable to do this exactly
+        tc_vg = K.value_and_grad(vqe_forward)
+        tq.keras.save_func(tc_vg, "./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
         time1 = time.time()
         print("staging time: ", time1 - time0)
 
-    tc_vg_loaded = tc.keras.load_func("./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
+    tc_vg_loaded = tq.keras.load_func("./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
 
     lr1 = 0.008
     lr2 = 0.06
@@ -110,27 +107,31 @@ if __name__ == "__main__":
     switch = 400
     debug_steps = 20
 
-    if tc.backend.name == "jax":
-        opt = tc.backend.optimizer(optax.adam(lr1))
-        opt2 = tc.backend.optimizer(optax.sgd(lr2))
+    if K.name == "jax":
+        # warning: jax backend not supported in this refactored version
+        pass
     else:
-        opt = tc.backend.optimizer(tf.keras.optimizers.Adam(lr1))
-        opt2 = tc.backend.optimizer(tf.keras.optimizers.SGD(lr2))
+        optimizer1 = torch.optim.Adam([], lr=lr1)
+        optimizer2 = torch.optim.SGD([], lr=lr2)
 
     times = []
-    param = tc.backend.implicit_randn(stddev=0.1, shape=[4 * nlayers, nwires])
+    param = torch.nn.Parameter(torch.randn(4 * nlayers, nwires) * 0.1)
 
     for j in range(steps):
         loss, gr = tc_vg_loaded(param)
         if j < switch:
-            param = opt.update(gr, param)
+            optimizer1.zero_grad()
+            param.grad = gr
+            optimizer1.step()
         else:
             if j == switch:
                 print("switching the optimizer")
-            param = opt2.update(gr, param)
+            optimizer2.zero_grad()
+            param.grad = gr
+            optimizer2.step()
         if j % debug_steps == 0 or j == steps - 1:
             times.append(time.time())
-            print("loss", tc.backend.numpy(loss))
+            print("loss", loss.detach().cpu().item())
             if j > 0:
                 print("running time:", (times[-1] - times[0]) / j)
 

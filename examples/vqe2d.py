@@ -2,8 +2,8 @@
 VQE on 2D square lattice Heisenberg model with size n*m
 """
 
-import tensorflow as tf
-import tensorcircuit as tc
+import torch
+import tyxonq as tq
 
 # import cotengra as ctg
 
@@ -15,50 +15,55 @@ import tensorcircuit as tc
 #     max_repeats=4096,
 #     progbar=True,
 # )
-# tc.set_contractor("custom", optimizer=optr, preprocessing=True)
+# tq.set_contractor("custom", optimizer=optr, preprocessing=True)
 
-tc.set_dtype("complex64")
-tc.set_backend("tensorflow")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex64")
 
 
 n, m, nlayers = 3, 2, 2
-coord = tc.templates.graphs.Grid2DCoord(n, m)
+coord = tq.templates.graphs.Grid2DCoord(n, m)
 
 
 def singlet_init(circuit):  # assert n % 2 == 0
     nq = circuit._nqubits
     for i in range(0, nq - 1, 2):
         j = (i + 1) % nq
-        circuit.X(i)
-        circuit.H(i)
+        circuit.x(i)
+        circuit.h(i)
         circuit.cnot(i, j)
-        circuit.X(j)
+        circuit.x(j)
     return circuit
 
 
 def vqe_forward(param):
-    paramc = tc.backend.cast(param, dtype="complex64")
-    c = tc.Circuit(n * m)
+    paramc = K.cast(param, dtype="complex64")
+    c = tq.Circuit(n * m)
     c = singlet_init(c)
     for i in range(nlayers):
-        c = tc.templates.blocks.Grid2D_entangling(
-            c, coord, tc.gates._swap_matrix, paramc[i]
+        c = tq.templates.blocks.Grid2D_entangling(
+            c, coord, tq.gates._swap_matrix, paramc[i]
         )
-    loss = tc.templates.measurements.heisenberg_measurements(c, coord.lattice_graph())
+    loss = tq.templates.measurements.heisenberg_measurements(c, coord.lattice_graph())
     return loss
 
 
-vgf = tc.backend.jit(
-    tc.backend.value_and_grad(vqe_forward),
+# warning pytorch might be unable to do this exactly
+vgf = K.jit(
+    K.value_and_grad(vqe_forward),
 )
-param = tc.backend.implicit_randn(stddev=0.1, shape=[nlayers, 2 * n * m])
+param = torch.nn.Parameter(torch.randn(nlayers, 2 * n * m) * 0.1)
 
 
 if __name__ == "__main__":
-    lr = tf.keras.optimizers.schedules.ExponentialDecay(0.01, 100, 0.9)
-    opt = tc.backend.optimizer(tf.keras.optimizers.Adam(lr))
+    optimizer = torch.optim.Adam([param], lr=1e-2)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
     for j in range(1000):
         loss, gr = vgf(param)
-        param = opt.update(gr, param)
+        optimizer.zero_grad()
+        param.grad = gr
+        optimizer.step()
         if j % 50 == 0:
-            print("loss", loss.numpy())
+            print("loss", loss.detach().cpu().item())
+        if (j + 1) % 100 == 0:
+            scheduler.step()

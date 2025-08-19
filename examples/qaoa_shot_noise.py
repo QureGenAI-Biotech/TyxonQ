@@ -6,14 +6,14 @@ from functools import partial
 import numpy as np
 from scipy import optimize
 import networkx as nx
-import optax
+import torch
 import cotengra as ctg
-import tensorcircuit as tc
-from tensorcircuit import experimental as E
-from tensorcircuit.applications.graphdata import maxcut_solution_bruteforce
+import tyxonq as tq
+from tyxonq import experimental as E
+from tyxonq.applications.graphdata import maxcut_solution_bruteforce
 
-K = tc.set_backend("jax")
-# note this script only supports jax backend
+K = tq.set_backend("pytorch")
+# note this script only supports pytorch backend
 
 opt_ctg = ctg.ReusableHyperOptimizer(
     methods=["greedy", "kahypar"],
@@ -24,7 +24,7 @@ opt_ctg = ctg.ReusableHyperOptimizer(
     progbar=True,
 )
 
-tc.set_contractor("custom", optimizer=opt_ctg, preprocessing=True)
+tq.set_contractor("custom", optimizer=opt_ctg, preprocessing=True)
 
 
 def get_graph(n, d, weights=None):
@@ -61,11 +61,11 @@ def get_pauli_string(g):
 
 def generate_circuit(param, g, n, nlayers):
     # construct the circuit ansatz
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
-        c = tc.templates.blocks.QAOA_block(c, g, param[j, 0], param[j, 1])
+        c = tq.templates.blocks.QAOA_block(c, g, param[j, 0], param[j, 1])
     return c
 
 
@@ -78,9 +78,6 @@ def ps2z(psi):
     return zs
 
 
-rkey = K.get_random_state(42)
-
-
 def main_benchmark_suite(n, nlayers, d=3, init=None):
     g = get_graph(n, d, weights=np.random.uniform(size=[int(d * n / 2)]))
     loss_exact = get_exact_maxcut_loss(g)
@@ -89,27 +86,26 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
     if init is None:
         init = np.random.normal(scale=0.1, size=[nlayers, 2])
 
-    @partial(K.jit, static_argnums=(2))
-    def exp_val(param, key, shots=10000):
+    @partial(K.jit, static_argnums=(1))  # warning pytorch might be unable to do this exactly
+    def exp_val(param, shots=10000):
         # expectation with shot noise
         # ps, w: H = \sum_i w_i ps_i
         # describing the system Hamiltonian as a weighted sum of Pauli string
         c = generate_circuit(param, g, n, nlayers)
         loss = 0
         s = c.state()
-        mc = tc.quantum.measurement_counts(
+        mc = tq.quantum.measurement_counts(
             s,
             counts=shots,
             format="sample_bin",
-            random_generator=key,
             jittable=True,
             is_prob=False,
         )
         for ps, w in zip(pss, ws):
-            loss += w * tc.quantum.correlation_from_samples(ps2z(ps), mc, c._nqubits)
+            loss += w * tq.quantum.correlation_from_samples(ps2z(ps), mc, c._nqubits)
         return K.real(loss)
 
-    @K.jit
+    @K.jit  # warning pytorch might be unable to do this exactly
     def exp_val_analytical(param):
         c = generate_circuit(param, g, n, nlayers)
         loss = 0
@@ -119,8 +115,8 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     # 0. Exact result double check
 
-    hm = tc.quantum.PauliStringSum2COO(
-        K.convert_to_tensor(pss), K.convert_to_tensor(ws), numpy=True
+    hm = tq.quantum.PauliStringSum2COO(
+        tq.array_to_tensor(pss), tq.array_to_tensor(ws), numpy=True
     )
     hm = K.to_dense(hm)
     e, _ = np.linalg.eigh(hm)
@@ -130,7 +126,7 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     print("QAOA without shot noise")
 
-    exp_val_analytical_sp = tc.interfaces.scipy_interface(
+    exp_val_analytical_sp = tq.interfaces.scipy_interface(
         exp_val_analytical, shape=[nlayers, 2], gradient=False
     )
 
@@ -146,16 +142,16 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     # 1.2 QAOA with numerically exact expectation: gradient based
 
-    exponential_decay_scheduler = optax.exponential_decay(
-        init_value=1e-2, transition_steps=500, decay_rate=0.9
-    )
-    opt = K.optimizer(optax.adam(exponential_decay_scheduler))
-    param = init  # zeros stall the gradient
-    param = tc.array_to_tensor(init, dtype=tc.rdtypestr)
-    exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))
+    # warning: pytorch scheduler is different from optax
+    optimizer = torch.optim.Adam([torch.nn.Parameter(torch.tensor(init))], lr=1e-2)
+    param = tq.array_to_tensor(init, dtype=tq.rdtypestr)
+    exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))  # warning pytorch might be unable to do this exactly
     for i in range(1000):
         e, gs = exp_val_grad_analytical(param)
-        param = opt.update(gs, param)
+        # warning: pytorch optimizer usage is different
+        optimizer.zero_grad()
+        param.grad = gs
+        optimizer.step()
         if i % 100 == 99:
             print(e)
     print("QAOA energy after gradient descent:", e)
@@ -165,12 +161,9 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
     print("QAOA with shot noise")
 
     def exp_val_wrapper(param):
-        global rkey
-        rkey, skey = K.random_split(rkey)
-        # maintain stateless randomness in scipy optimize interface
-        return exp_val(param, skey)
+        return exp_val(param)
 
-    exp_val_sp = tc.interfaces.scipy_interface(
+    exp_val_sp = tq.interfaces.scipy_interface(
         exp_val_wrapper, shape=[nlayers, 2], gradient=False
     )
 
@@ -188,24 +181,22 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     # 2.2 QAOA with finite shot noise: gradient based
 
-    exponential_decay_scheduler = optax.exponential_decay(
-        init_value=1e-2, transition_steps=500, decay_rate=0.9
-    )
-    opt = K.optimizer(optax.adam(exponential_decay_scheduler))
-    param = tc.array_to_tensor(init, dtype=tc.rdtypestr)
+    # warning: pytorch scheduler is different from optax
+    optimizer = torch.optim.Adam([torch.nn.Parameter(torch.tensor(init))], lr=1e-2)
+    param = tq.array_to_tensor(init, dtype=tq.rdtypestr)
     exp_grad = E.parameter_shift_grad_v2(
-        exp_val, argnums=0, random_argnums=1, shifts=(0.001, 0.002)
+        exp_val, argnums=0, shifts=(0.001, 0.002)
     )
     # parameter shift doesn't directly apply in QAOA case
-    rkey = K.get_random_state(42)
 
     for i in range(1000):
-        rkey, skey = K.random_split(rkey)
-        gs = exp_grad(param, skey)
-        param = opt.update(gs, param)
+        gs = exp_grad(param)
+        # warning: pytorch optimizer usage is different
+        optimizer.zero_grad()
+        param.grad = gs
+        optimizer.step()
         if i % 100 == 99:
-            rkey, skey = K.random_split(rkey)
-            print(exp_val(param, skey))
+            print(exp_val(param))
 
     # the real energy position after optimization
 

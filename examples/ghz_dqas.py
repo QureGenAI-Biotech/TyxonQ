@@ -6,23 +6,23 @@ import sys
 
 sys.path.insert(0, "../")
 import numpy as np
-import tensorflow as tf
+import torch
 import cirq
 
-import tensorcircuit as tc
-from tensorcircuit.applications.vags import double_qubits_initial, GHZ_vag, GHZ_vag_tfq
-from tensorcircuit.applications.dqas import (
+import tyxonq as tq
+from tyxonq.applications.vags import double_qubits_initial, GHZ_vag, GHZ_vag_tfq
+from tyxonq.applications.dqas import (
     set_op_pool,
     get_preset,
     DQAS_search,
 )
 
-tc.set_backend("tensorflow")
+tq.set_backend("pytorch")
 
 
 def main_tn():
     """
-    DQAS with the tensorcircuit engine backend by TensorNetwork
+    DQAS with the tyxonq engine backend by TensorNetwork
     state preparation example
 
     :return:
@@ -32,13 +32,13 @@ def main_tn():
         ("ry", 0),
         ("ry", 1),
         ("ry", 2),
-        ("CNOT", 0, 1),
-        ("CNOT", 1, 0),
-        ("CNOT", 0, 2),
-        ("CNOT", 2, 0),
-        ("H", 0),
-        ("H", 1),
-        ("H", 2),
+        ("cnot", 0, 1),
+        ("cnot", 1, 0),
+        ("cnot", 0, 2),
+        ("cnot", 2, 0),
+        ("h", 0),
+        ("h", 1),
+        ("h", 2),
     ]
     set_op_pool(ghz_pool)
     c = len(ghz_pool)
@@ -51,15 +51,15 @@ def main_tn():
         verbose=True,
         parallel_num=0,
         nnp_initial_value=np.zeros([p, c]),
-        structure_opt=tf.keras.optimizers.Adam(learning_rate=0.15),
+        structure_opt=torch.optim.Adam([torch.nn.Parameter(torch.zeros([p, c]))], lr=0.15),
     )
-    preset = get_preset(stp).numpy()
+    preset = get_preset(stp).detach().cpu().numpy()
     GHZ_vag(None, nnp, preset, verbose=True)
 
 
 def main_tfq():
     """
-    DQAS with the tensorflow quantum engine.
+    DQAS with the pytorch quantum engine.
     Unitary learning example.
 
     :return:
@@ -84,9 +84,9 @@ def main_tfq():
         verbose=False,
         parallel_num=0,
         nnp_initial_value=np.zeros([p, c]),
-        structure_opt=tf.keras.optimizers.Adam(learning_rate=0.15),
+        structure_opt=torch.optim.Adam([torch.nn.Parameter(torch.zeros([p, c]))], lr=0.15),
     )
-    preset = get_preset(stp).numpy()
+    preset = get_preset(stp).detach().cpu().numpy()
     GHZ_vag_tfq(double_qubits_initial().send(None), nnp, preset, verbose=True)
 
 

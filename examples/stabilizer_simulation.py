@@ -1,14 +1,14 @@
 import numpy as np
 import stim
 
-import tensorcircuit as tc
+import tyxonq as tq
 
 np.random.seed(0)
 
-tc.set_dtype("complex128")
+tq.set_dtype("complex128")
 
-clifford_one_qubit_gates = ["H", "X", "Y", "Z", "S"]
-clifford_two_qubit_gates = ["CNOT"]
+clifford_one_qubit_gates = ["h", "x", "y", "z", "s"]
+clifford_two_qubit_gates = ["cnot"]
 clifford_gates = clifford_one_qubit_gates + clifford_two_qubit_gates
 
 
@@ -21,7 +21,7 @@ def genpair(num_qubits, count):
 
 
 def random_clifford_circuit_with_mid_measurement(num_qubits, depth):
-    c = tc.Circuit(num_qubits)
+    c = tq.Circuit(num_qubits)
     operation_list = []
     for _ in range(depth):
         for j, k in genpair(num_qubits, 2):
@@ -30,7 +30,7 @@ def random_clifford_circuit_with_mid_measurement(num_qubits, depth):
         for j in range(num_qubits):
             gate_name = np.random.choice(clifford_one_qubit_gates)
             getattr(c, gate_name)(j)
-            operation_list.append((gate_name, (j,)))
+            operation_list.append((gate_name.upper(), (j,)))
         if np.random.uniform() < 0.2:
             measured_qubit = np.random.randint(0, num_qubits - 1)
             sample, p = c.measure_reference(measured_qubit, with_prob=True)
@@ -124,10 +124,10 @@ if __name__ == "__main__":
     # index list that is traced out to calculate the entanglement entropy
     cut = [i for i in range(num_qubits // 3)]
 
-    tc_circuit, op_list = random_clifford_circuit_with_mid_measurement(
+    tq_circuit, op_list = random_clifford_circuit_with_mid_measurement(
         num_qubits, depth
     )
-    print(tc_circuit.draw(output="text"))
+    print(tq_circuit.draw(output="text"))
 
     stim_circuit = convert_operation_list_to_stim_circuit(op_list)
 
@@ -139,13 +139,13 @@ if __name__ == "__main__":
     stim_entropy = (gf2_rank(cur_matrix.tolist()) - len(cut)) * np.log(2)
     print("Stim Entanglement Entropy:", stim_entropy)
 
-    # Entanglement entropy calculation using TensorCircuit
-    state_vector = tc_circuit.wavefunction()
+    # Entanglement entropy calculation using TyxonQ
+    state_vector = tq_circuit.wavefunction()
     assert np.linalg.norm(state_vector) > 0
     # Normalize the state vector because mid-measurement operation is not unitary
     state_vector /= np.linalg.norm(state_vector)
-    tc_entropy = tc.quantum.entanglement_entropy(state_vector, cut)
-    print("TensorCircuit Entanglement Entropy:", tc_entropy)
+    tq_entropy = tq.quantum.entanglement_entropy(state_vector, cut)
+    print("TyxonQ Entanglement Entropy:", tq_entropy)
 
     # Check if the entanglement entropies are close
-    np.testing.assert_allclose(stim_entropy, tc_entropy, atol=1e-8)
+    np.testing.assert_allclose(stim_entropy, tq_entropy, atol=1e-8)

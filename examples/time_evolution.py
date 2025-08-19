@@ -6,26 +6,26 @@ import time
 from functools import partial
 import numpy as np
 from scipy.integrate import solve_ivp
-import tensorcircuit as tc
-from tensorcircuit.experimental import hamiltonian_evol
+import tyxonq as tq
+from tyxonq.experimental import hamiltonian_evol
 
-K = tc.set_backend("jax")
-tc.set_dtype("complex128")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex128")
 
 
 @partial(K.jit, static_argnums=1)
 def total_z(psi, N):
     return K.real(
-        K.sum(K.stack([tc.expectation([tc.gates.z(), i], ket=psi) for i in range(N)]))
+        K.sum(K.stack([tq.expectation([tq.gates.z(), i], ket=psi) for i in range(N)]))
     )
 
 
-@K.jit
+@K.jit  # warning pytorch might be unable to do this exactly
 def naive_evol(t, h, psi0):
     return K.reshape(K.expm(-1j * t * h) @ K.reshape(psi0, [-1, 1]), [-1])
 
 
-@K.jit
+@K.jit  # warning pytorch might be unable to do this exactly
 def hpsi(h, y):
     return K.reshape(-1.0j * h @ K.reshape(y, [-1, 1]), [-1])
 
@@ -33,9 +33,9 @@ def hpsi(h, y):
 def main(N):
     psi0 = np.zeros([2**N])
     psi0[0] = 1
-    psi0 = tc.array_to_tensor(psi0)
-    g = tc.templates.graphs.Line1D(N, pbc=False)
-    h = tc.quantum.heisenberg_hamiltonian(g, hzz=1, hxx=0, hyy=0, hx=1, sparse=False)
+    psi0 = tq.array_to_tensor(psi0)
+    g = tq.templates.graphs.Line1D(N, pbc=False)
+    h = tq.quantum.heisenberg_hamiltonian(g, hzz=1, hxx=0, hyy=0, hx=1, sparse=False)
     tlist = K.arange(0, 3, 0.1)
     time0 = time.time()
     for t in tlist:
@@ -48,7 +48,7 @@ def main(N):
     time2 = time.time()
 
     def fun(t, y):
-        y = tc.array_to_tensor(y)
+        y = tq.array_to_tensor(y)
         return K.numpy(hpsi(h, y))
 
     r = solve_ivp(

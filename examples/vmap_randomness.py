@@ -2,51 +2,26 @@
 Interplay between jit, vmap, randomness and backend
 """
 
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("tensorflow")
+K = tq.set_backend("pytorch")
 n = 10
 batch = 100
 
-print("tensorflow backend")
-# has serialization issue for random generation
+print("pytorch backend")
 
 
-@K.jit
-def f(a, key):
-    return a + K.stateful_randn(key, [n])
+@K.jit  # warning pytorch might be unable to do this exactly
+def f(a):
+    return a + tq.backend.randn([n])
 
 
-vf = K.jit(K.vmap(f))
+vf = K.jit(K.vmap(f))  # warning pytorch might be unable to do this exactly
 
-key = K.get_random_state(42)
+from tyxonq import utils
 
-r, _, _ = tc.utils.benchmark(f, K.ones([n], dtype="float32"), key)
+r, _, _ = utils.benchmark(f, K.ones([n], dtype="float32"))
 print(r)
 
-r, _, _ = tc.utils.benchmark(vf, K.ones([batch, n], dtype="float32"), key)
-print(r[:2])
-
-
-K = tc.set_backend("jax")
-
-print("jax backend")
-
-
-@K.jit
-def f2(a, key):
-    return a + K.stateful_randn(key, [n])
-
-
-vf2 = K.jit(K.vmap(f2, vectorized_argnums=(0, 1)))
-
-
-key = K.get_random_state(42)
-
-r, _, _ = tc.utils.benchmark(f2, K.ones([n], dtype="float32"), key)
-print(r)
-
-keys = K.stack([K.get_random_state(i) for i in range(batch)])
-
-r, _, _ = tc.utils.benchmark(vf2, K.ones([batch, n], dtype="float32"), keys)
+r, _, _ = utils.benchmark(vf, K.ones([batch, n], dtype="float32"))
 print(r[:2])

@@ -6,12 +6,12 @@ Optimization for performance comparison for different densities of two-qubit gat
 import sys
 
 sys.path.insert(0, "../")
-import tensorflow as tf
+import torch
 import numpy as np
 import cotengra as ctg
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("tensorflow")
+K = tq.set_backend("pytorch")
 optr = ctg.ReusableHyperOptimizer(
     methods=["greedy"],
     parallel=True,
@@ -20,17 +20,17 @@ optr = ctg.ReusableHyperOptimizer(
     max_repeats=512,
     progbar=True,
 )
-tc.set_contractor("custom", optimizer=optr, preprocessing=True)
+tq.set_contractor("custom", optimizer=optr, preprocessing=True)
 
 eye4 = K.eye(4)
-cnot = tc.array_to_tensor(tc.gates._cnot_matrix)
+cnot = tq.array_to_tensor(tq.gates._cnot_matrix)
 
 
 def energy_p(params, p, seed, n, nlayers):
-    g = tc.templates.graphs.Line1D(n)
-    c = tc.Circuit(n)
+    g = tq.templates.graphs.Line1D(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for i in range(nlayers):
         for k in range(n):
             c.ry(k, theta=params[2 * i, k])
@@ -45,12 +45,13 @@ def energy_p(params, p, seed, n, nlayers):
                 status=seed[i, k],
             )
 
-    e = tc.templates.measurements.heisenberg_measurements(
+    e = tq.templates.measurements.heisenberg_measurements(
         c, g, hzz=1, hxx=0, hyy=0, hx=-1, hy=0, hz=0
     )  # TFIM energy from expectation of circuit c defined on lattice given by g
     return e
 
 
+# warning pytorch might be unable to do this exactly
 vagf = K.jit(
     K.vectorized_value_and_grad(energy_p, argnums=0, vectorized_argnums=(0, 2)),
     static_argnums=(3, 4),
@@ -70,12 +71,16 @@ if __name__ == "__main__":
         energy_sublist = []
         params = K.implicit_randn(shape=[sample, 3 * nlayers, n])
         seeds = K.implicit_randu(shape=[sample, nlayers, n // 2])
-        opt = tc.backend.optimizer(tf.keras.optimizers.Adam(2e-3))
+        # warning: pytorch optimizer is different from tensorflow
+        optimizer = torch.optim.Adam([torch.nn.Parameter(params)], lr=2e-3)
         for i in range(nsteps):
             p = (n * nlayers) ** (a - 1)
-            p = tc.array_to_tensor(p, dtype="float32")
+            p = tq.array_to_tensor(p, dtype="float32")
             e, grads = vagf(params, p, seeds, n, nlayers)
-            params = opt.update(grads, params)
+            # warning: pytorch optimizer usage is different
+            optimizer.zero_grad()
+            params.grad = grads
+            optimizer.step()
             if i % 50 == 0 and debug:
                 print(a, i, e)
         energy_list.append(K.numpy(e))

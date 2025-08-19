@@ -3,19 +3,19 @@ DQAS-style optimization for discrete Clifford type circuit
 """
 
 import numpy as np
-import tensorflow as tf
+import torch
 
-import tensorcircuit as tc
+import tyxonq as tq
 
-ctype, rtype = tc.set_dtype("complex64")
-K = tc.set_backend("tensorflow")
+ctype, rtype = tq.set_dtype("complex64")
+K = tq.set_backend("pytorch")
 
 n = 6
 nlayers = 6
 
 
 def ansatz(structureo, structuret, preprocess="direct"):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     if preprocess == "softmax":
         structureo = K.softmax(structureo, axis=-1)
         structuret = K.softmax(structuret, axis=-1)
@@ -28,30 +28,30 @@ def ansatz(structureo, structuret, preprocess="direct"):
     structureo = K.cast(structureo, ctype)
     structuret = K.cast(structuret, ctype)
 
-    structureo = tf.reshape(structureo, shape=[nlayers, n, 7])
-    structuret = tf.reshape(structuret, shape=[nlayers, n, 3])
+    structureo = torch.reshape(structureo, shape=[nlayers, n, 7])
+    structuret = torch.reshape(structuret, shape=[nlayers, n, 3])
 
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for i in range(n):
             c.unitary(
                 i,
-                unitary=structureo[j, i, 0] * tc.gates.i().tensor
-                + structureo[j, i, 1] * tc.gates.x().tensor
-                + structureo[j, i, 2] * tc.gates.y().tensor
-                + structureo[j, i, 3] * tc.gates.z().tensor
-                + structureo[j, i, 4] * tc.gates.h().tensor
-                + structureo[j, i, 5] * tc.gates.s().tensor
-                + structureo[j, i, 6] * tc.gates.sd().tensor,
+                unitary=structureo[j, i, 0] * tq.gates.i().tensor
+                + structureo[j, i, 1] * tq.gates.x().tensor
+                + structureo[j, i, 2] * tq.gates.y().tensor
+                + structureo[j, i, 3] * tq.gates.z().tensor
+                + structureo[j, i, 4] * tq.gates.h().tensor
+                + structureo[j, i, 5] * tq.gates.s().tensor
+                + structureo[j, i, 6] * tq.gates.sd().tensor,
             )
         for i in range(n - 1):
             c.unitary(
                 i,
                 i + 1,
-                unitary=structuret[j, i, 0] * tc.gates.ii().tensor
-                + structuret[j, i, 1] * tc.gates.cnot().tensor
-                + structuret[j, i, 2] * tc.gates.cz().tensor,
+                unitary=structuret[j, i, 0] * tq.gates.ii().tensor
+                + structuret[j, i, 1] * tq.gates.cnot().tensor
+                + structuret[j, i, 2] * tq.gates.cz().tensor,
             )
     # loss = K.real(
     #     sum(
@@ -60,7 +60,7 @@ def ansatz(structureo, structuret, preprocess="direct"):
     #     )
     # )
     s = c.state()
-    loss = -K.real(tc.quantum.entropy(tc.quantum.reduced_density_matrix(s, cut=n // 2)))
+    loss = -K.real(tq.quantum.entropy(tq.quantum.reduced_density_matrix(s, cut=n // 2)))
     return loss
 
 
@@ -77,6 +77,7 @@ def sampling_from_structure(structures, batch=1):
     return r.transpose()
 
 
+# warning pytorch might be unable to do this exactly
 @K.jit
 def best_from_structure(structures):
     return K.argmax(structures, axis=-1)
@@ -89,22 +90,21 @@ def nmf_gradient(structures, oh):
     choice = K.argmax(oh, axis=-1)
     prob = K.softmax(K.real(structures), axis=-1)
     indices = K.transpose(
-        K.stack([K.cast(tf.range(structures.shape[0]), "int64"), choice])
+        K.stack([K.cast(torch.arange(structures.shape[0]), "int64"), choice])
     )
-    prob = tf.gather_nd(prob, indices)
+    prob = torch.gather(prob, 0, indices.unsqueeze(0)).squeeze(0)
     prob = K.reshape(prob, [-1, 1])
     prob = K.tile(prob, [1, structures.shape[-1]])
 
-    return K.real(
-        tf.tensor_scatter_nd_add(
-            tf.cast(-prob, dtype=ctype),
-            indices,
-            tf.ones([structures.shape[0]], dtype=ctype),
-        )
-    )
+    # warning pytorch might be unable to do this exactly
+    result = torch.zeros_like(structures, dtype=ctype)
+    result.scatter_add_(0, indices, torch.ones([structures.shape[0]], dtype=ctype))
+    return K.real(result - prob)
 
 
+# warning pytorch might be unable to do this exactly
 nmf_gradient_vmap = K.jit(K.vmap(nmf_gradient, vectorized_argnums=1))
+# warning pytorch might be unable to do this exactly
 vf = K.jit(K.vmap(ansatz, vectorized_argnums=(0, 1)), static_argnums=2)
 
 
@@ -112,8 +112,8 @@ def main(stddev=0.05, lr=None, epochs=2000, debug_step=50, batch=256, verbose=Fa
     so = K.implicit_randn([nlayers * n, 7], stddev=stddev)
     st = K.implicit_randn([nlayers * n, 3], stddev=stddev)
     if lr is None:
-        lr = tf.keras.optimizers.schedules.ExponentialDecay(0.06, 1000, 0.5)
-    structure_opt = tc.backend.optimizer(tf.keras.optimizers.Adam(lr))
+        lr = 0.06  # Simplified learning rate
+    structure_opt = torch.optim.Adam([so, st], lr=lr)
 
     avcost = 0
     avcost2 = 0
@@ -135,23 +135,28 @@ def main(stddev=0.05, lr=None, epochs=2000, debug_step=50, batch=256, verbose=Fa
 
         # go = [(vs[i] - avcost2) * go[i] for i in range(batch)]
         # gt = [(vs[i] - avcost2) * gt[i] for i in range(batch)]
-        # go = tf.math.reduce_mean(go, axis=0)
-        # gt = tf.math.reduce_mean(gt, axis=0)
+        # go = torch.math.reduce_mean(go, axis=0)
+        # gt = torch.math.reduce_mean(gt, axis=0)
         avcost2 = avcost
 
-        [so, st] = structure_opt.update([go, gt], [so, st])
+        # Update parameters using PyTorch optimizer
+        structure_opt.zero_grad()
+        so.grad = go
+        st.grad = gt
+        structure_opt.step()
+        
         # so -= K.reshape(K.mean(so, axis=-1), [-1, 1])
         # st -= K.reshape(K.mean(st, axis=-1), [-1, 1])
         if epoch % debug_step == 0 or epoch == epochs - 1:
             print("----------epoch %s-----------" % epoch)
             print(
                 "batched average loss: ",
-                np.mean(vs),
+                np.mean(vs.detach().cpu().numpy()),
                 "minimum candidate loss: ",
-                np.min(vs),
+                np.min(vs.detach().cpu().numpy()),
             )
-            minp1 = tf.math.reduce_min(tf.math.reduce_max(tf.math.softmax(st), axis=-1))
-            minp2 = tf.math.reduce_min(tf.math.reduce_max(tf.math.softmax(so), axis=-1))
+            minp1 = torch.min(torch.max(torch.softmax(st, dim=-1), dim=-1)[0])
+            minp2 = torch.min(torch.max(torch.softmax(so, dim=-1), dim=-1)[0])
             if minp1 > 0.3 and minp2 > 0.6:
                 print("probability converged")
                 break
@@ -161,9 +166,9 @@ def main(stddev=0.05, lr=None, epochs=2000, debug_step=50, batch=256, verbose=Fa
                 print(st)
                 print(
                     "strcuture parameter: \n",
-                    so.numpy(),
+                    so.detach().cpu().numpy(),
                     "\n",
-                    st.numpy(),
+                    st.detach().cpu().numpy(),
                 )
 
             cand_preseto = best_from_structure(so)

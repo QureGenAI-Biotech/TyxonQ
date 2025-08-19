@@ -11,37 +11,38 @@ import sys
 sys.path.insert(0, "../")
 
 from tqdm import tqdm
-import jax
-import tensorcircuit as tc
+import torch
+import tyxonq as tq
 
-tc.set_backend("jax")
+K = tq.set_backend("pytorch")
 
 n = 5
 nlayer = 3
 mctries = 100  # 100000
 
-print(jax.devices())
+print(torch.cuda.device_count())
 
 
 def template(c):
     # dont jit me!
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for i in range(n):
-        c.rz(i, theta=tc.num_to_tensor(i))
+        c.rz(i, theta=tq.num_to_tensor(i))
     for _ in range(nlayer):
         for i in range(n - 1):
             c.cnot(i, i + 1)
         for i in range(n):
-            c.rx(i, theta=tc.num_to_tensor(i))
+            c.rx(i, theta=tq.num_to_tensor(i))
         for i in range(n):
-            c.apply_general_kraus(tc.channels.phasedampingchannel(0.15), i)
+            c.apply_general_kraus(tq.channels.phasedampingchannel(0.15), i)
     return c.state()
 
 
-@tc.backend.jit
+# warning pytorch might be unable to do this exactly
+@K.jit
 def answer():
-    c = tc.DMCircuit2(n)
+    c = tq.DMCircuit2(n)
     return template(c)
 
 
@@ -50,31 +51,31 @@ rho0 = answer()
 print(rho0)
 
 
-@tc.backend.jit
-def f(key):
-    if key is not None:
-        tc.backend.set_random_state(key)
-    c = tc.Circuit(n)
+# warning pytorch might be unable to do this exactly
+@K.jit
+def f(seed):
+    if seed is not None:
+        torch.manual_seed(seed)
+    c = tq.Circuit(n)
     return template(c)
 
 
-key = jax.random.PRNGKey(42)
-f(key).block_until_ready()  # build the graph
+seed = 42
+f(seed)  # build the graph
 
 rho = 0.0
 
 for i in tqdm(range(mctries)):
-    key, subkey = jax.random.split(key)
-    psi = f(subkey)  # [1, 2**n]
+    psi = f(seed + i)  # [1, 2**n]
     rho += (
         1
         / mctries
-        * tc.backend.reshape(psi, [-1, 1])
-        @ tc.backend.conj(tc.backend.reshape(psi, [1, -1]))
+        * K.reshape(psi, [-1, 1])
+        @ K.conj(K.reshape(psi, [1, -1]))
     )
 
 print(rho)
-print("difference\n", tc.backend.abs(rho - rho0))
-print("difference in total\n", tc.backend.sum(tc.backend.abs(rho - rho0)))
-print("fidelity", tc.quantum.fidelity(rho, rho0))
-print("trace distance", tc.quantum.trace_distance(rho, rho0))
+print("difference\n", K.abs(rho - rho0))
+print("difference in total\n", K.sum(K.abs(rho - rho0)))
+print("fidelity", tq.quantum.fidelity(rho, rho0))
+print("trace distance", tq.quantum.trace_distance(rho, rho0))

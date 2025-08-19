@@ -4,8 +4,7 @@ Time comparison for different evaluation approach on molecule VQE
 
 import os
 
-os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
-# one need this for jax+gpu combination in some cases
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 import time
 import numpy as np
 from openfermion.chem import MolecularData
@@ -19,9 +18,9 @@ from openfermion.chem import geometry_from_pubchem
 from openfermion.utils import up_then_down
 from openfermionpyscf import run_pyscf
 
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("tensorflow")
+K = tq.set_backend("pytorch")
 
 
 n = 12
@@ -36,18 +35,18 @@ molecule = run_pyscf(molecule, run_mp2=True, run_cisd=True, run_ccsd=True, run_f
 mh = molecule.get_molecular_hamiltonian()
 fh = get_fermion_operator(mh)
 b = binary_code_transform(reorder(fh, up_then_down), 2 * checksum_code(7, 1))
-lsb, wb = tc.templates.chems.get_ps(b, 12)
+lsb, wb = tq.templates.chems.get_ps(b, 12)
 print("%s terms in H2O qubit Hamiltonian" % len(wb))
-mb = tc.quantum.PauliStringSum2COO_numpy(lsb, wb)
+mb = tq.quantum.PauliStringSum2COO_numpy(lsb, wb)
 mbd = mb.todense()
 mb = K.coo_sparse_matrix(
     np.transpose(np.stack([mb.row, mb.col])), mb.data, shape=(2**n, 2**n)
 )
-mbd = tc.array_to_tensor(mbd)
+mbd = tq.array_to_tensor(mbd)
 
 
 def ansatz(param):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]:
         c.X(i)
     for j in range(nlayers):
@@ -85,11 +84,11 @@ def vqe1(param):
         obs = []
         for i, p in enumerate(ps):
             if p == 1:
-                obs.append([tc.gates.x(), [i]])
+                obs.append([tq.gates.x(), [i]])
             elif p == 2:
-                obs.append([tc.gates.y(), [i]])
+                obs.append([tq.gates.y(), [i]])
             elif p == 3:
-                obs.append([tc.gates.z(), [i]])
+                obs.append([tq.gates.z(), [i]])
 
         loss += w * c.expectation(*obs)
     return K.real(loss)
@@ -99,15 +98,16 @@ def vqe1(param):
 
 
 def measurement(s, structure):
-    c = tc.Circuit(n, inputs=s)
-    return tc.templates.measurements.parameterized_measurements(
+    c = tq.Circuit(n, inputs=s)
+    return tq.templates.measurements.parameterized_measurements(
         c, structure, onehot=True
     )
 
 
+# warning pytorch might be unable to do this exactly
 measurement = K.jit(K.vmap(measurement, vectorized_argnums=1))
-structures = tc.array_to_tensor(lsb)
-weights = tc.array_to_tensor(wb, dtype="float32")
+structures = tq.array_to_tensor(lsb)
+weights = tq.array_to_tensor(wb, dtype="float32")
 
 
 def vqe2(param):
@@ -122,7 +122,7 @@ def vqe2(param):
 
 def vqe3(param):
     c = ansatz(param)
-    return tc.templates.measurements.operator_expectation(c, mbd)
+    return tq.templates.measurements.operator_expectation(c, mbd)
 
 
 # 4. sparse matrix
@@ -130,7 +130,7 @@ def vqe3(param):
 
 def vqe4(param):
     c = ansatz(param)
-    return tc.templates.measurements.operator_expectation(c, mb)
+    return tq.templates.measurements.operator_expectation(c, mb)
 
 
 # 5. mpo (ommited, since it is not that applicable for molecule/long range Hamiltonian
@@ -152,7 +152,11 @@ if __name__ == "__main__":
         r1, _ = benchmark(vqef[i], tries=tries[i])
         # plain approach takes too long to jit
         if r0 is not None:
-            np.testing.assert_allclose(r0[0], r1[0], atol=1e-5)
-            np.testing.assert_allclose(r0[1], r1[1], atol=1e-5)
+            a0 = r0[0].detach().cpu().numpy()
+            a1 = r1[0].detach().cpu().numpy()
+            b0 = r0[1].detach().cpu().numpy()
+            b1 = r1[1].detach().cpu().numpy()
+            np.testing.assert_allclose(a0, a1, atol=1e-5)
+            np.testing.assert_allclose(b0, b1, atol=1e-5)
         r0 = r1
         print("------------------")

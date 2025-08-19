@@ -15,10 +15,10 @@ import tempfile
 import subprocess
 import cotengra as ctg
 from omeinsum_treesa_optimizer import OMEinsumTreeSAOptimizer
-import tensorcircuit as tc
+import tyxonq as tq
 
 sys.setrecursionlimit(10000)
-tc.set_backend("tensorflow")
+tq.set_backend("pytorch")
 
 
 class OMEinsumTreeSAOptimizerSubprocess(OMEinsumTreeSAOptimizer):
@@ -114,7 +114,7 @@ class OMEinsumTreeSAOptimizerSubprocess(OMEinsumTreeSAOptimizer):
 if __name__ == "__main__":
     # For more random circuits, please refer to
     # https://datadryad.org/stash/dataset/doi:10.5061/dryad.k6t1rj8
-    c = tc.Circuit.from_qsim_file("circuit_n12_m14_s0_e0_pEFGH.qsim")
+    c = tq.Circuit.from_qsim_file("circuit_n12_m14_s0_e0_pEFGH.qsim")
 
     opt = ctg.ReusableHyperOptimizer(
         methods=["greedy", "kahypar"],
@@ -124,7 +124,7 @@ if __name__ == "__main__":
         progbar=False,
     )
     print("cotengra contractor")
-    tc.set_contractor(
+    tq.set_contractor(
         "custom",
         optimizer=opt,
         preprocessing=True,
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     opt_treesa = OMEinsumTreeSAOptimizerSubprocess(
         sc_target=30, sc_weight=0.0, rw_weight=0.0
     )
-    tc.set_contractor(
+    tq.set_contractor(
         "custom",
         optimizer=opt_treesa,
         preprocessing=True,
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     opt_treesa = OMEinsumTreeSAOptimizerSubprocess(
         sc_target=30, sc_weight=0.0, rw_weight=0.0, kahypar_init=True
     )
-    tc.set_contractor(
+    tq.set_contractor(
         "custom",
         optimizer=opt_treesa,
         preprocessing=True,

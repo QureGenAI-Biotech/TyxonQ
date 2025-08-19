@@ -12,16 +12,16 @@ from collections import namedtuple
 from pickle import dump
 from matplotlib import pyplot as plt
 import numpy as np
-import tensorflow as tf
-import tensorcircuit as tc
-from tensorcircuit.applications.dqas import *
-from tensorcircuit.applications.vags import *
-from tensorcircuit.applications.layers import *
-from tensorcircuit.applications.graphdata import regular_graph_generator
+import torch
+import tyxonq as tq
+from tyxonq.applications.dqas import *
+from tyxonq.applications.vags import *
+from tyxonq.applications.layers import *
+from tyxonq.applications.graphdata import regular_graph_generator
 
 # qaoa_block_vag_energy = partial(qaoa_block_vag, f=(_identity, _neg))
 
-tc.set_backend("tensorflow")
+tq.set_backend("pytorch")
 
 
 def main_layerwise_encoding():
@@ -30,27 +30,28 @@ def main_layerwise_encoding():
 
     def noise():
         n = np.random.normal(loc=0.0, scale=0.002, size=[p, c])
-        return tf.constant(n, dtype=tf.float32)
+        return torch.tensor(n, dtype=torch.float32)
 
     def penalty_gradient(stp, nnp, lbd=0.15, lbd2=0.01):
         c = stp.shape[1]
         p = stp.shape[0]
-        cost = tf.constant(
-            [1.0, 1.0, 1.0, 1.0, 27 / 2 * 2.0, 27 / 2 * 2.0, 15 / 2.0], dtype=tf.float32
+        cost = torch.tensor(
+            [1.0, 1.0, 1.0, 1.0, 27 / 2 * 2.0, 27 / 2 * 2.0, 15 / 2.0], dtype=torch.float32
         )
-        with tf.GradientTape() as t:
-            prob = tf.math.exp(stp) / tf.tile(
-                tf.math.reduce_sum(tf.math.exp(stp), axis=1)[:, tf.newaxis], [1, c]
-            )
-            penalty = 0.0
-            for i in range(p - 1):
-                penalty += lbd * tf.tensordot(prob[i], prob[i + 1], 1)
-                penalty += lbd2 * tf.tensordot(cost, prob[i], [0, 0])
-            penalty += lbd2 * tf.tensordot(cost, prob[p - 1], [0, 0])
-            penalty_g = t.gradient(penalty, stp)
+        stp.requires_grad_(True)
+        prob = torch.exp(stp) / torch.sum(torch.exp(stp), dim=1, keepdim=True)
+        penalty = 0.0
+        for i in range(p - 1):
+            penalty += lbd * torch.tensordot(prob[i], prob[i + 1], dims=1)
+            penalty += lbd2 * torch.tensordot(cost, prob[i], dims=1)
+        penalty += lbd2 * torch.tensordot(cost, prob[p - 1], dims=1)
+        penalty.backward()
+        penalty_g = stp.grad.clone()
+        stp.grad.zero_()
         return penalty_g
 
-    learning_rate_sch = tf.keras.optimizers.schedules.InverseTimeDecay(0.12, 1, 0.01)
+    # warning: pytorch scheduler is different from tensorflow
+    learning_rate_sch = 0.12
 
     DQAS_search(
         qaoa_vag_energy,
@@ -64,9 +65,9 @@ def main_layerwise_encoding():
         pertubation_func=noise,
         nnp_initial_value=np.random.normal(loc=0.23, scale=0.06, size=[p, c]),
         stp_regularization=penalty_gradient,
-        network_opt=tf.keras.optimizers.Adam(learning_rate=0.03),
-        prethermal_opt=tf.keras.optimizers.Adam(learning_rate=0.04),
-        structure_opt=tf.keras.optimizers.SGD(learning_rate=learning_rate_sch),
+        network_opt=torch.optim.Adam([], lr=0.03),
+        prethermal_opt=torch.optim.Adam([], lr=0.04),
+        structure_opt=torch.optim.SGD([], lr=learning_rate_sch),
     )
 
 
@@ -74,20 +75,21 @@ result = namedtuple("result", ["epoch", "cand", "loss"])
 
 
 def main_block_encoding():
-    learning_rate_sch = tf.keras.optimizers.schedules.InverseTimeDecay(0.3, 1, 0.01)
+    # warning: pytorch scheduler is different from tensorflow
+    learning_rate_sch = 0.3
     p = 6
     c = 8
 
     def record():
         return result(
-            get_var("epoch"), get_var("cand_preset_repr"), get_var("avcost1").numpy()
+            get_var("epoch"), get_var("cand_preset_repr"), get_var("avcost1").detach().cpu().item()
         )
 
     def noise():
         # p = 6
         # c = 6
         n = np.random.normal(loc=0.0, scale=0.2, size=[2 * p, c])
-        return tf.constant(n, dtype=tf.float32)
+        return torch.tensor(n, dtype=torch.float32)
 
     stp, nnp, h = DQAS_search(
         qaoa_block_vag_energy,
@@ -101,13 +103,13 @@ def main_block_encoding():
         p=p,
         history_func=record,
         nnp_initial_value=np.random.normal(loc=0.23, scale=0.06, size=[2 * p, c]),
-        network_opt=tf.keras.optimizers.Adam(learning_rate=0.04),
-        prethermal_opt=tf.keras.optimizers.Adam(learning_rate=0.04),
-        structure_opt=tf.keras.optimizers.SGD(learning_rate=learning_rate_sch),
+        network_opt=torch.optim.Adam([], lr=0.04),
+        prethermal_opt=torch.optim.Adam([], lr=0.04),
+        structure_opt=torch.optim.SGD([], lr=learning_rate_sch),
     )
 
     with open("qaoa_block.result", "wb") as f:
-        dump([stp.numpy(), nnp.numpy(), h], f)
+        dump([stp.detach().cpu().numpy(), nnp.detach().cpu().numpy(), h], f)
 
     epochs = np.arange(len(h))
     data = np.array([r.loss for r in h])

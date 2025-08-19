@@ -1,4 +1,4 @@
-// Extended gate set supported in TensorCircuit with OpenQASM3.0 stdgate
+// Extended gate set supported in TyxonQ with OpenQASM3.0 stdgate
 
 // OpenQASM 3 standard gate library
 
@@ -78,7 +78,7 @@ gate u3(θ, φ, λ) q { gphase(-(φ+λ)/2); U(θ, φ, λ) q; }
 
 
 
-// Extended gate set for TensorCircuit
+// Extended gate set for TyxonQ
 // Implemented by @refraction-ray
 
 // Aliases

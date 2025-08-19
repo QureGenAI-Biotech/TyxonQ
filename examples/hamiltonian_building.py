@@ -4,83 +4,82 @@ benchmark sparse hamiltonian building
 
 import time
 
-import jax
+import torch
 import numpy as np
 import quimb
 import scipy
-import tensorflow as tf
 
-import tensorcircuit as tc
+import tyxonq as tq
 
-tc.set_dtype("complex128")
+tq.set_dtype("complex128")
 
 nwires = 20
 
 print("--------------------")
 
-# 1.1 tc approach for TFIM (numpy backend)
+# 1.1 tq approach for TFIM (numpy backend)
 
-tc.set_backend("numpy")
-print("hamiltonian building with tc (numpy backend)")
+tq.set_backend("numpy")
+print("hamiltonian building with tq (numpy backend)")
 print("numpy version: ", np.__version__)
 print("scipy version: ", scipy.__version__)
 
-g = tc.templates.graphs.Line1D(nwires, pbc=False)
+g = tq.templates.graphs.Line1D(nwires, pbc=False)
 time0 = time.perf_counter()
-h11 = tc.quantum.heisenberg_hamiltonian(
+h11 = tq.quantum.heisenberg_hamiltonian(
     g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True, numpy=True
 )
 time1 = time.perf_counter()
 
-print("tc (numpy) time: ", time1 - time0)
+print("tq (numpy) time: ", time1 - time0)
 print("--------------------")
 
-# 1.2 tc approach for TFIM (jax backend)
+# 1.2 tq approach for TFIM (pytorch backend)
 
-tc.set_backend("jax")
-print("hamiltonian building with tc (jax backend)")
-print("jax version: ", jax.__version__)
+tq.set_backend("pytorch")
+print("hamiltonian building with tq (pytorch backend)")
+print("pytorch version: ", torch.__version__)
 
-g = tc.templates.graphs.Line1D(nwires, pbc=False)
+g = tq.templates.graphs.Line1D(nwires, pbc=False)
 time0 = time.perf_counter()
-h12 = tc.quantum.heisenberg_hamiltonian(
+h12 = tq.quantum.heisenberg_hamiltonian(
     g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
 )
 time1 = time.perf_counter()
 
-print("tc (jax) time: ", time1 - time0)
+print("tq (pytorch) time: ", time1 - time0)
 
 time0 = time.perf_counter()
-h12 = tc.quantum.heisenberg_hamiltonian(
+h12 = tq.quantum.heisenberg_hamiltonian(
     g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
 )
 time1 = time.perf_counter()
 
-print("tc (jax) time (after jit): ", time1 - time0)
+print("tq (pytorch) time (after jit): ", time1 - time0)
 print("--------------------")
 
-# 1.3 tc approach for TFIM (tensorflow backend)
+# 1.3 tq approach for TFIM (pytorch backend)
 
-tc.set_backend("tensorflow")
-print("hamiltonian building with tc (tensorflow backend)")
-print("tensorflow version: ", tf.__version__)
+tq.set_backend("pytorch")
+print("hamiltonian building with tq (pytorch backend)")
+print("pytorch version: ", torch.__version__)
 
-g = tc.templates.graphs.Line1D(nwires, pbc=False)
+g = tq.templates.graphs.Line1D(nwires, pbc=False)
 time0 = time.perf_counter()
-h13 = tc.quantum.heisenberg_hamiltonian(
+h13 = tq.quantum.heisenberg_hamiltonian(
     g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
 )
 time1 = time.perf_counter()
 
-print("tc (tensorflow) time: ", time1 - time0)
+print("tq (pytorch) time: ", time1 - time0)
 
 time0 = time.perf_counter()
-h13 = tc.quantum.heisenberg_hamiltonian(
+h13 = tq.quantum.heisenberg_hamiltonian(
     g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
 )
 time1 = time.perf_counter()
 
-print("tc (tensorflow) time (after jit): ", time1 - time0)
+print("tq (pytorch) time (after jit): ", time1 - time0)
 
 print("--------------------")
 
@@ -111,7 +110,7 @@ def assert_equal(h1, h2):
 # numpy
 assert_equal(h11, h2)
 
-# jax
+# pytorch
 scipy_coo = scipy.sparse.coo_matrix(
     (
         h12.data,
@@ -121,7 +120,7 @@ scipy_coo = scipy.sparse.coo_matrix(
 )
 assert_equal(scipy_coo, h2)
 
-# tensorflow
+# pytorch
 scipy_coo = scipy.sparse.coo_matrix(
     (
         h13.values,

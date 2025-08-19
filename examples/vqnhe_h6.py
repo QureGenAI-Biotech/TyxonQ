@@ -1,16 +1,16 @@
 """
-H6 molecule VQNHE with code from tc.application
+H6 molecule VQNHE with code from applications
 """
 
 import sys
 
 sys.path.insert(0, "../")
 import numpy as np
-import tensorcircuit as tc
-from tensorcircuit.applications.vqes import VQNHE, JointSchedule, construct_matrix_v3
+import tyxonq as tq
+from tyxonq.applications.vqes import VQNHE, JointSchedule, construct_matrix_v3
 
-tc.set_backend("tensorflow")
-tc.set_dtype("complex128")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex128")
 
 h6h = np.load("./h6_hamiltonian.npy")  # reported in 0.99 A
 hamiltonian = construct_matrix_v3(h6h.tolist())

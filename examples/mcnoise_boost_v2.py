@@ -8,9 +8,9 @@ import time
 import sys
 
 sys.path.insert(0, "../")
-import tensorcircuit as tc
+import tyxonq as tq
 
-tc.set_backend("jax")
+K = tq.set_backend("pytorch")
 
 n = 6  # 10
 nlayer = 5  # 4
@@ -18,54 +18,56 @@ nlayer = 5  # 4
 
 def precompute(c):
     s = c.state()
-    return tc.Circuit(c._nqubits, inputs=s)
+    return tq.Circuit(c._nqubits, inputs=s)
 
 
-def f1(key, param, n, nlayer):
-    if key is not None:
-        tc.backend.set_random_state(key)
-    c = tc.Circuit(n)
+def f1(seed, param, n, nlayer):
+    if seed is not None:
+        torch.manual_seed(seed)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayer):
         for i in range(n - 1):
             c.cnot(i, i + 1)
-            c.apply_general_kraus(tc.channels.phasedampingchannel(0.15), i)
-            c.apply_general_kraus(tc.channels.phasedampingchannel(0.15), i + 1)
+            c.apply_general_kraus(tq.channels.phasedampingchannel(0.15), i)
+            c.apply_general_kraus(tq.channels.phasedampingchannel(0.15), i + 1)
         for i in range(n):
             c.rx(i, theta=param[j, i])
-    return tc.backend.real(c.expectation((tc.gates.z(), [int(n / 2)])))
+    return K.real(c.expectation((tq.gates.z(), [int(n / 2)])))
 
 
-def f2(key, param, n, nlayer):
-    c = tc.Circuit(n)
+def f2(seed, param, n, nlayer):
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayer):
         for i in range(n - 1):
             c.cnot(i, i + 1)
             c = precompute(c)
-            c.apply_general_kraus(tc.channels.phasedampingchannel(0.15), i)
+            c.apply_general_kraus(tq.channels.phasedampingchannel(0.15), i)
             c = precompute(c)
-            c.apply_general_kraus(tc.channels.phasedampingchannel(0.15), i + 1)
+            c.apply_general_kraus(tq.channels.phasedampingchannel(0.15), i + 1)
         for i in range(n):
             c.rx(i, theta=param[j, i])
-    return tc.backend.real(c.expectation((tc.gates.z(), [int(n / 2)])))
+    return K.real(c.expectation((tq.gates.z(), [int(n / 2)])))
 
 
-vagf1 = tc.backend.jit(tc.backend.value_and_grad(f1, argnums=1), static_argnums=(2, 3))
-vagf2 = tc.backend.jit(tc.backend.value_and_grad(f2, argnums=1), static_argnums=(2, 3))
+# warning pytorch might be unable to do this exactly
+vagf1 = K.jit(K.value_and_grad(f1, argnums=1), static_argnums=(2, 3))
+# warning pytorch might be unable to do this exactly
+vagf2 = K.jit(K.value_and_grad(f2, argnums=1), static_argnums=(2, 3))
 
-param = tc.backend.ones([nlayer, n])
+param = K.ones([nlayer, n])
 
 
 def benchmark(f, tries=3):
     time0 = time.time()
-    key = tc.backend.get_random_state(42)
-    print(f(key, param, n, nlayer)[0])
+    seed = 42
+    print(f(seed, param, n, nlayer)[0])
     time1 = time.time()
     for _ in range(tries):
-        print(f(key, param, n, nlayer)[0])
+        print(f(seed, param, n, nlayer)[0])
     time2 = time.time()
     print(
         "staging time: ",
@@ -81,4 +83,4 @@ print("=============================")
 print("with layerwise slicing jit")
 benchmark(vagf2)
 
-# mac16 intel cpu: (6*5, jax) 1015, 0.0035; 31.68, 0.00082
+# mac16 intel cpu: (6*5, pytorch) 1015, 0.0035; 31.68, 0.00082

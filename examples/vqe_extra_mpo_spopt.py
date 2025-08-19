@@ -4,14 +4,14 @@ Demonstration of TFIM VQE with extra size in MPO formulation, with highly custom
 
 import os
 
-os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 import time
 import logging
 import sys
 import numpy as np
 from scipy import optimize
 
-logger = logging.getLogger("tensorcircuit")
+logger = logging.getLogger("tyxonq")
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -22,7 +22,7 @@ sys.setrecursionlimit(10000)
 import tensornetwork as tn
 import cotengra as ctg
 
-import tensorcircuit as tc
+import tyxonq as tq
 
 optc = ctg.ReusableHyperOptimizer(
     methods=["greedy", "kahypar"],
@@ -46,9 +46,9 @@ def opt_reconf(inputs, output, size, **kws):
     return tree_r.path()
 
 
-tc.set_contractor("custom", optimizer=opt_reconf, preprocessing=True)
-tc.set_dtype("complex64")
-tc.set_backend("jax")
+tq.set_contractor("custom", optimizer=opt_reconf, preprocessing=True)
+K = tq.set_backend("pytorch")
+K.set_dtype("complex64")
 # jax backend is incompatible with keras.save
 
 dtype = np.complex64
@@ -61,7 +61,7 @@ Bz = np.array([-1.0 for _ in range(nwires)])  # strength of transverse field
 hamiltonian_mpo = tn.matrixproductstates.mpo.FiniteTFI(
     Jx, Bz, dtype=dtype
 )  # matrix product operator
-hamiltonian_mpo = tc.quantum.tn2qop(hamiltonian_mpo)
+hamiltonian_mpo = tq.quantum.tn2qop(hamiltonian_mpo)
 
 
 def vqe_forward(param):
@@ -70,16 +70,16 @@ def vqe_forward(param):
         "max_singular_values": 2,
         "fixed_choice": 1,
     }
-    c = tc.Circuit(nwires, split=split_conf)
+    c = tq.Circuit(nwires, split=split_conf)
     for i in range(nwires):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for i in range(0, nwires - 1):
             c.exp1(
                 i,
                 (i + 1) % nwires,
                 theta=param[4 * j, i],
-                unitary=tc.gates._xx_matrix,
+                unitary=tq.gates._xx_matrix,
             )
 
         for i in range(nwires):
@@ -88,7 +88,7 @@ def vqe_forward(param):
             c.ry(i, theta=param[4 * j + 2, i])
         for i in range(nwires):
             c.rz(i, theta=param[4 * j + 3, i])
-    return tc.templates.measurements.mpo_expectation(c, hamiltonian_mpo)
+    return tq.templates.measurements.mpo_expectation(c, hamiltonian_mpo)
 
 
 def scipy_optimize(
@@ -125,19 +125,19 @@ def scipy_optimize(
 
 
 if __name__ == "__main__":
-    param = tc.backend.implicit_randn(stddev=0.1, shape=[4 * nlayers, nwires])
-    vqe_ng = tc.interfaces.scipy_optimize_interface(
+    param = torch.randn(4 * nlayers, nwires) * 0.1
+    vqe_ng = tq.interfaces.scipy_optimize_interface(
         vqe_forward, shape=[4 * nlayers, nwires], gradient=False, jit=True
     )
-    vqe_g = tc.interfaces.scipy_optimize_interface(
+    vqe_g = tq.interfaces.scipy_optimize_interface(
         vqe_forward, shape=[4 * nlayers, nwires], gradient=True, jit=True
     )
     scipy_optimize(
-        vqe_ng, tc.backend.numpy(param), method="COBYLA", jac=False, maxiter=50000
+        vqe_ng, param.detach().cpu().numpy(), method="COBYLA", jac=False, maxiter=50000
     )
     scipy_optimize(
         vqe_g,
-        tc.backend.numpy(param),
+        param.detach().cpu().numpy(),
         method="L-BFGS-B",
         jac=True,
         tol=1e-6,

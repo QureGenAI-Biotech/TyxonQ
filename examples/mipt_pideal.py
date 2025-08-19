@@ -1,5 +1,5 @@
 """
-demo example of mipt in tc style, with ideal p for each history trajectory
+demo example of mipt in tq style, with ideal p for each history trajectory
 p is also jittable now, change parameter p doesn't trigger recompiling
 """
 
@@ -7,12 +7,12 @@ from functools import partial
 import time
 import numpy as np
 from scipy import stats
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("jax")
-tc.set_dtype("complex128")
-# tf backend is slow (at least on cpu)
-tc.set_contractor("cotengra-16-64")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex128")
+# pytorch backend is fast and flexible
+tq.set_contractor("cotengra-16-64")
 
 
 def delete2(pick, plist):
@@ -25,6 +25,7 @@ def delete2(pick, plist):
     return p
 
 
+# warning pytorch might be unable to do this exactly
 @partial(K.jit, static_argnums=(2, 3))
 def circuit_output(random_matrix, status, n, d, p):
     """
@@ -49,15 +50,15 @@ def circuit_output(random_matrix, status, n, d, p):
     prob_history = []
     for j in range(d):
         if inputs is None:
-            c = tc.Circuit(n)
+            c = tq.Circuit(n)
         else:
-            c = tc.Circuit(n, inputs=inputs)
+            c = tq.Circuit(n, inputs=inputs)
         for i in range(0, n, 2):
             c.unitary(i, (i + 1) % n, unitary=random_matrix[j, i])
         for i in range(1, n, 2):
             c.unitary(i, (i + 1) % n, unitary=random_matrix[j, i])
         inputs = c.state()
-        c = tc.Circuit(n, inputs=inputs)
+        c = tq.Circuit(n, inputs=inputs)
         for i in range(n):
             pick, plist = c.general_kraus(
                 [
@@ -72,7 +73,7 @@ def circuit_output(random_matrix, status, n, d, p):
             bs_history.append(pick)
             prob_history.append(delete2(pick, plist))
             inputs = c.state()
-            c = tc.Circuit(n, inputs=inputs)
+            c = tq.Circuit(n, inputs=inputs)
         inputs = c.state()
         inputs /= K.norm(inputs)
     bs_history = K.stack(bs_history)
@@ -80,15 +81,16 @@ def circuit_output(random_matrix, status, n, d, p):
     return inputs, bs_history, prob_history, K.sum(K.log(prob_history + 1e-11))
 
 
+# warning pytorch might be unable to do this exactly
 @partial(K.jit, static_argnums=(2, 3))
 def cals(random_matrix, status, n, d, p):
     state, bs_history, prob_history, prob = circuit_output(
         random_matrix, status, n, d, p
     )
-    rho = tc.quantum.reduced_density_matrix(state, cut=[i for i in range(n // 2)])
+    rho = tq.quantum.reduced_density_matrix(state, cut=[i for i in range(n // 2)])
     return (
-        tc.quantum.entropy(rho),
-        tc.quantum.renyi_entropy(rho, k=2),
+        tq.quantum.entropy(rho),
+        tq.quantum.renyi_entropy(rho, k=2),
         bs_history,
         prob_history,
         prob,

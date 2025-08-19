@@ -1,23 +1,22 @@
 """
-keras3 is excellent to use together with tc, we will have unique features including:
-1. turn OO paradigm to functional paradigm, i.e. reuse keras layer function in functional programming
+pytorch is excellent to use together with tq, we will have unique features including:
+1. turn OO paradigm to functional paradigm, i.e. reuse pytorch layer function in functional programming
 2. batch on neural network weights
 """
 
 import os
 
-os.environ["KERAS_BACKEND"] = "jax"
-import keras_core as keras
+import torch
+import torch.nn as nn
 import numpy as np
-import optax
-import tensorcircuit as tc
+import tyxonq as tq
 
-K = tc.set_backend("jax")
+K = tq.set_backend("pytorch")
 
 batch = 8
 n = 6
-layer = keras.layers.Dense(1, activation="sigmoid")
-layer.build([batch, n])
+layer = nn.Linear(n, 1)
+layer.eval()  # Set to evaluation mode for stateless operation
 
 data_x = np.random.choice([0, 1], size=batch * n).reshape([batch, n])
 # data_y = np.sum(data_x, axis=-1) % 2
@@ -31,41 +30,54 @@ print("data", data_x, data_y)
 
 
 def loss(xs, ys, params, weights):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     c.rx(range(n), theta=xs)
     c.cx(range(n - 1), range(1, n))
     c.rz(range(n), theta=params)
     outputs = K.stack([K.real(c.expectation_ps(z=[i])) for i in range(n)])
-    ypred, _ = layer.stateless_call(weights, [], outputs)
-    return keras.losses.binary_crossentropy(ypred, ys), ypred
+    
+    # Use PyTorch functional approach
+    with torch.no_grad():
+        ypred = torch.sigmoid(torch.matmul(outputs, weights[0]) + weights[1])
+    
+    return torch.nn.functional.binary_cross_entropy(ypred, ys), ypred
 
 
 # common data batch practice
+# warning pytorch might be unable to do this exactly
 vgf = K.jit(
     K.vectorized_value_and_grad(
         loss, argnums=(2, 3), vectorized_argnums=(0, 1), has_aux=True
     )
 )
 
-params = K.implicit_randn(shape=[n])
-w = K.implicit_randn(shape=[n, 1])
-b = K.implicit_randn(shape=[1])
-opt = K.optimizer(optax.adam(1e-2))
-# seems that currently keras3'optimizer doesn't support nested list of variables
+params = torch.nn.Parameter(torch.randn(n))
+w = torch.nn.Parameter(torch.randn(n, 1))
+b = torch.nn.Parameter(torch.randn(1))
+optimizer = torch.optim.Adam([params, w, b], lr=1e-2)
 
 for i in range(100):
+    # Forward pass
     (v, yp), gs = vgf(data_x, data_y, params, [w, b])
-    params, [w, b] = opt.update(gs, (params, [w, b]))
+    
+    # Backward pass
+    optimizer.zero_grad()
+    v.backward()
+    optimizer.step()
+    
     if i % 10 == 0:
-        print(K.mean(v))
+        print(torch.mean(v))
 
-m = keras.metrics.BinaryAccuracy()
-m.update_state(data_y, yp[:, None])
-print("acc", m.result())
+# Calculate accuracy
+with torch.no_grad():
+    yp_binary = (yp > 0.5).float()
+    acc = (yp_binary == data_y).float().mean()
+    print("acc", acc.item())
 
 
 # data batch with batched and quantum neural weights
 
+# warning pytorch might be unable to do this exactly
 vgf2 = K.jit(
     K.vmap(
         K.vectorized_value_and_grad(
@@ -76,20 +88,25 @@ vgf2 = K.jit(
 )
 
 wbatch = 4
-params = K.implicit_randn(shape=[wbatch, n])
-w = K.implicit_randn(shape=[wbatch, n, 1])
-b = K.implicit_randn(shape=[wbatch, 1])
-opt = K.optimizer(optax.adam(1e-2))
-# seems that currently keras3'optimizer doesn't support nested list of variables
+params = torch.nn.Parameter(torch.randn(wbatch, n))
+w = torch.nn.Parameter(torch.randn(wbatch, n, 1))
+b = torch.nn.Parameter(torch.randn(wbatch, 1))
+optimizer = torch.optim.Adam([params, w, b], lr=1e-2)
 
 for i in range(100):
+    # Forward pass
     (v, yp), gs = vgf2(data_x, data_y, params, [w, b])
-    params, [w, b] = opt.update(gs, (params, [w, b]))
+    
+    # Backward pass
+    optimizer.zero_grad()
+    v.backward()
+    optimizer.step()
+    
     if i % 10 == 0:
-        print(K.mean(v, axis=-1))
+        print(torch.mean(v, dim=-1))
 
 for i in range(wbatch):
-    m = keras.metrics.BinaryAccuracy()
-    m.update_state(data_y, yp[0, :, None])
-    print("acc", m.result())
-    m.reset_state()
+    with torch.no_grad():
+        yp_binary = (yp[0] > 0.5).float()
+        acc = (yp_binary == data_y).float().mean()
+        print("acc", acc.item())

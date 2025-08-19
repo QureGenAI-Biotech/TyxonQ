@@ -4,11 +4,11 @@ Evaluate expectation and gradient on Pauli string sum with finite measurement sh
 
 from functools import partial
 import numpy as np
-import tensorcircuit as tc
-from tensorcircuit import experimental as E
+import tyxonq as tq
+from tyxonq import experimental as E
 
-K = tc.set_backend("jax")
-# note this script only supports jax backend
+K = tq.set_backend("pytorch")
+# note this script only supports pytorch backend
 
 n = 5
 nlayers = 4
@@ -28,9 +28,9 @@ w = [-1.0 for _ in range(n)] + [1.0 for _ in range(n - 1)]
 
 
 def generate_circuit(param):
-    c = tc.Circuit(n)
+    c = tq.Circuit(n)
     for i in range(n):
-        c.H(i)
+        c.h(i)
     for j in range(nlayers):
         for i in range(n - 1):
             c.rzz(i, i + 1, theta=param[i, j, 0])
@@ -39,12 +39,11 @@ def generate_circuit(param):
     return c
 
 
-def sample_exp(c, ps, w, shots, key):
+def sample_exp(c, ps, w, shots):
     if isinstance(shots, int):
         shots = [shots for _ in range(len(ps))]
     loss = 0
     for psi, wi, shot in zip(ps, w, shots):
-        key, subkey = K.random_split(key)
         xyz = {"x": [], "y": [], "z": []}
         for i, j in enumerate(psi):
             if j == 1:
@@ -53,11 +52,11 @@ def sample_exp(c, ps, w, shots, key):
                 xyz["y"].append(i)
             if j == 3:
                 xyz["z"].append(i)
-        loss += wi * c.sample_expectation_ps(**xyz, shots=shot, random_generator=subkey)
+        loss += wi * c.sample_expectation_ps(**xyz, shots=shot)
     return loss
 
 
-@K.jit
+@K.jit  # warning pytorch might be unable to do this exactly
 def exp_val_analytical(param):
     c = generate_circuit(param)
     loss = 0
@@ -74,36 +73,36 @@ def exp_val_analytical(param):
     return K.real(loss)
 
 
-@partial(K.jit, static_argnums=2)
-def exp_val(param, key, shots=4096):
+@partial(K.jit, static_argnums=1)  # warning pytorch might be unable to do this exactly
+def exp_val(param, shots=4096):
     # from circuit parameter to expectation
     c = generate_circuit(param)
-    return sample_exp(c, ps, w, shots, key=key)
+    return sample_exp(c, ps, w, shots)
 
 
 print("benchmarking sample expectation")
-tc.utils.benchmark(
-    exp_val, K.ones([n, nlayers, 2], dtype="float32"), K.get_random_state(42)
+tq.utils.benchmark(
+    exp_val, K.ones([n, nlayers, 2], dtype="float32")
 )
 print("benchmarking analytical expectation")
-tc.utils.benchmark(exp_val_analytical, K.ones([n, nlayers, 2], dtype="float32"))
-r1 = exp_val(K.ones([n, nlayers, 2], dtype="float32"), K.get_random_state(42))
+tq.utils.benchmark(exp_val_analytical, K.ones([n, nlayers, 2], dtype="float32"))
+r1 = exp_val(K.ones([n, nlayers, 2], dtype="float32"))
 r2 = exp_val_analytical(K.ones([n, nlayers, 2], dtype="float32"))
-np.testing.assert_allclose(r1, r2, atol=0.05, rtol=0.01)
+np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=0.05, rtol=0.01)
 print("correctness check passed for expectation value")
-gradf1 = E.parameter_shift_grad_v2(exp_val, argnums=0, random_argnums=1)
-gradf2 = K.jit(K.grad(exp_val_analytical))
+gradf1 = E.parameter_shift_grad_v2(exp_val, argnums=0)
+gradf2 = K.jit(K.grad(exp_val_analytical))  # warning pytorch might be unable to do this exactly
 print("benchmarking sample gradient")
-tc.utils.benchmark(
-    gradf1, K.ones([n, nlayers, 2], dtype="float32"), K.get_random_state(42)
+tq.utils.benchmark(
+    gradf1, K.ones([n, nlayers, 2], dtype="float32")
 )
 # n=12, nlayers=4, 276s + 0.75s, mac CPU
 print("benchmarking analytical gradient")
-tc.utils.benchmark(gradf2, K.ones([n, nlayers, 2], dtype="float32"))
-r1 = gradf1(K.ones([n, nlayers, 2], dtype="float32"), K.get_random_state(42))
+tq.utils.benchmark(gradf2, K.ones([n, nlayers, 2], dtype="float32"))
+r1 = gradf1(K.ones([n, nlayers, 2], dtype="float32"))
 r2 = gradf2(K.ones([n, nlayers, 2], dtype="float32"))
 print("gradient with measurement shot and parameter shift")
 print(r1)
 print(r2)
-np.testing.assert_allclose(r1, r2, atol=0.2, rtol=0.01)
+np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=0.2, rtol=0.01)
 print("correctness check passed for gradients")

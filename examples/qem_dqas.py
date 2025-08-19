@@ -9,9 +9,9 @@ sys.path.insert(0, "../")
 from functools import partial
 import cirq
 import numpy as np
-import tensorflow as tf
-from tensorcircuit.applications.vags import qft_qem_vag
-from tensorcircuit.applications.dqas import (
+import torch
+from tyxonq.applications.vags import qft_qem_vag
+from tyxonq.applications.dqas import (
     set_op_pool,
     DQAS_search,
     verbose_output,
@@ -24,7 +24,7 @@ def main_3():
     set_op_pool([cirq.X, cirq.Y, cirq.Z, cirq.I, cirq.T, cirq.S])
     DQAS_search(
         qft_3,
-        nnp_initial_value=tf.zeros([6, 6]),
+        nnp_initial_value=torch.zeros([6, 6]),
         p=6,
         prethermal=0,
         batch=32,
@@ -53,7 +53,7 @@ def main_4():
     )
     DQAS_search(
         qft_4,
-        nnp_initial_value=tf.zeros([12, 11]),
+        nnp_initial_value=torch.zeros([12, 11]),
         p=12,
         prethermal=0,
         batch=32,
