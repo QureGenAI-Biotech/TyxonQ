@@ -1,4 +1,4 @@
-tensorcircuit.applications.finance
+tyxonq.applications.finance
 ================================================================================
 .. toctree::
     finance/portfolio.rst

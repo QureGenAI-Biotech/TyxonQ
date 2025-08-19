@@ -1,6 +1,6 @@
-tensorcircuit.applications.finance.portfolio
+tyxonq.applications.finance.portfolio
 ================================================================================
-.. automodule:: tensorcircuit.applications.finance.portfolio
+.. automodule:: tyxonq.applications.finance.portfolio
     :members:
     :undoc-members:
     :show-inheritance:

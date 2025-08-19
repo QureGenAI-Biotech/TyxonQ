@@ -1,4 +1,4 @@
-tensorcircuit.templates
+tyxonq.templates
 ================================================================================
 .. toctree::
     templates/ansatz.rst

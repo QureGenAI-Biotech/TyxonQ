@@ -1,6 +1,6 @@
-tensorcircuit.templates.graphs
+tyxonq.templates.graphs
 ================================================================================
-.. automodule:: tensorcircuit.templates.graphs
+.. automodule:: tyxonq.templates.graphs
     :members:
     :undoc-members:
     :show-inheritance:

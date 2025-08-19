@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: tensorcircuit \n"
+"Project-Id-Version: tyxonq \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-08 21:05+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"

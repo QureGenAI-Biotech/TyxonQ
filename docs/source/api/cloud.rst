@@ -1,4 +1,4 @@
-tensorcircuit.cloud
+tyxonq.cloud
 ================================================================================
 .. toctree::
     cloud/abstraction.rst

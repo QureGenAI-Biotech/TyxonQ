@@ -1,6 +1,6 @@
-tensorcircuit.backends.pytorch_backend
+tyxonq.backends.pytorch_backend
 ================================================================================
-.. automodule:: tensorcircuit.backends.pytorch_backend
+.. automodule:: tyxonq.backends.pytorch_backend
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,6 @@
-tensorcircuit.mpscircuit
+tyxonq.mpscircuit
 ================================================================================
-.. automodule:: tensorcircuit.mpscircuit
+.. automodule:: tyxonq.mpscircuit
     :members:
     :undoc-members:
     :show-inheritance:

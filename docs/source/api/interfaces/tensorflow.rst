@@ -1,6 +1,6 @@
-tensorcircuit.interfaces.tensorflow
+tyxonq.interfaces.tensorflow
 ================================================================================
-.. automodule:: tensorcircuit.interfaces.tensorflow
+.. automodule:: tyxonq.interfaces.tensorflow
     :members:
     :undoc-members:
     :show-inheritance:

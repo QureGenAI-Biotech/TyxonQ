@@ -1,6 +1,6 @@
-tensorcircuit.cons
+tyxonq.cons
 ================================================================================
-.. automodule:: tensorcircuit.cons
+.. automodule:: tyxonq.cons
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,6 @@
-tensorcircuit.applications.vags
+tyxonq.applications.vags
 ================================================================================
-.. automodule:: tensorcircuit.applications.vags
+.. automodule:: tyxonq.applications.vags
     :members:
     :undoc-members:
     :show-inheritance:

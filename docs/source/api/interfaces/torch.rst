@@ -1,6 +1,6 @@
-tensorcircuit.interfaces.torch
+tyxonq.interfaces.torch
 ================================================================================
-.. automodule:: tensorcircuit.interfaces.torch
+.. automodule:: tyxonq.interfaces.torch
     :members:
     :undoc-members:
     :show-inheritance:

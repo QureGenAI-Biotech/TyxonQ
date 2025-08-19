@@ -1,6 +1,6 @@
-tensorcircuit.templates.measurements
+tyxonq.templates.measurements
 ================================================================================
-.. automodule:: tensorcircuit.templates.measurements
+.. automodule:: tyxonq.templates.measurements
     :members:
     :undoc-members:
     :show-inheritance:

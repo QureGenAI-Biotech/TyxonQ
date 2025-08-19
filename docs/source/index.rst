@@ -1,16 +1,16 @@
-TensorCircuit Documentation
+TyxonQ Documentation
 ===========================================================
 
-.. image:: https://github.com/tencent-quantum-lab/tensorcircuit/blob/master/docs/source/statics/logov2.jpg?raw=true
-    :target: https://github.com/tencent-quantum-lab/tensorcircuit
+.. image:: https://github.com/QureGenAI-Biotech/TyxonQ/blob/master/docs/source/statics/logov2.jpg?raw=true
+    :target: https://github.com/QureGenAI-Biotech/TyxonQ
 
 
-**Welcome and congratulations! You have found TensorCircuit.** 👏 
+**Welcome and congratulations! You have found TyxonQ.** 👏 
 
 Introduction
 ---------------
 
-TensorCircuit is an open-source high-performance quantum computing software framework in Python.
+TyxonQ is an open-source high-performance quantum computing software framework in Python.
 
 * It is built for humans. 👽
 
@@ -20,11 +20,11 @@ TensorCircuit is an open-source high-performance quantum computing software fram
 
 * It is ready for quantum hardware access with CPU/GPU/QPU (local/cloud) hybrid solutions. 🖥
 
-* It is implemented with industry-standard machine learning frameworks: TensorFlow, JAX, and PyTorch. 🤖
+* It is implemented with industry-standard machine learning framework: PyTorch. 🤖
 
 * It is compatible with machine learning engineering paradigms: automatic differentiation, just-in-time compilation, vectorized parallelism and GPU acceleration. 🛠
 
-With the help of TensorCircuit, now get ready to efficiently and elegantly solve interesting and challenging quantum computing problems: from academic research prototype to industry application deployment.
+With the help of TyxonQ, now get ready to efficiently and elegantly solve interesting and challenging quantum computing problems: from academic research prototype to industry application deployment.
 
 
 
@@ -32,25 +32,25 @@ With the help of TensorCircuit, now get ready to efficiently and elegantly solve
 Relevant Links
 --------------------
 
-TensorCircuit is created and maintained by `Shi-Xin Zhang <https://github.com/refraction-ray>`_ and this version is released by `Tencent Quantum Lab <https://quantum.tencent.com/>`_.
+TyxonQ is created and maintained by `Shi-Xin Zhang <https://github.com/refraction-ray>`_.
 
-The current core authors of TensorCircuit are `Shi-Xin Zhang <https://github.com/refraction-ray>`_ and `Yu-Qin Chen <https://github.com/yutuer21>`_.
-We also thank `contributions <https://github.com/tencent-quantum-lab/tensorcircuit/graphs/contributors>`_ from the open source community.
+The current core authors of TyxonQ are `Shi-Xin Zhang <https://github.com/refraction-ray>`_ and `Yu-Qin Chen <https://github.com/yutuer21>`_.
+We also thank `contributions <https://github.com/QureGenAI-Biotech/TyxonQ/graphs/contributors>`_ from the open source community.
 
-If you have any further questions or collaboration ideas, please use the issue tracker or forum below, or send email to shixinzhang#tencent.com.
+If you have any further questions or collaboration ideas, please use the issue tracker or forum below.
 
 
 .. card-carousel:: 2
 
    .. card:: Source code
-      :link: https://github.com/tencent-quantum-lab/tensorcircuit
+      :link: https://github.com/QureGenAI-Biotech/TyxonQ
       :shadow: md
 
       GitHub
 
 
    .. card:: Documentation
-      :link: https://tensorcircuit.readthedocs.io
+      :link: https://tyxonq.readthedocs.io
       :shadow: md
 
       Readthedocs
@@ -64,73 +64,68 @@ If you have any further questions or collaboration ideas, please use the issue t
 
 
    .. card:: Issue Tracker
-      :link: https://github.com/tencent-quantum-lab/tensorcircuit/issues
+      :link: https://github.com/QureGenAI-Biotech/TyxonQ/issues
       :shadow: md
 
       GitHub Issues
 
 
    .. card:: Forum
-      :link: https://github.com/tencent-quantum-lab/tensorcircuit/discussions
+      :link: https://github.com/QureGenAI-Biotech/TyxonQ/discussions
       :shadow: md
 
       GitHub Discussions
 
 
    .. card:: PyPI
-      :link:  https://pypi.org/project/tensorcircuit
+      :link:  https://pypi.org/project/tyxonq
       :shadow: md
 
       ``pip install``
 
 
    .. card:: DockerHub
-      :link: https://hub.docker.com/repository/docker/tensorcircuit/tensorcircuit
+      :link: https://hub.docker.com/repository/docker/tyxonq/tyxonq
       :shadow: md
 
       ``docker pull``
       
 
    .. card:: Application
-      :link: https://github.com/tencent-quantum-lab/tensorcircuit#research-and-applications
+      :link: https://github.com/QureGenAI-Biotech/TyxonQ#research-and-applications
       :shadow: md
 
-      Research using TC
+      Research using TQ
 
 
-   .. card:: Cloud
-      :link: https://quantum.tencent.com/cloud
 
-      Tencent Quantum Cloud
 
 
 
 
 ..
-   * Source code: https://github.com/tencent-quantum-lab/tensorcircuit
+   * Source code: https://github.com/QureGenAI-Biotech/TyxonQ
 
-   * Documentation: https://tensorcircuit.readthedocs.io
+   * Documentation: https://tyxonq.readthedocs.io
 
    * Software Whitepaper (published in Quantum): https://quantum-journal.org/papers/q-2023-02-02-912/
 
-   * Issue Tracker: https://github.com/tencent-quantum-lab/tensorcircuit/issues
+   * Issue Tracker: https://github.com/QureGenAI-Biotech/TyxonQ/issues
 
-   * Forum: https://github.com/tencent-quantum-lab/tensorcircuit/discussions
+   * Forum: https://github.com/QureGenAI-Biotech/TyxonQ/discussions
 
-   * PyPI page: https://pypi.org/project/tensorcircuit
+   * PyPI page: https://pypi.org/project/tyxonq
 
-   * DockerHub page: https://hub.docker.com/repository/docker/tensorcircuit/tensorcircuit
+   * DockerHub page: https://hub.docker.com/repository/docker/tyxonq/tyxonq
 
-   * Research and projects based on TensorCircuit: https://github.com/tencent-quantum-lab/tensorcircuit#research-and-applications
-
-   * Tencent Quantum Cloud Service: https://quantum.tencent.com/cloud/
+   * Research and projects based on TyxonQ: https://github.com/QureGenAI-Biotech/TyxonQ#research-and-applications
 
 
 
 Unified Quantum Programming
 ------------------------------
 
-TensorCircuit is unifying infrastructures and interfaces for quantum computing.
+TyxonQ is unifying infrastructures and interfaces for quantum computing.
 
 .. grid:: 1 2 4 4
    :margin: 0
@@ -141,7 +136,7 @@ TensorCircuit is unifying infrastructures and interfaces for quantum computing.
       :columns: 12 6 3 3
       :shadow: md
 
-      Jax/TensorFlow/PyTorch/Numpy/Cupy
+      PyTorch/Numpy/Cupy
 
    .. grid-item-card:: Unified Devices
       :columns: 12 6 3 3
@@ -197,7 +192,7 @@ TensorCircuit is unifying infrastructures and interfaces for quantum computing.
 Reference Documentation
 ----------------------------
 
-The following documentation sections briefly introduce TensorCircuit to the users and developpers.
+The following documentation sections briefly introduce TyxonQ to the users and developers.
 
 .. toctree::
    :maxdepth: 2

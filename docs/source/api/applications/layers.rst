@@ -1,6 +1,6 @@
-tensorcircuit.applications.layers
+tyxonq.applications.layers
 ================================================================================
-.. automodule:: tensorcircuit.applications.layers
+.. automodule:: tyxonq.applications.layers
     :members:
     :undoc-members:
     :show-inheritance:

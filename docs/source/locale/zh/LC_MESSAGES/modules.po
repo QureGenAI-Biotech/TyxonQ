@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: tensorcircuit \n"
+"Project-Id-Version: tyxonq \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-02-15 10:02+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Generated-By: Babel 2.9.1\n"
 
 #: ../../source/modules.rst:2
-msgid "tensorcircuit"
+msgid "tyxonq"
 msgstr ""
 
 #~ msgid "get the `tc.backend` object"
@@ -110,7 +110,7 @@ msgstr ""
 #~ msgid "``tn.Node`` after contraction"
 #~ msgstr ""
 
-#~ msgid "set the runtime backend of tensorcircuit"
+#~ msgid "set the runtime backend of tyxonq"
 #~ msgstr ""
 
 #~ msgid ""
@@ -146,7 +146,7 @@ msgstr ""
 #~ msgid ""
 #~ "`QuantumLayer` wraps the quantum function "
 #~ "`f` as a `keras.Layer`, so that "
-#~ "tensorcircuit is better integrated with "
+#~ "tyxonq is better integrated with "
 #~ "tensorflow"
 #~ msgstr ""
 
@@ -709,13 +709,13 @@ msgstr ""
 #~ " ``o`` as tensor or ``QuOperator``"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit  API"
+#~ msgid "tyxonq  API"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.backends module"
+#~ msgid "tyxonq.backends module"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.backends.backend_factory module"
+#~ msgid "tyxonq.backends.backend_factory module"
 #~ msgstr ""
 
 #~ msgid "backend register"
@@ -745,7 +745,7 @@ msgstr ""
 #~ msgid "Return type"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.backends.jax_backend module"
+#~ msgid "tyxonq.backends.jax_backend module"
 #~ msgstr ""
 
 #~ msgid "backend magic inherited from tensornetwork: jax backend"
@@ -1317,7 +1317,7 @@ msgstr ""
 #~ msgid "Bases: :class:`object`"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.backends.numpy_backend module"
+#~ msgid "tyxonq.backends.numpy_backend module"
 #~ msgstr ""
 
 #~ msgid "backend magic inherited from tensornetwork: numpy backend"
@@ -1332,7 +1332,7 @@ msgstr ""
 #~ "<https://github.com/google/TensorNetwork/blob/master/tensornetwork/backends/numpy/numpy_backend.py>`_"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.backends.pytorch_backend module"
+#~ msgid "tyxonq.backends.pytorch_backend module"
 #~ msgstr ""
 
 #~ msgid "backend magic inherited from tensornetwork: pytorch backend"
@@ -1356,7 +1356,7 @@ msgstr ""
 #~ " vmap support."
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.backends.tensorflow_backend module"
+#~ msgid "tyxonq.backends.tensorflow_backend module"
 #~ msgstr ""
 
 #~ msgid "backend magic inherited from tensornetwork: tensorflow backend"
@@ -1373,7 +1373,7 @@ msgstr ""
 #~ "<https://github.com/google/TensorNetwork/blob/master/tensornetwork/backends/tensorflow/tensorflow_backend.py>`_"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.channels module"
+#~ msgid "tyxonq.channels module"
 #~ msgstr ""
 
 #~ msgid "some common noise quantum channels"
@@ -1524,7 +1524,7 @@ msgstr ""
 #~ msgid "List of Kraus operators."
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.circuit module"
+#~ msgid "tyxonq.circuit module"
 #~ msgstr ""
 
 #~ msgid "quantum circuit: state simulator"
@@ -2066,7 +2066,7 @@ msgstr ""
 #~ "[Deperacted, use ``qir2tex instead``]"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.cons module"
+#~ msgid "tyxonq.cons module"
 #~ msgstr ""
 
 #~ msgid "some constants and setups"
@@ -2124,7 +2124,7 @@ msgstr ""
 #~ msgid "The ``tn.Node`` after contraction"
 #~ msgstr ""
 
-#~ msgid "To set the runtime backend of tensorcircuit."
+#~ msgid "To set the runtime backend of tyxonq."
 #~ msgstr ""
 
 #~ msgid ""
@@ -2142,28 +2142,28 @@ msgstr ""
 #~ msgid "Whether the object should be set as global."
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.densitymatrix module"
+#~ msgid "tyxonq.densitymatrix module"
 #~ msgstr ""
 
 #~ msgid "quantum circuit class but with density matrix simulator"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.densitymatrix2 module"
+#~ msgid "tyxonq.densitymatrix2 module"
 #~ msgstr ""
 
 #~ msgid "quantum circuit class but with density matrix simulator: v2"
 #~ msgstr ""
 
-#~ msgid "Bases: :class:`tensorcircuit.densitymatrix.DMCircuit`"
+#~ msgid "Bases: :class:`tyxonq.densitymatrix.DMCircuit`"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.experimental module"
+#~ msgid "tyxonq.experimental module"
 #~ msgstr ""
 
 #~ msgid "experimental features"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.gates module"
+#~ msgid "tyxonq.gates module"
 #~ msgstr ""
 
 #~ msgid ""
@@ -2178,7 +2178,7 @@ msgstr ""
 #~ msgid "Wrapper of tn.Node, quantum gate"
 #~ msgstr ""
 
-#~ msgid "Bases: :class:`tensorcircuit.gates.GateF`"
+#~ msgid "Bases: :class:`tyxonq.gates.GateF`"
 #~ msgstr ""
 
 #~ msgid "Note one should provide the gate with properly reshaped."
@@ -2403,13 +2403,13 @@ msgstr ""
 #~ msgid "RZ Gate"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.interfaces module"
+#~ msgid "tyxonq.interfaces module"
 #~ msgstr ""
 
 #~ msgid "interfaces bridging different backends"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.keras module"
+#~ msgid "tyxonq.keras module"
 #~ msgstr ""
 
 #~ msgid "keras layer for tc quantum function"
@@ -2421,7 +2421,7 @@ msgstr ""
 #~ msgid ""
 #~ "`QuantumLayer` wraps the quantum function "
 #~ "`f` as a `keras.Layer` so that "
-#~ "tensorcircuit is better integrated with "
+#~ "tyxonq is better integrated with "
 #~ "tensorflow."
 #~ msgstr ""
 
@@ -2493,7 +2493,7 @@ msgstr ""
 #~ msgid "the dir path to save the function"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.mpscircuit module"
+#~ msgid "tyxonq.mpscircuit module"
 #~ msgstr ""
 
 #~ msgid "quantum circuit: MPS state simulator"
@@ -2721,13 +2721,13 @@ msgstr ""
 #~ msgid "Two tensors after splitting"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.quantum module"
+#~ msgid "tyxonq.quantum module"
 #~ msgstr ""
 
 #~ msgid "quantum state and operator class backend by tensornetwork"
 #~ msgstr ""
 
-#~ msgid "Bases: :class:`tensorcircuit.quantum.QuOperator`"
+#~ msgid "Bases: :class:`tyxonq.quantum.QuOperator`"
 #~ msgstr ""
 
 #~ msgid "Represents an adjoint (row) vector via a tensor network."
@@ -3155,7 +3155,7 @@ msgstr ""
 #~ msgid "a scalar"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.simplify module"
+#~ msgid "tyxonq.simplify module"
 #~ msgstr ""
 
 #~ msgid "tensornetwork simplification"
@@ -3185,16 +3185,16 @@ msgstr ""
 #~ "calculation"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.templates module"
+#~ msgid "tyxonq.templates module"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.templates.blocks module"
+#~ msgid "tyxonq.templates.blocks module"
 #~ msgstr ""
 
 #~ msgid "shortcuts for measurement patterns on circuit"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.templates.graphs module"
+#~ msgid "tyxonq.templates.graphs module"
 #~ msgstr ""
 
 #~ msgid "Some common graphs and lattices"
@@ -3203,7 +3203,7 @@ msgstr ""
 #~ msgid "1D chain with ``n`` sites"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.templates.measurements module"
+#~ msgid "tyxonq.templates.measurements module"
 #~ msgstr ""
 
 #~ msgid ""
@@ -3230,7 +3230,7 @@ msgstr ""
 #~ msgid "a real and scalar tensor of shape []"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.utils module"
+#~ msgid "tyxonq.utils module"
 #~ msgstr ""
 
 #~ msgid "some helper functions"
@@ -3252,7 +3252,7 @@ msgstr ""
 #~ msgid "The modified callable function"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit.vis module"
+#~ msgid "tyxonq.vis module"
 #~ msgstr ""
 
 #~ msgid "visualization on circuits"
@@ -3285,9 +3285,9 @@ msgstr ""
 #~ msgid "if notebook is True, return `Image` object; otherwise return `None`"
 #~ msgstr ""
 
-#~ msgid "tensorcircuit"
+#~ msgid "tyxonq"
 #~ msgstr ""
 
-#~ msgid "TensorCircuit"
+#~ msgid "TyxonQ"
 #~ msgstr ""
 

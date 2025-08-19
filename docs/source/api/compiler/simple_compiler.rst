@@ -1,6 +1,6 @@
-tensorcircuit.compiler.simple_compiler
+tyxonq.compiler.simple_compiler
 ================================================================================
-.. automodule:: tensorcircuit.compiler.simple_compiler
+.. automodule:: tyxonq.compiler.simple_compiler
     :members:
     :undoc-members:
     :show-inheritance:

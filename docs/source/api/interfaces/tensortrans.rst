@@ -1,6 +1,6 @@
-tensorcircuit.interfaces.tensortrans
+tyxonq.interfaces.tensortrans
 ================================================================================
-.. automodule:: tensorcircuit.interfaces.tensortrans
+.. automodule:: tyxonq.interfaces.tensortrans
     :members:
     :undoc-members:
     :show-inheritance:

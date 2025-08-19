@@ -1,6 +1,6 @@
-tensorcircuit.applications.physics.baseline
+tyxonq.applications.physics.baseline
 ================================================================================
-.. automodule:: tensorcircuit.applications.physics.baseline
+.. automodule:: tyxonq.applications.physics.baseline
     :members:
     :undoc-members:
     :show-inheritance:

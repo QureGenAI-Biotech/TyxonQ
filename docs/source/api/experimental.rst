@@ -1,6 +1,6 @@
-tensorcircuit.experimental
+tyxonq.experimental
 ================================================================================
-.. automodule:: tensorcircuit.experimental
+.. automodule:: tyxonq.experimental
     :members:
     :undoc-members:
     :show-inheritance:

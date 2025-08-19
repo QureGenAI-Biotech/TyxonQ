@@ -1,6 +1,6 @@
-tensorcircuit.templates.blocks
+tyxonq.templates.blocks
 ================================================================================
-.. automodule:: tensorcircuit.templates.blocks
+.. automodule:: tyxonq.templates.blocks
     :members:
     :undoc-members:
     :show-inheritance:

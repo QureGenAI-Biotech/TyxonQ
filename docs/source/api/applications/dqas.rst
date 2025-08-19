@@ -1,6 +1,6 @@
-tensorcircuit.applications.dqas
+tyxonq.applications.dqas
 ================================================================================
-.. automodule:: tensorcircuit.applications.dqas
+.. automodule:: tyxonq.applications.dqas
     :members:
     :undoc-members:
     :show-inheritance:

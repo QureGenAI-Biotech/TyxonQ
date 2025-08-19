@@ -1,6 +1,6 @@
-tensorcircuit.cloud.quafu_provider
+tyxonq.cloud.quafu_provider
 ================================================================================
-.. automodule:: tensorcircuit.cloud.quafu_provider
+.. automodule:: tyxonq.cloud.quafu_provider
     :members:
     :undoc-members:
     :show-inheritance:

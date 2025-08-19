@@ -1,6 +1,6 @@
-tensorcircuit.translation
+tyxonq.translation
 ================================================================================
-.. automodule:: tensorcircuit.translation
+.. automodule:: tyxonq.translation
     :members:
     :undoc-members:
     :show-inheritance:

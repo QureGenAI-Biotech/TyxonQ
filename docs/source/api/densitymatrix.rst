@@ -1,6 +1,6 @@
-tensorcircuit.densitymatrix
+tyxonq.densitymatrix
 ================================================================================
-.. automodule:: tensorcircuit.densitymatrix
+.. automodule:: tyxonq.densitymatrix
     :members:
     :undoc-members:
     :show-inheritance:

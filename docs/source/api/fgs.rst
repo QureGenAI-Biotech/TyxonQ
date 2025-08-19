@@ -1,6 +1,6 @@
-tensorcircuit.fgs
+tyxonq.fgs
 ================================================================================
-.. automodule:: tensorcircuit.fgs
+.. automodule:: tyxonq.fgs
     :members:
     :undoc-members:
     :show-inheritance:

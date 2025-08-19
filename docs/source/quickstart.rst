@@ -223,7 +223,7 @@ AD is the base for all modern machine learning libraries.
 **JIT Support:**
 
 Parameterized quantum circuits can run in a blink. Always use jit if the circuit will get evaluations multiple times, it can greatly boost the simulation with two or three order time reduction. But also be cautious, users need to be familiar with jit, otherwise, the jitted function may return unexpected results or recompile on every hit (wasting lots of time).
-To learn more about the jit mechanism, one can refer to documentation or blogs on ``torch.compile``, though these two still have subtle differences.
+To learn more about the jit mechanism, one can refer to documentation or blogs on ``torch.compile``.
 
 
 **VMAP Support:**
@@ -469,13 +469,13 @@ Beside global level setup, we can also setup the backend, the dtype, and the con
         with tq.runtime_dtype("complex128"):
             m = tq.backend.eye(2)
     n = tq.backend.eye(2)
-    print(m, n) # m is tf tensor while n is numpy array
+    print(m, n) # m is torch tensor while n is numpy array
 
     @tq.set_function_backend("pytorch")
     @tq.set_function_dtype("complex128")
     def f():
         return tq.backend.eye(2)
-    print(f()) # complex128 tf tensor
+    print(f()) # complex128 torch tensor
 
 
 Noisy Circuit Simulation

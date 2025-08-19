@@ -1,6 +1,6 @@
-tensorcircuit.keras
+tyxonq.keras
 ================================================================================
-.. automodule:: tensorcircuit.keras
+.. automodule:: tyxonq.keras
     :members:
     :undoc-members:
     :show-inheritance:

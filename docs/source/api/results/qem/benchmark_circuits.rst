@@ -1,6 +1,6 @@
-tensorcircuit.results.qem.benchmark_circuits
+tyxonq.results.qem.benchmark_circuits
 ================================================================================
-.. automodule:: tensorcircuit.results.qem.benchmark_circuits
+.. automodule:: tyxonq.results.qem.benchmark_circuits
     :members:
     :undoc-members:
     :show-inheritance:

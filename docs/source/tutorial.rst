@@ -28,4 +28,3 @@ Jupyter Tutorials
     tutorials/imag_time_evo.ipynb
     tutorials/classical_shadows.ipynb
     tutorials/sklearn_svc.ipynb
-    tutorials/qcloud_sdk_demo.ipynb

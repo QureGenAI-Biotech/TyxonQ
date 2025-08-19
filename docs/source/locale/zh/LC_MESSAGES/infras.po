@@ -1,12 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  tensorcircuit\n"
+"Project-Id-Version:  tyxonq\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-05-27 18:52+0800\n"
 "PO-Revision-Date: 2022-04-18 20:44+0800\n"
@@ -19,8 +19,8 @@ msgstr ""
 "Generated-By: Babel 2.9.1\n"
 
 #: ../../source/infras.rst:3
-msgid "TensorCircuit: What is inside?"
-msgstr "TensorCircuit：里面有什么？"
+msgid "TyxonQ: What is inside?"
+msgstr "TyxonQ：里面有什么？"
 
 #: ../../source/infras.rst:5
 msgid ""
@@ -39,41 +39,41 @@ msgstr "**核心模块：**"
 
 #: ../../source/infras.rst:13
 msgid ""
-":py:mod:`tensorcircuit.abstractcircuit` and "
-":py:mod:`tensorcircuit.basecircuit`: Hierarchical abstraction of circuit "
+":py:mod:`tyxonq.abstractcircuit` and "
+":py:mod:`tyxonq.basecircuit`: Hierarchical abstraction of circuit "
 "class."
 msgstr ""
 
 #: ../../source/infras.rst:15
 msgid ""
-":py:mod:`tensorcircuit.circuit`: The core object "
-":py:obj:`tensorcircuit.circuit.Circuit`. It supports circuit "
+":py:mod:`tyxonq.circuit`: The core object "
+":py:obj:`tyxonq.circuit.Circuit`. It supports circuit "
 "construction, simulation, representation, and visualization without noise"
 " or with noise using the Monte Carlo trajectory approach."
 msgstr ""
-":py:mod:`tensorcircuit.circuit`: 核心对象 "
-":py:obj:`tensorcircuit.circuit.Circuit`.它支持使用蒙特卡洛轨迹方法的无噪声或有噪声的电路构建、仿真、表示和可视化。"
+":py:mod:`tyxonq.circuit`: 核心对象 "
+":py:obj:`tyxonq.circuit.Circuit`.它支持使用蒙特卡洛轨迹方法的无噪声或有噪声的电路构建、仿真、表示和可视化。"
 
 #: ../../source/infras.rst:17
 msgid ""
-":py:mod:`tensorcircuit.cons`: Runtime ML backend, dtype and contractor "
+":py:mod:`tyxonq.cons`: Runtime ML backend, dtype and contractor "
 "setups. We provide three sets of set methods for global setup, function "
 "level setup using function decorators, and context setup using ``with`` "
 "context managers. We also include customized contractor infrastructures "
 "in this module."
 msgstr ""
-":py:mod:`tensorcircuit.cons`: 运行时的机器学习后端、数据类型和 contractor 设置。 "
+":py:mod:`tyxonq.cons`: 运行时的机器学习后端、数据类型和 contractor 设置。 "
 "我们为全局设置、使用函数装饰器的函数级别设置和使用 ``with`` 上下文管理器的上下文设置提供了三组设置方法.我们还在此模块中提供了定制的 "
 "contractor 基础设施。"
 
 #: ../../source/infras.rst:19
 msgid ""
-":py:mod:`tensorcircuit.gates`: Definition of quantum gates, either fixed "
+":py:mod:`tyxonq.gates`: Definition of quantum gates, either fixed "
 "ones or parameterized ones, as well as "
-":py:obj:`tensorcircuit.gates.GateF` class for gates."
+":py:obj:`tyxonq.gates.GateF` class for gates."
 msgstr ""
-":py:mod:`tensorcircuit.gates`: 固定或参数化的量子门的定义，以及用于门的 "
-":py:obj:`tensorcircuit.gates.GateF` 类。"
+":py:mod:`tyxonq.gates`: 固定或参数化的量子门的定义，以及用于门的 "
+":py:obj:`tyxonq.gates.GateF` 类。"
 
 #: ../../source/infras.rst:21
 msgid "**Backend Agnostic Abstraction:**"
@@ -81,12 +81,12 @@ msgstr "**后端无关抽象：**"
 
 #: ../../source/infras.rst:23
 msgid ""
-":py:mod:`tensorcircuit.backends` provides a set of backend API and the "
+":py:mod:`tyxonq.backends` provides a set of backend API and the "
 "corresponding implementation on Numpy, Jax, TensorFlow, and PyTorch "
 "backends. These backends are inherited from the TensorNetwork package and"
 " are highly customized."
 msgstr ""
-":py:mod:`tensorcircuit.backends` 提供了一组后端 API 以及在 Numpy、Jax、TensorFlow 和 "
+":py:mod:`tyxonq.backends` 提供了一组后端 API 以及在 Numpy、Jax、TensorFlow 和 "
 "PyTorch 后端上的对应实现。这些后端继承自 TensorNetwork 包并且是高度定制的。"
 
 #: ../../source/infras.rst:25
@@ -94,26 +94,26 @@ msgid "**Noisy Simulation Related Modules:**"
 msgstr "**噪声模拟相关模块：**"
 
 #: ../../source/infras.rst:27
-msgid ":py:mod:`tensorcircuit.channels`: Definition of quantum noise channels."
-msgstr ":py:mod:`tensorcircuit.channels`: 量子噪声通道的定义。"
+msgid ":py:mod:`tyxonq.channels`: Definition of quantum noise channels."
+msgstr ":py:mod:`tyxonq.channels`: 量子噪声通道的定义。"
 
 #: ../../source/infras.rst:29
 #, fuzzy
 msgid ""
-":py:mod:`tensorcircuit.densitymatrix`: Referenced and highly efficient "
+":py:mod:`tyxonq.densitymatrix`: Referenced and highly efficient "
 "implementation of ``tc.DMCircuit`` class, with similar set API of "
 "``tc.Circuit`` while simulating the noise in the full form of the density"
 " matrix."
 msgstr ""
-":py:mod:`tensorcircuit.densitymatrix`: Referenced implementation of "
+":py:mod:`tyxonq.densitymatrix`: Referenced implementation of "
 "``tc.DMCircuit`` 类的引用实现，具有 ``tc.Circuit`` 的类似集合 API，同时以密度矩阵的完整形式模拟噪声。"
 
 #: ../../source/infras.rst:31
 #, fuzzy
 msgid ""
-":py:mod:`tensorcircuit.noisemodel`: The global noise configuration and "
+":py:mod:`tyxonq.noisemodel`: The global noise configuration and "
 "circuit noisy method APIs"
-msgstr ":py:mod:`tensorcircuit.vis`: 用于电路可视化的代码"
+msgstr ":py:mod:`tyxonq.vis`: 用于电路可视化的代码"
 
 #: ../../source/infras.rst:33
 msgid "**ML Interfaces Related Modules:**"
@@ -122,23 +122,23 @@ msgstr "**机器学习接口相关模块：**"
 #: ../../source/infras.rst:35
 #, fuzzy
 msgid ""
-":py:mod:`tensorcircuit.interfaces`: Provide interfaces when quantum "
+":py:mod:`tyxonq.interfaces`: Provide interfaces when quantum "
 "simulation backend is different from neural libraries. Currently include "
 "PyTorch, TensorFlow, NumPy and SciPy optimizer interfaces."
 msgstr ""
-":py:mod:`tensorcircuit.interfaces`: 当量子模拟后端与神经库不同时提供接口。 目前包括 PyTorch 和 "
+":py:mod:`tyxonq.interfaces`: 当量子模拟后端与神经库不同时提供接口。 目前包括 PyTorch 和 "
 "scipy 优化器接口。"
 
 #: ../../source/infras.rst:37
 msgid ""
-":py:mod:`tensorcircuit.keras`: Provide TensorFlow Keras layers, as well "
+":py:mod:`tyxonq.keras`: Provide TensorFlow Keras layers, as well "
 "as wrappers of jitted function, save/load from tf side."
 msgstr ""
-":py:mod:`tensorcircuit.keras`: 提供 TensorFlow Keras 层，以及可及时编译函数的包装器，从 "
+":py:mod:`tyxonq.keras`: 提供 TensorFlow Keras 层，以及可及时编译函数的包装器，从 "
 "TensorFlow 端保存/加载."
 
 #: ../../source/infras.rst:39
-msgid ":py:mod:`tensorcircuit.torchnn`: Provide PyTorch nn Modules."
+msgid ":py:mod:`tyxonq.torchnn`: Provide PyTorch nn Modules."
 msgstr ""
 
 #: ../../source/infras.rst:41
@@ -147,12 +147,12 @@ msgstr "**MPS 和 MPO 实用模块：**"
 
 #: ../../source/infras.rst:43
 msgid ""
-":py:mod:`tensorcircuit.quantum`: Provide definition and classes for "
+":py:mod:`tyxonq.quantum`: Provide definition and classes for "
 "Matrix Product States as well as Matrix Product Operators, we also "
 "include various quantum physics and quantum information quantities in "
 "this module."
 msgstr ""
-":py:mod:`tensorcircuit.quantum`: "
+":py:mod:`tyxonq.quantum`: "
 "提供矩阵乘积状态以及矩阵乘积算子的定义和类，我们还在这个模块中包含了各种量子物理和量子信息量。"
 
 #: ../../source/infras.rst:45
@@ -161,21 +161,21 @@ msgstr "**基于 MPS 的模拟器模块：**"
 
 #: ../../source/infras.rst:47
 msgid ""
-":py:mod:`tensorcircuit.mps_base`: Customized and jit/AD compatible MPS "
+":py:mod:`tyxonq.mps_base`: Customized and jit/AD compatible MPS "
 "class from TensorNetwork package."
 msgstr ""
-":py:mod:`tensorcircuit.mps_base`: 来自 TensorNetwork 包的自定义并且即时编译/自动微分兼容的 "
+":py:mod:`tyxonq.mps_base`: 来自 TensorNetwork 包的自定义并且即时编译/自动微分兼容的 "
 "MPS 类。"
 
 #: ../../source/infras.rst:49
 msgid ""
-":py:mod:`tensorcircuit.mpscircuit`: "
-":py:obj:`tensorcircuit.mpscircuit.MPSCircuit` class with similar (but "
+":py:mod:`tyxonq.mpscircuit`: "
+":py:obj:`tyxonq.mpscircuit.MPSCircuit` class with similar (but "
 "subtly different) APIs as ``tc.Circuit``, where the simulation engine is "
 "based on MPS TEBD."
 msgstr ""
-":py:mod:`tensorcircuit.mpscircuit`: "
-":py:obj:`tensorcircuit.mpscircuit.MPSCircuit` 类具有与 "
+":py:mod:`tyxonq.mpscircuit`: "
+":py:obj:`tyxonq.mpscircuit.MPSCircuit` 类具有与 "
 "``tc.Circuit``，类似（但略有不同）的 API，其中仿真引擎基于 MPS TEBD。"
 
 #: ../../source/infras.rst:51
@@ -184,31 +184,31 @@ msgstr "**支持模块：**"
 
 #: ../../source/infras.rst:53
 msgid ""
-":py:mod:`tensorcircuit.simplify`: Provide tools and utility functions to "
+":py:mod:`tyxonq.simplify`: Provide tools and utility functions to "
 "simplify the tensornetworks before the real contractions."
-msgstr ":py:mod:`tensorcircuit.simplify`: 提供工具和实用函数以在真正收缩之前简化张量网络。"
+msgstr ":py:mod:`tyxonq.simplify`: 提供工具和实用函数以在真正收缩之前简化张量网络。"
 
 #: ../../source/infras.rst:55
 msgid ""
-":py:mod:`tensorcircuit.experimental`: Experimental functions, long and "
+":py:mod:`tyxonq.experimental`: Experimental functions, long and "
 "stable support is not guaranteed."
-msgstr ":py:mod:`tensorcircuit.experimental`: 实验函数，不保证有持久且稳定的支持。"
+msgstr ":py:mod:`tyxonq.experimental`: 实验函数，不保证有持久且稳定的支持。"
 
 #: ../../source/infras.rst:57
 msgid ""
-":py:mod:`tensorcircuit.utils`: Some general function tools that are not "
+":py:mod:`tyxonq.utils`: Some general function tools that are not "
 "quantum at all."
-msgstr ":py:mod:`tensorcircuit.utils`: 一些与量子完全无关的通用工具函数。"
+msgstr ":py:mod:`tyxonq.utils`: 一些与量子完全无关的通用工具函数。"
 
 #: ../../source/infras.rst:59
-msgid ":py:mod:`tensorcircuit.vis`: Visualization code for circuit drawing."
-msgstr ":py:mod:`tensorcircuit.vis`: 用于电路可视化的代码"
+msgid ":py:mod:`tyxonq.vis`: Visualization code for circuit drawing."
+msgstr ":py:mod:`tyxonq.vis`: 用于电路可视化的代码"
 
 #: ../../source/infras.rst:61
 msgid ""
-":py:mod:`tensorcircuit.translation`: Translate circuit object to circuit "
+":py:mod:`tyxonq.translation`: Translate circuit object to circuit "
 "object in other quantum packages."
-msgstr ":py:mod:`tensorcircuit.translation`: 将电路对象转换为其他量子包中的电路对象。"
+msgstr ":py:mod:`tyxonq.translation`: 将电路对象转换为其他量子包中的电路对象。"
 
 #: ../../source/infras.rst:63
 msgid "**Processing and error mitigation on sample results:**"
@@ -216,7 +216,7 @@ msgstr ""
 
 #: ../../source/infras.rst:65
 msgid ""
-":py:mod:`tensorcircuit.results`: Provide tools to process count dict and "
+":py:mod:`tyxonq.results`: Provide tools to process count dict and "
 "to apply error mitigation."
 msgstr ""
 
@@ -226,13 +226,13 @@ msgstr ""
 
 #: ../../source/infras.rst:69
 msgid ""
-":py:mod:`tensorcircuit.cloud`: Provide quantum cloud SDK that can access "
+":py:mod:`tyxonq.cloud`: Provide quantum cloud SDK that can access "
 "and program the real quantum hardware."
 msgstr ""
 
 #: ../../source/infras.rst:71
 msgid ""
-":py:mod:`tensorcircuit.compiler`: Provide compiler chains to compile and "
+":py:mod:`tyxonq.compiler`: Provide compiler chains to compile and "
 "transform quantum circuits."
 msgstr ""
 
@@ -242,9 +242,9 @@ msgstr "**电路操作的快捷方式和模板：**"
 
 #: ../../source/infras.rst:75
 msgid ""
-":py:mod:`tensorcircuit.templates`: provide handy shortcuts functions for "
+":py:mod:`tyxonq.templates`: provide handy shortcuts functions for "
 "expectation or circuit building patterns."
-msgstr ":py:mod:`tensorcircuit.templates`: 为期望或电路构建模式提供方便的快捷函数。"
+msgstr ":py:mod:`tyxonq.templates`: 为期望或电路构建模式提供方便的快捷函数。"
 
 #: ../../source/infras.rst:77
 msgid "**Applications:**"
@@ -252,9 +252,9 @@ msgstr "**应用：**"
 
 #: ../../source/infras.rst:79
 msgid ""
-":py:mod:`tensorcircuit.applications`: most code here is not maintained "
+":py:mod:`tyxonq.applications`: most code here is not maintained "
 "and deprecated, use at your own risk."
-msgstr ":py:mod:`tensorcircuit.applications`: 这里的大多数代码都没有维护并且被弃用了，使用风险自负。"
+msgstr ":py:mod:`tyxonq.applications`: 这里的大多数代码都没有维护并且被弃用了，使用风险自负。"
 
 #: ../../source/infras.rst:83
 msgid ""
@@ -266,30 +266,30 @@ msgstr ""
 "``tc.gates``。"
 
 #: ../../source/infras.rst:88
-msgid "Relation between TensorCircuit and TensorNetwork"
-msgstr "TensorCircuit 和 TensorNetwork 之间的关系"
+msgid "Relation between TyxonQ and TensorNetwork"
+msgstr "TyxonQ 和 TensorNetwork 之间的关系"
 
 #: ../../source/infras.rst:90
 msgid ""
-"TensorCircuit has a strong connection with the `TensorNetwork package "
+"TyxonQ has a strong connection with the `TensorNetwork package "
 "<https://github.com/google/TensorNetwork>`_ released by Google. Since the"
 " TensorNetwork package has poor documentation and tutorials, most of the "
 "time, we need to delve into the codebase of TensorNetwork to figure out "
-"what happened. In other words, to read the TensorCircuit codebase, one "
+"what happened. In other words, to read the TyxonQ codebase, one "
 "may have to frequently refer to the TensorNetwork codebase."
 msgstr ""
-"TensorCircuit 与谷歌发布的 `TensorNetwork "
+"TyxonQ 与谷歌发布的 `TensorNetwork "
 "<https://github.com/google/TensorNetwork>`_ 有很强的联系。由于 TensorNetwork "
 "包的文档和教程很差，大多数时候，我们需要深入研究 TensorNetwork 的代码库来弄清楚发生了什么。换句话说，要阅读 "
-"TensorCircuit 代码库，可能需要经常参考 TensorNetwork 代码库。"
+"TyxonQ 代码库，可能需要经常参考 TensorNetwork 代码库。"
 
 #: ../../source/infras.rst:92
 msgid ""
-"Inside TensorCircuit, we heavily utilize TensorNetwork-related APIs from "
+"Inside TyxonQ, we heavily utilize TensorNetwork-related APIs from "
 "the TensorNetwork package and highly customized several modules from "
 "TensorNetwork by inheritance and rewriting:"
 msgstr ""
-"在 TensorCircuit 内部，我们大量使用了 TensorNetwork 包中与 TensorNetwork 相关的 "
+"在 TyxonQ 内部，我们大量使用了 TensorNetwork 包中与 TensorNetwork 相关的 "
 "API，并通过继承和重写从 TensorNetwork 中高度定制了几个模块："
 
 #: ../../source/infras.rst:94
@@ -332,16 +332,16 @@ msgstr "QuOperator/QuVector 和 MPO/MPS"
 
 #: ../../source/infras.rst:116
 msgid ""
-":py:class:`tensorcircuit.quantum.QuOperator`, "
-":py:class:`tensorcircuit.quantum.QuVector` and "
-":py:class:`tensorcircuit.quantum.QuAdjointVector` are classes adopted "
+":py:class:`tyxonq.quantum.QuOperator`, "
+":py:class:`tyxonq.quantum.QuVector` and "
+":py:class:`tyxonq.quantum.QuAdjointVector` are classes adopted "
 "from TensorNetwork package. They behave like a matrix/vector (column or "
 "row) when interacting with other ingredients while the inner structure is"
 " maintained by the tensornetwork for efficiency and compactness."
 msgstr ""
-":py:class:`tensorcircuit.quantum.QuOperator`, "
-":py:class:`tensorcircuit.quantum.QuVector` 和 "
-":py:class:`tensorcircuit.quantum.QuAdjointVector` 是从 TensorNetwork "
+":py:class:`tyxonq.quantum.QuOperator`, "
+":py:class:`tyxonq.quantum.QuVector` 和 "
+":py:class:`tyxonq.quantum.QuAdjointVector` 是从 TensorNetwork "
 "包中采用的类。它们的行为类似于与其他成分交互时的矩阵/向量（列或行），而内部结构由张量网络维护以提高效率和紧凑性。"
 
 #: ../../source/infras.rst:119
@@ -414,31 +414,31 @@ msgstr ""
 #: ../../source/infras.rst:166
 msgid ""
 "Vendor specific implementation of functional API in, e.g., "
-":py:mod:`tensorcircuit.cloud.tencent`"
+":py:mod:`tyxonq.cloud.tencent`"
 msgstr ""
 
 #: ../../source/infras.rst:168
 msgid ""
 "Provider agnostic functional lower level API for task/device management "
-"in :py:mod:`tensorcircuit.cloud.apis`"
+"in :py:mod:`tyxonq.cloud.apis`"
 msgstr ""
 
 #: ../../source/infras.rst:170
 msgid ""
 "Object oriented abstraction for Provider/Device/Task in "
-":py:mod:`tensorcircuit.cloud.abstraction`"
+":py:mod:`tyxonq.cloud.abstraction`"
 msgstr ""
 
 #: ../../source/infras.rst:172
 msgid ""
 "Unified batch submission interface as standarized in "
-":py:meth:`tensorcircuit.cloud.wrapper.batch_submit_template`"
+":py:meth:`tyxonq.cloud.wrapper.batch_submit_template`"
 msgstr ""
 
 #: ../../source/infras.rst:174
 msgid ""
 "Numerical and experimental unified all-in-one interface as "
-":py:meth:`tensorcircuit.cloud.wrapper.batch_expectation_ps`"
+":py:meth:`tyxonq.cloud.wrapper.batch_expectation_ps`"
 msgstr ""
 
 #: ../../source/infras.rst:176
@@ -454,24 +454,24 @@ msgstr ""
 msgid ""
 "For compiler, error mitigation and results post-processing parts, they "
 "can be carefully designed to decouple with the QPU calls, so they are "
-"separately implemented in :py:mod:`tensorcircuit.compiler` and "
-":py:mod:`tensorcircuit.results`, and they can be independently useful "
+"separately implemented in :py:mod:`tyxonq.compiler` and "
+":py:mod:`tyxonq.results`, and they can be independently useful "
 "even without tc's cloud access."
 msgstr ""
 
 #~ msgid ""
-#~ ":py:mod:`tensorcircuit.densitymatrix2`: Highly efficient"
+#~ ":py:mod:`tyxonq.densitymatrix2`: Highly efficient"
 #~ " implementation of "
-#~ ":py:obj:`tensorcircuit.densitymatrix2.DMCircuit2` class, "
+#~ ":py:obj:`tyxonq.densitymatrix2.DMCircuit2` class, "
 #~ "always preferred than the referenced "
 #~ "implementation."
 #~ msgstr ""
-#~ ":py:mod:`tensorcircuit.densitymatrix2`:  "
-#~ ":py:obj:`tensorcircuit.densitymatrix2.DMCircuit2` "
+#~ ":py:mod:`tyxonq.densitymatrix2`:  "
+#~ ":py:obj:`tyxonq.densitymatrix2.DMCircuit2` "
 #~ "类的高效实现，总是比参考的实现更适用。"
 
 #~ msgid ""
-#~ ":py:mod:`tensorcircuit.results`: Provide tools to"
+#~ ":py:mod:`tyxonq.results`: Provide tools to"
 #~ " process count dict and to apply "
 #~ "error mitigation"
 #~ msgstr ""

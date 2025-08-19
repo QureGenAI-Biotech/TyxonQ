@@ -1,6 +1,6 @@
-tensorcircuit.applications.vqes
+tyxonq.applications.vqes
 ================================================================================
-.. automodule:: tensorcircuit.applications.vqes
+.. automodule:: tyxonq.applications.vqes
     :members:
     :undoc-members:
     :show-inheritance:

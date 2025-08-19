@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: tensorcircuit \n"
+"Project-Id-Version: tyxonq \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-05-07 10:47+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -19,12 +19,12 @@ msgstr ""
 "Generated-By: Babel 2.9.1\n"
 
 #: ../../source/sharpbits.rst:3
-msgid "TensorCircuit: The Sharp Bits 🔪"
-msgstr "TensorCircuit: 常见错误 🔪"
+msgid "TyxonQ: The Sharp Bits 🔪"
+msgstr "TyxonQ: 常见错误 🔪"
 
 #: ../../source/sharpbits.rst:5
 msgid ""
-"Be fast is never for free, though much cheaper in TensorCircuit, but you "
+"Be fast is never for free, though much cheaper in TyxonQ, but you "
 "have to be cautious especially in terms of AD, JIT compatibility. We will"
 " go through the main sharp edges 🔪 in this note."
 msgstr "虽然在TensorCircuit中速度很快，但是你必须小心，尤其是在AD和JIT兼容性方面。"
@@ -105,7 +105,7 @@ msgstr ""
 #: ../../source/sharpbits.rst:162
 msgid ""
 "If the backend is inconsistent, one can convert the tensor backend via "
-":py:meth:`tensorcircuit.interfaces.tensortrans.general_args_to_backend`."
+":py:meth:`tyxonq.interfaces.tensortrans.general_args_to_backend`."
 msgstr ""
 
 #: ../../source/sharpbits.rst:173
@@ -148,13 +148,13 @@ msgstr ""
 
 #: ../../source/sharpbits.rst:196
 msgid ""
-"In TensorCircuit, currently we make the difference in AD transparent, "
+"In TyxonQ, currently we make the difference in AD transparent, "
 "namely, when switching the backend, the AD behavior and result for "
 "complex valued function can be different and determined by the nature "
 "behavior of the corresponding backend framework. All AD relevant ops such"
 " as ``grad`` or ``jacrev`` may be affected. Therefore, the user must be "
 "careful when dealing with AD on complex valued function in a backend "
-"agnostic way in TensorCircuit."
+"agnostic way in TyxonQ."
 msgstr ""
 "在TensorCircuit中，我们目前使AD的差异透明，即在切换后端时，复值函数的AD行为和结果可能不同，并由相应后端框架的本质行为决定。所有与AD相关的操作，如"
 " ``grad`` 或者 ``jacrev`` "
@@ -164,10 +164,10 @@ msgstr ""
 msgid ""
 "See example script on computing Jacobian with different modes on "
 "different backends: `jacobian_cal.py <https://github.com/tencent-quantum-"
-"lab/tensorcircuit/blob/master/examples/jacobian_cal.py>`_. Also see the "
+"lab/tyxonq/blob/master/examples/jacobian_cal.py>`_. Also see the "
 "code below for a reference:"
 msgstr ""
 "参考不同后端的不同模式下计算Jacobian的示例脚本：`jacobian_cal.py <https://github.com/tencent-"
 "quantum-"
-"lab/tensorcircuit/blob/master/examples/jacobian_cal.py>`_。另外请参考下面的代码:"
+"lab/tyxonq/blob/master/examples/jacobian_cal.py>`_。另外请参考下面的代码:"
 

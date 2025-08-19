@@ -1,6 +1,6 @@
-tensorcircuit.compiler.qiskit_compiler
+tyxonq.compiler.qiskit_compiler
 ================================================================================
-.. automodule:: tensorcircuit.compiler.qiskit_compiler
+.. automodule:: tyxonq.compiler.qiskit_compiler
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,6 @@
-tensorcircuit.quantum
+tyxonq.quantum
 ================================================================================
-.. automodule:: tensorcircuit.quantum
+.. automodule:: tyxonq.quantum
     :members:
     :undoc-members:
     :show-inheritance:

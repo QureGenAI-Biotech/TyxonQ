@@ -1,6 +1,6 @@
-tensorcircuit.applications.van
+tyxonq.applications.van
 ================================================================================
-.. automodule:: tensorcircuit.applications.van
+.. automodule:: tyxonq.applications.van
     :members:
     :undoc-members:
     :show-inheritance:

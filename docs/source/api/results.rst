@@ -1,4 +1,4 @@
-tensorcircuit.results
+tyxonq.results
 ================================================================================
 .. toctree::
     results/counts.rst

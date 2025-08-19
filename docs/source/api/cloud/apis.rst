@@ -1,6 +1,6 @@
-tensorcircuit.cloud.apis
+tyxonq.cloud.apis
 ================================================================================
-.. automodule:: tensorcircuit.cloud.apis
+.. automodule:: tyxonq.cloud.apis
     :members:
     :undoc-members:
     :show-inheritance:

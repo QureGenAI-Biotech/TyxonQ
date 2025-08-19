@@ -1,4 +1,4 @@
-tensorcircuit.results.qem
+tyxonq.results.qem
 ================================================================================
 .. toctree::
     qem/benchmark_circuits.rst

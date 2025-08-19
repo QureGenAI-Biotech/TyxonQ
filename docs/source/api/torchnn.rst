@@ -1,6 +1,6 @@
-tensorcircuit.torchnn
+tyxonq.torchnn
 ================================================================================
-.. automodule:: tensorcircuit.torchnn
+.. automodule:: tyxonq.torchnn
     :members:
     :undoc-members:
     :show-inheritance:

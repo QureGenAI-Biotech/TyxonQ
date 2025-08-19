@@ -1,6 +1,6 @@
-tensorcircuit.simplify
+tyxonq.simplify
 ================================================================================
-.. automodule:: tensorcircuit.simplify
+.. automodule:: tyxonq.simplify
     :members:
     :undoc-members:
     :show-inheritance:

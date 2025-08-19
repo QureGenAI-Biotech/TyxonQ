@@ -1,4 +1,4 @@
-tensorcircuit.applications.physics
+tyxonq.applications.physics
 ================================================================================
 .. toctree::
     physics/baseline.rst

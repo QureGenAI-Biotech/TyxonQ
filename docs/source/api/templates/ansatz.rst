@@ -1,6 +1,6 @@
-tensorcircuit.templates.ansatz
+tyxonq.templates.ansatz
 ================================================================================
-.. automodule:: tensorcircuit.templates.ansatz
+.. automodule:: tyxonq.templates.ansatz
     :members:
     :undoc-members:
     :show-inheritance:

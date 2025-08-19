@@ -1,6 +1,6 @@
-tensorcircuit.cloud.wrapper
+tyxonq.cloud.wrapper
 ================================================================================
-.. automodule:: tensorcircuit.cloud.wrapper
+.. automodule:: tyxonq.cloud.wrapper
     :members:
     :undoc-members:
     :show-inheritance:

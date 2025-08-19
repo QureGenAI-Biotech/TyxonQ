@@ -1,6 +1,6 @@
-tensorcircuit.vis
+tyxonq.vis
 ================================================================================
-.. automodule:: tensorcircuit.vis
+.. automodule:: tyxonq.vis
     :members:
     :undoc-members:
     :show-inheritance:

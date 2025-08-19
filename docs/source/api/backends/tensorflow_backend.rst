@@ -1,6 +1,6 @@
-tensorcircuit.backends.tensorflow_backend
+tyxonq.backends.tensorflow_backend
 ================================================================================
-.. automodule:: tensorcircuit.backends.tensorflow_backend
+.. automodule:: tyxonq.backends.tensorflow_backend
     :members:
     :undoc-members:
     :show-inheritance:

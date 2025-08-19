@@ -20,9 +20,9 @@ sys.path.insert(0, os.path.abspath("../ext/"))
 
 # -- Project information -----------------------------------------------------
 
-project = "tensorcircuit"
-copyright = "2020, The TensorCircuit Authors"
-author = "refraction-ray"
+project = "tyxonq"
+copyright = "2025, The TyxonQ Authors. Refactor from tensorcircut"
+author = "TyxonQ Team"
 
 # The short X.Y version
 version = ""
@@ -132,8 +132,8 @@ html_static_path = ["_static"]
 # rtd github link config
 html_context = {
     "display_github": True,  # Integrate GitHub
-    "github_user": "tencent-quantum-lab",  # Username
-    "github_repo": "tensorcircuit",  # Repo name
+    "github_user": "QureGenAI-Biotech",  # Username
+    "github_repo": "TyxonQ",  # Repo name
     "github_version": "master",  # Version
     "conf_py_path": "/source/",  # Path in the checkout to the docs root
 }
@@ -142,7 +142,7 @@ html_context = {
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "tensorcircuitdoc"
+htmlhelp_basename = "tyxonqdoc"
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -168,8 +168,8 @@ latex_elements = {
 latex_documents = [
     (
         master_doc,
-        "tensorcircuit.tex",
-        "tensorcircuit Documentation",
+        "tyxonq.tex",
+        "tyxonq Documentation",
         "refraction-ray",
         "manual",
     ),
@@ -180,7 +180,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "tensorcircuit", "tensorcircuit Documentation", [author], 1)]
+man_pages = [(master_doc, "tyxonq", "tyxonq Documentation", [author], 1)]
 
 
 # -- Options for Texinfo output ----------------------------------------------
@@ -191,10 +191,10 @@ man_pages = [(master_doc, "tensorcircuit", "tensorcircuit Documentation", [autho
 texinfo_documents = [
     (
         master_doc,
-        "tensorcircuit",
-        "tensorcircuit Documentation",
+        "tyxonq",
+        "tyxonq Documentation",
         author,
-        "tensorcircuit",
+        "tyxonq",
         "One line description of project.",
         "Miscellaneous",
     ),

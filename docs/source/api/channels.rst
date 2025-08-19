@@ -1,6 +1,6 @@
-tensorcircuit.channels
+tyxonq.channels
 ================================================================================
-.. automodule:: tensorcircuit.channels
+.. automodule:: tyxonq.channels
     :members:
     :undoc-members:
     :show-inheritance:

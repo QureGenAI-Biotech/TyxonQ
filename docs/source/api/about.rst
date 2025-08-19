@@ -1,6 +1,6 @@
-tensorcircuit.about
+tyxonq.about
 ================================================================================
-.. automodule:: tensorcircuit.about
+.. automodule:: tyxonq.about
     :members:
     :undoc-members:
     :show-inheritance:

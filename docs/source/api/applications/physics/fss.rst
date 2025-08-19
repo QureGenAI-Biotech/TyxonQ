@@ -1,6 +1,6 @@
-tensorcircuit.applications.physics.fss
+tyxonq.applications.physics.fss
 ================================================================================
-.. automodule:: tensorcircuit.applications.physics.fss
+.. automodule:: tyxonq.applications.physics.fss
     :members:
     :undoc-members:
     :show-inheritance:
