@@ -13,7 +13,7 @@ yy = tq.gates._yy_matrix
 zz = tq.gates._zz_matrix
 
 nqubit = 4
-t = 1.0
+t = 0.5
 tau = 0.1
 
 
@@ -30,7 +30,7 @@ def Trotter_step_unitary(input_state, tau, nqubit):
     return TSUstate, z0
 
 
-TSU_vmap = K.jit(  # warning pytorch might be unable to do this exactly
+TSU_vmap = K.jit(
     K.vmap(
         Trotter_step_unitary,
         vectorized_argnums=0,

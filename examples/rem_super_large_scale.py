@@ -37,18 +37,22 @@ def run(cs, shots, p=0.1):
 
 
 if __name__ == "__main__":
-    for p in [0.1, 0.05, 0.02]:
+    # downscale for quick demo
+    for p in [0.1]:
         print(p)
-        n = int(3 / p)
+        n = int(3 / p)  # 30
+        n = min(n, 20)
         c = tq.Circuit(n)
         c.x(range(n))
         runp = partial(run, p=p)
-        r = runp([c], 8192)[0]
+        r = runp([c], 2048)[0]
         mit = tq.results.rem.ReadoutMit(runp)
         mit.cals_from_system(n)
-        for i in range(n):
+        max_q = len(mit.single_qubit_cals)
+        for i in range(min(max_q, 10)):
             print(i, "\n", mit.single_qubit_cals[i])
         rs = []
-        for i in range(n):
-            rs.append([i, np.abs(mit.expectation(r, list(range(i))))])
+        for i in range(min(max_q, 10)):
+            qs = list(range(i))
+            rs.append([i, np.abs(mit.expectation(r, qs))])
             print(rs[i])

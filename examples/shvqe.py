@@ -17,13 +17,13 @@ from tyxonq.applications.vqes import construct_matrix_v3
 ctype, rtype = tq.set_dtype("complex64")
 K = tq.set_backend("pytorch")
 
-n = 10  # the number of qubits (must be even for consistency later)
-ncz = 2  # number of cz layers in Schrodinger circuit
+n = 6  # the number of qubits (must be even for consistency later)
+ncz = 1  # number of cz layers in Schrodinger circuit
 nlayersq = ncz + 1  # Schrodinger parameter layers
 
-# training setup
-epochs = 1000
-batch = 1000
+# training setup (shortened for quick validation)
+epochs = 60
+batch = 64
 
 # Hamiltonian
 h6h = np.load("./h6_hamiltonian.npy")  # reported in 0.99 A
@@ -135,7 +135,7 @@ def sampling_from_structure(structures, batch=1):
     return r.transpose()
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def best_from_structure(structures):
     return K.argmax(structures, axis=-1)
 
@@ -164,7 +164,6 @@ def nmf_gradient(structures, oh):
     prob = K.reshape(prob, [-1, 1])
     prob = K.tile(prob, [1, structures.shape[-1]])
 
-    # warning: pytorch scatter operation is different from tensorflow
     result = -prob.clone()
     for i, idx in enumerate(indices):
         result[idx[0], idx[1]] = 1 - prob[idx[0], idx[1]]
@@ -173,11 +172,9 @@ def nmf_gradient(structures, oh):
 
 
 # vmap for a batch of structures
-# warning pytorch might be unable to do this exactly
 nmf_gradient_vmap = K.jit(K.vmap(nmf_gradient, vectorized_argnums=1))
 
 # vvag for a batch of structures
-# warning pytorch might be unable to do this exactly
 vvag_hybrid = K.jit(
     K.vectorized_value_and_grad(hybrid_vqe, vectorized_argnums=(0,), argnums=(1,)),
     static_argnums=(2,),
@@ -191,8 +188,7 @@ def train_hybrid(
     params = K.ones([n // 2, 2], dtype=float)
     paramq = K.implicit_randn([nlayersq, n, 3], stddev=stddev) * 2 * np.pi
     if lr is None:
-        # warning: pytorch scheduler is different from tensorflow
-        lr = 0.6
+        lr = 0.2
     structure_opt = torch.optim.Adam([torch.nn.Parameter(params), torch.nn.Parameter(paramq)], lr=lr)
 
     avcost = 0

@@ -30,9 +30,25 @@ def variational_wfn(theta, psi0):
     return c.state()
 
 
-# warning pytorch might be unable to do this exactly
-ppsioverptheta = K.jit(K.jacfwd(variational_wfn, argnums=0))
-# compute \partial psi /\partial theta, i.e. jacobian of wfn
+def numerical_jacobian(theta, psi0, eps=1e-3):
+    """Compute numerical Jacobian J_{:,k} = d psi / d theta_k via central differences.
+    Returns a tensor of shape (2^N, P) where P = l*N*2.
+    """
+    theta = K.reshape(theta, [-1])
+    num_params = theta.shape[0]
+    # preallocate jacobian as list of columns
+    cols = []
+    for k in range(num_params):
+        tp = K.copy(theta)
+        tm = K.copy(theta)
+        tp[k] = tp[k] + eps
+        tm[k] = tm[k] - eps
+        wp = variational_wfn(tp, psi0)
+        wm = variational_wfn(tm, psi0)
+        cols.append((wp - wm) / (2 * eps))
+    # stack columns: shape (P, 2^N) -> then transpose
+    J = K.transpose(K.stack(cols))
+    return J
 
 
 def ij(i, j):
@@ -42,42 +58,27 @@ def ij(i, j):
     return K.tensordot(K.conj(i), j, 1)
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
-def lhs_matrix(theta, psi0):
-    vij = K.vmap(ij, vectorized_argnums=0)
-    vvij = K.vmap(vij, vectorized_argnums=1)
-    jacobian = ppsioverptheta(theta, psi0=psi0)
-    # fim = K.adjoint(jacobian)@jacobian is also ok
-    # speed comparison?
-    jacobian = K.transpose(jacobian)
-    fim = vvij(jacobian, jacobian)
-    fim = K.real(fim)
+def lhs_matrix_from_jacobian(J):
+    # FIM = Re( J^H J )
+    JH = K.conj(K.transpose(J))
+    fim = K.real(JH @ J)
     return fim
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
-def rhs_vector(theta, psi0):
-    def energy(theta, psi0):
-        w = variational_wfn(theta, psi0)
-        wl = K.stop_gradient(w)
-        wl = K.conj(wl)
-        wr = w
-        wl = K.reshape(wl, [1, -1])
-        wr = K.reshape(wr, [-1, 1])
-        e = wl @ h @ wr
-        # use sparse matrix if required
-        return K.real(e)[0, 0]
-
-    eg = K.grad(energy, argnums=0)
-    rhs = eg(theta, psi0)
-    rhs = K.imag(rhs)
+def rhs_vector_from_jacobian(theta, psi, J):
+    # RHS_k = Im( <d psi / d theta_k | H | psi> )
+    Hpsi = K.reshape(h @ K.reshape(psi, [-1, 1]), [-1])
+    # J shape: (state_dim, P) -> conj(J)^T shape: (P, state_dim)
+    inner = K.transpose(K.conj(J)) @ K.reshape(Hpsi, [-1, 1])
+    inner = K.reshape(inner, [-1])
+    rhs = K.imag(inner)
     return rhs
     # for ITE, imag is replace with real
     # a simpler way to get rhs in ITE case is to directly evaluate
     # 0.5*\nabla <H>
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def update(theta, lhs, rhs, tau):
     # protection
     eps = 1e-4
@@ -91,10 +92,10 @@ def update(theta, lhs, rhs, tau):
 
 
 if __name__ == "__main__":
-    N = 10
-    l = 5
-    tau = 0.005
-    steps = 200
+    N = 6
+    l = 3
+    tau = 0.01
+    steps = 20
 
     g = tq.templates.graphs.Line1D(N, pbc=False)
     h = tq.quantum.heisenberg_hamiltonian(
@@ -114,10 +115,11 @@ if __name__ == "__main__":
 
     for n in range(steps):
         psi = variational_wfn(theta, psi0)
-        lhs = lhs_matrix(theta, psi0)
-        rhs = rhs_vector(theta, psi0)
+        J = numerical_jacobian(theta, psi0, eps=1e-3)
+        lhs = lhs_matrix_from_jacobian(J)
+        rhs = rhs_vector_from_jacobian(theta, psi, J)
         theta = update(theta, lhs, rhs, tau)
-        if n % 10 == 0:
+        if n % 5 == 0:
             time1 = time.time()
             print(time1 - time0)
             time0 = time1

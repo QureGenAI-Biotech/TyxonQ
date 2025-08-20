@@ -21,7 +21,7 @@ K = tq.set_backend("pytorch")
 K.set_dtype("complex64")
 
 
-n, m, nlayers = 3, 2, 2
+n, m, nlayers = 2, 2, 2
 coord = tq.templates.graphs.Grid2DCoord(n, m)
 
 
@@ -58,12 +58,12 @@ param = torch.nn.Parameter(torch.randn(nlayers, 2 * n * m) * 0.1)
 if __name__ == "__main__":
     optimizer = torch.optim.Adam([param], lr=1e-2)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-    for j in range(1000):
+    for j in range(50):
         loss, gr = vgf(param)
         optimizer.zero_grad()
         param.grad = gr
         optimizer.step()
-        if j % 50 == 0:
+        if j % 10 == 0:
             print("loss", loss.detach().cpu().item())
-        if (j + 1) % 100 == 0:
+        if (j + 1) % 25 == 0:
             scheduler.step()

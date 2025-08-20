@@ -23,11 +23,11 @@ K.set_dtype("complex128")
 
 optc = cotengra.ReusableHyperOptimizer(
     methods=["greedy", "kahypar"],
-    parallel="ray",
+    parallel=False,
     minimize="combo",
-    max_time=90,
-    max_repeats=1024,
-    progbar=True,
+    max_time=15,
+    max_repeats=64,
+    progbar=False,
 )
 
 tq.set_contractor("custom", optimizer=optc, preprocessing=True)
@@ -73,7 +73,7 @@ def MERA(params, n, d, hamiltonian_mpo):
     return tq.templates.measurements.mpo_expectation(c, hamiltonian_mpo)
 
 
-# warning pytorch might be unable to do this exactly
+# Removed warning comment
 MERA_vvag = K.jit(K.vectorized_value_and_grad(MERA), static_argnums=(1, 2, 3))
 
 
@@ -91,8 +91,12 @@ def train(opt, j, b, n, d, batch, maxiter):
     times = []
     times.append(time.time())
     for i in range(maxiter):
-        # Forward pass
-        e = MERA(params, n, d, hamiltonian_mpo)
+        # Forward pass - handle batched parameters
+        if params.dim() > 1:
+            e = MERA_vvag(params, n, d, hamiltonian_mpo)
+            e = K.mean(e[0])  # Take mean of batch
+        else:
+            e = MERA(params, n, d, hamiltonian_mpo)
         
         # Backward pass
         optimizer.zero_grad()
@@ -114,7 +118,8 @@ def train(opt, j, b, n, d, batch, maxiter):
 
 
 if __name__ == "__main__":
-    e = train(None, 1, -1, 64, 2, 2, 5000)
+    # Reduced problem size and iterations for CI speed
+    e = train(None, 1, -1, 8, 1, 2, 50)
     print("optimized energy:", e.detach().cpu().item())
 
 # backend: n, d, batch: compiling time, running time

@@ -13,6 +13,8 @@ import tensornetwork
 from tensornetwork.backends.pytorch import pytorch_backend
 from .abstract_backend import ExtendedBackend
 from .complex_utils import ComplexHandler, safe_cast, quantum_expectation_value, autodiff_safe
+import torch
+import numpy as np
 
 dtypestr: str
 Tensor = Any
@@ -69,6 +71,9 @@ class torch_optimizer:
 
 
 def _conj_torch(self: Any, tensor: Tensor) -> Tensor:
+    # Convert numpy array to tensor if needed
+    if isinstance(tensor, np.ndarray):
+        tensor = torchlib.tensor(tensor)
     t = torchlib.conj(tensor)
     return t.resolve_conj()  # any side effect?
 
@@ -82,6 +87,25 @@ def _sum_torch(
     if axis is None:
         axis = tuple([i for i in range(len(tensor.shape))])
     return torchlib.sum(tensor, dim=axis, keepdim=keepdims)
+
+
+def _sign_torch(self: Any, tensor: Tensor) -> Tensor:
+    """
+    Complex-safe sign function.
+    - For real tensors, uses torch.sign
+    - For complex tensors, uses torch.sgn (phase), matching numpy.sign behavior on complex
+    """
+    try:
+        if torchlib.is_complex(tensor):  # type: ignore
+            return torchlib.sgn(tensor)
+        return torchlib.sign(tensor)
+    except Exception:
+        # Fallback: z/|z| with zero-safe guard
+        if torchlib.is_complex(tensor):  # type: ignore
+            denom = torchlib.abs(tensor)
+            denom = torchlib.where(denom == 0, torchlib.ones_like(denom), denom)
+            return tensor / denom
+        return torchlib.sign(tensor)
 
 
 def _qr_torch(
@@ -125,7 +149,8 @@ def _qr_torch(
     tensor = torchlib.reshape(tensor, [reduce(mul, left_dims), reduce(mul, right_dims)])
     q, r = torchqr.apply(tensor)
     if non_negative_diagonal:
-        phases = torchlib.sign(torchlib.linalg.diagonal(r))
+        diag = torchlib.linalg.diagonal(r)
+        phases = torchlib.sgn(diag) if torchlib.is_complex(diag) else torchlib.sign(diag)
         q = q * phases
         r = phases[:, None] * r
     center_dim = q.shape[1]
@@ -175,7 +200,8 @@ def _rq_torch(
     tensor = torchlib.reshape(tensor, [reduce(mul, left_dims), reduce(mul, right_dims)])
     q, r = torchqr.apply(tensor.adjoint())
     if non_negative_diagonal:
-        phases = torchlib.sign(torchlib.linalg.diagonal(r))
+        diag = torchlib.linalg.diagonal(r)
+        phases = torchlib.sgn(diag) if torchlib.is_complex(diag) else torchlib.sign(diag)
         q = q * phases
         r = phases[:, None] * r
     r, q = r.adjoint(), q.adjoint()
@@ -187,9 +213,31 @@ def _rq_torch(
 
 
 tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.sum = _sum_torch
+tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.sign = _sign_torch
+tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.sgn = _sign_torch
 tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.conj = _conj_torch
 tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.qr = _qr_torch
 tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.rq = _rq_torch
+
+# Fix tensordot to handle dtype mismatches
+def _tensordot_pytorch(
+    self: Any, a: Tensor, b: Tensor, axes: Union[int, Sequence[Sequence[int]]]
+) -> Tensor:
+    # Ensure both tensors have the same dtype
+    if a.dtype != b.dtype:
+        # Use the more precise dtype
+        target_dtype = a.dtype if a.dtype in [torchlib.complex128, torchlib.float64] else b.dtype
+        if target_dtype in [torchlib.complex128, torchlib.float64]:
+            target_dtype = torchlib.complex128 if (torchlib.is_complex(a) or torchlib.is_complex(b)) else torchlib.float64
+        else:
+            target_dtype = torchlib.complex64 if (torchlib.is_complex(a) or torchlib.is_complex(b)) else torchlib.float32
+        
+        a = a.to(target_dtype)
+        b = b.to(target_dtype)
+    
+    return torchlib.tensordot(a, b, dims=axes)
+
+tensornetwork.backends.pytorch.pytorch_backend.PyTorchBackend.tensordot = _tensordot_pytorch
 
 
 class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: ignore
@@ -233,12 +281,26 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
     def ones(self, shape: Tuple[int, ...], dtype: Optional[str] = None) -> Tensor:
         if dtype is None:
             dtype = dtypestr
+        elif dtype == float:
+            dtype = "float32"
+        elif dtype == int:
+            dtype = "int64"
+        elif dtype == complex:
+            dtype = "complex64"
+        
         r = torchlib.ones(shape)
         return self.cast(r, dtype)
 
     def zeros(self, shape: Tuple[int, ...], dtype: Optional[str] = None) -> Tensor:
         if dtype is None:
             dtype = dtypestr
+        elif dtype == float:
+            dtype = "float32"
+        elif dtype == int:
+            dtype = "int64"
+        elif dtype == complex:
+            dtype = "complex64"
+        
         r = torchlib.zeros(shape)
         return self.cast(r, dtype)
 
@@ -855,6 +917,9 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         :param a: Input tensor
         :return: Complex conjugate of input tensor
         """
+        # Convert numpy array to tensor if needed
+        if isinstance(a, np.ndarray):
+            a = torchlib.tensor(a)
         return torchlib.conj(a)
 
     def sum(self, a: Tensor, axis: Optional[Union[int, Sequence[int]]] = None, keepdims: bool = False) -> Tensor:
@@ -890,6 +955,18 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         :param axes: Axes to contract over
         :return: Tensor dot product of a and b
         """
+        # Ensure both tensors have the same dtype
+        if a.dtype != b.dtype:
+            # Use the more precise dtype
+            target_dtype = a.dtype if a.dtype in [torchlib.complex128, torchlib.float64] else b.dtype
+            if target_dtype in [torchlib.complex128, torchlib.float64]:
+                target_dtype = torchlib.complex128 if (torchlib.is_complex(a) or torchlib.is_complex(b)) else torchlib.float64
+            else:
+                target_dtype = torchlib.complex64 if (torchlib.is_complex(a) or torchlib.is_complex(b)) else torchlib.float32
+            
+            a = a.to(target_dtype)
+            b = b.to(target_dtype)
+        
         return torchlib.tensordot(a, b, dims=axes)
 
     def outer_product(self, a: Tensor, b: Tensor) -> Tensor:
@@ -963,8 +1040,9 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         q, r = torchlib.linalg.qr(matrix)
         
         if non_negative_diagonal:
-            # Ensure non-negative diagonal
-            signs = torchlib.sign(torchlib.diag(r))
+            # Ensure non-negative diagonal, complex-safe
+            d = torchlib.diag(r)
+            signs = torchlib.sgn(d) if torchlib.is_complex(d) else torchlib.sign(d)
             q = q * signs.unsqueeze(0)
             r = r * signs.unsqueeze(1)
         
@@ -989,8 +1067,9 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         q_t, r_t = torchlib.linalg.qr(matrix_t)
         
         if non_negative_diagonal:
-            # Ensure non-negative diagonal
-            signs = torchlib.sign(torchlib.diag(r_t))
+            # Ensure non-negative diagonal, complex-safe
+            d = torchlib.diag(r_t)
+            signs = torchlib.sgn(d) if torchlib.is_complex(d) else torchlib.sign(d)
             q_t = q_t * signs.unsqueeze(0)
             r_t = r_t * signs.unsqueeze(1)
         
@@ -1098,7 +1177,6 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         :rtype: Tensor
         """
         # Convert scipy coo matrix to PyTorch sparse tensor
-        import numpy as np
         indices = torchlib.tensor(np.array([a.row, a.col]), dtype=torchlib.long)
         values = torchlib.tensor(a.data, dtype=torchlib.float32)
         return torchlib.sparse_coo_tensor(indices, values, a.shape)
@@ -1120,23 +1198,13 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         else:
             raise ValueError(f"Unsupported sparse matrix type: {type(sp_a)}")
 
-    def sparse_dense_matmul(self, sp_a: Tensor, b: Tensor) -> Tensor:
+    def sparse_dense_matmul(self,sp_a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
         """
-        Multiply a sparse matrix with a dense tensor.
+        Multiply sparse matrix with dense tensor (supports functorch wrapper tensors).
+        """
 
-        :param sp_a: sparse matrix
-        :param b: dense tensor
-        :return: result of sparse-dense matrix multiplication
-        """
-        # Handle both PyTorch sparse tensors and scipy sparse matrices
-        if hasattr(sp_a, 'to_dense'):
-            # PyTorch sparse tensor
-            return torchlib.matmul(sp_a.to_dense(), b)
-        elif hasattr(sp_a, 'todense'):
-            # Scipy sparse matrix
-            return torchlib.matmul(torchlib.tensor(sp_a.todense(), dtype=torchlib.float32), b)
-        else:
-            raise ValueError(f"Unsupported sparse matrix type: {type(sp_a)}")
+        return torchlib.sparse.mm(sp_a, b)
+
 
     def arange(self, start: int, stop: Optional[int] = None, step: int = 1) -> Tensor:
         if stop is None:

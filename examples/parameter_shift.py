@@ -28,12 +28,10 @@ def f1(param):
     return K.real(c.expectation_ps(y=[n // 2]))
 
 
-# warning pytorch might be unable to do this exactly
 g1f1 = K.jit(K.grad(f1))
 
 r1, ts, tr = tq.utils.benchmark(g1f1, K.ones([n, m], dtype="float32"))
 
-# warning pytorch might be unable to do this exactly
 g2f1 = K.jit(E.parameter_shift_grad(f1))
 
 r2, ts, tr = tq.utils.benchmark(g2f1, K.ones([n, m], dtype="float32"))
@@ -56,14 +54,12 @@ def f2(paramzz, paramx):
     return K.real(c.expectation_ps(y=[n // 2]))
 
 
-# warning pytorch might be unable to do this exactly
 g1f2 = K.jit(K.grad(f2, argnums=(0, 1)))
 
 r12, ts, tr = tq.utils.benchmark(
     g1f2, K.ones([n, m], dtype="float32"), K.ones([n, m], dtype="float32")
 )
 
-# warning pytorch might be unable to do this exactly
 g2f2 = K.jit(E.parameter_shift_grad(f2, argnums=(0, 1)))
 
 r22, ts, tr = tq.utils.benchmark(
@@ -91,7 +87,6 @@ def f3(param):
     return K.real(c.sample_expectation_ps(y=[n // 2]))
 
 
-# warning pytorch might be unable to do this exactly
 g2f3 = K.jit(E.parameter_shift_grad(f3))
 
 r2, ts, tr = tq.utils.benchmark(g2f3, K.ones([n, m], dtype="float32"))

@@ -9,7 +9,7 @@ import torch
 import tyxonq as tq
 
 K = tq.set_backend("pytorch")
-K.set_dtype("complex128")
+K.set_dtype("complex64")
 
 
 def energy_reference(param, n, nlayers):
@@ -24,7 +24,6 @@ def energy_reference(param, n, nlayers):
     return K.real(c.expectation_ps(z=[0, 1]))
 
 
-# warning pytorch might be unable to do this exactly
 vg_reference = K.jit(
     K.value_and_grad(energy_reference, argnums=0), static_argnums=(1, 2)
 )
@@ -42,7 +41,6 @@ with tq.runtime_backend("pytorch") as tfk:
                 c.rx(j, theta=param[i, j, 1])
         return tfk.real(c.expectation_ps(z=[0, 1]))
 
-    # warning pytorch might be unable to do this exactly
     vg_reference_tf = tfk.jit(
         tfk.value_and_grad(energy_reference_tf, argnums=0), static_argnums=(1, 2)
     )
@@ -51,32 +49,28 @@ with tq.runtime_backend("pytorch") as tfk:
 
 
 def energy(param, n, nlayers, each):
-    def loop_f(s_, param_):
-        c_ = tq.Circuit(n, inputs=s_)
-        for i in range(each):
-            for j in range(n - 1):
-                c_.rzz(j, j + 1, theta=param_[i, j, 0])
-            for j in range(n):
-                c_.rx(j, theta=param_[i, j, 1])
-        s_ = c_.state()
-        return s_, s_
-
     c = tq.Circuit(n)
     for i in range(n):
         c.h(i)
     s = c.state()
-    # warning pytorch might be unable to do this exactly
-    s1, _ = K.scan(loop_f, s, K.reshape(param, [nlayers // each, each, n, 2]))
-    c1 = tq.Circuit(n, inputs=s1)
+    param_blocks = K.reshape(param, [nlayers // each, each, n, 2])
+    for blk in range(param_blocks.shape[0]):
+        c_ = tq.Circuit(n, inputs=s)
+        for i in range(each):
+            for j in range(n - 1):
+                c_.rzz(j, j + 1, theta=param_blocks[blk, i, j, 0])
+            for j in range(n):
+                c_.rx(j, theta=param_blocks[blk, i, j, 1])
+        s = c_.state()
+    c1 = tq.Circuit(n, inputs=s)
     return K.real(c1.expectation_ps(z=[0, 1]))
 
 
-# warning pytorch might be unable to do this exactly
 vg = K.jit(K.value_and_grad(energy, argnums=0), static_argnums=(1, 2, 3))
 
 if __name__ == "__main__":
-    n = 10
-    nlayers = 32
+    n = 8
+    nlayers = 16
     param = K.implicit_randn([nlayers, n, 2])
 
     r1 = tq.utils.benchmark(vg, param, n, nlayers, 1)
@@ -95,5 +89,5 @@ if __name__ == "__main__":
     np.testing.assert_allclose(r0[0][1].detach().cpu().numpy(), r1[0][1].detach().cpu().numpy(), atol=1e-5)
     # correctness check
 
-    print("pytorch plain impl (may be super slow for deeper system)")
-    r0 = tq.utils.benchmark(vg_reference, param, n, nlayers)  # too slow
+    print("pytorch plain impl (reduced size)")
+    r0 = tq.utils.benchmark(vg_reference, param, n, nlayers)

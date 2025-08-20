@@ -61,26 +61,32 @@ tq.set_backend("pytorch")
     with open(temp_path, 'w', encoding='utf-8') as f:
         f.write(modified_content)
     
+    # Copy dependency files if they exist
+    # Handle h6_hamiltonian.npy for vqnhe_h6.py
+    if original_file == "vqnhe_h6.py":
+        h6_file = os.path.join(examples_path, "h6_hamiltonian.npy")
+        if os.path.exists(h6_file):
+            import shutil
+            shutil.copy2(h6_file, temp_dir)
+    
     return temp_path
 
 
 def run_example_file(file_path, timeout=30):
     """Run an example file and return success status"""
     try:
-        # Run the file in a subprocess
+        # Run the file in a subprocess with real-time output
+        print(f"    Running: {os.path.basename(file_path)}")
         result = subprocess.run(
             [sys.executable, file_path],
-            capture_output=True,
+            capture_output=False,  # Don't capture output to see it in real-time
             text=True,
             timeout=timeout,
             cwd=os.path.dirname(file_path)
         )
         
         success = result.returncode == 0
-        output = result.stdout
-        error = result.stderr
-        
-        return success, output, error
+        return success, "", ""  # No captured output since we're showing it in real-time
     except subprocess.TimeoutExpired:
         return False, "", f"Timeout after {timeout} seconds"
     except Exception as e:
@@ -97,14 +103,15 @@ def run_example_with_timeout(file_path: str, timeout_seconds: int = 15) -> tuple
     """
     def target():
         try:
+            print(f"    Running: {os.path.basename(file_path)}")
             result = subprocess.run(
                 [sys.executable, file_path],
-                capture_output=True,
+                capture_output=False,  # Don't capture output to see it in real-time
                 text=True,
                 cwd=os.path.dirname(file_path),
                 timeout=timeout_seconds
             )
-            return result.returncode == 0, result.stdout, result.stderr
+            return result.returncode == 0, "", ""  # No captured output since we're showing it in real-time
         except subprocess.TimeoutExpired:
             return False, "", f"Timeout after {timeout_seconds} seconds"
         except Exception as e:
@@ -387,7 +394,10 @@ def test_long_running_examples():
         'noisy_sampling_jit.py',
         'sample_benchmark.py',
         'vqe_shot_noise.py',
-        'vqe_noisyopt.py'
+        'vqe_noisyopt.py',
+        'sample_benchmark.py',
+        'vqe2d.py',
+        # 'clifford_optimization.py',
     ]
     
     examples_dir = Path(__file__).parent.parent / "examples"

@@ -6,6 +6,7 @@ essentially the same as v1, but much simpler
 
 import time
 import sys
+import torch
 
 sys.path.insert(0, "../")
 import tyxonq as tq
@@ -53,9 +54,7 @@ def f2(seed, param, n, nlayer):
     return K.real(c.expectation((tq.gates.z(), [int(n / 2)])))
 
 
-# warning pytorch might be unable to do this exactly
 vagf1 = K.jit(K.value_and_grad(f1, argnums=1), static_argnums=(2, 3))
-# warning pytorch might be unable to do this exactly
 vagf2 = K.jit(K.value_and_grad(f2, argnums=1), static_argnums=(2, 3))
 
 param = K.ones([nlayer, n])

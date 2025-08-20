@@ -38,12 +38,12 @@ def filter_pair(x, y, a, b):
     return x, y
 
 
-datapoints = 200
-batch = 32
+datapoints = 64
+batch = 16
 logfile = "qml_param_v2.npy"
 n = 9
 m = 4
-maxiter = 5000
+maxiter = 200
 data_preparation = "v1"
 
 x_train, y_train = filter_pair(x_train, y_train, 0, 1)
@@ -89,9 +89,12 @@ def f(param, seed, x, pn):
     px, py, pz = pn, pn, pn
     for i in range(n):
         if data_preparation == "v1":
-            c.rx(i, theta=x[i] * np.pi / 2)
+            # 避免在vmap中使用标量theta
+            theta_val = x[i] * np.pi / 2
+            c.rx(i, theta=theta_val)
         else:
-            c.rx(i, theta=torch.atan(x[i]))
+            theta_val = torch.atan(x[i])
+            c.rx(i, theta=theta_val)
     for j in range(m):
         for i in range(n - 1):
             c.cx(i, i + 1)
@@ -102,16 +105,19 @@ def f(param, seed, x, pn):
         for i in range(n):
             c.rx(i, theta=param[j, i, 1])
 
-    ypreds = torch.tensor([torch.real(c.expectation_ps(z=[i])) for i in range(n)])
+    ypreds = torch.stack([tq.backend.real(c.expectation_ps(z=[i])) for i in range(n)])
 
     return torch.mean(ypreds)
 
 
-# warning pytorch might be unable to do this exactly
 vf = tq.utils.append(K.vmap(f, vectorized_argnums=1), torch.mean)
 
 
 def loss(param, scale, seeds, x, y, pn):
+    # Ensure single-sample feature vector for circuit building
+    if hasattr(x, 'dim') and x.dim() > 1:
+        x = x[0]
+        y = y[0]
     ypred = vf(param, seeds, x, pn)
     ypred = torch.sigmoid(scale * ypred)
     y = y.to(torch.float32)
@@ -122,15 +128,15 @@ def loss(param, scale, seeds, x, y, pn):
 
 
 def acc(yps, ys):
-    yps = yps.detach().cpu().numpy()
-    ys = ys.detach().cpu().numpy()
+    if hasattr(yps, 'detach'):
+        yps = yps.detach().cpu().numpy()
+    if hasattr(ys, 'detach'):
+        ys = ys.detach().cpu().numpy()
     yps = (np.sign(yps - 0.5) + 1) / 2
     return 1 - np.mean(np.logical_xor(ys, yps))
 
 
-# warning pytorch might be unable to do this exactly
 vgloss = K.jit(K.vvag(loss, argnums=(0, 1), vectorized_argnums=(3, 4), has_aux=True))
-# warning pytorch might be unable to do this exactly
 vloss = K.jit(K.vmap(loss, vectorized_argnums=(3, 4)))
 
 
@@ -216,5 +222,6 @@ def inference(param=None, scale=None, noise=0, noc=1, debug=False):
 
 
 if __name__ == "__main__":
-    train(noise=0.005, scale=30, noc=100, fixed=False)
-    # inference(noise=0.01, noc=1000, scale=40, debug=True)
+    # run a short training to validate functionality
+    train(noise=0.005, scale=10, noc=8, fixed=True, val_step=50)
+    # inference(noise=0.01, noc=50, scale=15, debug=True)

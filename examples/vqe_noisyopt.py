@@ -15,8 +15,8 @@ np.random.seed(seed)
 
 K = tq.set_backend("pytorch")
 
-n = 6
-nlayers = 4
+n = 2
+nlayers = 2
 
 # initial value of the parameters
 initial_value = np.random.uniform(size=[n * nlayers * 2])
@@ -71,7 +71,7 @@ def ps2xyz(psi):
     return xyz
 
 
-@partial(K.jit, static_argnums=(1))  # warning pytorch might be unable to do this exactly
+@partial(K.jit, static_argnums=(1))
 def exp_val(param, shots=1024):
     # expectation with shot noise
     # ps, w: H = \sum_i w_i ps_i
@@ -86,7 +86,7 @@ def exp_val(param, shots=1024):
     return K.real(loss)
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def exp_val_analytical(param):
     param = param.reshape(n, nlayers, 2)
     c = generate_circuit(param)
@@ -114,8 +114,8 @@ print(">>> VQE without shot noise")
 
 r = minimizeSPSA(
     func=exp_val_analytical,
-    x0=initial_value,
-    niter=6000,
+    x0=torch.tensor(initial_value),
+    niter=40,
     paired=False,
 )
 
@@ -125,9 +125,9 @@ result["SPSA (Gradient Free)"].append(exp_val_analytical(r.x))
 
 r = minimizeCompass(
     func=exp_val_analytical,
-    x0=initial_value,
-    deltatol=0.1,
-    feps=1e-3,
+    x0=torch.tensor(initial_value),
+    deltatol=0.3,
+    feps=1e-2,
     paired=False,
 )
 
@@ -142,14 +142,14 @@ param = torch.nn.Parameter(torch.tensor(initial_value.reshape((n, nlayers, 2)), 
 exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))
 optimizer = torch.optim.Adam([param], lr=1e-2)
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-for i in range(1000):
+for i in range(30):
     e, g = exp_val_grad_analytical(param)
     optimizer.zero_grad()
     param.grad = g
     optimizer.step()
-    if i % 100 == 99:
+    if i % 10 == 9:
         print(f"Expectation value at iteration {i}: {e.detach().cpu().item()}")
-    if (i + 1) % 500 == 0:
+    if (i + 1) % 30 == 0:
         scheduler.step()
 
 print(">> Adam converged as:", exp_val_grad_analytical(param)[0].detach().cpu().item())
@@ -164,13 +164,13 @@ print(">>> VQE with shot noise")
 def exp_val_wrapper(param):
     param = param.reshape(n, nlayers, 2)
     # maintain stateless randomness in scipy optimize interface
-    return exp_val(param, shots=1024)
+    return exp_val(param, shots=128)
 
 
 r = minimizeSPSA(
     func=exp_val_wrapper,
-    x0=initial_value,
-    niter=6000,
+    x0=torch.tensor(initial_value),
+    niter=40,
     paired=False,
 )
 print(r)
@@ -179,9 +179,9 @@ result["SPSA (Gradient Free)"].append(exp_val_wrapper(r["x"]))
 
 r = minimizeCompass(
     func=exp_val_wrapper,
-    x0=initial_value,
-    deltatol=0.1,
-    feps=1e-2,
+    x0=torch.tensor(initial_value),
+    deltatol=0.3,
+    feps=3e-2,
     paired=False,
 )
 
@@ -197,7 +197,7 @@ exp_grad = E.parameter_shift_grad_v2(exp_val, argnums=0)
 optimizer = torch.optim.Adam([param], lr=1e-2)
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
-for i in range(1000):
+for i in range(30):
     g = exp_grad(param)
     optimizer.zero_grad()
     if isinstance(param, torch.nn.Parameter):
@@ -207,9 +207,9 @@ for i in range(1000):
         param.grad = g
         optimizer = torch.optim.Adam([param], lr=1e-2)
     optimizer.step()
-    if i % 100 == 99:
-        print(f"Expectation value at iteration {i}: {exp_val(param, shots=1024).detach().cpu().item()}")
-    if (i + 1) % 500 == 0:
+    if i % 10 == 9:
+        print(f"Expectation value at iteration {i}: {exp_val(param, shots=128).detach().cpu().item()}")
+    if (i + 1) % 30 == 0:
         scheduler.step()
 
 # the real energy position after optimization

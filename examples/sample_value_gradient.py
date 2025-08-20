@@ -56,7 +56,7 @@ def sample_exp(c, ps, w, shots):
     return loss
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def exp_val_analytical(param):
     c = generate_circuit(param)
     loss = 0
@@ -73,7 +73,7 @@ def exp_val_analytical(param):
     return K.real(loss)
 
 
-@partial(K.jit, static_argnums=1)  # warning pytorch might be unable to do this exactly
+@partial(K.jit, static_argnums=1)
 def exp_val(param, shots=4096):
     # from circuit parameter to expectation
     c = generate_circuit(param)
@@ -91,7 +91,7 @@ r2 = exp_val_analytical(K.ones([n, nlayers, 2], dtype="float32"))
 np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=0.05, rtol=0.01)
 print("correctness check passed for expectation value")
 gradf1 = E.parameter_shift_grad_v2(exp_val, argnums=0)
-gradf2 = K.jit(K.grad(exp_val_analytical))  # warning pytorch might be unable to do this exactly
+gradf2 = K.jit(K.grad(exp_val_analytical))
 print("benchmarking sample gradient")
 tq.utils.benchmark(
     gradf1, K.ones([n, nlayers, 2], dtype="float32")

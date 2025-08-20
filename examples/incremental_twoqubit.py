@@ -12,12 +12,14 @@ import tyxonq as tq
 
 K = tq.set_backend("pytorch")
 
-n = 10
+n = 8
 nlayers = 3
 g = tq.templates.graphs.Line1D(n)
 
 
 def energy(params, structures, n, nlayers):
+    # binarize structures; support complex dtypes by using real part
+    structures = K.real(structures)
     structures = (K.sign(structures) + 1) / 2  # 0 or 1
     structures = K.cast(structures, params.dtype)
     c = tq.Circuit(n)
@@ -25,17 +27,10 @@ def energy(params, structures, n, nlayers):
         c.h(i)
     for j in range(nlayers):
         for i in range(n - 1):
-            matrix = structures[j, i] * tq.gates._ii_matrix + (
-                1.0 - structures[j, i]
-            ) * (
-                K.cos(params[2 * j + 1, i]) * tq.gates._ii_matrix
-                + 1.0j * K.sin(params[2 * j + 1, i]) * tq.gates._zz_matrix
-            )
-            c.any(
-                i,
-                i + 1,
-                unitary=matrix,
-            )
+            # Implement identity when structures[j,i]==1 and exp( i theta ZZ ) when 0
+            # by using theta_eff = (1 - structures[j,i]) * theta
+            theta_eff = (1.0 - structures[j, i]) * params[2 * j + 1, i]
+            c.exp1(i, i + 1, theta=theta_eff, unitary=tq.gates._zz_matrix)
         for i in range(n):
             c.rx(i, theta=params[2 * j, i])
 
@@ -45,27 +40,18 @@ def energy(params, structures, n, nlayers):
     return e
 
 
-# warning pytorch might be unable to do this exactly
 vagf = K.jit(K.value_and_grad(energy, argnums=0), static_argnums=(2, 3))
 
-params = np.random.uniform(size=[2 * nlayers, n])
-structures = np.random.uniform(size=[nlayers, n])
-params, structures = tq.array_to_tensor(params, structures)
+params = torch.nn.Parameter(torch.from_numpy(np.random.uniform(size=[2 * nlayers, n]).astype(np.float32)))
+structures = torch.from_numpy(np.random.uniform(size=[nlayers, n]).astype(np.float32))
 
 optimizer = torch.optim.Adam([params], lr=1e-2)
 
-for i in range(300):
+for i in range(80):
     if i % 20 == 0:
-        structures -= 0.2 * K.ones([nlayers, n])
-    # one can change the structures by tune the structure tensor value
-    # this specifically equiv to add two qubit gates
-    
-    # Forward pass
+        structures = structures - 0.2 * torch.ones([nlayers, n], dtype=structures.dtype)
     e = energy(params, structures, n, nlayers)
-    
-    # Backward pass
     optimizer.zero_grad()
     e.backward()
     optimizer.step()
-    
     print(e.detach().cpu().item())

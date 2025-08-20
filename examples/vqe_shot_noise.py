@@ -11,8 +11,8 @@ from tyxonq import experimental as E
 
 K = tq.set_backend("pytorch")
 
-n = 6
-nlayers = 4
+n = 3
+nlayers = 2
 
 # We use OBC 1D TFIM Hamiltonian in this script
 
@@ -57,7 +57,7 @@ def ps2xyz(psi):
     return xyz
 
 
-@partial(K.jit, static_argnums=(1))  # warning pytorch might be unable to do this exactly
+@partial(K.jit, static_argnums=(1))
 def exp_val(param, shots=1024):
     # expectation with shot noise
     # ps, w: H = \sum_i w_i ps_i
@@ -72,7 +72,7 @@ def exp_val(param, shots=1024):
     return K.real(loss)
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def exp_val_analytical(param):
     c = generate_circuit(param)
     loss = 0
@@ -101,7 +101,7 @@ r = optimize.minimize(
     exp_val_analytical_sp,
     np.zeros([n * nlayers * 2]),
     method="COBYLA",
-    options={"maxiter": 5000},
+    options={"maxiter": 5},
 )
 print(r)
 
@@ -109,18 +109,17 @@ print(r)
 # 1.2 VQE with numerically exact expectation: gradient based
 
 param = torch.nn.Parameter(torch.randn(n, nlayers, 2) * 0.1)
-# warning pytorch might be unable to do this exactly
 exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))
 optimizer = torch.optim.Adam([param], lr=1e-2)
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
-for i in range(1000):
+for i in range(10):
     e, g = exp_val_grad_analytical(param)
     optimizer.zero_grad()
     param.grad = g
     optimizer.step()
-    if i % 100 == 99:
+    if i % 5 == 4:
         print(e.detach().cpu().item())
-    if (i + 1) % 500 == 0:
+    if (i + 1) % 10 == 0:
         scheduler.step()
 
 
@@ -130,7 +129,7 @@ print("VQE with shot noise")
 
 
 def exp_val_wrapper(param):
-    return exp_val(param, shots=1024)
+    return exp_val(param, shots=256)
 
 
 exp_val_sp = tq.interfaces.scipy_interface(
@@ -141,7 +140,7 @@ r = optimize.minimize(
     exp_val_sp,
     np.random.normal(scale=0.1, size=[n * nlayers * 2]),
     method="COBYLA",
-    options={"maxiter": 5000},
+    options={"maxiter": 5},
 )
 print(r)
 
@@ -157,14 +156,14 @@ exp_grad = E.parameter_shift_grad_v2(exp_val, argnums=0)
 optimizer = torch.optim.Adam([param], lr=1e-2)
 scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
-for i in range(1000):
+for i in range(10):
     g = exp_grad(param)
     optimizer.zero_grad()
     param.grad = g
     optimizer.step()
-    if i % 100 == 99:
-        print(exp_val(param, shots=1024).detach().cpu().item())
-    if (i + 1) % 500 == 0:
+    if i % 5 == 4:
+        print(exp_val(param, shots=64).detach().cpu().item())
+    if (i + 1) % 10 == 0:
         scheduler.step()
 
 # the real energy position after optimization

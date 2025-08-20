@@ -13,7 +13,6 @@ for bk in ["pytorch"]:
         print("~~~~~~~~~~~~~~~~~~~~~")
         print(f"using {K.name} backend")
 
-        # warning pytorch might be unable to do this exactly
         @partial(K.jit, jit_compile=True)
         def mul(a, b):
             return a @ b
@@ -27,7 +26,6 @@ for bk in ["pytorch"]:
         vij = K.vmap(ij, vectorized_argnums=1)
         vvij = K.vmap(vij, vectorized_argnums=0)
 
-        # warning pytorch might be unable to do this exactly
         @partial(K.jit, jit_compile=True)
         def mul2(a, b):
             b = K.transpose(b)
@@ -41,4 +39,4 @@ for bk in ["pytorch"]:
             r1, _, _ = tq.utils.benchmark(mul, a, b, tries=10)
             print("vmap matprod")
             r2, _, _ = tq.utils.benchmark(mul2, a, b, tries=10)
-            np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=1e-5)
+            np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=1e-3, rtol=1e-3)

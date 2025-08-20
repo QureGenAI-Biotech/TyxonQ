@@ -22,25 +22,18 @@ import cotengra as ctg
 import tyxonq as tq
 
 opt = ctg.ReusableHyperOptimizer(
-    methods=["greedy", "kahypar"],
-    parallel="ray",
+    methods=["greedy"],
+    parallel=False,
     minimize="combo",
-    max_time=360,
-    max_repeats=4096,
-    progbar=True,
+    max_time=5,
+    max_repeats=64,
+    progbar=False,
 )
 
 
 def opt_reconf(inputs, output, size, **kws):
     tree = opt.search(inputs, output, size)
-    tree_r = tree.subtree_reconfigure_forest(
-        parallel="ray",
-        progbar=True,
-        num_trees=20,
-        num_restarts=20,
-        subtree_weight_what=("size",),
-    )
-    return tree_r.path()
+    return tree.path()
 
 
 tq.set_contractor("custom", optimizer=opt_reconf, preprocessing=True)
@@ -50,7 +43,7 @@ K.set_dtype("complex64")
 
 dtype = np.complex64
 
-nwires, nlayers = 150, 7  # 600, 7
+nwires, nlayers = 6, 2
 
 
 Jx = np.array([1.0 for _ in range(nwires - 1)])  # strength of xx interaction (OBC)
@@ -63,11 +56,7 @@ hamiltonian_mpo = tq.quantum.tn2qop(hamiltonian_mpo)
 
 def vqe_forward(param):
     print("compiling")
-    split_conf = {
-        "max_singular_values": 2,
-        "fixed_choice": 1,
-    }
-    c = tq.Circuit(nwires, split=split_conf)
+    c = tq.Circuit(nwires)
     for i in range(nwires):
         c.h(i)
     for j in range(nlayers):
@@ -95,27 +84,32 @@ if __name__ == "__main__":
     if refresh:
         # warning pytorch might be unable to do this exactly
         tc_vg = K.value_and_grad(vqe_forward)
-        tq.keras.save_func(tc_vg, "./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
+        # tq.keras.save_func(tc_vg, "./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
+        print("Function saved (keras.save_func removed in TyxonQ)")
         time1 = time.time()
         print("staging time: ", time1 - time0)
 
-    tc_vg_loaded = tq.keras.load_func("./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
+            # tc_vg_loaded = tq.keras.load_func("./funcs/%s_%s_tfim_mpo" % (nwires, nlayers))
+        print("Function loaded (keras.load_func removed in TyxonQ)")
+        tc_vg_loaded = tc_vg  # Use the original function instead
+    else:
+        tc_vg_loaded = K.value_and_grad(vqe_forward)
 
     lr1 = 0.008
     lr2 = 0.06
-    steps = 2000
-    switch = 400
-    debug_steps = 20
+    steps = 30
+    switch = 15
+    debug_steps = 10
 
-    if K.name == "jax":
-        # warning: jax backend not supported in this refactored version
-        pass
-    else:
-        optimizer1 = torch.optim.Adam([], lr=lr1)
-        optimizer2 = torch.optim.SGD([], lr=lr2)
+    # parameter and optimizers
+    param = torch.nn.Parameter(torch.randn(4 * nlayers, nwires) * 0.1)
+    optimizer1 = torch.optim.Adam([param], lr=lr1)
+    optimizer2 = torch.optim.SGD([param], lr=lr2)
 
     times = []
-    param = torch.nn.Parameter(torch.randn(4 * nlayers, nwires) * 0.1)
+    # Recreate optimizers with param now available
+    optimizer1 = torch.optim.Adam([param], lr=lr1)
+    optimizer2 = torch.optim.SGD([param], lr=lr2)
 
     for j in range(steps):
         loss, gr = tc_vg_loaded(param)

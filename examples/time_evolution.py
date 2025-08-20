@@ -20,12 +20,14 @@ def total_z(psi, N):
     )
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def naive_evol(t, h, psi0):
+    # ensure types as tensors
+    t = tq.array_to_tensor(t)
     return K.reshape(K.expm(-1j * t * h) @ K.reshape(psi0, [-1, 1]), [-1])
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def hpsi(h, y):
     return K.reshape(-1.0j * h @ K.reshape(y, [-1, 1]), [-1])
 
@@ -36,7 +38,8 @@ def main(N):
     psi0 = tq.array_to_tensor(psi0)
     g = tq.templates.graphs.Line1D(N, pbc=False)
     h = tq.quantum.heisenberg_hamiltonian(g, hzz=1, hxx=0, hyy=0, hx=1, sparse=False)
-    tlist = K.arange(0, 3, 0.1)
+    # shorten range for CI speed
+    tlist = K.arange(0, 1, 0.2)
     time0 = time.time()
     for t in tlist:
         psit = naive_evol(t, h, psi0)
@@ -52,7 +55,7 @@ def main(N):
         return K.numpy(hpsi(h, y))
 
     r = solve_ivp(
-        fun, (0, 3), psi0, method="DOP853", t_eval=K.numpy(tlist), rtol=1e-6, atol=1e-6
+        fun, (0, 1), psi0, method="DOP853", t_eval=K.numpy(tlist), rtol=1e-6, atol=1e-6
     )
     for psit in r.y.T:
         print(total_z(psit, N))
@@ -60,7 +63,7 @@ def main(N):
     print(
         "matrix exponential:",
         time1 - time0,
-        "tc fast implementation",
+        "tq fast implementation",
         time2 - time1,
         "scipy ode",
         time3 - time2,
@@ -68,4 +71,4 @@ def main(N):
 
 
 if __name__ == "__main__":
-    main(10)
+    main(8)

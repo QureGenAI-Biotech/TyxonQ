@@ -69,7 +69,6 @@ def QAOAansatz(gamma, beta, g=example_graph):
 
 # 3. get compiled function for QAOA ansatz and its gradient
 
-# warning pytorch might be unable to do this exactly
 QAOA_vg = K.jit(K.value_and_grad(QAOAansatz, argnums=(0, 1)), static_argnums=2)
 
 

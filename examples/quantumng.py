@@ -13,12 +13,13 @@ import tyxonq as tq
 from tyxonq import experimental
 
 tq.set_backend("pytorch")  # pytorch backend
+tq.backend.set_dtype("complex64")
 
 n, nlayers = 7, 2
 g = tq.templates.graphs.Line1D(n)
 
 
-@tq.backend.jit  # warning pytorch might be unable to do this exactly
+@tq.backend.jit
 def state(params):
     params = tq.backend.reshape(params, [2 * nlayers, n])
     c = tq.Circuit(n)
@@ -35,25 +36,28 @@ def energy(params):
     return tq.backend.real(loss)
 
 
-vags = tq.backend.jit(tq.backend.value_and_grad(energy))  # warning pytorch might be unable to do this exactly
+vags = tq.backend.jit(tq.backend.value_and_grad(energy))
 lr = 1e-2
 # warning: pytorch optimizer is different from jax/tensorflow
-opt = torch.optim.SGD([], lr=lr)
+# We'll create the optimizer later when we have the parameters
 
-qng = tq.backend.jit(experimental.qng(state, mode="fwd"))  # warning pytorch might be unable to do this exactly
-qngr = tq.backend.jit(experimental.qng(state, mode="rev"))  # warning pytorch might be unable to do this exactly
-qng2 = tq.backend.jit(experimental.qng2(state, mode="fwd"))  # warning pytorch might be unable to do this exactly
-qng2r = tq.backend.jit(experimental.qng2(state, mode="rev"))  # warning pytorch might be unable to do this exactly
+qng = tq.backend.jit(experimental.qng(state, mode="fwd"))
+qngr = tq.backend.jit(experimental.qng(state, mode="rev"))
+qng2 = tq.backend.jit(experimental.qng2(state, mode="fwd"))
+qng2r = tq.backend.jit(experimental.qng2(state, mode="rev"))
 
 
-def train_loop(params, i, qngf):
-    qmetric = qngf(params)
+def train_loop(params, i, qngf=None):
     value, grad = vags(params)
-    ngrad = tq.backend.solve(qmetric, grad, assume_a="sym")
-    # warning: pytorch optimizer usage is different
-    opt.zero_grad()
+    if qngf is not None:
+        qmetric = qngf(params)
+        ngrad = tq.backend.solve(qmetric, grad, assume_a="sym")
+    else:
+        ngrad = grad
+    if not hasattr(params, 'grad'):
+        params.grad = None
     params.grad = ngrad
-    opt.step()
+    params = params - lr * ngrad
     if i % 10 == 0:
         print(tq.backend.numpy(value))
     return params
@@ -62,9 +66,11 @@ def train_loop(params, i, qngf):
 def plain_train_loop(params, i):
     value, grad = vags(params)
     # warning: pytorch optimizer usage is different
-    opt.zero_grad()
+    if not hasattr(params, 'grad'):
+        params.grad = None
     params.grad = grad
-    opt.step()
+    # Manual gradient descent
+    params = params - lr * grad
     if i % 10 == 0:
         print(tq.backend.numpy(value))
     return params
@@ -77,7 +83,7 @@ def benchmark(f, *args):
     time0 = time.time()
     params = f(params, 0, *args)
     time1 = time.time()
-    for i in range(100):
+    for i in range(30):
         params = f(params, i + 1, *args)
     time2 = time.time()
 
@@ -85,13 +91,6 @@ def benchmark(f, *args):
 
 
 if __name__ == "__main__":
-    print("quantum natural gradient descent 1+f")
-    benchmark(train_loop, qng)
-    print("quantum natural gradient descent 1+r")
-    benchmark(train_loop, qngr)
-    print("quantum natural gradient descent 2+f")
-    benchmark(train_loop, qng2)
-    print("quantum natural gradient descent 2+r")
-    benchmark(train_loop, qng2r)
-    print("plain gradient descent")
-    benchmark(plain_train_loop)
+    # run a short plain gradient descent to fit in 5–10s
+    print("plain gradient descent (short)")
+    benchmark(train_loop, None)

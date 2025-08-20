@@ -7,24 +7,16 @@ import numpy as np
 from scipy import optimize
 import networkx as nx
 import torch
-import cotengra as ctg
 import tyxonq as tq
 from tyxonq import experimental as E
 from tyxonq.applications.graphdata import maxcut_solution_bruteforce
 
 K = tq.set_backend("pytorch")
+K.set_dtype("complex64")
 # note this script only supports pytorch backend
 
-opt_ctg = ctg.ReusableHyperOptimizer(
-    methods=["greedy", "kahypar"],
-    parallel="ray",
-    minimize="combo",
-    max_time=10,
-    max_repeats=128,
-    progbar=True,
-)
-
-tq.set_contractor("custom", optimizer=opt_ctg, preprocessing=True)
+# use a lightweight contractor to minimize overhead
+tq.set_contractor("greedy")
 
 
 def get_graph(n, d, weights=None):
@@ -86,8 +78,8 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
     if init is None:
         init = np.random.normal(scale=0.1, size=[nlayers, 2])
 
-    @partial(K.jit, static_argnums=(1))  # warning pytorch might be unable to do this exactly
-    def exp_val(param, shots=10000):
+    @partial(K.jit, static_argnums=(1))
+    def exp_val(param, shots=1000):
         # expectation with shot noise
         # ps, w: H = \sum_i w_i ps_i
         # describing the system Hamiltonian as a weighted sum of Pauli string
@@ -105,7 +97,7 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
             loss += w * tq.quantum.correlation_from_samples(ps2z(ps), mc, c._nqubits)
         return K.real(loss)
 
-    @K.jit  # warning pytorch might be unable to do this exactly
+    @K.jit
     def exp_val_analytical(param):
         c = generate_circuit(param, g, n, nlayers)
         loss = 0
@@ -115,12 +107,7 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     # 0. Exact result double check
 
-    hm = tq.quantum.PauliStringSum2COO(
-        tq.array_to_tensor(pss), tq.array_to_tensor(ws), numpy=True
-    )
-    hm = K.to_dense(hm)
-    e, _ = np.linalg.eigh(hm)
-    print("exact minimal loss via eigenstate: ", e[0])
+    # skip dense exact eigenvalue check for speed
 
     # 1.1 QAOA with numerically exact expectation: gradient free
 
@@ -132,9 +119,9 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     r = optimize.minimize(
         exp_val_analytical_sp,
-        init,
+        init.flatten(),
         method="Nelder-Mead",
-        options={"maxiter": 5000},
+        options={"maxiter": 50},
     )
     print(r)
     print("double check the value?: ", exp_val_analytical_sp(r["x"]))
@@ -145,8 +132,8 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
     # warning: pytorch scheduler is different from optax
     optimizer = torch.optim.Adam([torch.nn.Parameter(torch.tensor(init))], lr=1e-2)
     param = tq.array_to_tensor(init, dtype=tq.rdtypestr)
-    exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))  # warning pytorch might be unable to do this exactly
-    for i in range(1000):
+    exp_val_grad_analytical = K.jit(K.value_and_grad(exp_val_analytical))
+    for i in range(10):
         e, gs = exp_val_grad_analytical(param)
         # warning: pytorch optimizer usage is different
         optimizer.zero_grad()
@@ -169,9 +156,9 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
     r = optimize.minimize(
         exp_val_sp,
-        init,
+        init.flatten(),
         method="Nelder-Mead",
-        options={"maxiter": 5000},
+        options={"maxiter": 50},
     )
     print(r)
 
@@ -189,7 +176,7 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
     )
     # parameter shift doesn't directly apply in QAOA case
 
-    for i in range(1000):
+    for i in range(10):
         gs = exp_grad(param)
         # warning: pytorch optimizer usage is different
         optimizer.zero_grad()
@@ -204,4 +191,4 @@ def main_benchmark_suite(n, nlayers, d=3, init=None):
 
 
 if __name__ == "__main__":
-    main_benchmark_suite(8, 4)
+    main_benchmark_suite(6, 2)

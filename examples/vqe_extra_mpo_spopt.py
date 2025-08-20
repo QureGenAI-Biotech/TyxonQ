@@ -19,41 +19,34 @@ logger.addHandler(ch)
 
 sys.setrecursionlimit(10000)
 
+import torch
 import tensornetwork as tn
 import cotengra as ctg
 
 import tyxonq as tq
 
 optc = ctg.ReusableHyperOptimizer(
-    methods=["greedy", "kahypar"],
-    parallel="ray",
+    methods=["greedy"],
+    parallel=False,
     minimize="combo",
-    max_time=6,
-    max_repeats=4096,
-    progbar=True,
+    max_time=2,
+    max_repeats=16,
+    progbar=False,
 )
 
 
 def opt_reconf(inputs, output, size, **kws):
     tree = optc.search(inputs, output, size)
-    tree_r = tree.subtree_reconfigure_forest(
-        parallel="ray",
-        progbar=True,
-        num_trees=6,
-        num_restarts=6,
-        subtree_weight_what=("size",),
-    )
-    return tree_r.path()
+    return tree.path()
 
 
 tq.set_contractor("custom", optimizer=opt_reconf, preprocessing=True)
 K = tq.set_backend("pytorch")
 K.set_dtype("complex64")
-# jax backend is incompatible with keras.save
 
 dtype = np.complex64
 
-nwires, nlayers = 8, 2  # 600, 7
+nwires, nlayers = 4, 2
 
 
 Jx = np.array([1.0 for _ in range(nwires - 1)])  # strength of xx interaction (OBC)
@@ -65,12 +58,7 @@ hamiltonian_mpo = tq.quantum.tn2qop(hamiltonian_mpo)
 
 
 def vqe_forward(param):
-    print("compiling")
-    split_conf = {
-        "max_singular_values": 2,
-        "fixed_choice": 1,
-    }
-    c = tq.Circuit(nwires, split=split_conf)
+    c = tq.Circuit(nwires)
     for i in range(nwires):
         c.h(i)
     for j in range(nlayers):
@@ -92,7 +80,7 @@ def vqe_forward(param):
 
 
 def scipy_optimize(
-    f, x0, method, jac=None, tol=1e-9, maxiter=10000, step=1000, threshold=1e-6
+    f, x0, method, jac=None, tol=1e-4, maxiter=20, step=10, threshold=1e-4
 ):
     epoch = 0
     loss_prev = 0
@@ -111,7 +99,7 @@ def scipy_optimize(
         x0 = r["x"]
         print(epoch, loss)
         print(r["message"])
-        if len(times) > 2:
+        if len(times) > 1:
             running_time = np.mean(times[1:]) / step
             staging_time = times[0] - running_time * step
             print("staging time: ", staging_time)
@@ -133,15 +121,15 @@ if __name__ == "__main__":
         vqe_forward, shape=[4 * nlayers, nwires], gradient=True, jit=True
     )
     scipy_optimize(
-        vqe_ng, param.detach().cpu().numpy(), method="COBYLA", jac=False, maxiter=50000
+        vqe_ng, param.detach().cpu().numpy().flatten(), method="COBYLA", jac=False, maxiter=20
     )
     scipy_optimize(
         vqe_g,
-        param.detach().cpu().numpy(),
+        param.detach().cpu().numpy().flatten(),
         method="L-BFGS-B",
         jac=True,
-        tol=1e-6,
-        maxiter=50000,
+        tol=1e-3,
+        maxiter=20,
     )
     # for BFGS, large tol is necessary, see
     # https://stackoverflow.com/questions/34663539/scipy-optimize-fmin-l-bfgs-b-returns-abnormal-termination-in-lnsrch

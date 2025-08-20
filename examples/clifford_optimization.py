@@ -89,17 +89,29 @@ def nmf_gradient(structures, oh):
     """
     choice = K.argmax(oh, axis=-1)
     prob = K.softmax(K.real(structures), axis=-1)
-    indices = K.transpose(
-        K.stack([K.cast(torch.arange(structures.shape[0]), "int64"), choice])
-    )
-    prob = torch.gather(prob, 0, indices.unsqueeze(0)).squeeze(0)
-    prob = K.reshape(prob, [-1, 1])
-    prob = K.tile(prob, [1, structures.shape[-1]])
+    
+    # In vmap, structures shape is [nlayers * n, 7], oh shape is [nlayers * n, 7]
+    # choice shape is [nlayers * n]
+    # prob shape is [nlayers * n, 7]
+    
+    # Create indices for gathering
+    seq_len = structures.shape[0]
+    seq_indices = torch.arange(seq_len, device=structures.device)
+    indices = torch.stack([seq_indices, choice], dim=-1)
+    
+    # Gather the selected probabilities
+    prob_gathered = torch.gather(prob, 1, choice.unsqueeze(-1)).squeeze(-1)
+    
+    prob_gathered = K.reshape(prob_gathered, [-1, 1])
+    prob_gathered = K.tile(prob_gathered, [1, structures.shape[-1]])
 
     # warning pytorch might be unable to do this exactly
-    result = torch.zeros_like(structures, dtype=ctype)
-    result.scatter_add_(0, indices, torch.ones([structures.shape[0]], dtype=ctype))
-    return K.real(result - prob)
+    result = torch.zeros_like(structures, dtype=torch.complex64)
+    
+    # Use scatter_add_ to accumulate gradients
+    result.scatter_add_(1, choice.unsqueeze(-1), torch.ones_like(choice, dtype=torch.complex64).unsqueeze(-1))
+    
+    return K.real(result - prob_gathered)
 
 
 # warning pytorch might be unable to do this exactly
@@ -182,9 +194,9 @@ def main(stddev=0.05, lr=None, epochs=2000, debug_step=50, batch=256, verbose=Fa
 
 
 if __name__ == "__main__":
-    tries = 5
+    tries = 1  # 减少尝试次数
     rs = []
     for _ in range(tries):
-        ee, _, _ = main()
+        ee, _, _ = main(epochs=10, batch=32)  # 减少epochs和batch size
         rs.append(-K.numpy(ee))
     print(np.min(rs))

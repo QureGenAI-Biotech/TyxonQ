@@ -34,10 +34,13 @@ if __name__ == "__main__":
     # load from json string
     c2 = tq.Circuit.from_json(s)
     print("\n", c2.draw())
-    np.testing.assert_allclose(c.state().detach().cpu().numpy(), c2.state().detach().cpu().numpy(), atol=1e-5)
+    s1 = tq.backend.numpy(c.state())
+    s2 = tq.backend.numpy(c2.state())
+    np.testing.assert_allclose(s1, s2, atol=1e-5)
     print("test correctness 1")
     # load from json file
     c3 = tq.Circuit.from_json_file("circuit.json")
     print("\n", c3.draw())
-    np.testing.assert_allclose(c.state().detach().cpu().numpy(), c3.state().detach().cpu().numpy(), atol=1e-5)
+    s3 = tq.backend.numpy(c3.state())
+    np.testing.assert_allclose(s1, s3, atol=1e-5)
     print("test correctness 2")

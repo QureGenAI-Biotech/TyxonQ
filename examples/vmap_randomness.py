@@ -11,12 +11,12 @@ batch = 100
 print("pytorch backend")
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def f(a):
     return a + tq.backend.randn([n])
 
 
-vf = K.jit(K.vmap(f))  # warning pytorch might be unable to do this exactly
+vf = K.jit(K.vmap(f))
 
 from tyxonq import utils
 

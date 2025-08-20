@@ -8,7 +8,7 @@ import numpy as np
 import tyxonq as tq
 
 K = tq.set_backend("pytorch")
-# pytorch staging is different from jax
+K.set_dtype("complex64")
 
 
 def construct_circuit(n, nlayers):
@@ -22,8 +22,8 @@ def construct_circuit(n, nlayers):
     return c
 
 
-for n in [8, 10, 12, 14, 16]:
-    for nlayers in [2, 6, 10]:
+for n in [8, 10]:
+    for nlayers in [2, 6]:
         print("n: ", n, " nlayers: ", nlayers)
         c = construct_circuit(n, nlayers)
         time0 = time.time()
@@ -41,16 +41,16 @@ for n in [8, 10, 12, 14, 16]:
         time1 = time.time()
         print("batch state sampling time: ", (time1 - time0) / 10)
 
-        @K.jit  # warning pytorch might be unable to do this exactly
+        @K.jit
         def f():
             return c.sample()
 
         time0 = time.time()
         smp = f()
         time1 = time.time()
-        for _ in range(10):
+        for _ in range(5):
             smp = f()
             # print(smp)
         time2 = time.time()
         print("jittable tensor sampling staginging time: ", time1 - time0)
-        print("jittable tensor sampling running time: ", (time2 - time1) / 10)
+        print("jittable tensor sampling running time: ", (time2 - time1) / 5)

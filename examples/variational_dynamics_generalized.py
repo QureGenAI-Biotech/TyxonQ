@@ -19,7 +19,7 @@ K.set_dtype("complex64")
 # the default precision is complex64, can change to complex128 for double precision
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def variational_wfn(theta, psi0):
     theta = K.reshape(theta, [l, N, 2])
     c = tq.Circuit(N, inputs=psi0)
@@ -31,69 +31,52 @@ def variational_wfn(theta, psi0):
 
     return c.state()
 
-
-# warning pytorch might be unable to do this exactly
-ppsioverptheta = K.jit(K.jacfwd(variational_wfn, argnums=0))
-# compute \partial psi /\partial theta, i.e. jacobian of wfn
+def numerical_jacobian(theta, psi0, eps=1e-3):
+    """Numerical Jacobian J (state_dim, P) with central differences."""
+    theta = K.reshape(theta, [-1])
+    num_params = theta.shape[0]
+    cols = []
+    for k in range(num_params):
+        tp = K.copy(theta)
+        tm = K.copy(theta)
+        tp[k] = tp[k] + eps
+        tm[k] = tm[k] - eps
+        wp = variational_wfn(tp, psi0)
+        wm = variational_wfn(tm, psi0)
+        cols.append((wp - wm) / (2 * eps))
+    J = K.transpose(K.stack(cols))
+    return J
 
 
 def _vdot(i, j):
     return K.tensordot(K.conj(i), j, 1)
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
 def lhs_matrix(theta, psi0):
     psi = variational_wfn(theta, psi0)
-
-    def ij(i, j):
-        return _vdot(i, j) + _vdot(i, psi) * _vdot(j, psi)
-
-    vij = K.vmap(ij, vectorized_argnums=0)
-    vvij = K.vmap(vij, vectorized_argnums=1)
-    jacobian = ppsioverptheta(theta, psi0=psi0)
-    jacobian = K.transpose(jacobian)
-    fim = vvij(jacobian, jacobian)
-    lhs = K.real(fim)
+    J = numerical_jacobian(theta, psi0)
+    JH = K.conj(K.transpose(J))  # (P, state)
+    fim = JH @ J  # (P, P)
+    v = JH @ K.reshape(psi, [-1, 1])  # (P,1), components <dpsi|psi>
+    outer = v @ K.transpose(v)  # (P,P), v v^T
+    lhs = K.real(fim + outer)
     return lhs
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
 def rhs_vector(theta, psi0):
-    def energy1(theta, psi0):
-        w = variational_wfn(theta, psi0)
-        wl = K.conj(w)
-        wr = K.stop_gradient(w)
-        wl = K.reshape(wl, [1, -1])
-        wr = K.reshape(wr, [-1, 1])
-        e = wl @ h @ wr  # <\partial psi0|H| psi0>
-        return K.real(e)[0, 0]
-
-    def energy2(theta, psi0):
-        w = variational_wfn(theta, psi0)
-        wr0 = K.stop_gradient(w)
-        wr0 = K.reshape(wr0, [-1, 1])
-        wl0 = K.stop_gradient(w)
-        wl0 = K.conj(wl0)
-        wl0 = K.reshape(wl0, [1, -1])
-        e0 = wl0 @ h @ wr0  # <psi0| H | psi0>
-
-        wl = K.conj(w)
-        wl = K.reshape(wl, [1, -1])
-        w0 = wl @ wr0  # <\partial psi0| psi0>
-        return K.real((w0 * e0)[0, 0])
-
-    eg1 = K.grad(energy1, argnums=0)
-    eg2 = K.grad(energy2, argnums=0)
-
-    rhs1 = eg1(theta, psi0)
-    rhs1 = K.imag(rhs1)
-    rhs2 = eg2(theta, psi0)
-    rhs2 = K.imag(rhs2)  # should be a imaginary number
-    rhs = rhs1 - rhs2
+    psi = variational_wfn(theta, psi0)
+    J = numerical_jacobian(theta, psi0)
+    JH = K.conj(K.transpose(J))  # (P, state)
+    Hpsi = K.reshape(h @ K.reshape(psi, [-1, 1]), [-1])
+    e0 = K.tensordot(K.conj(psi), Hpsi, 1)  # scalar <psi|H|psi>
+    term1 = JH @ K.reshape(Hpsi, [-1, 1])  # (P,1)
+    v = JH @ K.reshape(psi, [-1, 1])  # (P,1)
+    term2 = v * K.reshape(e0, [1, 1])  # (P,1)
+    rhs = K.imag(K.reshape(term1 - term2, [-1]))
     return rhs
 
 
-@K.jit  # warning pytorch might be unable to do this exactly
+@K.jit
 def update(theta, lhs, rhs, tau):
     # protection
     eps = 1e-3
@@ -105,10 +88,10 @@ def update(theta, lhs, rhs, tau):
 
 
 if __name__ == "__main__":
-    N = 10
-    l = 5
-    tau = 0.005
-    steps = 200
+    N = 6
+    l = 3
+    tau = 0.01
+    steps = 20
 
     g = tq.templates.graphs.Line1D(N, pbc=False)
     h = tq.quantum.heisenberg_hamiltonian(

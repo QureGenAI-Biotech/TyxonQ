@@ -62,9 +62,9 @@ def circuit_output(random_matrix, status, n, d, p):
         for i in range(n):
             pick, plist = c.general_kraus(
                 [
-                    K.sqrt(p) * K.convert_to_tensor(np.array([[1.0, 0], [0, 0]])),
-                    K.sqrt(p) * K.convert_to_tensor(np.array([[0, 0], [0, 1.0]])),
-                    K.sqrt(1 - p) * K.eye(2),
+                    K.sqrt(K.convert_to_tensor(p)) * K.convert_to_tensor(np.array([[1.0, 0], [0, 0]])),
+                    K.sqrt(K.convert_to_tensor(p)) * K.convert_to_tensor(np.array([[0, 0], [0, 1.0]])),
+                    K.sqrt(K.convert_to_tensor(1 - p)) * K.eye(2),
                 ],
                 i,
                 status=status[j, i],

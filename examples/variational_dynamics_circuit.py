@@ -9,7 +9,7 @@ import torch
 import tyxonq as tq
 
 K = tq.set_backend("pytorch")
-K.set_dtype("complex128")
+K.set_dtype("complex64")
 
 
 # realize R gates in paper
@@ -162,11 +162,11 @@ def numdiff(i):
 if __name__ == "__main__":
     # l: layers; h and J: coefficient of Hamiltonian;
     # L_var and L_num: results of variation method and numerical method
-    N = 3
-    l = 4
+    N = 2
+    l = 2
     J = 1 / 4
-    dt = 0.005
-    t = 1
+    dt = 0.01
+    t = 0.2
     h = []
     L_var = []
     L_num = []
@@ -318,8 +318,8 @@ if __name__ == "__main__":
         L_var.append(K.numpy(simulation(ODE_theta)).tolist())
 
         x_value.append(round((T + 1) * dt, 3))
-        print("Now time:", x_value[T], "Loss:", L_num[T] - L_var[T])
+        if T % 5 == 0:
+            print("Now time:", x_value[T], "Loss:", L_num[T] - L_var[T])
 
-    plt.plot(x_value, L_var, color="green")
-    plt.plot(x_value, L_num, color="red")
-    plt.show()
+    # quick summary print (omit plotting for CI speed)
+    print("final var:", L_var[-1], "final num:", L_num[-1])
