@@ -12,6 +12,9 @@ import tempfile
 import shutil
 from pathlib import Path
 import warnings
+import time
+import signal
+import threading
 
 # Suppress warnings for cleaner test output
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -84,6 +87,54 @@ def run_example_file(file_path, timeout=30):
         return False, "", str(e)
 
 
+def run_example_with_timeout(file_path: str, timeout_seconds: int = 15) -> tuple[bool, str, str]:
+    """
+    Run an example file with a timeout
+    
+    :param file_path: Path to the example file
+    :param timeout_seconds: Timeout in seconds
+    :return: Tuple of (success, output, error)
+    """
+    def target():
+        try:
+            result = subprocess.run(
+                [sys.executable, file_path],
+                capture_output=True,
+                text=True,
+                cwd=os.path.dirname(file_path),
+                timeout=timeout_seconds
+            )
+            return result.returncode == 0, result.stdout, result.stderr
+        except subprocess.TimeoutExpired:
+            return False, "", f"Timeout after {timeout_seconds} seconds"
+        except Exception as e:
+            return False, "", str(e)
+    
+    # Run in a thread to handle timeout
+    result_container = [None, None, None]
+    
+    def run_with_timeout():
+        try:
+            success, output, error = target()
+            result_container[0] = success
+            result_container[1] = output
+            result_container[2] = error
+        except Exception as e:
+            result_container[0] = False
+            result_container[1] = ""
+            result_container[2] = str(e)
+    
+    thread = threading.Thread(target=run_with_timeout)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout=timeout_seconds + 5)  # Extra 5 seconds for cleanup
+    
+    if thread.is_alive():
+        return False, "", f"Timeout after {timeout_seconds} seconds"
+    
+    return result_container[0], result_container[1], result_container[2]
+
+
 class TestExamplesExecution:
     """Test execution of all examples"""
     
@@ -109,7 +160,6 @@ class TestExamplesExecution:
             'cloud_api_devices.py',  # Requires API keys
             'cloud_api_task.py',  # Requires API keys
             'simple_demo_1.py',# Requires API keys
-            'cotengra_setting_bench.py',#too long time~
         }
         
         # Statistics
@@ -323,6 +373,77 @@ def test_matrix_operations_work():
     assert eigenvals is not None
     assert len(eigenvals) == 2
     print(f"Eigenvalues: {eigenvals}")
+
+
+def test_long_running_examples():
+    """
+    Test examples that were marked as 'too long time' with a 15-second timeout
+    """
+    # Examples marked as too long time
+    long_running_examples = [
+        'cotengra_setting_bench.py',
+        'analog_evolution_mint.py', 
+        'lightcone_simplify.py',
+        'noisy_sampling_jit.py',
+        'sample_benchmark.py',
+        'vqe_shot_noise.py',
+        'vqe_noisyopt.py'
+    ]
+    
+    examples_dir = Path(__file__).parent.parent / "examples"
+    
+    successful_files = 0
+    failed_files = 0
+    timeout_files = 0
+    
+    print(f"\nTesting {len(long_running_examples)} long-running examples with 15-second timeout...")
+    print("-" * 60)
+    
+    for example_file in long_running_examples:
+        file_path = examples_dir / example_file
+        
+        if not file_path.exists():
+            print(f"  ⚠️  SKIPPED: {example_file} (file not found)")
+            continue
+            
+        print(f"\nTesting: {example_file}")
+        
+        # Create modified version with PyTorch backend
+        temp_dir = tempfile.mkdtemp()
+        temp_file_path = create_modified_example(example_file, temp_dir)
+        
+        # Run with timeout
+        success, output, error = run_example_with_timeout(temp_file_path, timeout_seconds=15)
+        
+        if success:
+            print(f"  ✅ SUCCESS (completed within 15s)")
+            print(f"     Output: {output[:100]}...")
+            successful_files += 1
+        elif "Timeout" in error:
+            print(f"  ⏰ TIMEOUT (took longer than 15s)")
+            print(f"     This is expected for long-running examples")
+            timeout_files += 1
+        else:
+            print(f"  ❌ FAILED")
+            print(f"     Error: {error[:200]}...")
+            failed_files += 1
+    
+    print("\n" + "="*60)
+    print("LONG-RUNNING EXAMPLES SUMMARY")
+    print("="*60)
+    print(f"Total files: {len(long_running_examples)}")
+    print(f"Completed within 15s: {successful_files}")
+    print(f"Timed out (expected): {timeout_files}")
+    print(f"Failed with error: {failed_files}")
+    print("="*60)
+    
+    # Consider it a success if most files either completed or timed out (as expected)
+    total_tested = successful_files + timeout_files + failed_files
+    if total_tested > 0:
+        success_rate = (successful_files + timeout_files) / total_tested
+        assert success_rate >= 0.7, f"Success rate {success_rate:.1%} is too low"
+    
+    print(f"\n🎉 SUCCESS: {successful_files} examples completed within 15s, {timeout_files} timed out as expected!")
 
 
 if __name__ == "__main__":

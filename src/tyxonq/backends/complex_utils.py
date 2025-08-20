@@ -82,18 +82,24 @@ class ComplexHandler:
         else:
             return complex_tensor
 
-def safe_cast(tensor: torch.Tensor, dtype: str) -> torch.Tensor:
+def safe_cast(tensor, dtype):
     """
-    Safely cast tensor to specified dtype without complex warnings.
+    Safely cast tensor to the specified dtype, handling complex numbers.
     
     :param tensor: Input tensor
     :param dtype: Target dtype
     :return: Casted tensor
     """
-    if dtype in ['float32', 'float64'] and tensor.is_complex():
-        # For real dtypes, convert complex to real safely
-        return ComplexHandler.safe_complex_to_real(tensor, "real")
-    else:
+    import torch
+    
+    # Convert NumPy arrays to PyTorch tensors first
+    if hasattr(tensor, 'numpy'):  # Already a PyTorch tensor
+        return tensor.type(getattr(torch, dtype))
+    else:  # NumPy array or other type
+        if hasattr(tensor, 'detach'):  # Already a PyTorch tensor
+            tensor = tensor.detach().clone()
+        else:
+            tensor = torch.tensor(tensor)
         return tensor.type(getattr(torch, dtype))
 
 def quantum_expectation_value(complex_tensor: torch.Tensor) -> torch.Tensor:

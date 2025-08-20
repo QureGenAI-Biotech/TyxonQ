@@ -593,7 +593,7 @@ def rx_gate(theta: float = 0) -> Gate:
     """
     i, x = array_to_tensor(_i_matrix, _x_matrix)
     theta = num_to_tensor(theta)
-    unitary = backend.cos(theta / 2.0) * i - backend.i() * backend.sin(theta / 2.0) * x
+    unitary = backend.cos(theta / 2.0) * i - 1j * backend.sin(theta / 2.0) * x
     return Gate(unitary)
 
 
@@ -614,7 +614,7 @@ def ry_gate(theta: float = 0) -> Gate:
     """
     i, y = array_to_tensor(_i_matrix, _y_matrix)
     theta = num_to_tensor(theta)
-    unitary = backend.cos(theta / 2.0) * i - backend.i() * backend.sin(theta / 2.0) * y
+    unitary = backend.cos(theta / 2.0) * i - 1j * backend.sin(theta / 2.0) * y
     return Gate(unitary)
 
 
@@ -635,7 +635,7 @@ def rz_gate(theta: float = 0) -> Gate:
     """
     i, z = array_to_tensor(_i_matrix, _z_matrix)
     theta = num_to_tensor(theta)
-    unitary = backend.cos(theta / 2.0) * i - backend.i() * backend.sin(theta / 2.0) * z
+    unitary = backend.cos(theta / 2.0) * i - 1j * backend.sin(theta / 2.0) * z
     return Gate(unitary)
 
 

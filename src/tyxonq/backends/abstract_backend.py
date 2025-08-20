@@ -63,6 +63,8 @@ class ExtendedBackend:
         if psd:
             e = self.relu(e)
         e = self.sqrt(e)
+        # Ensure consistent dtype for complex matrix operations
+        e = self.cast(e, v.dtype)
         return v @ self.diagflat(e) @ self.adjoint(v)
 
     def eigvalsh(self: Any, a: Tensor) -> Tensor:

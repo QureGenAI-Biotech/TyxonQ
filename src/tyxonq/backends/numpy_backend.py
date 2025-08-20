@@ -55,19 +55,19 @@ class NumpyBackend(numpy_backend.NumPyBackend, ExtendedBackend):  # type: ignore
         self, N: int, dtype: Optional[str] = None, M: Optional[int] = None
     ) -> Tensor:
         if dtype is None:
-            dtype = dtypestr
+            dtype = "float64"
         r = np.eye(N, M=M)
         return self.cast(r, dtype)
 
     def ones(self, shape: Sequence[int], dtype: Optional[str] = None) -> Tensor:
         if dtype is None:
-            dtype = dtypestr
+            dtype = "float64"
         r = np.ones(shape)
         return self.cast(r, dtype)
 
     def zeros(self, shape: Sequence[int], dtype: Optional[str] = None) -> Tensor:
         if dtype is None:
-            dtype = dtypestr
+            dtype = "float64"
         r = np.zeros(shape)
         return self.cast(r, dtype)
 
@@ -317,6 +317,9 @@ class NumpyBackend(numpy_backend.NumPyBackend, ExtendedBackend):  # type: ignore
     def coo_sparse_matrix(
         self, indices: Tensor, values: Tensor, shape: Tensor
     ) -> Tensor:
+        # Handle different indices shapes
+        if indices.shape[0] == 2:  # indices is (2, nnz)
+            indices = indices.T  # transpose to (nnz, 2)
         return coo_matrix((values, (indices[:, 0], indices[:, 1])), shape=shape)
 
     def sparse_dense_matmul(

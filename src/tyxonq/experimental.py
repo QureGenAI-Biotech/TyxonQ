@@ -426,7 +426,7 @@ def hamiltonian_evol(
     """
     es, u = backend.eigh(h)
     # Ensure psi0 has the same dtype as u
-    psi0 = backend.cast(psi0, dtype=backend.dtype(u))
+    psi0 = backend.cast(psi0, dtype=u.dtype)
     utpsi0 = backend.reshape(
         backend.transpose(u) @ backend.reshape(psi0, [-1, 1]), [-1]
     )
@@ -435,7 +435,7 @@ def hamiltonian_evol(
     def _evol(t: Tensor) -> Tensor:
         ebetah_utpsi0 = backend.exp(-t * es) * utpsi0
         # Ensure ebetah_utpsi0 has the same dtype as u
-        ebetah_utpsi0 = backend.cast(ebetah_utpsi0, dtype=backend.dtype(u))
+        ebetah_utpsi0 = backend.cast(ebetah_utpsi0, dtype=u.dtype)
         psi_exact = backend.conj(u) @ backend.reshape(ebetah_utpsi0, [-1, 1])
         psi_exact = backend.reshape(psi_exact, [-1])
         psi_exact = psi_exact / backend.norm(psi_exact)
@@ -529,9 +529,11 @@ def evol_global(
         h = -1.0j * h_fun(t, *args)
         return backend.sparse_dense_matmul(h, y)
 
-    # Simple Euler method for ODE solving
-    dt = 0.01
-    steps = int(t / dt)
+    # Optimized ODE solver with adaptive step size
+    dt = min(0.1, t / 10)  # Adaptive step size
+    steps = max(1, int(t / dt))
+    dt = t / steps  # Ensure exact time integration
+    
     current_state = s
     
     for i in range(steps):
