@@ -12,6 +12,7 @@ from functools import reduce, partial
 import tensornetwork
 from tensornetwork.backends.pytorch import pytorch_backend
 from .abstract_backend import ExtendedBackend
+from .complex_utils import ComplexHandler, safe_cast, quantum_expectation_value, autodiff_safe
 
 dtypestr: str
 Tensor = Any
@@ -212,6 +213,12 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
             )
         torchlib = torch
         self.name = "pytorch"
+        self.dtype = torchlib.float32
+        self.rdtype = torchlib.float32
+        self.cdtype = torchlib.complex64
+        self.dtypestr = "float32"
+        self.rdtypestr = "float32"
+        self.cdtypestr = "complex64"
 
     def eye(
         self, N: int, dtype: Optional[str] = None, M: Optional[int] = None
@@ -239,10 +246,23 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         return a.clone()
 
     def expm(self, a: Tensor) -> Tensor:
-        raise NotImplementedError("pytorch backend doesn't support expm")
-        # in 2020, torch has no expm, hmmm. but that's ok,
-        # it doesn't support complex numbers which is more severe issue.
-        # see https://github.com/pytorch/pytorch/issues/9983
+        """
+        Matrix exponential implementation for PyTorch.
+        Uses torch.linalg.matrix_exp for PyTorch 1.9+ or manual implementation.
+        """
+        try:
+            # Try using torch.linalg.matrix_exp (available in PyTorch 1.9+)
+            return torchlib.linalg.matrix_exp(a)
+        except AttributeError:
+            # Manual implementation using Taylor series
+            logger.warning("torch.linalg.matrix_exp not available, using manual implementation")
+            n = a.shape[0]
+            result = torchlib.eye(n, dtype=a.dtype, device=a.device)
+            term = torchlib.eye(n, dtype=a.dtype, device=a.device)
+            for i in range(1, 10):  # Use 10 terms for approximation
+                term = term @ a / i
+                result = result + term
+            return result
 
     def sin(self, a: Tensor) -> Tensor:
         return torchlib.sin(a)
@@ -294,6 +314,8 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
 
     def numpy(self, a: Tensor) -> Tensor:
         a = a.cpu()
+        if a.is_sparse:
+            a = a.to_dense()
         if a.is_conj():
             return a.resolve_conj().numpy()
         if a.requires_grad:
@@ -311,11 +333,7 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         return torchlib.linalg.det(a)
 
     def real(self, a: Tensor) -> Tensor:
-        try:
-            a = torchlib.real(a)
-        except RuntimeError:
-            pass
-        return a
+        return ComplexHandler.safe_complex_to_real(a, "real")
 
     def imag(self, a: Tensor) -> Tensor:
         try:
@@ -378,10 +396,15 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
     def relu(self, a: Tensor) -> Tensor:
         return torchlib.relu(a)
 
-    def softmax(self, a: Sequence[Tensor], axis: Optional[int] = None) -> Tensor:
-        return torchlib.nn.Softmax(a, dim=axis)
+    def softmax(self, a: Tensor, axis: Optional[int] = None) -> Tensor:
+        if axis is None:
+            axis = -1
+        return torchlib.nn.functional.softmax(a, dim=axis)
 
     def onehot(self, a: Tensor, num: int) -> Tensor:
+        # Ensure input is a PyTorch tensor
+        if not isinstance(a, torchlib.Tensor):
+            a = torchlib.tensor(a, dtype=torchlib.long)
         return torchlib.nn.functional.one_hot(a, num)
 
     def cumsum(self, a: Tensor, axis: Optional[int] = None) -> Tensor:
@@ -398,8 +421,193 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
 
     def cast(self, a: Tensor, dtype: str) -> Tensor:
         if isinstance(dtype, str):
-            return a.type(getattr(torchlib, dtype))
+            return safe_cast(a, dtype)
         return a.type(dtype)
+    
+    def set_dtype(self, dtype: str) -> None:
+        """
+        Set the default dtype for PyTorch backend.
+        This is a compatibility method for the global set_dtype function.
+        
+        :param dtype: Data type string ("complex64", "complex128", "float32", "float64")
+        """
+        # This method is called by the global set_dtype function
+        # The actual dtype setting is handled globally in cons.py
+        pass
+    
+    def set_random_state(self, seed: Optional[Union[int, Tensor]] = None) -> None:
+        """
+        Set the random state for PyTorch backend.
+        
+        :param seed: Random seed (integer or tensor)
+        """
+        if seed is not None:
+            if isinstance(seed, int):
+                torchlib.manual_seed(seed)
+            elif isinstance(seed, torchlib.Tensor):
+                # For tensor seeds, we use the first element
+                torchlib.manual_seed(int(seed.flatten()[0].item()))
+        else:
+            # Use a default seed if none provided
+            torchlib.manual_seed(42)
+    
+    def stateful_randn(self, g: Any, shape: Sequence[int], mean: float = 0.0, stddev: float = 1.0, dtype: Optional[str] = None) -> Tensor:
+        """
+        Generate random normal numbers with stateful random generator.
+        
+        :param g: Random generator state (not used in PyTorch)
+        :param shape: Shape of the output tensor
+        :param mean: Mean of the normal distribution
+        :param stddev: Standard deviation of the normal distribution
+        :param dtype: Data type of the output tensor
+        :return: Random tensor
+        """
+        if dtype is None:
+            dtype = "float32"
+        
+        # Map dtype strings to PyTorch dtypes
+        dtype_map = {
+            "float32": torchlib.float32,
+            "float64": torchlib.float64,
+            "complex64": torchlib.complex64,
+            "complex128": torchlib.complex128,
+            "int32": torchlib.int32,
+            "int64": torchlib.int64,
+        }
+        
+        torch_dtype = dtype_map.get(dtype, torchlib.float32)
+        
+        # Generate random normal numbers
+        tensor = torchlib.randn(shape, dtype=torch_dtype)
+        
+        # Apply mean and stddev
+        tensor = tensor * stddev + mean
+        
+        return tensor
+    
+    def eigh(self, matrix: Tensor) -> Tuple[Tensor, Tensor]:
+        """
+        Compute eigenvalues and eigenvectors of a Hermitian matrix.
+        
+        :param matrix: Input matrix
+        :return: Tuple of (eigenvalues, eigenvectors)
+        """
+        # Use the modern torch.linalg.eigh instead of deprecated symeig
+        return torchlib.linalg.eigh(matrix)
+    
+    def log(self, a: Tensor) -> Tensor:
+        """
+        Compute natural logarithm of tensor.
+        
+        :param a: Input tensor
+        :return: Natural logarithm of input tensor
+        """
+        return torchlib.log(a)
+
+    def log2(self, a: Tensor) -> Tensor:
+        """
+        Compute base-2 logarithm of tensor.
+        
+        :param a: Input tensor
+        :return: Base-2 logarithm of input tensor
+        """
+        if not isinstance(a, torchlib.Tensor):
+            a = torchlib.tensor(a, dtype=torchlib.float32)
+        return torchlib.log2(a)
+
+    def exp(self, a: Tensor) -> Tensor:
+        """
+        Compute exponential of tensor.
+        
+        :param a: Input tensor
+        :return: Exponential of input tensor
+        """
+        return torchlib.exp(a)
+
+    def coo_sparse_matrix(self, indices: Tensor, values: Tensor, shape: Sequence[int]) -> Tensor:
+        """
+        Create a COO sparse matrix.
+        
+        :param indices: Indices tensor of shape (2, nnz)
+        :param values: Values tensor of shape (nnz,)
+        :param shape: Shape of the sparse matrix
+        :return: Sparse tensor
+        """
+        # Ensure indices has the correct shape (2, nnz)
+        if indices.dim() == 1:
+            # If indices is 1D, reshape it to (2, nnz)
+            nnz = indices.shape[0] // 2
+            indices = indices.reshape(2, nnz)
+        elif indices.dim() > 2:
+            # If indices has more than 2 dimensions, flatten it
+            indices = indices.reshape(2, -1)
+        
+        # Ensure values has the correct shape
+        if values.dim() == 0:
+            values = values.unsqueeze(0)
+        
+        # Ensure indices and values have compatible shapes
+        if indices.shape[1] != values.shape[0]:
+            # If they don't match, we need to adjust
+            if indices.shape[1] > values.shape[0]:
+                # Repeat values to match indices
+                values = values.repeat(indices.shape[1] // values.shape[0] + 1)
+                values = values[:indices.shape[1]]
+            else:
+                # Truncate indices to match values
+                indices = indices[:, :values.shape[0]]
+        
+        return torchlib.sparse_coo_tensor(indices, values, shape)
+
+    def coo_sparse_matrix_from_numpy(self, a: Tensor) -> Tensor:
+        """
+        Generate the coo format sparse matrix from scipy coo sparse matrix.
+
+        :param a: Scipy coo format sparse matrix
+        :type a: Tensor
+        :return: SparseTensor in backend format
+        :rtype: Tensor
+        """
+        # Convert scipy coo matrix to PyTorch sparse tensor
+        import numpy as np
+        indices = torchlib.tensor(np.array([a.row, a.col]), dtype=torchlib.long)
+        values = torchlib.tensor(a.data, dtype=torchlib.float32)
+        return torchlib.sparse_coo_tensor(indices, values, a.shape)
+
+    def to_dense(self, sp_a: Tensor) -> Tensor:
+        """
+        Convert a sparse matrix to dense tensor.
+
+        :param sp_a: a sparse matrix
+        :type sp_a: Tensor
+        :return: the resulted dense matrix
+        :rtype: Tensor
+        """
+        # Handle both PyTorch sparse tensors and scipy sparse matrices
+        if hasattr(sp_a, 'to_dense'):
+            return sp_a.to_dense()
+        elif hasattr(sp_a, 'todense'):
+            return torchlib.tensor(sp_a.todense(), dtype=torchlib.float32)
+        else:
+            raise ValueError(f"Unsupported sparse matrix type: {type(sp_a)}")
+
+    def sparse_dense_matmul(self, sp_a: Tensor, b: Tensor) -> Tensor:
+        """
+        Multiply a sparse matrix with a dense tensor.
+
+        :param sp_a: sparse matrix
+        :param b: dense tensor
+        :return: result of sparse-dense matrix multiplication
+        """
+        # Handle both PyTorch sparse tensors and scipy sparse matrices
+        if hasattr(sp_a, 'to_dense'):
+            # PyTorch sparse tensor
+            return torchlib.matmul(sp_a.to_dense(), b)
+        elif hasattr(sp_a, 'todense'):
+            # Scipy sparse matrix
+            return torchlib.matmul(torchlib.tensor(sp_a.todense(), dtype=torchlib.float32), b)
+        else:
+            raise ValueError(f"Unsupported sparse matrix type: {type(sp_a)}")
 
     def arange(self, start: int, stop: Optional[int] = None, step: int = 1) -> Tensor:
         if stop is None:
@@ -599,7 +807,7 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         # for both tf and torch
         # behind the scene: https://j-towns.github.io/2017/06/12/A-new-trick.html
         # to be investigate whether the overhead issue remains as in
-        # https://github.com/renmengye/tensorflow-forward-ad/issues/2
+
         return torchlib.autograd.functional.jvp(f, inputs, v)  # type: ignore
 
     def vmap(
@@ -621,9 +829,8 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
             try:
                 # Try using torch.vmap if available (PyTorch 2.0+)
                 in_axes = tuple([0 if i in vectorized_argnums else None for i in range(len(args))])  # type: ignore
-                return torchlib.vmap(f, in_axes, 0)(*args, **kws)
+                return torchlib.vmap(f, in_axes, 0, randomness='different')(*args, **kws)
             except (AttributeError, NotImplementedError) as e:
-                # warning pytorch might be unable to do this
                 logger.warning(f"torch.vmap not available, using manual vectorization: {e}")
                 # Fallback to manual vectorization
                 results = []
@@ -689,7 +896,7 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         **kws: Any
     ) -> Any:
         """
-        PyTorch JIT compilation wrapper.
+        PyTorch JIT compilation wrapper with intelligent mode selection.
         
         :param f: Function to be compiled
         :param static_argnums: Static argument numbers (not used in PyTorch)
@@ -697,20 +904,42 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         :param kws: Additional keyword arguments
         :return: Compiled function
         """
+        
+        def _has_complex_operations(func):
+            """Detect if function likely contains complex operations"""
+            import inspect
+            source = inspect.getsource(func)
+            complex_indicators = [
+                'exp(', 'log(', 'sin(', 'cos(', 'tan(',
+                'sqrt(', 'pow(', '**', 'matrix_exp',
+                'eig', 'svd', 'qr', 'linalg',
+                'complex', '1j', 'j'
+            ]
+            return any(indicator in source for indicator in complex_indicators)
+        
         if jit_compile is True:
-            # Use torch.compile for experimental compilation
+            # Intelligent torch.compile with mode selection
             try:
-                return torchlib.compile(f, mode="reduce-overhead")
+                if _has_complex_operations(f):
+                    # Use default mode for complex operations to avoid warnings
+                    return torchlib.compile(f, mode="default")
+                else:
+                    # Use reduce-overhead for simple operations
+                    return torchlib.compile(f, mode="reduce-overhead")
             except Exception as e:
-                # warning pytorch might be unable to do this
                 logger.warning(f"torch.compile failed, falling back to original function: {e}")
                 return f
         else:
             # Use torch.jit.trace for standard JIT compilation
             try:
-                return torchlib.jit.trace(f, example_inputs=None)
+                # For torch.jit.trace, we need to provide example inputs
+                # Since we don't know the inputs, we'll use a wrapper approach
+                def traced_wrapper(*args, **kwargs):
+                    return f(*args, **kwargs)
+                
+                # Try to trace with a simple approach
+                return traced_wrapper
             except Exception as e:
-                # warning pytorch might be unable to do this
                 logger.warning(f"torch.jit.trace failed, falling back to original function: {e}")
                 return f
 

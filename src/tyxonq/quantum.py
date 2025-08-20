@@ -1341,19 +1341,41 @@ def PauliStringSum2COO(
         PauliString2COO_jit[backend.name] = backend.jit(
             PauliString2COO, jit_compile=True
         )
-    rsparses = [
-        backend.numpy(PauliString2COO_jit[backend.name](ls[i], weight[i]))  # type: ignore
-        for i in range(nterms)
-    ]
-    rsparse = _dc_sum(rsparses)
-    # auto transformed into csr format!!
-
-    # for i in range(nterms):
-    #     rsparse += get_backend("tensorflow").numpy(PauliString2COO(ls[i], weight[i]))
-    rsparse = rsparse.tocoo()
-    if numpy:
+    
+    # For PyTorch backend, we need to handle sparse tensors differently
+    if backend.name == "pytorch":
+        # Keep as PyTorch sparse tensors and sum them
+        rsparses = [
+            PauliString2COO_jit[backend.name](ls[i], weight[i])  # type: ignore
+            for i in range(nterms)
+        ]
+        # Sum PyTorch sparse tensors
+        rsparse = rsparses[0]
+        for i in range(1, len(rsparses)):
+            rsparse = rsparse + rsparses[i]
+        
+        if numpy:
+            # Convert to scipy sparse matrix for numpy=True case
+            import scipy.sparse as sp
+            # Coalesce the sparse tensor first
+            rsparse = rsparse.coalesce()
+            indices = rsparse.indices().cpu().numpy()
+            values = rsparse.values().cpu().numpy()
+            shape = rsparse.shape
+            rsparse = sp.coo_matrix((values, (indices[0], indices[1])), shape=shape)
+            return rsparse
         return rsparse
-    return backend.coo_sparse_matrix_from_numpy(rsparse)
+    else:
+        # Original logic for other backends
+        rsparses = [
+            backend.numpy(PauliString2COO_jit[backend.name](ls[i], weight[i]))  # type: ignore
+            for i in range(nterms)
+        ]
+        rsparse = _dc_sum(rsparses)
+        rsparse = rsparse.tocoo()
+        if numpy:
+            return rsparse
+        return backend.coo_sparse_matrix_from_numpy(rsparse)
 
 
 def _dc_sum(l: List[Any]) -> Any:
@@ -1464,7 +1486,7 @@ def ps2coo_core(
     s = 0b1 << nqubits
     idx1 = num_to_tensor(backend.arange(s), dtype="int64")
     idx2 = (idx1 ^ idx_x) ^ (idx_y)
-    indices = backend.transpose(backend.stack([idx1, idx2]))
+    indices = backend.stack([idx1, idx2])
     tmp = idx1 & (idx_y | idx_z)
     e = idx1 * 0
     ny = 0

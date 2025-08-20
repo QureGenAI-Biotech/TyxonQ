@@ -425,14 +425,17 @@ def hamiltonian_evol(
     :rtype: result dynamics on ``tlist``
     """
     es, u = backend.eigh(h)
+    # Ensure psi0 has the same dtype as u
+    psi0 = backend.cast(psi0, dtype=backend.dtype(u))
     utpsi0 = backend.reshape(
         backend.transpose(u) @ backend.reshape(psi0, [-1, 1]), [-1]
     )
 
     @backend.jit
     def _evol(t: Tensor) -> Tensor:
-        # warning pytorch might be unable to do this
         ebetah_utpsi0 = backend.exp(-t * es) * utpsi0
+        # Ensure ebetah_utpsi0 has the same dtype as u
+        ebetah_utpsi0 = backend.cast(ebetah_utpsi0, dtype=backend.dtype(u))
         psi_exact = backend.conj(u) @ backend.reshape(ebetah_utpsi0, [-1, 1])
         psi_exact = backend.reshape(psi_exact, [-1])
         psi_exact = psi_exact / backend.norm(psi_exact)
@@ -467,7 +470,6 @@ def evol_local(
     :return: _description_
     :rtype: Circuit
     """
-    # warning pytorch might be unable to do this
     # Manual ODE solver implementation for PyTorch backend
     s = c.state()
     n = c._nqubits
@@ -519,7 +521,6 @@ def evol_global(
     :return: _description_
     :rtype: Circuit
     """
-    # warning pytorch might be unable to do this
     # Manual ODE solver implementation for PyTorch backend
     s = c.state()
     n = c._nqubits

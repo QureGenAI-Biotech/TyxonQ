@@ -584,7 +584,6 @@ class BaseCircuit(AbstractCircuit):
 
                 @backend.jit
                 def perfect_sampling(key: Any) -> Any:
-                    # warning pytorch might be unable to do this
                     backend.set_random_state(key)
                     return self.perfect_sampling()
 

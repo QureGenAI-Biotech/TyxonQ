@@ -80,11 +80,17 @@ class Circuit(BaseCircuit):
             inputs = backend.reshape(inputs, [-1])
             N = inputs.shape[0]
             n = int(np.log(N) / np.log(2))
-            assert n == nqubits or n == 2 * nqubits
-            inputs = backend.reshape(inputs, [2 for _ in range(n)])
+            # For complex tensors, the dimension calculation might be different
+            # We need to handle both real and complex cases
+            if inputs.is_complex():
+                # For complex tensors, we need to check if it's a valid quantum state
+                assert n == nqubits, f"Complex input tensor dimension {n} does not match nqubits {nqubits}"
+            else:
+                assert n == nqubits or n == 2 * nqubits
+            inputs = backend.reshape(inputs, [2 for _ in range(nqubits)])
             inputs = Gate(inputs)
             nodes = [inputs]
-            self._front = [inputs.get_edge(i) for i in range(n)]
+            self._front = [inputs.get_edge(i) for i in range(nqubits)]
         else:  # mps_inputs is not None
             mps_nodes = list(mps_inputs.nodes)  # type: ignore
             for i, n in enumerate(mps_nodes):

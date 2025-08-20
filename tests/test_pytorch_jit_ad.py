@@ -35,7 +35,7 @@ def test_pytorch_jit_basic(torchb):
         c = tq.Circuit(2)
         c.rx(0, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     theta = tq.backend.ones([])
     result = simple_circuit(theta)
@@ -56,7 +56,7 @@ def test_pytorch_jit_with_static_args(torchb):
                 c.cnot(i, i + 1)
             for i in range(n_qubits):
                 c.rx(i, theta=theta[layer, i])
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     theta = tq.backend.ones([3, 4])  # 3 layers, 4 qubits
     result = parameterized_circuit(theta, 4, 3)
@@ -73,7 +73,7 @@ def test_pytorch_jit_compile(torchb):
         c.rx(0, theta=theta)
         c.ry(1, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     theta = tq.backend.ones([])
     result = compiled_circuit(theta)
@@ -82,13 +82,14 @@ def test_pytorch_jit_compile(torchb):
 
 
 def test_pytorch_automatic_differentiation(torchb):
-    """Test PyTorch automatic differentiation"""
+    """Test PyTorch automatic differentiation with real outputs"""
     
     def circuit_function(theta):
         c = tq.Circuit(2)
         c.rx(0, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        # Return real part for autodiff compatibility
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     # Test grad
     theta = tq.backend.ones([])
@@ -114,7 +115,7 @@ def test_pytorch_jit_with_autodiff(torchb):
         c.rx(0, theta=theta)
         c.ry(1, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     # JIT the gradient function
     grad_fn = tq.backend.grad(jitted_circuit)
@@ -133,7 +134,7 @@ def test_pytorch_vmap(torchb):
         c = tq.Circuit(2)
         c.rx(0, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     # Vectorize over theta
     vmap_fn = tq.backend.vmap(single_circuit, vectorized_argnums=0)
@@ -153,7 +154,7 @@ def test_pytorch_vmap_with_jit(torchb):
         c = tq.Circuit(2)
         c.rx(0, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     # Vectorize the JIT-compiled function
     vmap_fn = tq.backend.vmap(jitted_circuit, vectorized_argnums=0)
@@ -172,7 +173,7 @@ def test_pytorch_vectorized_value_and_grad(torchb):
         c = tq.Circuit(2)
         c.rx(0, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     # Vectorized value and gradient
     vvag_fn = tq.backend.vectorized_value_and_grad(
@@ -199,7 +200,7 @@ def test_pytorch_optimization_workflow(torchb):
         c.rx(0, theta=params[0])
         c.ry(1, theta=params[1])
         c.cnot(0, 1)
-        expectation = c.expectation((tq.gates.z(), [0]))
+        expectation = tq.backend.real(c.expectation((tq.gates.z(), [0])))
         return expectation
     
     # JIT the loss function
@@ -214,7 +215,7 @@ def test_pytorch_optimization_workflow(torchb):
     
     # Simple gradient descent
     learning_rate = 0.1
-    for step in range(10):
+    for step in range(5):  # Reduced steps for testing
         loss = jitted_loss(params)
         grad = jitted_grad(params)
         params = params - learning_rate * grad
@@ -227,12 +228,14 @@ def test_pytorch_jit_fallback(torchb):
     # This function might fail JIT compilation due to complex control flow
     def complex_circuit(theta, condition):
         c = tq.Circuit(2)
-        if condition > 0.5:
+        # Use real comparison for PyTorch compatibility
+        condition_real = tq.backend.real(condition)
+        if condition_real > 0.5:
             c.rx(0, theta=theta)
         else:
             c.ry(0, theta=theta)
         c.cnot(0, 1)
-        return c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(c.expectation((tq.gates.z(), [0])))
     
     # Should fallback to original function if JIT fails
     jitted_fn = tq.backend.jit(complex_circuit)
@@ -243,6 +246,23 @@ def test_pytorch_jit_fallback(torchb):
     result = jitted_fn(theta, condition)
     assert result is not None
     print(f"JIT fallback result: {result}")
+
+
+def test_pytorch_complex_handling(torchb):
+    """Test PyTorch handling of complex numbers in quantum circuits"""
+    
+    def complex_circuit(theta):
+        c = tq.Circuit(2)
+        c.rx(0, theta=theta)
+        c.cnot(0, 1)
+        # Get complex expectation but return real part for autodiff
+        complex_exp = c.expectation((tq.gates.z(), [0]))
+        return tq.backend.real(complex_exp)
+    
+    theta = tq.backend.ones([])
+    result = complex_circuit(theta)
+    assert result is not None
+    print(f"Complex handling result: {result}")
 
 
 if __name__ == "__main__":

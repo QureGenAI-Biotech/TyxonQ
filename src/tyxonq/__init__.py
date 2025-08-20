@@ -1,6 +1,6 @@
-__version__ = "0.1.1"
-__author__ = "TensorCircuit Authors"
-__creator__ = "refraction-ray"
+__version__ = "0.4.0"
+__author__ = "TyxonQ Authors"
+__creator__ = "TyxonQ Team Refactor from TensorCircuit"
 
 from .utils import gpu_memory_share
 
@@ -43,11 +43,12 @@ from . import cloud
 from . import fgs
 from .fgs import FGSSimulator
 
-try:
-    from . import keras
-    from .keras import KerasLayer, KerasHardwareLayer
-except ModuleNotFoundError:
-    pass  # in case tf is not installed
+# Keras module removed in TyxonQ refactoring
+# try:
+#     from . import keras
+#     from .keras import KerasLayer, KerasHardwareLayer
+# except ModuleNotFoundError:
+#     pass  # in case tf is not installed
 
 try:
     from . import torchnn
