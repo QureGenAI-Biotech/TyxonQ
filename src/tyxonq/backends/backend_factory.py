@@ -17,8 +17,6 @@ except ImportError:
     tnbackend = abstract_backend.AbstractBackend
 
 from .numpy_backend import NumpyBackend
-from .jax_backend import JaxBackend
-from .tensorflow_backend import TensorFlowBackend
 from .pytorch_backend import PyTorchBackend
 from .cupy_backend import CuPyBackend
 
@@ -26,10 +24,8 @@ bk = Any  # tnbackend
 
 _BACKENDS = {
     "numpy": NumpyBackend,
-    "jax": JaxBackend,
-    "tensorflow": TensorFlowBackend,
-    "pytorch": PyTorchBackend,  # no intention to fully maintain this one
-    "cupy": CuPyBackend,  # no intention to fully maintain this one
+    "pytorch": PyTorchBackend,  # primary backend for tyxonq
+    "cupy": CuPyBackend,  # NVIDIA GPU acceleration
 }
 
 tn.backends.backend_factory._BACKENDS["cupy"] = CuPyBackend
@@ -41,7 +37,7 @@ def get_backend(backend: Union[Text, bk]) -> bk:
     """
     Get the `tc.backend` object.
 
-    :param backend: "numpy", "tensorflow", "jax", "pytorch"
+    :param backend: "numpy", "pytorch", "cupy"
     :type backend: Union[Text, tnbackend]
     :raises ValueError: Backend doesn't exist for `backend` argument.
     :return: The `tc.backend` object that with all registered universal functions.

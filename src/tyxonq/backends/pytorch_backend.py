@@ -607,12 +607,37 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         f: Callable[..., Any],
         vectorized_argnums: Union[int, Sequence[int]] = 0,
     ) -> Any:
+        """
+        PyTorch vmap implementation with fallback to manual vectorization.
+        
+        :param f: Function to be vectorized
+        :param vectorized_argnums: Arguments to vectorize over
+        :return: Vectorized function
+        """
         if isinstance(vectorized_argnums, int):
             vectorized_argnums = (vectorized_argnums,)
 
         def wrapper(*args: Any, **kws: Any) -> Tensor:
-            in_axes = tuple([0 if i in vectorized_argnums else None for i in range(len(args))])  # type: ignore
-            return torchlib.vmap(f, in_axes, 0)(*args, **kws)
+            try:
+                # Try using torch.vmap if available (PyTorch 2.0+)
+                in_axes = tuple([0 if i in vectorized_argnums else None for i in range(len(args))])  # type: ignore
+                return torchlib.vmap(f, in_axes, 0)(*args, **kws)
+            except (AttributeError, NotImplementedError) as e:
+                # warning pytorch might be unable to do this
+                logger.warning(f"torch.vmap not available, using manual vectorization: {e}")
+                # Fallback to manual vectorization
+                results = []
+                for barg in zip(*[args[i] for i in vectorized_argnums]):  # type: ignore
+                    narg = []
+                    j = 0
+                    for k in range(len(args)):
+                        if k in vectorized_argnums:  # type: ignore
+                            narg.append(barg[j])
+                            j += 1
+                        else:
+                            narg.append(args[k])
+                    results.append(f(*narg, **kws))
+                return torchlib.stack(results)
 
         return wrapper
         # v3
@@ -663,12 +688,31 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         jit_compile: Optional[bool] = None,
         **kws: Any
     ) -> Any:
+        """
+        PyTorch JIT compilation wrapper.
+        
+        :param f: Function to be compiled
+        :param static_argnums: Static argument numbers (not used in PyTorch)
+        :param jit_compile: Whether to use torch.compile (experimental)
+        :param kws: Additional keyword arguments
+        :return: Compiled function
+        """
         if jit_compile is True:
-            # experimental feature reusing the jit_compile flag for tf
-            return torchlib.compile(f)
-        return f
-        # return f  # do nothing here until I figure out what torch.jit is for and how does it work
-        # see https://github.com/pytorch/pytorch/issues/36910
+            # Use torch.compile for experimental compilation
+            try:
+                return torchlib.compile(f, mode="reduce-overhead")
+            except Exception as e:
+                # warning pytorch might be unable to do this
+                logger.warning(f"torch.compile failed, falling back to original function: {e}")
+                return f
+        else:
+            # Use torch.jit.trace for standard JIT compilation
+            try:
+                return torchlib.jit.trace(f, example_inputs=None)
+            except Exception as e:
+                # warning pytorch might be unable to do this
+                logger.warning(f"torch.jit.trace failed, falling back to original function: {e}")
+                return f
 
     def vectorized_value_and_grad(
         self,

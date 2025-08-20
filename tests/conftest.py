@@ -17,26 +17,6 @@ def npb():
 
 
 @pytest.fixture(scope="function")
-def tfb():
-    tq.set_backend("tensorflow")
-    yield
-    tq.set_backend("numpy")  # default backend
-
-
-@pytest.fixture(scope="function")
-def jaxb():
-    try:
-        tq.set_backend("jax")
-        yield
-        tq.set_backend("numpy")
-
-    except ImportError as e:
-        print(e)
-        tq.set_backend("numpy")
-        pytest.skip("****** No jax backend found, skipping test suit *******")
-
-
-@pytest.fixture(scope="function")
 def torchb():
     try:
         tq.set_backend("pytorch")

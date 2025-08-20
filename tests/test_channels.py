@@ -21,7 +21,7 @@ from tyxonq.channels import (
 )
 
 
-@pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("npb"), lf("torchb")])
 def test_channel_identity(backend):
     cs = depolarizingchannel(0.1, 0.15, 0.2)
     tq.channels.single_qubit_kraus_identity_check(cs)
@@ -33,7 +33,7 @@ def test_channel_identity(backend):
     tq.channels.single_qubit_kraus_identity_check(cs)
 
 
-@pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("npb"), lf("torchb")])
 def test_dep(backend):
     cs = tq.channels.generaldepolarizingchannel(0.1, 1)
     tq.channels.kraus_identity_check(cs)
@@ -49,7 +49,7 @@ def test_dep(backend):
         np.testing.assert_allclose(c1.tensor, c2.tensor)
 
 
-@pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("npb"), lf("torchb")])
 def test_rep_transformation(backend):
     kraus_set = []
     kraus_set.append(tq.channels.phasedampingchannel(0.2))
@@ -85,7 +85,7 @@ def test_rep_transformation(backend):
     np.testing.assert_allclose(kraus, [np.zeros([2, 2])], atol=1e-5)
 
 
-@pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("npb"), lf("torchb")])
 def test_thermal(backend):
     t2 = 100
     time = 100
@@ -109,7 +109,7 @@ def test_thermal(backend):
     np.testing.assert_allclose(supop1, supop2, atol=1e-5)
 
 
-@pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("npb"), lf("torchb")])
 def test_noisecircuit(backend):
     # Monte carlo simulation
     def noisecircuit(X):

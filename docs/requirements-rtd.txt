@@ -11,5 +11,3 @@ ipykernel>=6.26.0
 #brew install pandoc
 #for Linux install pandoc
 #sudo apt-get install pandoc
-
-#python -m ipykernel install --user --name python 

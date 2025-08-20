@@ -84,7 +84,7 @@ def test_adjoint_gate_circuit():
     np.testing.assert_allclose(c.state(), np.array([0.0, -1.0j]))
 
 
-@pytest.mark.parametrize("backend", [lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("torchb")])
 def test_jittable_measure(backend):
     @partial(tq.backend.jit, static_argnums=(2, 3))
     def f(param, key, n=6, nlayers=3):
@@ -100,23 +100,21 @@ def test_jittable_measure(backend):
                 c.rx(i, theta=param[2 * j + 1, i])
         return c.measure_jit(0, 1, 2, with_prob=True)
 
-    if tq.backend.name == "tensorflow":
-        import tensorflow as tf
-
+    if tq.backend.name == "pytorch":
+        import torch
+        
+        # Test with PyTorch random generator
         print(f(tq.backend.ones([6, 6]), None))
         print(f(tq.backend.ones([6, 6]), None))
-        print(f(tq.backend.ones([6, 6]), tf.random.Generator.from_seed(23)))
-        print(f(tq.backend.ones([6, 6]), tf.random.Generator.from_seed(24)))
-    elif tq.backend.name == "jax":
-        import jax
-
-        print(f(tq.backend.ones([6, 6]), jax.random.PRNGKey(23)))
-        print(f(tq.backend.ones([6, 6]), jax.random.PRNGKey(24)))
-
-    # As seen here, though I have tried the best, the random API is still not that consistent under jit
+        
+        # Test with PyTorch random state
+        torch.manual_seed(23)
+        print(f(tq.backend.ones([6, 6]), None))
+        torch.manual_seed(24)
+        print(f(tq.backend.ones([6, 6]), None))
 
 
-@pytest.mark.parametrize("backend", [lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("torchb")])
 def test_jittable_depolarizing(backend):
     @tq.backend.jit
     def f1(key):
@@ -214,15 +212,15 @@ def test_jittable_depolarizing(backend):
         return c.wavefunction()
 
     for f in [f1, f2, f3, f4, f5]:
-        if tq.backend.name == "tensorflow":
-            import tensorflow as tf
+        if tq.backend.name == "pytorch":
+            import torch
 
             np.testing.assert_allclose(tq.backend.norm(f(None)), 1.0, atol=1e-4)
             np.testing.assert_allclose(
-                tq.backend.norm(f(tf.random.Generator.from_seed(23))), 1.0, atol=1e-4
+                tq.backend.norm(f(torch.manual_seed(23))), 1.0, atol=1e-4
             )
             np.testing.assert_allclose(
-                tq.backend.norm(f(tf.random.Generator.from_seed(24))), 1.0, atol=1e-4
+                tq.backend.norm(f(torch.manual_seed(24))), 1.0, atol=1e-4
             )
 
         elif tq.backend.name == "jax":
@@ -236,7 +234,7 @@ def test_jittable_depolarizing(backend):
             )
 
 
-@pytest.mark.parametrize("backend", [lf("jaxb")])  # too slow for np
+@pytest.mark.parametrize("backend", [lf("torchb")])  # PyTorch backend for large scale sampling
 def test_large_scale_sample(backend):
     L = 30
     c = tq.Circuit(L)
@@ -260,7 +258,7 @@ def test_expectation(backend):
     )
 
 
-@pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb"), lf("cpb")])
+@pytest.mark.parametrize("backend", [lf("npb"), lf("torchb"), lf("cpb")])
 def test_exp1(backend):
     @partial(tq.backend.jit, jit_compile=True)
     def sf():
@@ -287,7 +285,7 @@ def test_exp1(backend):
     np.testing.assert_allclose(s, s1, atol=1e-4)
 
 
-def test_complex128(highp, tfb):
+def test_complex128(highp, torchb):
     c = tq.Circuit(2)
     c.H(1)
     c.rx(0, theta=tq.gates.num_to_tensor(1j))
@@ -325,7 +323,7 @@ def universal_ad():
     return v2, grad2
 
 
-@pytest.mark.parametrize("backend", [lf("tfb"), lf("jaxb")])
+@pytest.mark.parametrize("backend", [lf("torchb")])
 def test_ad(backend):
     # this amazingly shows how to code once and run in very different AD-ML engines
     print(universal_ad())

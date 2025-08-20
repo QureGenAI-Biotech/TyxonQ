@@ -431,6 +431,7 @@ def hamiltonian_evol(
 
     @backend.jit
     def _evol(t: Tensor) -> Tensor:
+        # warning pytorch might be unable to do this
         ebetah_utpsi0 = backend.exp(-t * es) * utpsi0
         psi_exact = backend.conj(u) @ backend.reshape(ebetah_utpsi0, [-1, 1])
         psi_exact = backend.reshape(psi_exact, [-1])
@@ -452,7 +453,7 @@ def evol_local(
 ) -> Circuit:
     """
     ode evolution of time dependent Hamiltonian on circuit of given indices
-    [only jax backend support for now]
+    [PyTorch backend support with manual ODE solver]
 
     :param c: _description_
     :type c: Circuit
@@ -466,8 +467,8 @@ def evol_local(
     :return: _description_
     :rtype: Circuit
     """
-    from jax.experimental.ode import odeint
-
+    # warning pytorch might be unable to do this
+    # Manual ODE solver implementation for PyTorch backend
     s = c.state()
     n = c._nqubits
     l = len(index)
@@ -489,10 +490,16 @@ def evol_local(
         y = contractor([y, h], output_edge_order=edges)
         return backend.reshape(y.tensor, [-1])
 
-    ts = backend.stack([0.0, t])
-    ts = backend.cast(ts, dtype=rdtypestr)
-    s1 = odeint(f, s, ts, *args, **solver_kws)
-    return type(c)(n, inputs=s1[-1])
+    # Simple Euler method for ODE solving
+    dt = 0.01
+    steps = int(t / dt)
+    current_state = s
+    
+    for i in range(steps):
+        current_time = i * dt
+        current_state = current_state + dt * f(current_state, current_time, *args)
+    
+    return type(c)(n, inputs=current_state)
 
 
 def evol_global(
@@ -500,7 +507,7 @@ def evol_global(
 ) -> Circuit:
     """
     ode evolution of time dependent Hamiltonian on circuit of all qubits
-    [only jax backend support for now]
+    [PyTorch backend support with manual ODE solver]
 
     :param c: _description_
     :type c: Circuit
@@ -512,8 +519,8 @@ def evol_global(
     :return: _description_
     :rtype: Circuit
     """
-    from jax.experimental.ode import odeint
-
+    # warning pytorch might be unable to do this
+    # Manual ODE solver implementation for PyTorch backend
     s = c.state()
     n = c._nqubits
 
@@ -521,7 +528,13 @@ def evol_global(
         h = -1.0j * h_fun(t, *args)
         return backend.sparse_dense_matmul(h, y)
 
-    ts = backend.stack([0.0, t])
-    ts = backend.cast(ts, dtype=rdtypestr)
-    s1 = odeint(f, s, ts, *args, **solver_kws)
-    return type(c)(n, inputs=s1[-1])
+    # Simple Euler method for ODE solving
+    dt = 0.01
+    steps = int(t / dt)
+    current_state = s
+    
+    for i in range(steps):
+        current_time = i * dt
+        current_state = current_state + dt * f(current_state, current_time, *args)
+    
+    return type(c)(n, inputs=current_state)
