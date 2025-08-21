@@ -38,6 +38,12 @@ dependencies = [
     "tensornetwork>=0.4.6",
     "torch>=2.7.1",
     "matplotlib",
+    "pandas",
+    "pyscf",
+    "openfermion",
+    "pylatexenc",
+    "noisyopt",
+    "renormalizer==0.0.11",
 ]
 
 [project.optional-dependencies]
