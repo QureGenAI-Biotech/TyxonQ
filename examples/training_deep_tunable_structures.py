@@ -16,7 +16,7 @@ import tyxonq as tq
 def main():
     tq.set_contractor("cotengra-40-64")
     K = tq.set_backend("pytorch")
-    K.set_dtype("complex128")
+    K.set_dtype("complex64")
 
     ii = tq.array_to_tensor(tq.gates._ii_matrix, dtype=tq.dtypestr)
     xx = tq.array_to_tensor(tq.gates._xx_matrix, dtype=tq.dtypestr)
@@ -30,6 +30,10 @@ def main():
     heih = tq.quantum.heisenberg_hamiltonian(
         g, hzz=1.0, hyy=1.0, hxx=1.0, hx=0, hy=0, hz=0
     )
+
+    # Densify Hamiltonian once to avoid sparse/functorch issues and match complex dtype
+    heihd = K.to_dense(heih) if K.is_sparse(heih) else heih
+    heihd = K.cast(heihd, dtype="complex64")
 
     def energy(params, structures, n, nlayers):
         def one_layer(state, others):
@@ -117,9 +121,9 @@ def main():
             s = c.state()
             return s, s
 
-        params = K.cast(K.real(params), dtype="complex128")
+        params = K.cast(K.real(params), dtype="complex64")
         structures = (K.sign(structures) + 1) / 2  # complex-safe via backend
-        structures = K.cast(structures, dtype="complex128")
+        structures = K.cast(structures, dtype="complex64")
 
         c = tq.Circuit(n)
 
@@ -136,17 +140,15 @@ def main():
         for lidx in range(nlayers):
             s, _ = one_layer(s, (p3[lidx], s3[lidx]))
         c = tq.Circuit(n, inputs=s)
-        # e = tq.templates.measurements.heisenberg_measurements(
-        #     c, g, hzz=1, hxx=1, hyy=1, hx=0, hy=0, hz=0
-        # )
-        e = tq.templates.measurements.operator_expectation(c, heih)
+        # Use dense operator expectation to bypass sparse kernels under functorch
+        e = tq.templates.measurements.operator_expectation(c, heihd)
         return K.real(e)
 
     # warning pytorch might be unable to do this exactly
     vagf = K.jit(K.value_and_grad(energy, argnums=0), static_argnums=(2, 3))
 
     structures = tq.array_to_tensor(
-        np.random.uniform(low=0.0, high=1.0, size=[3 * nlayers, n]), dtype="complex128"
+        np.random.uniform(low=0.0, high=1.0, size=[3 * nlayers, n]), dtype="complex64"
     )
     structures -= 1.0 * K.ones([3 * nlayers, n])
     params = tq.array_to_tensor(
@@ -158,7 +160,7 @@ def main():
     params = torch.nn.Parameter(params)
     optimizer = torch.optim.Adam([params], lr=1e-2)
 
-    for _ in range(10):
+    for _ in range(3):
         time0 = time.time()
         e, grads = vagf(params, structures, n, nlayers)
         time1 = time.time()

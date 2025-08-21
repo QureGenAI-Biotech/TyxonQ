@@ -1109,21 +1109,20 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         :param shape: Shape of the sparse matrix
         :return: Sparse tensor
         """
-        # Ensure indices has the correct shape (2, nnz)
-        # Handle both PyTorch tensors and NumPy arrays
+        # Normalize indices to shape (2, nnz). Accept (nnz, 2) as well.
         if hasattr(indices, 'dim'):
-            # PyTorch tensor
-            if indices.dim() == 1:
-                # If indices is 1D, reshape it to (2, nnz)
+            if indices.dim() == 2 and indices.shape[0] != 2 and indices.shape[1] == 2:
+                indices = indices.transpose(0, 1)
+            elif indices.dim() == 1:
                 nnz = indices.shape[0] // 2
                 indices = indices.reshape(2, nnz)
             elif indices.dim() > 2:
-                # If indices has more than 2 dimensions, flatten it
                 indices = indices.reshape(2, -1)
         else:
-            # NumPy array or other type
             if hasattr(indices, 'ndim'):
-                if indices.ndim == 1:
+                if indices.ndim == 2 and indices.shape[1] == 2 and indices.shape[0] != 2:
+                    indices = indices.T
+                elif indices.ndim == 1:
                     nnz = indices.shape[0] // 2
                     indices = indices.reshape(2, nnz)
                 elif indices.ndim > 2:
@@ -1156,13 +1155,31 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
         elif hasattr(shape, 'tolist'):
             shape = shape.tolist()
         
+        # Ensure torch dtypes
+        if not self.is_tensor(indices):
+            indices = torchlib.tensor(indices, dtype=torchlib.long)
+        else:
+            indices = indices.to(dtype=torchlib.long)
+        if not self.is_tensor(values):
+            # map numpy dtype to torch
+            if hasattr(values, 'dtype') and str(values.dtype).startswith('complex'):
+                values = torchlib.tensor(values, dtype=torchlib.complex64)
+            else:
+                values = torchlib.tensor(values, dtype=torchlib.float32)
+        # normalize shape as python list of ints
+        shape_list = [int(s) for s in (shape.tolist() if hasattr(shape, 'tolist') else list(shape))]
+
         try:
-            return torchlib.sparse_coo_tensor(indices, values, shape)
+            return torchlib.sparse_coo_tensor(indices, values, shape_list)
         except RuntimeError as e:
             if "number of dimensions must be sparse_dim" in str(e):
-                # Fallback: convert to dense and back to sparse
-                dense = torchlib.zeros(shape, dtype=values.dtype)
-                dense[indices[0], indices[1]] = values
+                # Fallback: manual COO construction via index_add
+                rows = indices[0].to(dtype=torchlib.long)
+                cols = indices[1].to(dtype=torchlib.long)
+                M, N = int(shape_list[0]), int(shape_list[1])
+                dense = torchlib.zeros((M, N), dtype=values.dtype, device=values.device)
+                flat_idx = rows * N + cols
+                dense.view(-1).index_add_(0, flat_idx, values)
                 return dense.to_sparse()
             else:
                 raise e

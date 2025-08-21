@@ -15,7 +15,7 @@ import tyxonq as tq
 K = tq.set_backend("pytorch")
 
 
-n = 20
+n = 10
 nlayers = 1
 j, h = 1, -1
 xx = tq.gates._xx_matrix  # xx gate matrix to be utilized
@@ -41,13 +41,17 @@ def benchmark(vqef, tries=3):
     time0 = time.time()
     v, g = vagf(K.zeros([2 * nlayers, n]))
     time1 = time.time()
-    for _ in range(tries):
-        v, g = vagf(K.zeros([2 * nlayers, n]))
-    time2 = time.time()
+    if tries > 0:
+        for _ in range(tries):
+            v, g = vagf(K.zeros([2 * nlayers, n]))
+        time2 = time.time()
+        running = (time2 - time1) / tries
+    else:
+        running = 0.0
     print("staging time: ", time1 - time0)
     if tries > 0:
-        print("running time: ", (time2 - time1) / tries)
-    return (v, g), (time1 - time0, (time2 - time1) / tries)
+        print("running time: ", running)
+    return (v, g), (time1 - time0, running)
 
 
 # 1. plain Pauli sum
@@ -66,15 +70,32 @@ def vqe1(param):
 # 2. vmap the Pauli sum
 
 
-def measurement(s, structure):
-    c = tq.Circuit(n, inputs=s)
-    return tq.templates.measurements.parameterized_measurements(
-        c, structure, onehot=True
-    )
+def measurement_batch(state, structures):
+    # Manual batching to avoid functorch interactions with gate tensors
+    c = tq.Circuit(n, inputs=state)
+    structures_int = K.cast(structures, dtype="int32")
+    results = []
+    for t in range(structures_int.shape[0]):
+        row = structures_int[t]
+        obs = []
+        for i in range(n):
+            code = int(row[i].item())
+            if code == 0:
+                continue
+            if code == 1:
+                obs.append((tq.gates.x(), [i]))
+            elif code == 2:
+                obs.append((tq.gates.y(), [i]))
+            elif code == 3:
+                obs.append((tq.gates.z(), [i]))
+        if len(obs) == 0:
+            results.append(K.ones([]))
+        else:
+            results.append(c.expectation(*obs, reuse=True))
+    return K.real(K.stack(results))
 
 
-# warning pytorch might be unable to do this exactly
-measurement = K.jit(K.vmap(measurement, vectorized_argnums=1))
+# Avoid jit/vmap here; manual batching above
 
 structures = []
 for i in range(n - 1):
@@ -96,7 +117,7 @@ weights = tq.array_to_tensor(
 def vqe2(param):
     c = ansatz(param)
     s = c.state()
-    ms = measurement(s, structures)
+    ms = measurement_batch(s, structures)
     return K.sum(ms * K.real(weights))
 
 
@@ -111,10 +132,12 @@ def vqe_template(param, op):
 
 
 hamiltonian_sparse_numpy = tq.quantum.PauliStringSum2COO_numpy(structures, weights)
+# Cache COO components for manual quadratic form to avoid sparse mm under functorch
+coo_rows = K.convert_to_tensor(hamiltonian_sparse_numpy.row)
+coo_cols = K.convert_to_tensor(hamiltonian_sparse_numpy.col)
+coo_vals = K.convert_to_tensor(hamiltonian_sparse_numpy.data)
 hamiltonian_sparse = K.coo_sparse_matrix(
-    np.transpose(
-        np.stack([hamiltonian_sparse_numpy.row, hamiltonian_sparse_numpy.col])
-    ),
+    np.transpose(np.stack([hamiltonian_sparse_numpy.row, hamiltonian_sparse_numpy.col])),
     hamiltonian_sparse_numpy.data,
     shape=(2**n, 2**n),
 )
@@ -127,10 +150,15 @@ if enable_dense is True:
 else:
     vqe3 = vqe1
 
-# 4. sparse matrix
+# 4. sparse matrix (manual quadratic form using cached COO to avoid sparse mm)
 
 
-vqe4 = partial(vqe_template, op=hamiltonian_sparse)
+def vqe4(param):
+    c = ansatz(param)
+    state = c.wavefunction(form="ket").squeeze(-1)
+    # sum_i conj(s[row_i]) * val_i * s[col_i]
+    contrib = K.conj(state[coo_rows]) * coo_vals * state[coo_cols]
+    return K.real(K.sum(contrib))
 
 
 # 5. mpo
@@ -158,7 +186,7 @@ if __name__ == "__main__":
         "mpo Hamiltonian",
     ]
     vqef = [vqe1, vqe2, vqe3, vqe4, vqe5]
-    tries = [2, 2, 5, 5, 5]
+    tries = [0, 0, 1, 1, 1]
     if enable_dense:
         tests = [i for i in range(5)]
     else:

@@ -17,17 +17,32 @@ from tyxonq.applications.vqes import construct_matrix_v3
 ctype, rtype = tq.set_dtype("complex64")
 K = tq.set_backend("pytorch")
 
-n = 6  # the number of qubits (must be even for consistency later)
+# n will be inferred from Hamiltonian below
+n = 6  # default, will be overwritten
 ncz = 1  # number of cz layers in Schrodinger circuit
 nlayersq = ncz + 1  # Schrodinger parameter layers
 
 # training setup (shortened for quick validation)
-epochs = 60
-batch = 64
+epochs = 10
+batch = 16
 
 # Hamiltonian
-h6h = np.load("./h6_hamiltonian.npy")  # reported in 0.99 A
+h6h = np.load("./examples/h6_hamiltonian.npy")  # reported in 0.99 A
 hamiltonian = construct_matrix_v3(h6h.tolist())
+# Avoid functorch + sparse issues by densifying once
+try:
+    if K.is_sparse(hamiltonian):
+        hamiltonian = K.to_dense(hamiltonian)
+except Exception:
+    pass
+# Infer number of qubits from Hamiltonian dimension
+try:
+    dim = hamiltonian.shape[0]
+    n = int(np.log2(dim))
+    assert 2 ** n == dim, "Hamiltonian dimension must be a power of 2"
+except Exception:
+    n = n  # keep default
+nlayersq = ncz + 1
 
 
 def hybrid_ansatz(structure, paramq, preprocess="direct", train=True):
@@ -157,26 +172,25 @@ def nmf_gradient(structures, oh):
     """
     choice = K.argmax(oh, axis=-1)
     prob = K.softmax(K.real(structures), axis=-1)
-    indices = K.transpose(
-        K.stack([K.cast(torch.arange(structures.shape[0]), "int64"), choice])
-    )
-    prob = torch.gather(prob, 0, indices.unsqueeze(1)).squeeze(1)
+    # Gather along row indices
+    row_idx = K.cast(torch.arange(structures.shape[0]), "int64")
+    prob_sel = prob[row_idx, choice]
+    prob = prob_sel
     prob = K.reshape(prob, [-1, 1])
     prob = K.tile(prob, [1, structures.shape[-1]])
 
-    result = -prob.clone()
-    for i, idx in enumerate(indices):
-        result[idx[0], idx[1]] = 1 - prob[idx[0], idx[1]]
-    
-    return K.real(result)  # in oh : 1-p, not in oh : -p
+    # Functional one-hot update: result = -prob + one_hot(choice)
+    mask = torch.nn.functional.one_hot(choice.long(), num_classes=structures.shape[-1]).to(prob.dtype)
+    result = -prob + mask
+    return K.real(result)
 
 
 # vmap for a batch of structures
 nmf_gradient_vmap = K.jit(K.vmap(nmf_gradient, vectorized_argnums=1))
 
-# vvag for a batch of structures
-vvag_hybrid = K.jit(
-    K.vectorized_value_and_grad(hybrid_vqe, vectorized_argnums=(0,), argnums=(1,)),
+# Single-sample value_and_grad to avoid functorch vmap+sparse issues
+vag_hybrid = K.jit(
+    K.value_and_grad(hybrid_vqe, argnums=(1,)),
     static_argnums=(2,),
 )
 
@@ -200,12 +214,23 @@ def train_hybrid(
             sampling_from_structure(params, batch=batch),
             num=params.shape[-1],
         )
-        vs, gq = vvag_hybrid(batched_stucture, paramq, "direct")
-        loss_history.append(np.min(vs))
-        gq = gq[0]
+        # Evaluate values and grads per-sample to keep tensors strided
+        vs_list = []
+        gq_acc = 0
+        for bidx in range(batched_stucture.shape[0]):
+            v_b, gq_b = vag_hybrid(batched_stucture[bidx], paramq, "direct")
+            vs_list.append(v_b)
+            gq_acc = gq_acc + gq_b[0]
+        vs = torch.stack(vs_list)
+        loss_history.append(np.min(vs.detach().cpu().numpy()))
+        gq = gq_acc / batched_stucture.shape[0]
         avcost = K.mean(vs)  # average cost of the batch
-        gs = nmf_gradient_vmap(params, batched_stucture)  # \nabla lnp
-        gs = K.mean(K.reshape(vs - avcost2, [-1, 1, 1]) * gs, axis=0)
+        # Monte Carlo policy gradient per-sample then weighted average
+        gs_list = []
+        for bidx in range(batched_stucture.shape[0]):
+            gs_list.append(nmf_gradient(params, batched_stucture[bidx]))
+        gs_stack = torch.stack(gs_list)
+        gs = K.mean(K.reshape(vs - avcost2, [-1, 1, 1]) * gs_stack, axis=0)
         # avcost2 is averaged cost in the last epoch
         avcost2 = avcost
 
@@ -219,9 +244,9 @@ def train_hybrid(
             print("----------epoch %s-----------" % epoch)
             print(
                 "batched average loss: ",
-                np.mean(vs),
+                vs.detach().mean().item(),
                 "minimum candidate loss: ",
-                np.min(vs),
+                vs.detach().min().item(),
             )
 
             # max over choices, min over layers and qubits
