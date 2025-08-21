@@ -1,6 +1,6 @@
 ## TyxonQ 重构迁移方案（提案稿 · 团队评审）
 
-本方案面向将 TyxonQ 重构为工程化、鲁棒、横向可扩展的量子计算框架。聚焦抽象清晰、插件化扩展、与实际硬件/云后端兼容，同时保留对数值计算与自动微分生态（NumPy、PyTorch、cuNumeric）的良好支持。
+本方案面向将 TyxonQ 重构为工程化、鲁棒、横向可扩展的量子计算框架。聚焦抽象清晰、插件化扩展、与实际硬件/云后端兼容，同时保留对数值计算与自动微分生态（NumPy、PyTorch、cupynumeric）的良好支持。
 
 ### 目标与设计原则
 - **工程化与稳定 API**：核心模块公开稳定接口，内部细节可演进。
@@ -52,6 +52,32 @@
 ## 新的整体目录结构（拟）
 
 ```
+
+### 示例六：集成 OpenFermion（化学到 Hamiltonian）
+
+```python
+from tyxonq.integrations.openfermion import jordan_wigner_to_qubit_hamiltonian
+from openfermion import MolecularData
+
+mol = MolecularData(geometry=[('H',(0,0,0)),('H',(0,0,0.74))], basis='sto-3g', multiplicity=1, charge=0)
+# 假设已通过外部驱动获得 one-/two-body integrals
+ham = jordan_wigner_to_qubit_hamiltonian(mol)
+
+# ham: tyxonq.core.ir.Hamiltonian，可直接进入 compiler → devices
+```
+
+### 示例七：集成 OpenQAOA（QASM/Qiskit → IR Circuit）
+
+```python
+from tyxonq.integrations.openqaoa import to_ir_circuit
+
+# openqaoa 可生成 qiskit.QuantumCircuit 或 QASM 字符串
+qc = build_openqaoa_qc(...)  # 来自 openqaoa 的构建
+circ = to_ir_circuit(qc)     # 或传入 qasm 字符串
+
+compiled = compiler.compile({"circuit": circ, "target": dev.capabilities, "options": {}})
+res = dev.run(compiled["circuit"], shots=10000)
+```
 src/tyxonq/
   core/
     ir/
@@ -97,9 +123,16 @@ src/tyxonq/
   devices/
     base.py                   # Device 抽象/能力声明
     simulators/
-      statevector/
-      densitymatrix/
-      mps/
+      wavefunction/           # 波函数法（原 statevector）
+      density_matrix/         # 密度矩阵法（原 densitymatrix）
+      compressed_state/       # 压缩态模拟器（面向大尺度/低秩态的高效模拟）
+        backends/
+          backend_base.py     # 压缩态后端协议
+          pytorch_backend.py  # 基于 PyTorch 的实现
+          numpy_backend.py    # 基于 NumPy 的实现
+          cupynumeric_backend.py # 基于 cupynumeric 的实现（可选 cuTensorNet 加速）
+      vendor/
+        cuquantum/            # NVIDIA cuQuantum 供应商模拟器封装（custatevec/cutensornet）
     hardware/
       ibm/
       braket/
@@ -110,13 +143,17 @@ src/tyxonq/
     api.py                    # ArrayBackend 协议与工厂
     backends/
       numpy_backend.py
-      torch_backend.py
-      cunumeric_backend.py
-    checks.py                 # 前置静态/运行期检查
+      pytorch_backend.py
+      cupynumeric_backend.py
+    vectorization_checks.py                 # 前置静态/运行期检查
     linalg.py
     random.py
     autodiff/
       bridge.py               # 与编译梯度方法的薄桥
+    accelerators/             # 说明：专属数值库的可选绑定（仅数值算子层）
+      cutensornet.py          # NVIDIA cuTensorNet（张量收缩加速）
+      custatevec.py           # NVIDIA cuStateVec（波函数加速）
+      custom_ops.py           # 自定义核/优化路径
 
   postprocessing/             # 原 results/ 更名
     mitigation/
@@ -126,6 +163,12 @@ src/tyxonq/
 
   plugins/
     registry.py
+
+  integrations/
+    openfermion.py            # OpenFermion 适配（FO/QO → Hamiltonian）
+    openqaoa.py               # OpenQAOA 适配（QASM/Qiskit → Circuit）
+    qiskit_import.py          # Qiskit QuantumCircuit → IR Circuit
+    qasm_import.py            # QASM → IR Circuit
 
   utils/
   config/
@@ -531,10 +574,14 @@ ham = to_qubit_hamiltonian(ints, aspace, mapping="jw")
      - `devices/session` 与 `RunResult.metadata` 记录矢量化/回退原因与成本；
      - 为核心实现编写 vmap-safe 规范并通过测试验证。
    - 产出：梯度契约测试、测量重写与 shot 调度测试绿。
-5. 后处理与文档（1 周）
+5. TN/压缩态与供应商模拟器（1–2 周）
+   - `simulators/compressed_state/backends` 完成协议与 pytorch/numpy/cupynumeric 三后端；
+   - `simulators/vendor/cuquantum` 封装 custatevec/cutensornet，打通与 numerics.accelerators 探测；
+   - 产出：跨后端一致 API、性能基准与自动加速验证测试。
+6. 后处理与文档（1 周）
    - `results/`→`postprocessing/` 重命名与整合；示例与教程完善；性能/回退日志验证。
    - 产出：postprocessing 模块测试绿；教程与示例 CI 可运行。
-6. 清理与稳定（1 周）
+7. 清理与稳定（1 周）
    - 去冗余；补充测试与基准；冻结公共 API，发布迁移指南。
    - 产出：迁移指南与旧→新映射最终版；版本标签与发布说明。
 
@@ -596,9 +643,10 @@ ham = to_qubit_hamiltonian(ints, aspace, mapping="jw")
 - 目的：统一数组/张量后端抽象，提供可控的向量化与检查。
 - 功能：
   - `api.py`：`ArrayBackend` 协议与选择；
-  - `backends/`：numpy/torch/cunumeric 实现；
+  - `backends/`：numpy/pytorch/cupynumeric 实现；
   - `checks.py`：vmap 安全检查与 warn→error 围栏；
   - `autodiff/bridge.py`：与编译梯度方法的薄桥；
+  - `accelerators/`：特定数值库加速（如 cuTensorNet/custatevec、自定义核），遵循“仅数值层增强、与设备层解耦”的原则；
 - 不做：量子电路语义、设备交互。
 
 ### compiler/
@@ -623,12 +671,44 @@ stages = [
 ]
 ```
 
+### 示例四：跨后端的压缩态后端选择（保持核心特性）
+
+```python
+from tyxonq.devices.simulators.compressed_state import CSDevice
+from tyxonq.numerics import get_backend
+
+# 选择数值后端（pytorch/numpy/cupynumeric）
+backend = get_backend("pytorch")
+
+# 创建 TN 模拟设备，选择后端
+dev = CSDevice(num_qubits=32, backend="pytorch_backend", max_bond=128, dtype="float32")
+
+# 如果是 NVIDIA 环境，自动探测并启用 cuTensorNet 加速
+dev.enable_accelerator("cutensornet")  # 若不可用则无操作
+
+res = dev.run(compiled_circuit, shots=None)
+```
+
+### 示例五：替换 tensornetwork（遗留）为 PyTorch 压缩态后端
+
+```python
+# 旧：from tensornetwork import Node, contractor
+# 新：使用 devices.simulators.tensor_network.backends.pytorch_backend 的高层接口
+from tyxonq.devices.simulators.compressed_state.backends import pytorch_backend as cs
+
+psi = cs.init_product_state(num_qubits=20, dtype="float32")
+psi = cs.apply_two_qubit_gate(psi, gate="cx", q0=0, q1=1)
+exp = cs.expectation(psi, observable="Z", qubit=0)
+```
+
 ### devices/
 - 目的：承载仿真与硬件执行，统一作业调度与会话管理。
 - 功能：
   - `base.py`：`Device` 抽象与能力声明；
   - `simulators/`、`hardware/`：具体执行器；
   - `session.py`、`executor.py`：批量、异步、重试与结果聚合；
+  - `simulators/compressed_state/backends/*`：压缩态后端（pytorch/numpy/cupynumeric），可替换/可扩展；
+  - `simulators/vendor/cuquantum/*`：供应商模拟器（custatevec/cutensornet）封装；
 - 不做：编译/变换（输入应为已编译 IR）。
 
 #### 会话与执行策略
@@ -663,6 +743,53 @@ stages = [
 
 ### config/ 与 utils/
 - 目的：配置解析/合并与通用工具（日志、并行、缓存、随机数）。
+
+## 架构层次关系图（numerics ↔ simulators/backends）
+
+```mermaid
+flowchart TD
+  subgraph Numerics["numerics (数组/线性代数/自动微分)"]
+    NB[backends: numpy / pytorch / cupynumeric]
+    ACC[accelerators: cutensornet, custatevec, custom_ops]
+    CHECKS[vectorization_checks: vmap safety]
+    NB --> ACC
+    NB --> CHECKS
+  end
+
+  subgraph Simulators["devices/simulators (模拟策略)"]
+    WF[wavefunction]
+    DM[density_matrix]
+    CS[compressed_state]
+
+    subgraph CSB["compressed_state/backends"]
+      CSPT[pytorch_backend]
+      CSNP[numpy_backend]
+      CSCP[cupynumeric_backend]
+    end
+
+    CS --> CSPT
+    CS --> CSNP
+    CS --> CSCP
+  end
+
+  ACC --> CSCP
+  ACC --> WF
+  ACC --> DM
+
+  subgraph Vendor["devices/simulators/vendor"]
+    CUQ[cuquantum]
+  end
+
+  Numerics --> Simulators
+  CUQ --> Simulators
+
+  subgraph Devices["devices/hardware"]
+    IBM[ibm]
+    BRA[braket]
+  end
+
+  Simulators --> Devices
+```
 
 ---
 
