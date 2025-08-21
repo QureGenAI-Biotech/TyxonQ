@@ -11,6 +11,44 @@
 
 ---
 
+## 执行方案总览（可落地）
+
+- **目标（Outcome）**：
+  - 稳定的公共 API（`core`/`compiler`/`devices`/`numerics`）；
+  - 化学主线从分子到哈密顿量、编译、执行、后处理的最小可用链路；
+  - 默认安全的向量化策略（auto 回退），并在元数据中可观测；
+  - 测试驱动与 CI 门禁，任何增量在全绿后合入。
+- **方法（How）**：
+  - 渐进式分阶段；每阶段都有可验收产出与 DoD；
+  - TDD 优先，契约/单元/集成/性能分层；
+  - ADR 记录关键设计决策；
+  - 严格的模块边界与命名规范；
+  - 插件机制可选，兼容层移除（破坏性迁移）。
+- **度量（Metrics）**：
+  - 覆盖率≥80%（核心模块）；
+  - 向量化回退比例与主要原因；
+  - 关键 E2E 路径性能基线与波动阈值；
+  - 示例与文档可运行性（CI 验证）。
+
+---
+
+## 范围与边界（Scope）
+
+- **在范围内**：
+  - 目录重构与模块抽象；
+  - `app/chem` PySCF 风格接口；
+  - `compiler` 阶段化与目标适配；
+  - `devices` 模拟器/硬件抽象与会话；
+  - `numerics` 三后端与向量化策略；
+  - `postprocessing` 误差缓解与读出校正；
+  - TDD 与 CI 门禁落地。
+- **不在范围内（本期）**：
+  - JAX/TF 接口（以后通过插件或扩展）；
+  - Tape 抽象；
+  - 全量硬件厂商支持（先以 qiskit/IBMQ 作为样板）。
+
+---
+
 ## 新的整体目录结构（拟）
 
 ```
@@ -25,30 +63,36 @@ src/tyxonq/
     types.py
     errors.py
 
-  applications/
-    api.py                    # Application/ProblemDefinition 协议
-    domains/
-      ai/
-      finance/
-      physics/
+  app/
+    chem/
+      __init__.py
+      gto.py                  # 分子与几何/基组（PySCF 风格 Mole）
+      scf.py                  # 自洽场计算（RHF/UHF 等）
+      integrals.py            # 一/二电子积分
+      active_space.py         # 活性空间定义
+      fermion_to_qubit.py     # 费米子→量子比特哈密顿量映射（JW/Parity/BK）
 
   compiler/
-    api.py                    # Compiler、Pass、Pipeline 抽象
-    passes/
+    api.py                    # Compiler、Stage、Pipeline 抽象
+    pipeline.py               # 可组合流水线定义与构建器
+    stages/
       layout/
       decompose/
       optimize/
       scheduling/
       rewrite/                # 变换类操作归于编译重写，无 Tape
+      measurement/            # 新增：期望/分组/概率等测量级重写
+      shot_scheduler.py       # 新增：shot vectors 调度与合并
     gradients/
       parameter_shift.py
       adjoint.py
       finite_diff.py
-    dialects/
-    backends/
+    targets/
       qiskit/
         __init__.py
-        compiler.py
+        compiler.py           # 目标平台专属编译适配
+        dialect.py            # 可选：目标方言（门/指令映射）
+        stages/               # 可选：目标相关的额外 stage
 
   devices/
     base.py                   # Device 抽象/能力声明
@@ -83,14 +127,12 @@ src/tyxonq/
   plugins/
     registry.py
 
-  compat/                     # 旧 API 的瘦适配与弃用提示
-
   utils/
   config/
 ```
 
 说明：
-- 取消单独 `transforms/` 与 Tape 抽象；变换行为通过 `compiler/passes/rewrite/` 与 `compiler/gradients/` 落地。
+- 取消单独 `transforms/` 与 Tape 抽象；变换行为通过 `compiler/stages/rewrite/` 与 `compiler/gradients/` 落地。
 - 移除 `templates/` 与 `workflows/`；示例放在 `examples/`，教程放在 `docs/tutorials/`。
 
 ---
@@ -114,12 +156,12 @@ src/tyxonq/
 | `src/tyxonq/results/` | `src/tyxonq/postprocessing/` | 目录整体更名（保持语义） |
 | `src/tyxonq/results/readout_mitigation.py` | `src/tyxonq/postprocessing/readout/` | 读出校正 |
 | `src/tyxonq/results/qem/` | `src/tyxonq/postprocessing/mitigation/` | 误差缓解方法 |
-| `src/tyxonq/compiler/qiskit_compiler.py` | `src/tyxonq/compiler/backends/qiskit/compiler.py` | 后端化与方言/Pass 解耦 |
+| `src/tyxonq/compiler/qiskit_compiler.py` | `src/tyxonq/compiler/targets/qiskit/compiler.py` | 目标平台适配，解耦通用 stage |
 | `src/tyxonq/backends/*` | `src/tyxonq/numerics/backends/*` + `src/tyxonq/devices/simulators/*` | 前端数值与执行后端解耦 |
-| `src/tyxonq/torchnn.py` | `examples/` 或 `applications/` 相关 | 训练流程示例化/领域化 |
+| `src/tyxonq/torchnn.py` | `examples/` 或 `app/chem/` 相关 | 训练流程示例化/领域化 |
 | `src/tyxonq/templates/*` | 移除（合并到 applications 或 examples） | 以应用为准，不再单列模板 |
 
-兼容策略见下文 `compat/`。
+（已移除兼容层，本次为破坏性迁移，参见迁移计划与映射清单。）
 
 ---
 
@@ -268,7 +310,7 @@ def get_compiler(name: str):
 
 - **设备与执行**：
   - PennyLane：`devices/` + `QNode/Tape` 执行范式。
-  - TyxonQ（本方案）：保留 `devices/`，但不引入 Tape；通过 `compiler/passes` 的重写与 `devices/session` 执行，简化心智模型。
+  - TyxonQ（本方案）：保留 `devices/`，但不引入 Tape；通过 `compiler/stages` 的重写与 `devices/session` 执行，简化心智模型。
 
 - **运算与观测**：
   - PennyLane：`ops/`、`measurements/` 分层清晰。
@@ -276,7 +318,7 @@ def get_compiler(name: str):
 
 - **变换与梯度**：
   - PennyLane：大量 `transforms/` 与 `gradients/` 基于 Tape。
-  - TyxonQ：将变换纳入编译 Pass（`rewrite/`），梯度方法放 `compiler/gradients/`，与 `numerics.autodiff` 薄桥对接。
+  - TyxonQ：将变换纳入编译 Stage（`stages/rewrite/`），梯度方法放 `compiler/gradients/`，与 `numerics.autodiff` 薄桥对接。
 
 - **接口/数值后端**：
   - PennyLane：多接口（torch/jax/tf）整合在 QNode 层。
@@ -285,6 +327,14 @@ def get_compiler(name: str):
 - **插件化**：
   - PennyLane：`entry points` 扩展设备与变换。
   - TyxonQ：提供 `plugins/registry.py` 与 entry points 组：`tyxonq.devices`、`tyxonq.compilers`、`tyxonq.postprocessing`、`tyxonq.applications`。
+
+### 明确映射（Tape → TyxonQ 方案）
+- Tape 记录 qfunc → `core.ir.Circuit` + 可选 `CircuitBuilder`（轻量录制器，后续补强）。
+- Tape expand → `compiler/stages/decompose` 与 `compiler/stages/rewrite`。
+- 测量级变换（聚合/分组/重写） → `compiler/stages/rewrite/measurement.py`（新增）。
+- 设备执行 → `compiler/targets/*` 产物 + `devices/*` 执行。
+- 梯度变换 → `compiler/gradients/*`（parameter-shift、adjoint、finite-diff）。
+- 批量/shot vectors → `numerics.vectorize_or_fallback` + `devices/session` + `stages/scheduling/shot_scheduler.py`（新增）。
 
 ---
 
@@ -340,51 +390,279 @@ warn_on_fallback = true
 
 ---
 
-## 插件与注册（plugins/registry）
+## 无 Tape 方案的覆盖性与补强建议
 
-### 入口点建议
-```
-[project.entry-points."tyxonq.devices"]
-ibm = "tyxonq_ext_ibm.device:IBMDevice"
+本方案不引入 Tape，而以 IR + 编译阶段化（stages + pipeline）实现等价能力：
 
-[project.entry-points."tyxonq.compilers"]
-qiskit = "tyxonq.compiler.backends.qiskit.compiler:QiskitCompiler"
+### 已覆盖能力
+- 操作/测量展开与重写：`stages/decompose`、`stages/rewrite`（含 measurement 重写）。
+- 目标方言映射与能力协商：`compiler/targets/*` + `DeviceCapabilities`。
+- 梯度与可微：`compiler/gradients/*` + `numerics/autodiff` 薄桥。
+- 批量/向量化与 shot vectors：`numerics.vectorize_or_fallback` + `devices/session` + Shot 调度（见下）。
+- 可组合变换：`compiler/pipeline.py` 有序 stage 组合，可插拔扩展。
 
-[project.entry-points."tyxonq.postprocessing"]
-m3 = "tyxonq_ext_m3.readout:M3Mitigator"
-```
+### 补强项（建议落地）
+- `core/operations` 增加梯度元数据：是否可移位、生成元、shift 系数等。
+- 新增 `stages/rewrite/measurement.py`：统一期望/方差/概率/观测量分组等测量级重写。
+- 新增 `stages/scheduling/shot_scheduler.py`：支持 shot 向量（分段采样）与合并策略。
+- 提供 `core/ir.CircuitBuilder`（轻量录制器，可选）：便于装饰器式体验，将用户函数生成的 IR 交由 pipeline 处理。
 
-### 运行时行为
-- 懒加载、名称冲突检测、版本与能力校验（如门集、shots 支持）。
-- 缓存发现结果，允许覆盖/屏蔽内置组件（按配置优先级）。
+上述补强可使能力对齐 PennyLane Tape 的主要使用场景，同时保持工程实现简洁、面向硬件优化更直接。
 
 ---
 
-## 兼容层（compat/）策略
+## 示例
 
-- 目的：平滑迁移旧 API，避免一次性破坏用户代码。
-- 方式：
-  - 提供旧模块名到新实现的轻量转发；
-  - 进入点抛出 `DeprecationWarning`，附带迁移建议；
-  - 在 1–2 个小版本窗口后移除；
-  - 维护“旧→新”映射清单，CI 增加兼容契约测试。
+### 示例一：从 qfunc/CircuitBuilder 到 pipeline 的最小用例
+
+```python
+# 伪代码，仅示意接口风格
+from tyxonq.core.ir import Circuit
+from tyxonq.core.ir.builder import CircuitBuilder  # 轻量录制器（建议新增）
+from tyxonq.compiler.pipeline import build_pipeline
+from tyxonq.compiler.api import Compiler
+from tyxonq.devices import get_device
+
+def qfunc(theta):
+    with CircuitBuilder(num_qubits=2) as cb:
+        cb.rx(0, theta)
+        cb.cx(0, 1)
+        cb.measure_z(1)
+    return cb.circuit()
+
+circ: Circuit = qfunc(0.3)
+
+pipeline = build_pipeline([
+    "decompose",
+    "rewrite/measurement",
+    "layout",
+    "scheduling",
+])
+
+compiler: Compiler = ...  # 选择 `compiler/targets/qiskit` 等
+compiled = compiler.compile({
+    "circuit": circ,
+    "target": get_device("ibm").capabilities,
+    "options": {"opt_level": 2}
+})
+
+res = get_device("ibm").run(compiled["circuit"], shots=4000)
+print(res["expectations"])  # 或 samples/metadata
+```
+
+### 示例二：shot vectors 经 shot_scheduler 的执行路径
+
+```python
+# 伪代码，仅示意接口风格
+from tyxonq.compiler.stages.scheduling import shot_scheduler
+
+shot_plan = [100, 1000, 5000]  # shot vectors
+compiled = compiler.compile({"circuit": circ, "target": dev.capabilities, "options": {}})
+
+scheduled = shot_scheduler.schedule(compiled["circuit"], shot_plan)
+# scheduled 可能包含：多分段电路或同一电路的分段执行计划
+
+agg = devices.session.execute_plan(dev, scheduled)
+# session 聚合每段结果，同时记录 metadata：每段耗时、误差条、合并方法
+
+print(agg.expectations, agg.metadata["per_segment"])
+```
+
+---
+
+### 示例三：PySCF 风格的化学接口用法
+
+```python
+from tyxonq.app.chem import Mole, RHF, Integrals, ActiveSpace
+from tyxonq.app.chem.fermion_to_qubit import to_qubit_hamiltonian
+
+mol = Mole(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g", charge=0, spin=0, unit="Angstrom").build()
+mf = RHF(mol).run()
+ints = Integrals(mol, mf)
+aspace = ActiveSpace(nelec=2, norb=2)
+
+ham = to_qubit_hamiltonian(ints, aspace, mapping="jw")
+# 直接使用 ham 进入编译与执行流程，无需 Problem 封装
+```
+
+---
+
+## 插件与注册（plugins/registry）
+
+### 为什么需要？（可选）
+- 默认情况下，TyxonQ 通过配置文件直接选择内置的 `compiler.targets.*` 和 `devices.*` 实现，已能满足典型需求。
+- 当需要第三方扩展包“无修改核心代码”接入时，可选地启用 `plugins/registry`：
+  - 允许外部 pip 包注册新设备/编译目标/后处理模块；
+  - 核心仅做“名称→类”的查找与加载，不改变既有编译与执行流程。
+
+### 简化使用方式
+- 默认关闭插件发现，仅使用配置映射：
+  - `config/loader.py` 解析 `tyxonq.toml` 中的 `device = "ibm"`、`compiler = "qiskit"` 等配置，映射到内置模块。
+- 如需启用第三方扩展：
+  - 在 `config` 中声明 `plugins.enabled = true` 与 `plugins.groups = ["tyxonq.devices", ...]`；
+  - `plugins/registry.py` 负责按名称解析并实例化（可基于 entry points 或显式模块路径）。
+
+注：若团队当前阶段无需第三方扩展，可暂不实现 `plugins/registry`，待需求明确再补充。
+
+---
+
+## 兼容层（compat/）策略（本次移除）
+
+- 本次为大版本破坏性迁移，不再提供兼容层。
+- 提供完整的“旧→新”映射清单与示例迁移指南，协助用户手动迁移。
 
 ---
 
 ## 渐进式迁移计划（建议）
 
 1. 设计冻结（1 周）
-   - 确认 `core/ir`、`devices/base`、`compiler/api`、`numerics/api` 最小接口。
+   - 确认 `core/ir`、`devices/base`、`compiler/api`、`compiler/pipeline`、`numerics/api` 最小接口。
+   - 产出：ADR-001（分层与命名）、ADR-002（接口骨架），样板测试套件；评审通过。
 2. 骨架搭建（1–2 周）
-   - 新目录就绪；实现 numerics 三后端与 `vectorize_or_fallback`；落 `plugins/registry`；起 `compat/`。
+   - 新目录就绪；实现 numerics 三后端与 `vectorize_or_fallback`；完成 `compiler/stages` 与 `pipeline` 骨架；新增 `stages/rewrite/measurement` 与 `stages/scheduling/shot_scheduler` 骨架；（插件系统可后置，不是必须）。
+   - 产出：核心模块单元/契约测试全绿；样例示例编译通过；文档初稿。
 3. 编译与设备（2 周）
-   - 迁移 `qiskit_compiler`；模拟器按目录拆分；打通最小 VQE 路径（applications→compiler→device→postprocessing）。
+   - 迁移 `qiskit_compiler` 至 `compiler/targets/qiskit`；模拟器按目录拆分；打通最小 VQE 路径（app→compiler→device→postprocessing）。
+   - 产出：端到端 E2E 用例与性能基线；回退比例报告。
 4. 梯度与优化（1–2 周）
-   - `compiler/gradients` 参数移位/伴随；与 numerics.autodiff 薄桥验证。
+   - `compiler/gradients` 参数移位/伴随；与 numerics.autodiff 薄桥验证；在 `core/operations` 标注梯度元数据（可移位/生成元/shift 规则）。
+   - 向量化策略落地：
+     - 默认 `vectorization_policy = "auto"`；实现 `numerics/checks.safe_for_vectorization` 与 warn→error 围栏；
+     - `devices/session` 与 `RunResult.metadata` 记录矢量化/回退原因与成本；
+     - 为核心实现编写 vmap-safe 规范并通过测试验证。
+   - 产出：梯度契约测试、测量重写与 shot 调度测试绿。
 5. 后处理与文档（1 周）
    - `results/`→`postprocessing/` 重命名与整合；示例与教程完善；性能/回退日志验证。
+   - 产出：postprocessing 模块测试绿；教程与示例 CI 可运行。
 6. 清理与稳定（1 周）
    - 去冗余；补充测试与基准；冻结公共 API，发布迁移指南。
+   - 产出：迁移指南与旧→新映射最终版；版本标签与发布说明。
+
+---
+
+## 测试驱动开发（TDD）与 CI 门禁
+
+### 总体原则
+- 每个模块/子模块的重构必须伴随新增或更新的测试用例；
+- 引入“最小可用版本”增量推进：每个阶段完成后，必须在 CI 中全绿后才能进入下阶段；
+- 对核心路径（编译→设备→后处理）添加端到端（E2E）用例与性能基线。
+
+### 测试层次
+- 单元测试：`core/`、`numerics/`、`compiler/stages/*`、`devices/*`、`postprocessing/*`；
+- 契约测试：
+  - `Device` 契约：shots、batch、期望/采样一致性；
+  - `Compiler` 契约：等价性测试（电路语义不变）、目标能力遵从；
+  - `Stage` 契约：输入输出 IR 正确性与稳定属性（大小、测量集合等）；
+- 集成测试：`app/chem` 典型问题到结果的完整链路；
+- 性能/回归：为关键 pipeline 建立阈值（运行时、内存、回退比例）。
+
+### 接受标准（DoD）
+- 每个模块/子模块：
+  - API 与文档注释完整；
+  - 单元与契约测试通过，覆盖率达标；
+  - 若影响 E2E 路径，需更新集成测试与基线；
+  - 性能与回退比例不超过阈值；
+  - 变更记录（CHANGELOG/ADR）更新。
+
+### CI 门禁与报告
+- PR 必须：单元/契约/集成测试通过；
+- 覆盖率门槛：核心模块 ≥ 80%；
+- 性能回归：关键基准不得超过阈值（配置化）；
+- 向量化回退报告：CI 输出回退比率与主要原因统计。
+
+---
+
+## 模块职责与边界
+
+为保证可维护性与清晰的协作边界，定义各模块目的、核心功能与不做的事情：
+
+### core/
+- 目的：提供稳定的中间表示（IR）、基本运算抽象与错误类型。
+- 功能：
+  - `ir/`：`Circuit`、`Hamiltonian` 基本结构；
+  - `operations/`：量子门/通道元信息（可分解性、梯度元数据等）；
+  - `measurements/`：测量与观测量定义；
+  - `types.py`、`errors.py`：公共类型与异常；
+- 不做：设备执行细节、目标方言映射、数值后端实现。
+
+### app/
+- 目的：领域问题到 IR 的构建（以化学为先）。
+- 功能：
+  - `chem/`：PySCF 风格组件（`Mole`/`RHF`/`Integrals`/`ActiveSpace`/`to_qubit_hamiltonian` 等）；
+  - 入口方式：用户从 `app.chem` 直接导入类与函数进行组装；
+- 不做：编译/设备的具体实现与优化；
+
+### numerics/
+- 目的：统一数组/张量后端抽象，提供可控的向量化与检查。
+- 功能：
+  - `api.py`：`ArrayBackend` 协议与选择；
+  - `backends/`：numpy/torch/cunumeric 实现；
+  - `checks.py`：vmap 安全检查与 warn→error 围栏；
+  - `autodiff/bridge.py`：与编译梯度方法的薄桥；
+- 不做：量子电路语义、设备交互。
+
+### compiler/
+- 目的：将 IR 转换为目标可执行形式，承载所有结构性变换与优化。
+- 功能：
+  - `api.py`：`Compiler`、`Stage`、`Pipeline` 抽象；
+  - `pipeline.py`：可组合流水线；
+  - `stages/`：布局、分解、优化、调度、测量重写、shot 调度；
+  - `gradients/`：parameter-shift、adjoint、finite-diff；
+  - `targets/`：目标方言/约束/专属 stage；
+- 不做：直接设备执行（交由 devices）、数值运算实现（交由 numerics）。
+
+#### 编译流水线示例（可配置）
+```toml
+[compiler.pipeline]
+stages = [
+  "decompose",
+  "rewrite/measurement",
+  "layout",
+  "scheduling",
+  "scheduling/shot_scheduler"
+]
+```
+
+### devices/
+- 目的：承载仿真与硬件执行，统一作业调度与会话管理。
+- 功能：
+  - `base.py`：`Device` 抽象与能力声明；
+  - `simulators/`、`hardware/`：具体执行器；
+  - `session.py`、`executor.py`：批量、异步、重试与结果聚合；
+- 不做：编译/变换（输入应为已编译 IR）。
+
+#### 会话与执行策略
+- `session` 负责：批量/异步提交、重试、合并、记录 metadata（向量化/回退/每段耗时）。
+- 支持 shot vectors 与分段执行计划；
+
+#### 真实硬件支持与接口不变更承诺
+- 接口不变更（签名级别）：对外 `Device` 的核心方法保持不变，特别是：
+  - `run(circuit, shots: int | None = None, **kwargs) -> RunResult`
+  - `expval(circuit, obs, **kwargs) -> float`
+  - 若已有异步接口（如 `submit`/`get_job`/`cancel`），其签名保持不变；
+- 目录迁移不影响方法签名：硬件适配器迁移至 `devices/hardware/<vendor>/`，保留同名类与方法；
+- `DeviceCapabilities` 用于能力协商，新增字段仅为可选（total=False），不影响既有调用；
+- 与 `cloud/` 现有模块的关系：
+  - 保持 `cloud/*` 作为低层 API 调用；
+  - `devices/hardware/*` 封装 `cloud/*`，对外仍以 `Device` 抽象提供相同接口；
+- 配置与凭证：
+  - 通过 `config/loader.py` 读取 `[[devices.hardware]]` 配置（名称、区域、tokens、超时/队列策略等），不在代码中硬编码；
+  - 支持环境变量覆盖（如 `TYXONQ_IBM_TOKEN`）；
+- 验收与测试：
+  - 提供真实或沙箱硬件的集成测试（可打上 `hardware` 标记，在受控 CI 或手动流水线执行）；
+  - 契约测试确保 shots、批量、期望/采样一致性；
+  - 失败容错：网络/配额/队列错误具备重试与明确错误类型；
+
+### postprocessing/
+- 目的：误差缓解、读出校正、指标与结果 IO。
+- 功能：`mitigation/`、`readout/`、`metrics.py`、`io.py`；
+- 不做：编译与设备执行；
+
+### plugins/（可选）
+- 目的：第三方扩展接入；默认关闭，仅当需要时开启。
+
+### config/ 与 utils/
+- 目的：配置解析/合并与通用工具（日志、并行、缓存、随机数）。
 
 ---
 
@@ -397,6 +675,77 @@ m3 = "tyxonq_ext_m3.readout:M3Mitigator"
 
 ---
 
+## 分支与评审策略
+
+- 分支命名：`feat/refactor-<module>`；阶段性里程碑分支 `milestone/<n>`；
+- PR 规范：
+  - 关联 ADR/Issue；
+  - 包含测试与文档更新；
+  - 说明对性能与回退比例的影响；
+- 评审清单：API 变更、边界遵守、测试覆盖、性能影响、文档更新。
+
+## 风险与缓解
+
+- 风险：向量化导致隐性内存放大 → 缓解：默认 auto 回退与检查、CI 报告；
+- 风险：模块边界侵蚀 → 缓解：职责清单与契约测试；
+- 风险：目标平台差异导致编译失败 → 缓解：`targets` 与通用 `stages` 分层，能力协商；
+- 风险：性能回退 → 缓解：基线与阈值、阶段性优化任务单。
+
+## 启动清单（Kickoff Checklist）
+
+- [ ] 冻结 ADR-001/002 并评审通过
+- [ ] 初始化目录与空实现骨架（含 docstring）
+- [ ] 配置 CI（测试、覆盖率、性能、回退报告）
+- [ ] 建立首批测试（契约 + E2E 化学主线）
+- [ ] 里程碑 1 开发开始
+
+---
+
 本文档为评审草案。若方向达成一致，可据此生成 ADR 与接口骨架文件并开始迁移实施。
+
+---
+
+## 深度思考：向量化回退策略的默认行为与可观测性
+
+### 立场 A（工程优先，默认启用回退）
+- 现实问题：当前代码在 vmap/JIT 下产生大量警告（如建议使用 `detach().clone()`），在批量维度下会几何级放大内存与时间成本，甚至破坏梯度正确性。
+- 策略：默认 `vectorization_policy = "auto"`。
+  - 运行前检查（`numerics/checks.safe_for_vectorization`）+ 运行时“警告转异常”围栏。
+  - 命中风险则回退 eager，并记录 metadata（原因、次数、耗时占比）。
+- 优点：生产可用、稳定性强，避免隐性 O(N·shots) 的代价失控。
+- 代价：少数可安全矢量化但被保守规则拦截的场景会损失性能，可通过白名单/禁用检查解决。
+
+### 立场 B（性能优先，默认强制矢量化）
+- 策略：默认 `vectorization_policy = "force"`，仅当后端显式报错时才回退。
+- 优点：最大限度吃满批量并行性能。
+- 代价：对用户代码质量要求高，警告被忽略时更易出现内存暴涨或梯度错误；不适合当前代码基的稳定性现状。
+
+### 折中方案（推荐）
+- 框架默认 `auto`；核心模块内部实现“vmap-safe 保证”：
+  - 在 `core`/`compiler`/`devices` 自有实现中，禁止隐式 `torch.tensor(t)` 之类构造；统一使用 `detach().clone()` 或后端安全构造；避免 in-place；对别名进行显式控制。
+  - 在 `numerics` 提供“张量别名/clone 检查”工具，CI 基准覆盖。
+- 对用户代码：
+  - 提供快速诊断开关：`TYXONQ_NUMERICS_DEBUG=1` 输出命中规则、建议修复点。
+  - 提供白名单：对特定函数/路径标记“已审计安全”以跳过部分检查。
+
+结论：在当前阶段采用工程优先（默认 auto 回退）是合理的；同时我们通过内部 vmap-safe 编码规范与工具，逐步降低回退频率，达到性能与安全的平衡。
+
+---
+
+### 附录 A：领域入口与协议位置
+
+- 协议位置：`core/types.py` 定义 `Problem` 与必要类型，作为公共契约；
+- 领域入口：PySCF 风格；从 `app.chem` 导入 `Mole`、`RHF`、`Integrals`、`ActiveSpace`、`to_qubit_hamiltonian`、`to_problem` 等进行组装；
+- 无需 `prepare` 函数与 `contracts.py` 文件。
+
+### 附录 B：`compiler/targets` 的职责边界
+
+- 职责：
+  - 目标平台（如 Qiskit/IBMQ、Braket）的方言与适配。
+  - 在通用 `stages` 与 `pipeline` 基础上，提供目标专属的映射、约束与额外 stage。
+- 不做：
+  - 通用优化/布局/分解逻辑（应放 `compiler/stages`）。
+  - 与 `devices/` 的直接耦合（通过编译产物与能力描述对接）。
+
 
 
