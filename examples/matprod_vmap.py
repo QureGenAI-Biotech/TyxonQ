@@ -31,12 +31,12 @@ for bk in ["pytorch"]:
             b = K.transpose(b)
             return vvij(a, b)
 
-        for shape in [(256, 4096), (4096, 256), (2048, 2048)]:
+        for shape in [(256, 512), (512, 256), (512, 512)]:
             print(shape)
             a = K.implicit_randn(shape)
             b = K.implicit_randn([shape[1], shape[0]])
             print("plain matprod")
-            r1, _, _ = tq.utils.benchmark(mul, a, b, tries=10)
+            r1, _, _ = tq.utils.benchmark(mul, a, b, tries=3)
             print("vmap matprod")
-            r2, _, _ = tq.utils.benchmark(mul2, a, b, tries=10)
+            r2, _, _ = tq.utils.benchmark(mul2, a, b, tries=3)
             np.testing.assert_allclose(r1.detach().cpu().numpy(), r2.detach().cpu().numpy(), atol=1e-3, rtol=1e-3)

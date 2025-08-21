@@ -186,9 +186,19 @@ def sparse_expectation(c: Circuit, hamiltonian: Tensor) -> Tensor:
     :rtype: Tensor
     """
     state = c.wavefunction(form="ket")
-    tmp = backend.sparse_dense_matmul(hamiltonian, state)
-    expt = backend.adjoint(state) @ tmp
-    return backend.real(expt)[0, 0]
+    # If sparse kernels fail under functorch wrappers, compute quadratic form directly from COO
+    try:
+        tmp = backend.sparse_dense_matmul(hamiltonian, state)
+        expt = backend.adjoint(state) @ tmp
+        return backend.real(expt)[0, 0]
+    except Exception:
+        sp = hamiltonian.coalesce() if hasattr(hamiltonian, "coalesce") else hamiltonian
+        idx = sp.indices()
+        rows, cols = idx[0], idx[1]
+        vals = sp.values()
+        s = state.squeeze(-1)
+        contrib = backend.conj(s[rows]) * vals * s[cols]
+        return backend.real(contrib.sum())
 
 
 def mpo_expectation(c: Circuit, mpo: QuOperator) -> Tensor:

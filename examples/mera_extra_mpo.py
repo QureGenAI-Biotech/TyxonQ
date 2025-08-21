@@ -18,15 +18,15 @@ logger.addHandler(ch)
 
 
 K = tq.set_backend("pytorch")
-K.set_dtype("complex128")
+K.set_dtype("complex64")
 
 
 optc = cotengra.ReusableHyperOptimizer(
     methods=["greedy", "kahypar"],
     parallel=False,
     minimize="combo",
-    max_time=15,
-    max_repeats=64,
+    max_time=3,
+    max_repeats=16,
     progbar=False,
 )
 
@@ -119,7 +119,7 @@ def train(opt, j, b, n, d, batch, maxiter):
 
 if __name__ == "__main__":
     # Reduced problem size and iterations for CI speed
-    e = train(None, 1, -1, 8, 1, 2, 50)
+    e = train(None, 1, -1, 6, 1, 1, 10)
     print("optimized energy:", e.detach().cpu().item())
 
 # backend: n, d, batch: compiling time, running time

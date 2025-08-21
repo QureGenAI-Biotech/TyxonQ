@@ -593,7 +593,23 @@ def rx_gate(theta: float = 0) -> Gate:
     """
     i, x = array_to_tensor(_i_matrix, _x_matrix)
     theta = num_to_tensor(theta)
-    unitary = backend.cos(theta / 2.0) * i - 1j * backend.sin(theta / 2.0) * x
+    
+    # Handle vmap case where theta might be a vector
+    if hasattr(theta, 'shape') and len(theta.shape) > 0:
+        # theta is a vector, need to handle broadcasting
+        cos_theta = backend.cos(theta / 2.0)
+        sin_theta = backend.sin(theta / 2.0)
+        
+        # Reshape for broadcasting: [batch_size] -> [batch_size, 1, 1]
+        if len(cos_theta.shape) == 1:
+            cos_theta = cos_theta.unsqueeze(-1).unsqueeze(-1)
+            sin_theta = sin_theta.unsqueeze(-1).unsqueeze(-1)
+        
+        unitary = cos_theta * i - 1j * sin_theta * x
+    else:
+        # Scalar case
+        unitary = backend.cos(theta / 2.0) * i - 1j * backend.sin(theta / 2.0) * x
+    
     return Gate(unitary)
 
 

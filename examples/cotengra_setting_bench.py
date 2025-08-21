@@ -62,9 +62,9 @@ def trigger_cotengra_optimization(n, nlayers, graph):
     )(params, n, nlayers)
 
 
-# define the benchmark parameters
-n = 12
-nlayers = 12
+# define the benchmark parameters (reduced for CI speed)
+n = 6
+nlayers = 4
 
 # define the cotengra optimizer parameters
 graph_args = {
@@ -81,7 +81,7 @@ graph_args = {
 
 methods_args = [  # https://cotengra.readthedocs.io/en/latest/advanced.html#drivers
     "greedy",
-    "kahypar",
+    # "kahypar",
     # "labels",
     # "spinglass",  # requires igraph
     # "labelprop",  # requires igraph
@@ -123,8 +123,8 @@ def get_optimizer(method, optlib, post_processing, minimize):
             optlib=optlib,
             minimize=minimize,
             parallel=True,
-            max_time=60,
-            max_repeats=128,
+            max_time=5,
+            max_repeats=16,
             progbar=True,
         )
     else:
@@ -133,8 +133,8 @@ def get_optimizer(method, optlib, post_processing, minimize):
             optlib=optlib,
             minimize=minimize,
             parallel=True,
-            max_time=60,
-            max_repeats=128,
+            max_time=5,
+            max_repeats=16,
             progbar=True,
             **{post_processing[0]: post_processing[1]},
         )
@@ -142,11 +142,7 @@ def get_optimizer(method, optlib, post_processing, minimize):
 
 if __name__ == "__main__":
     for graph, method, optlib, post_processing, minimize in itertools.product(
-        graph_args.keys(),
-        methods_args,
-        optlib_args,
-        post_processing_args,
-        minimize_args,
+        graph_args.keys(), methods_args, optlib_args, post_processing_args, minimize_args
     ):
         print(
             f"graph: {graph}, method: {method}, optlib: {optlib}, "

@@ -11,10 +11,10 @@ import numpy as np
 import torch
 
 import tyxonq as tq
-from tyxonq.applications.vqes import VQNHE, JointSchedule
+from tyxonq.applications.vqes import VQNHE, JointSchedule, construct_matrix_v3
 
-tq.set_backend("pytorch")
-tq.set_dtype("complex128")
+K = tq.set_backend("pytorch")
+K.set_dtype("complex64")
 
 
 def initial_param(t, last=None, lastlast=None):
@@ -67,22 +67,28 @@ def adiabatic_range(hm, history):
     else:
         lastlast = None
     print("begin calculation on new")
+    # Build dense Hamiltonian from terms (wrap single term if needed)
+    ham_terms = hm if (isinstance(hm, list) and (len(hm) > 0) and isinstance(hm[0], (list, tuple))) else [hm]
+    n = int(len(ham_terms[0]) - 1)
+    ham_sparse = construct_matrix_v3(ham_terms)
+    ham_dense = K.to_dense(ham_sparse)
     vqeinstance = VQNHE(
-        4,
-        hm,
-        {"max_value": 5, "init_value": 1.0, "min_value": 0.1},
-        {"filled_qubit": [0]},
+        n,
+        ham_dense,
+        {"width": 16, "stddev": 0.001, "choose": "complex-rbm"},
+        {"filled_qubit": [0], "epochs": 1},
+        shortcut=True,
     )
 
-    def learn_q():
+    def learn_q(_=0):
         return JointSchedule(180, 0.009, 800, 0.001, 800)
 
-    def learn_c():
+    def learn_c(_=0):
         return JointSchedule(160, 0.002, 10000, 0.2, 1500)
 
     rs = vqeinstance.multi_training(
-        tries=2,
-        maxiter=150,  # 10000
+        tries=1,
+        maxiter=50,
         threshold=0.2 * 1e-8,
         optq=learn_q,  # JointSchedule(2800, 0.009, 800, 0.002, 100),
         optc=learn_c,
@@ -100,8 +106,9 @@ def adiabatic_range(hm, history):
 if __name__ == "__main__":
     history = []
     # warning: please prepare your own data file
-    lihh = np.load("h6_hamiltonian.npy")
-    for h in lihh[3:6]:
+    import os
+    lihh = np.load(os.path.join(os.path.dirname(__file__), "h6_hamiltonian.npy"))
+    for h in lihh[3:4]:
         history.append(adiabatic_range(h.tolist(), history))
     print(history)
     # vqeinstance = VQNHE(

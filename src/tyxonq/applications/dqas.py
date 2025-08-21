@@ -146,7 +146,7 @@ def parallel_kernel(
     :param kernel_func:
     :return:
     """
-    sp.random.seed()  # make each subprocess run with different random state
+    np.random.seed()  # make each subprocess run with different random state
     # see https://stackoverflow.com/a/6914470/9062180
     # it is still not the best way to corporate numpy random and multiprocessing
     # see more in https://github.com/numpy/numpy/issues/9650
@@ -466,7 +466,7 @@ def qaoa_simple_train(
     search_func: Optional[Callable[..., Any]] = None,
     kws: Optional[Dict[Any, Any]] = None,
 ) -> Tuple[Array, float]:
-    sp.random.seed()
+    np.random.seed()
     # TODO(@refraction-ray): the best practice combine multiprocessing and random generator still
     # needs further investigation
     p = len(preset)

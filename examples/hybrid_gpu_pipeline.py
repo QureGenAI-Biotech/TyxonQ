@@ -69,7 +69,7 @@ x_train_torch = x_train_torch.to(device=device)
 y_train_torch = y_train_torch.to(device=device)
 
 n = 9
-nlayers = 3
+nlayers = 2
 
 # Define the quantum function (using PyTorch backend)
 def qpreds(x, weights):
@@ -101,11 +101,11 @@ model = model.to(device=device)
 
 criterion = torch.nn.BCELoss()
 opt = torch.optim.Adam(model.parameters(), lr=1e-2)
-nepochs = 300
+nepochs = 10
 nbatch = 32
 times = []
 for epoch in range(nepochs):
-    index = np.random.randint(low=0, high=100, size=nbatch)
+    index = np.random.randint(low=0, high=min(100, x_train_torch.shape[0]), size=nbatch)
     inputs, labels = x_train_torch[index], y_train_torch[index]
     opt.zero_grad()
 
@@ -116,7 +116,7 @@ for epoch in range(nepochs):
             torch.reshape(yps, [nbatch, 1]), torch.reshape(labels, [nbatch, 1])
         )
         loss.backward()
-        if epoch % 100 == 0:
+        if epoch % 5 == 0:
             print(loss)
         opt.step()
         time1 = time.time()

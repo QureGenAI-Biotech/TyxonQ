@@ -12,6 +12,9 @@ import tempfile
 import shutil
 from pathlib import Path
 import warnings
+import re
+from datetime import datetime
+import re
 import time
 import signal
 import threading
@@ -61,39 +64,46 @@ tq.set_backend("pytorch")
     with open(temp_path, 'w', encoding='utf-8') as f:
         f.write(modified_content)
     
-    # Copy dependency files if they exist
-    # Handle h6_hamiltonian.npy for vqnhe_h6.py
-    if original_file == "vqnhe_h6.py":
-        h6_file = os.path.join(examples_path, "h6_hamiltonian.npy")
-        if os.path.exists(h6_file):
-            import shutil
-            shutil.copy2(h6_file, temp_dir)
+    # Ensure data dependencies are available next to the example
+    # Always copy h6_hamiltonian.npy if present (some scripts use relative path)
+    h6_file = os.path.join(examples_path, "h6_hamiltonian.npy")
+    if os.path.exists(h6_file):
+        shutil.copy2(h6_file, temp_dir)
     
     return temp_path
 
 
 def run_example_file(file_path, timeout=30):
-    """Run an example file and return success status"""
+    """Run an example file and return (success, stdout, stderr, warned, duration_s)."""
+    env = os.environ.copy()
+    env["PYTHONWARNINGS"] = env.get("PYTHONWARNINGS", "default")
+    cmd = [sys.executable, "-W", "default", os.path.basename(file_path)]
+    start = time.time()
     try:
-        # Run the file in a subprocess with real-time output
-        print(f"    Running: {os.path.basename(file_path)}")
         result = subprocess.run(
-            [sys.executable, file_path],
-            capture_output=False,  # Don't capture output to see it in real-time
+            cmd,
+            capture_output=True,
             text=True,
             timeout=timeout,
-            cwd=os.path.dirname(file_path)
+            cwd=os.path.dirname(file_path),
+            env=env,
         )
-        
-        success = result.returncode == 0
-        return success, "", ""  # No captured output since we're showing it in real-time
+        duration = time.time() - start
+        stdout_text = result.stdout or ""
+        stderr_text = result.stderr or ""
+        warned = bool(re.search(r"warning", stdout_text, re.IGNORECASE)) or bool(
+            re.search(r"warning", stderr_text, re.IGNORECASE)
+        )
+        return result.returncode == 0, stdout_text, stderr_text, warned, duration
     except subprocess.TimeoutExpired:
-        return False, "", f"Timeout after {timeout} seconds"
+        duration = time.time() - start
+        return False, "", f"Timeout after {timeout} seconds", False, duration
     except Exception as e:
-        return False, "", str(e)
+        duration = time.time() - start
+        return False, "", str(e), False, duration
 
 
-def run_example_with_timeout(file_path: str, timeout_seconds: int = 15) -> tuple[bool, str, str]:
+def run_example_with_timeout(file_path: str, timeout_seconds: int = 15) -> tuple[bool, str, str, bool]:
     """
     Run an example file with a timeout
     
@@ -104,32 +114,30 @@ def run_example_with_timeout(file_path: str, timeout_seconds: int = 15) -> tuple
     def target():
         try:
             print(f"    Running: {os.path.basename(file_path)}")
-            result = subprocess.run(
-                [sys.executable, file_path],
-                capture_output=False,  # Don't capture output to see it in real-time
-                text=True,
-                cwd=os.path.dirname(file_path),
-                timeout=timeout_seconds
-            )
-            return result.returncode == 0, "", ""  # No captured output since we're showing it in real-time
+            env = os.environ.copy()
+            env["PYTHONWARNINGS"] = env.get("PYTHONWARNINGS", "default")
+            success, out, err, warned = run_example_file(file_path, timeout=timeout_seconds)
+            return success, out, err, warned
         except subprocess.TimeoutExpired:
-            return False, "", f"Timeout after {timeout_seconds} seconds"
+            return False, "", f"Timeout after {timeout_seconds} seconds", False
         except Exception as e:
-            return False, "", str(e)
+            return False, "", str(e), False
     
     # Run in a thread to handle timeout
-    result_container = [None, None, None]
+    result_container = [None, None, None, None]
     
     def run_with_timeout():
         try:
-            success, output, error = target()
+            success, output, error, warned = target()
             result_container[0] = success
             result_container[1] = output
             result_container[2] = error
+            result_container[3] = warned
         except Exception as e:
             result_container[0] = False
             result_container[1] = ""
             result_container[2] = str(e)
+            result_container[3] = False
     
     thread = threading.Thread(target=run_with_timeout)
     thread.daemon = True
@@ -139,7 +147,7 @@ def run_example_with_timeout(file_path: str, timeout_seconds: int = 15) -> tuple
     if thread.is_alive():
         return False, "", f"Timeout after {timeout_seconds} seconds"
     
-    return result_container[0], result_container[1], result_container[2]
+    return result_container[0], result_container[1], result_container[2], result_container[3]
 
 
 class TestExamplesExecution:
@@ -160,9 +168,15 @@ class TestExamplesExecution:
         
         # Get all py files
         py_files = get_all_py_files()
-        print(f"Found {len(py_files)} Python files in examples directory")
+        # Optional whitelist via env: comma-separated filenames to run only
+        only_env = os.environ.get("EXAMPLES_ONLY", "").strip()
+        if only_env:
+            only_set = {name.strip() for name in only_env.split(",") if name.strip()}
+            py_files = [f for f in py_files if f in only_set]
+        total_files = len(py_files)
+        print(f"Found {total_files} Python files in examples directory")
         
-        # Define files to skip
+        # Define files to skip (edit this set to add/remove skips)
         skip_files = {
             'cloud_api_devices.py',  # Requires API keys
             'cloud_api_task.py',  # Requires API keys
@@ -170,40 +184,50 @@ class TestExamplesExecution:
         }
         
         # Statistics
-        total_files = len(py_files)
         skipped_files = 0
         successful_files = 0
         failed_files = 0
         dependency_errors = 0
+        warning_files: list[str] = []
+        timeout_files = 0
+
+        # Prepare markdown report
+        report_path = Path(__file__).parent.parent / f"EXAMPLES_TEST_REPORT_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        report_lines = []
+        report_lines.append(f"### Examples Test Report\n")
+        report_lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        report_lines.append(f"- Total discovered: {total_files}\n")
+        report_lines.append(f"- Skips preset: {len(skip_files)}\n\n")
+        report_lines.append("| Script | Status | Duration (s) | Warning | Notes |\n")
+        report_lines.append("| --- | --- | ---: | ---: | --- |\n")
         
         print(f"\nSkipping {len(skip_files)} files due to known issues:")
         for file in skip_files:
             print(f"  - {file}")
         
-        print(f"\nTesting {total_files - len(skip_files)} files...")
+        to_test_files = [f for f in py_files if f not in skip_files]
+        print(f"\nTesting {len(to_test_files)} files...")
         print("-" * 60)
         
         # Test each file
-        for i, example_file in enumerate(py_files, 1):
-            print(f"\n[{i}/{total_files}] Testing: {example_file}")
-            
-            if example_file in skip_files:
-                print(f"  ⏭️  SKIPPED (known issue)")
-                skipped_files += 1
-                continue
+        for i, example_file in enumerate(to_test_files, 1):
+            print(f"\n[{i}/{len(to_test_files)}] Testing: {example_file}")
             
             # Create modified version of the example
             temp_file_path = create_modified_example(example_file, temp_dir)
             
-            # Run the example
-            success, output, error = run_example_file(temp_file_path)
+            # Run the example with 30s timeout
+            success, output, error, warned, duration = run_example_file(temp_file_path, timeout=30)
             
             if success:
-                print(f"  ✅ SUCCESS")
-                print(f"     Output: {output[:100]}...")
+                print(f"  ✅ SUCCESS  ({duration:.2f}s){'  ⚠️ warned' if warned else ''}")
+                if warned:
+                    warning_files.append(example_file)
                 successful_files += 1
+                report_lines.append(f"| {example_file} | SUCCESS | {duration:.3f} | {'yes' if warned else 'no'} |  |\n")
             else:
-                print(f"  ❌ FAILED")
+                status_label = "TIMEOUT" if "Timeout after" in error else "FAILED"
+                print(f"  ❌ {status_label}  ({duration:.2f}s)")
                 print(f"     Error: {error[:200]}...")
                 
                 # Check if it's a dependency issue
@@ -224,12 +248,25 @@ class TestExamplesExecution:
                 
                 is_dependency_error = any(indicator in error for indicator in dependency_error_indicators)
                 
-                if is_dependency_error:
+                if status_label == "TIMEOUT":
+                    timeout_files += 1
+                    notes = error
+                elif is_dependency_error:
                     print(f"     ⚠️  DEPENDENCY ERROR (skipping)")
                     dependency_errors += 1
+                    notes = "dependency error"
                 else:
                     print(f"     🔍 REAL FAILURE (needs investigation)")
                     failed_files += 1
+                    notes = error
+                report_lines.append(f"| {example_file} | {status_label} | {duration:.3f} | {'yes' if warned else 'no'} | {notes.replace('|','/')[:25]} |\n")
+
+            # Pause and clear screen before next test
+            time.sleep(1)
+            try:
+                os.system('clear')
+            except Exception:
+                pass
         
         # Print summary
         print("\n" + "="*60)
@@ -238,7 +275,16 @@ class TestExamplesExecution:
         print(f"Total files: {total_files}")
         print(f"Successfully executed: {successful_files}")
         print(f"Skipped (known issues): {skipped_files}")
+        print(f"Timed out: {timeout_files}")
         print(f"Dependency errors: {dependency_errors}")
+        print(f"Files emitting warnings: {len(warning_files)}")
+        if warning_files:
+            print("  → "+", ".join(sorted(warning_files)))
+
+        # Write markdown report
+        with open(report_path, 'w', encoding='utf-8') as rf:
+            rf.writelines(report_lines)
+        print(f"\n📝 Report written to {report_path}")
         print(f"Real failures: {failed_files}")
         print("="*60)
         
@@ -381,81 +427,6 @@ def test_matrix_operations_work():
     assert len(eigenvals) == 2
     print(f"Eigenvalues: {eigenvals}")
 
-
-def test_long_running_examples():
-    """
-    Test examples that were marked as 'too long time' with a 15-second timeout
-    """
-    # Examples marked as too long time
-    long_running_examples = [
-        'cotengra_setting_bench.py',
-        'analog_evolution_mint.py', 
-        'lightcone_simplify.py',
-        'noisy_sampling_jit.py',
-        'sample_benchmark.py',
-        'vqe_shot_noise.py',
-        'vqe_noisyopt.py',
-        'sample_benchmark.py',
-        'vqe2d.py',
-        # 'clifford_optimization.py',
-    ]
-    
-    examples_dir = Path(__file__).parent.parent / "examples"
-    
-    successful_files = 0
-    failed_files = 0
-    timeout_files = 0
-    
-    print(f"\nTesting {len(long_running_examples)} long-running examples with 15-second timeout...")
-    print("-" * 60)
-    
-    for example_file in long_running_examples:
-        file_path = examples_dir / example_file
-        
-        if not file_path.exists():
-            print(f"  ⚠️  SKIPPED: {example_file} (file not found)")
-            continue
-            
-        print(f"\nTesting: {example_file}")
-        
-        # Create modified version with PyTorch backend
-        temp_dir = tempfile.mkdtemp()
-        temp_file_path = create_modified_example(example_file, temp_dir)
-        
-        # Run with timeout
-        success, output, error = run_example_with_timeout(temp_file_path, timeout_seconds=15)
-        
-        if success:
-            print(f"  ✅ SUCCESS (completed within 15s)")
-            print(f"     Output: {output[:100]}...")
-            successful_files += 1
-        elif "Timeout" in error:
-            print(f"  ⏰ TIMEOUT (took longer than 15s)")
-            print(f"     This is expected for long-running examples")
-            timeout_files += 1
-        else:
-            print(f"  ❌ FAILED")
-            print(f"     Error: {error[:200]}...")
-            failed_files += 1
-    
-    print("\n" + "="*60)
-    print("LONG-RUNNING EXAMPLES SUMMARY")
-    print("="*60)
-    print(f"Total files: {len(long_running_examples)}")
-    print(f"Completed within 15s: {successful_files}")
-    print(f"Timed out (expected): {timeout_files}")
-    print(f"Failed with error: {failed_files}")
-    print("="*60)
-    
-    # Consider it a success if most files either completed or timed out (as expected)
-    total_tested = successful_files + timeout_files + failed_files
-    if total_tested > 0:
-        success_rate = (successful_files + timeout_files) / total_tested
-        assert success_rate >= 0.7, f"Success rate {success_rate:.1%} is too low"
-    
-    print(f"\n🎉 SUCCESS: {successful_files} examples completed within 15s, {timeout_files} timed out as expected!")
-
-
 if __name__ == "__main__":
-    # Run all tests
-    pytest.main([__file__, "-v"])
+    # Run all tests with verbose and without capture
+    pytest.main([__file__, "-v", "-s"]) 

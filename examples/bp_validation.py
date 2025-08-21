@@ -15,6 +15,9 @@ nqubits, nlayers = 8, 6
 # number of qubits and number of even-odd brick layers in the circuit
 K = tq.set_backend("pytorch")
 
+xx_t = K.cast(K.convert_to_tensor(xx), K.dtypestr)
+yy_t = K.cast(K.convert_to_tensor(yy), K.dtypestr)
+zz_t = K.cast(K.convert_to_tensor(zz), K.dtypestr)
 
 def ansatz(param, gate_param):
     # gate_param here is a 2D-vector for theta and phi in the XXZ gate
@@ -30,7 +33,7 @@ def ansatz(param, gate_param):
                 i,
                 i + 1,
                 theta=1.0,
-                unitary=gate_param[0] * (xx + yy) + gate_param[1] * zz,
+                unitary=gate_param[0] * (xx_t + yy_t) + gate_param[1] * zz_t,
             )
         for i in range(nqubits):
             c.ry(i, theta=param[j, 1, i, 0])
@@ -41,7 +44,7 @@ def ansatz(param, gate_param):
                 i,
                 i + 1,
                 theta=1.0,
-                unitary=gate_param[0] * (xx + yy) + gate_param[1] * zz,
+                unitary=gate_param[0] * (xx_t + yy_t) + gate_param[1] * zz_t,
             )
     return c
 
@@ -52,14 +55,20 @@ def measure_z(param, gate_param, i):
     return K.real(c.expectation_ps(z=[i]))
 
 
-# warning pytorch might be unable to do this
-gradf = K.vvag(measure_z, argnums=0, vectorized_argnums=0)
-# vectorized parallel the computation on circuit gradients for different circuit parameters
+# Manual batching to avoid functorch vmap issues
+_single_value_and_grad = K.value_and_grad(measure_z, argnums=0)
+
+def batched_grads(param_batch, gate_param, measure_on):
+    grads = []
+    for b in range(param_batch.shape[0]):
+        _, g = _single_value_and_grad(param_batch[b], gate_param, measure_on)
+        grads.append(g)
+    return K.stack(grads)
 
 if __name__ == "__main__":
-    batch = 100
-    # tune batch as large as possible if the memory allows
-    reps = 20
+    # Reduced sizes to keep CI runtime within ~5-10s
+    batch = 8
+    reps = 3
     measure_on = nqubits // 2
     # which qubit the sigma_z observable is on
 
@@ -70,7 +79,7 @@ if __name__ == "__main__":
     for _ in tqdm(range(reps)):
         param = np.random.uniform(0, 2 * np.pi, size=[batch, nlayers, 2, nqubits, 3])
         param = tq.array_to_tensor(param, dtype="float32")
-        _, gs = gradf(param, gate_param, measure_on)
+        gs = batched_grads(param, gate_param, measure_on)
         # gs.shape = [batch, nlayers, 2, nqubits, 3]
         gs = K.abs(gs) ** 2
         rlist.append(gs)

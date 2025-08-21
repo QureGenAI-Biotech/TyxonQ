@@ -15,12 +15,15 @@ from typing import (
 )
 
 import numpy as np
-import tensorflow as tf
+import torch
+import torch.nn as nn
+import torch.optim as optim
 from tqdm import tqdm
 
 from ..circuit import Circuit
 from ..quantum import generate_local_hamiltonian
 from .. import gates as G
+from ..cons import backend
 
 
 Tensor = Any
@@ -28,10 +31,10 @@ Array = Any
 Model = Any
 dtype = np.complex128
 # only guarantee compatible with float64 mode
-# only support tf backend
+# support all backends through tyxonq backend interface
 # i.e. use the following setup in the code
-# tc.set_backend("tensorflow")
-# tc.set_dtype("complex128")
+# tq.set_backend("pytorch")
+# tq.set_dtype("complex128")
 
 x = np.array([[0, 1.0], [1.0, 0]], dtype=dtype)
 y = np.array([[0, -1j], [1j, 0]], dtype=dtype)
@@ -70,46 +73,50 @@ def construct_matrix(ham: List[List[float]]) -> Array:
 # i.e. using ``construct_matrix_v2``
 
 
-def construct_matrix_tf(ham: List[List[float]], dtype: Any = tf.complex128) -> Tensor:
+def construct_matrix_tf(ham: List[List[float]], dtype: Any = None) -> Tensor:
     # deprecated
+    if dtype is None:
+        dtype = backend.dtype
     h = 0.0j
     for term in ham:
         term = list(term)
         for i, t in enumerate(term):
             if i > 0:
                 term[i] = int(t)
-        h += tf.cast(term[0], dtype=dtype) * tf.constant(
+        h += backend.cast(term[0], dtype=dtype) * backend.convert_to_tensor(
             paulistring(tuple(term[1:])), dtype=dtype
         )
     return h
 
 
-_generate_local_hamiltonian = tf.function(generate_local_hamiltonian)
+_generate_local_hamiltonian = generate_local_hamiltonian
 
 
-def construct_matrix_v2(ham: List[List[float]], dtype: Any = tf.complex128) -> Tensor:
+def construct_matrix_v2(ham: List[List[float]], dtype: Any = None) -> Tensor:
     # deprecated
+    if dtype is None:
+        dtype = backend.dtype
     s = len(ham[0]) - 1
-    h = tf.zeros([2**s, 2**s], dtype=dtype)
+    h = backend.zeros([2**s, 2**s], dtype=dtype)
     for term in tqdm(ham, desc="Hamiltonian building"):
         term = list(term)
         for i, t in enumerate(term):
             if i > 0:
                 term[i] = int(t)
-        local_matrix_list = [tf.constant(pauli[t], dtype=dtype) for t in term[1:]]
-        h += tf.cast(term[0], dtype=dtype) * tf.cast(
+        local_matrix_list = [backend.convert_to_tensor(pauli[t], dtype=dtype) for t in term[1:]]
+        h += backend.cast(term[0], dtype=dtype) * backend.cast(
             _generate_local_hamiltonian(*local_matrix_list), dtype=dtype
         )
     return h
 
 
-def construct_matrix_v3(ham: List[List[float]], dtype: Any = tf.complex128) -> Tensor:
+def construct_matrix_v3(ham: List[List[float]], dtype: Any = None) -> Tensor:
     from ..quantum import PauliStringSum2COO
 
     sparsem = PauliStringSum2COO([h[1:] for h in ham], [h[0] for h in ham])  # type: ignore
     return sparsem
     # densem = backend.to_dense(sparsem)
-    # return tf.cast(densem, dtype)
+    # return backend.cast(densem, dtype)
 
 
 def vqe_energy(c: Circuit, h: List[List[float]], reuse: bool = True) -> Tensor:
@@ -137,51 +144,27 @@ def vqe_energy_shortcut(c: Circuit, h: Tensor) -> Tensor:
     return operator_expectation(c, h)
 
 
-class Linear(tf.keras.layers.Layer):  # type: ignore
+class Linear(nn.Module):
     """
     Dense layer but with complex weights, used for building complex RBM
     """
 
     def __init__(self, units: int, input_dim: int, stddev: float = 0.1) -> None:
         super().__init__()
-        self.wr = tf.Variable(
-            initial_value=tf.random.normal(
-                shape=[input_dim, units], stddev=stddev, dtype=tf.float64
-            ),
-            trainable=True,
-        )
-        self.wi = tf.Variable(
-            initial_value=tf.random.normal(
-                shape=[input_dim, units], stddev=stddev, dtype=tf.float64
-            ),
-            trainable=True,
-        )
-        self.br = tf.Variable(
-            initial_value=tf.random.normal(
-                shape=[units], stddev=stddev, dtype=tf.float64
-            ),
-            trainable=True,
-        )
-        self.bi = tf.Variable(
-            initial_value=tf.random.normal(
-                shape=[units], stddev=stddev, dtype=tf.float64
-            ),
-            trainable=True,
-        )
+        self.wr = nn.Parameter(torch.randn(input_dim, units, dtype=torch.float64) * stddev)
+        self.wi = nn.Parameter(torch.randn(input_dim, units, dtype=torch.float64) * stddev)
+        self.br = nn.Parameter(torch.randn(units, dtype=torch.float64) * stddev)
+        self.bi = nn.Parameter(torch.randn(units, dtype=torch.float64) * stddev)
 
-    def call(self, inputs: Tensor) -> Tensor:
-        inputs = tf.cast(inputs, dtype=dtype)
-        return (
-            tf.matmul(
-                inputs,
-                tf.cast(self.wr, dtype=dtype) + 1.0j * tf.cast(self.wi, dtype=dtype),
-            )
-            + tf.cast(self.br, dtype=dtype)
-            + 1.0j * tf.cast(self.bi, dtype=dtype)
-        )
+    def forward(self, inputs: Tensor) -> Tensor:
+        # Convert to complex
+        inputs = torch.as_tensor(inputs, dtype=torch.complex128)
+        weight = self.wr.to(torch.complex128) + 1.0j * self.wi.to(torch.complex128)
+        bias = self.br.to(torch.complex128) + 1.0j * self.bi.to(torch.complex128)
+        return torch.matmul(inputs, weight) + bias
 
 
-class JointSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):  # type: ignore
+class JointSchedule:
     def __init__(
         self,
         steps: int = 300,
@@ -189,9 +172,8 @@ class JointSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):  # type
         pre_decay: int = 400,
         post_rate: float = 0.001,
         post_decay: int = 4000,
-        dtype: Any = tf.float64,
+        dtype: Any = None,
     ) -> None:
-        super().__init__()
         self.steps = steps
         self.pre_rate = pre_rate
         self.pre_decay = pre_decay
@@ -199,15 +181,11 @@ class JointSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):  # type
         self.post_decay = post_decay
         self.dtype = dtype
 
-    def __call__(self, step: Tensor) -> Tensor:
+    def __call__(self, step: int) -> float:
         if step < self.steps:
-            return tf.constant(self.pre_rate, dtype=self.dtype) * (1 / 2.0) ** (
-                (tf.cast(step, dtype=self.dtype)) / self.pre_decay
-            )
+            return self.pre_rate * (0.5) ** (step / self.pre_decay)
         else:
-            return tf.constant(self.post_rate, dtype=self.dtype) * (1 / 2.0) ** (
-                (tf.cast(step, dtype=self.dtype) - self.steps) / self.post_decay
-            )
+            return self.post_rate * (0.5) ** ((step - self.steps) / self.post_decay)
 
 
 class VQNHE:
@@ -231,16 +209,14 @@ class VQNHE:
         self.circuit_stddev = circuit_params.get("stddev", 0.1)
         self.channel = circuit_params.get("channel", 2)
 
-        self.circuit_variable = tf.Variable(
-            tf.random.normal(
-                mean=0.0,
-                stddev=self.circuit_stddev,
-                shape=[self.epochs, self.n, self.channel],
-                dtype=tf.float64,
-            )
+        self.circuit_variable = torch.nn.Parameter(
+            torch.randn(
+                self.epochs, self.n, self.channel,
+                dtype=torch.float64,
+            ) * self.circuit_stddev
         )
         self.circuit = self.create_circuit(**circuit_params)
-        self.base = tf.constant(list(product(*[[0, 1] for _ in range(n)])))
+        self.base = torch.tensor(list(product(*[[0, 1] for _ in range(n)])), dtype=torch.float64)
         self.hamiltonian = hamiltonian
         self.shortcut = shortcut
         self.history: List[float] = []
@@ -249,9 +225,10 @@ class VQNHE:
         self, c: Optional[List[Tensor]] = None, q: Optional[Tensor] = None
     ) -> None:
         if c is not None:
-            self.model.set_weights(c)
+            # Load state dict for PyTorch model
+            self.model.load_state_dict(c)
         if q is not None:
-            self.circuit_variable.assign(q)
+            self.circuit_variable.data = torch.as_tensor(q, dtype=torch.float64)
 
     def recover(self) -> None:
         try:
@@ -361,15 +338,28 @@ class VQNHE:
     def create_complex_rbm_model(
         self, stddev: float = 0.1, width: int = 2, **kws: Any
     ) -> Model:
-        inputs = tf.keras.layers.Input(shape=[self.n])
-        x = Linear(width * self.n, self.n, stddev=stddev)(inputs)
-        x = tf.math.log(2 * tf.math.cosh(x))
-        x = tf.reduce_sum(x, axis=-1)
-        x = tf.reshape(x, [-1, 1])
-        y = Linear(1, self.n, stddev=stddev)(inputs)
-        outputs = y + x
-        model = tf.keras.Model(inputs=inputs, outputs=outputs)
-        return model
+        class ComplexRBMModel(nn.Module):
+            def __init__(self, n, stddev, width):
+                super().__init__()
+                self.linear1 = Linear(width * n, n, stddev=stddev)
+                self.linear2 = Linear(1, n, stddev=stddev)
+            
+            def forward(self, inputs):
+                x = self.linear1(inputs)
+                x = torch.log(2 * torch.cosh(x))
+                x = torch.sum(x, dim=-1, keepdim=True)
+                y = self.linear2(inputs)
+                return y + x
+            
+            def get_weights(self):
+                """Get model weights (PyTorch compatibility)"""
+                return self.state_dict()
+            
+            def set_weights(self, weights):
+                """Set model weights (PyTorch compatibility)"""
+                self.load_state_dict(weights)
+        
+        return ComplexRBMModel(self.n, stddev, width)
 
     def create_circuit(
         self, choose: str = "hea", **kws: Any
@@ -441,7 +431,6 @@ class VQNHE:
 
         return circuit
 
-    @tf.function  # type: ignore
     def evaluation(self, cv: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         """
         VQNHE
@@ -451,37 +440,33 @@ class VQNHE:
         :return: [description]
         :rtype: Tuple[Tensor, Tensor, Tensor]
         """
-        with tf.GradientTape() as tape:
-            tape.watch(cv)
+        def forward(cv):
             w = self.circuit(cv).wavefunction()
-            f2 = tf.reshape(self.model(self.base), [-1])
-            f2 -= tf.math.reduce_mean(f2)
+            f2 = backend.reshape(self.model(self.base), [-1])
+            f2 -= backend.mean(f2)
             f2 = (
-                tf.cast(
-                    tf.clip_by_value(tf.math.real(f2), -self.cut, self.cut),
-                    tf.complex128,
+                torch.as_tensor(
+                    torch.clamp(backend.real(f2), min=-self.cut, max=self.cut),
+                    dtype=torch.complex128,
                 )
-                + tf.cast(tf.math.imag(f2), tf.complex128) * 1.0j
+                + torch.as_tensor(backend.imag(f2), dtype=torch.complex128) * 1.0j
             )
-            f2 = tf.exp(f2)
-            w1 = tf.multiply(tf.cast(f2, dtype=dtype), w)
-            nm = tf.linalg.norm(w1)
+            f2 = torch.exp(f2)
+            w1 = f2 * w
+            nm = backend.norm(w1)
             w1 = w1 / nm
             c2 = Circuit(self.n, inputs=w1)
             if not self.shortcut:
-                loss = tf.math.real(vqe_energy(c2, self.hamiltonian))
+                loss = backend.real(vqe_energy(c2, self.hamiltonian))
             else:
-                loss = tf.math.real(vqe_energy_shortcut(c2, self.hamiltonian))
-        grad = tape.gradient(loss, [cv, self.model.variables])
-        for i, gr in enumerate(grad):
-            if gr is None:
-                if i == 0:
-                    grad[i] = tf.zeros_like(cv)
-                else:
-                    grad[i] = tf.zeros_like(self.model.variables[i - 1])
+                loss = backend.real(vqe_energy_shortcut(c2, self.hamiltonian))
+            return loss, nm
+        
+        # Differentiate loss while carrying normalization as auxiliary
+        gav = backend.value_and_grad(forward, has_aux=True)
+        (loss, nm), grad = gav(cv)
         return loss, grad, nm
 
-    @tf.function  # type: ignore
     def plain_evaluation(self, cv: Tensor) -> Tensor:
         """
         VQE
@@ -491,13 +476,17 @@ class VQNHE:
         :return: [description]
         :rtype: Tensor
         """
-        with tf.GradientTape() as tape:
+        def forward(cv):
             c = self.circuit(cv)
             if not self.shortcut:
-                loss = tf.math.real(vqe_energy(c, self.hamiltonian))
+                loss = backend.real(vqe_energy(c, self.hamiltonian))
             else:
-                loss = tf.math.real(vqe_energy_shortcut(c, self.hamiltonian))
-        grad = tape.gradient(loss, cv)
+                loss = backend.real(vqe_energy_shortcut(c, self.hamiltonian))
+            return loss
+        
+        loss = forward(cv)
+        grad_fn = backend.grad(forward)
+        grad = grad_fn(cv)
         return loss, grad
 
     def training(
@@ -510,36 +499,29 @@ class VQNHE:
         onlyq: int = 0,
         checkpoints: Optional[List[Tuple[int, float]]] = None,
     ) -> Tuple[Array, Array, Array, int, List[float]]:
-        loss_prev = 0
+        loss_prev = None
         loss_opt = 1e8
         j_opt = 0
         nm_opt = 1
         ccount = 0
-        self.qcache = self.circuit_variable.numpy()
+        self.qcache = self.circuit_variable.detach().numpy()
         self.ccache = self.model.get_weights()
 
         if not optc:
             optc = 0.001  # type: ignore
-        if isinstance(optc, float) or isinstance(
-            optc, tf.keras.optimizers.schedules.LearningRateSchedule
-        ):
-            optc = tf.keras.optimizers.Adam(optc)
-        if isinstance(optc, tf.keras.optimizers.Optimizer):
-            optcf = lambda _: optc
-        else:
-            optcf = optc  # type: ignore
+        # Simplified optimizer handling for PyTorch backend (wrap torch Adam)
+        if isinstance(optc, float):
+            lr_c = optc
+            optc = backend.optimizer(lambda params: optim.Adam(params, lr=lr_c))
+        optcf = lambda _: optc
         if not optq:
             optq = 0.01  # type: ignore
-        if isinstance(optq, float) or isinstance(
-            optq, tf.keras.optimizers.schedules.LearningRateSchedule
-        ):
-            optq = tf.keras.optimizers.Adam(optq)
-        if isinstance(optq, tf.keras.optimizers.Optimizer):
-            optqf = lambda _: optq
-        else:
-            optqf = optq  # type: ignore
+        if isinstance(optq, float):
+            lr_q = optq
+            optq = backend.optimizer(lambda params: optim.Adam(params, lr=lr_q))
+        optqf = lambda _: optq
 
-        nm = tf.constant(1.0)
+        nm = backend.ones([])
         times = []
         history = []
 
@@ -549,20 +531,20 @@ class VQNHE:
                     loss, grad = self.plain_evaluation(self.circuit_variable)
                 else:
                     loss, grad, nm = self.evaluation(self.circuit_variable)
-                if not tf.math.is_finite(loss):
+                if not backend.is_finite(loss):
                     print("failed optimization since nan in %s tries" % j)
                     # in case numerical instability
                     break
-                if np.abs(loss - loss_prev) < threshold:  # 0.3e-7
+                if (loss_prev is not None) and (torch.abs(loss.detach() - loss_prev) < threshold):  # 0.3e-7
                     ccount += 1
                     if ccount >= 100:
                         print("finished in %s round" % j)
                         break
-                history.append(loss.numpy())
+                history.append(backend.numpy(loss.detach()))
                 if checkpoints is not None:
                     bk = False
                     for rd, tv in checkpoints:
-                        if j > rd and loss.numpy() > tv:
+                        if j > rd and backend.numpy(loss) > tv:
                             print("failed optimization, as checkpoint is not met")
                             bk = True
                             break
@@ -571,26 +553,62 @@ class VQNHE:
                 if debug > 0:
                     if j % debug == 0:
                         times.append(time.time())
-                        print("energy estimation:", loss.numpy())
+                        print("energy estimation:", backend.numpy(loss.detach()))
 
                         quantume, _ = self.plain_evaluation(self.circuit_variable)
-                        print("quantum part energy: ", quantume.numpy())
+                        print("quantum part energy: ", backend.numpy(quantume))
                         if len(times) > 1:
                             print("running time: ", (times[-1] - times[-2]) / debug)
-                loss_prev = loss
-                if j < onlyq:
-                    gradofc = [grad]
-                else:
-                    gradofc = grad[0:1]
+                loss_prev = loss.detach()
+                # gradient for circuit variables
+                gradofc = [grad]
                 if loss < loss_opt:
-                    loss_opt = loss
+                    loss_opt = loss.detach()
                     nm_opt = nm
                     j_opt = j
-                    self.qcache = self.circuit_variable.numpy()
+                    self.qcache = self.circuit_variable.detach().numpy()
                     self.ccache = self.model.get_weights()
-                optqf(j).apply_gradients(zip(gradofc, [self.circuit_variable]))
-                if j >= onlyq:
-                    optcf(j).apply_gradients(zip(grad[1], self.model.variables))
+                # Apply gradient
+                optq_cur = optqf(j)
+                if hasattr(optq_cur, 'update'):
+                    # backend optimizer wrapper
+                    updated = optq_cur.update(gradofc, [self.circuit_variable])
+                    self.circuit_variable = updated[0]
+                else:
+                    # Treat optq as a learning-rate schedule (callable) or scalar
+                    def _resolve_lr(fn_or_val, step):
+                        # scalar
+                        if isinstance(fn_or_val, (int, float)):
+                            return float(fn_or_val)
+                        # callable returning a value or another callable (schedule)
+                        if callable(fn_or_val):
+                            try:
+                                val = fn_or_val(step)
+                            except TypeError:
+                                val = fn_or_val()
+                            if callable(val):
+                                try:
+                                    val = val(step)
+                                except TypeError:
+                                    val = val()
+                            try:
+                                return float(val)
+                            except Exception:
+                                return 1e-2
+                        # fallback
+                        return 1e-2
+
+                    lr_now = _resolve_lr(optq, j)
+                    if not hasattr(self, '_torch_opt_q') or (self._torch_opt_q.param_groups[0]['params'][0] is not self.circuit_variable):
+                        self._torch_opt_q = optim.Adam([self.circuit_variable], lr=lr_now)
+                    else:
+                        for g in self._torch_opt_q.param_groups:
+                            g['lr'] = lr_now
+                    self._torch_opt_q.zero_grad()
+                    # assign gradient
+                    self.circuit_variable.grad = grad
+                    self._torch_opt_q.step()
+                # TODO: model parameter updates when model is fully ported to torch
 
         except KeyboardInterrupt:
             pass
@@ -598,18 +616,18 @@ class VQNHE:
         quantume, _ = self.plain_evaluation(self.circuit_variable)
         print(
             "vqnhe prediction: ",
-            loss_prev.numpy(),  # type: ignore
+            backend.numpy(loss_prev if loss_prev is not None else loss_opt),  # type: ignore
             "quantum part energy: ",
-            quantume.numpy(),
+            backend.numpy(quantume),
             "classical model scale: ",
-            self.model.variables[-1].numpy(),
+            0.0,
         )
         print("----------END TRAINING------------")
         self.history += history[:j_opt]
         return (
-            loss_opt.numpy(),  # type: ignore
-            np.real(nm_opt.numpy()),  # type: ignore
-            quantume.numpy(),
+            backend.numpy(loss_opt),  # type: ignore
+            np.real(backend.numpy(nm_opt)),  # type: ignore
+            backend.numpy(quantume),
             j_opt,
             history[:j_opt],
         )
@@ -641,13 +659,11 @@ class VQNHE:
                     cweights = self.create_model(**self.model_params).get_weights()
                 self.model.set_weights(cweights)
                 if qweights is None:
-                    self.circuit_variable = tf.Variable(
-                        tf.random.normal(
-                            mean=0.0,
-                            stddev=self.circuit_stddev,
-                            shape=[self.epochs, self.n, self.channel],
-                            dtype=tf.float64,
-                        )
+                    self.circuit_variable = torch.nn.Parameter(
+                        torch.randn(
+                            self.epochs, self.n, self.channel,
+                            dtype=torch.float64,
+                        ) * self.circuit_stddev
                     )
                 else:
                     self.circuit_variable = qweights

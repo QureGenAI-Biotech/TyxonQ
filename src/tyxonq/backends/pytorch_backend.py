@@ -1222,6 +1222,11 @@ class PyTorchBackend(pytorch_backend.PyTorchBackend, ExtendedBackend):  # type: 
 
         return torchlib.sparse.mm(sp_a, b)
 
+    def is_finite(self, x: torch.Tensor) -> bool:
+        if x.is_complex():
+            return torchlib.isfinite(torchlib.real(x)).all().item() and torchlib.isfinite(torchlib.imag(x)).all().item()
+        return torchlib.isfinite(x).all().item()
+
 
     def arange(self, start: int, stop: Optional[int] = None, step: int = 1) -> Tensor:
         if stop is None:

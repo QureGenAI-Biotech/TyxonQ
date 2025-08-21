@@ -7,32 +7,37 @@ import sys
 sys.path.insert(0, "../")
 import numpy as np
 import tyxonq as tq
+import os
 from tyxonq.applications.vqes import VQNHE, JointSchedule, construct_matrix_v3
 
 K = tq.set_backend("pytorch")
-K.set_dtype("complex128")
+K.set_dtype("complex64")
 
-h6h = np.load("./h6_hamiltonian.npy")  # reported in 0.99 A
+h6h = np.load(os.path.join(os.path.dirname(__file__), "h6_hamiltonian.npy"))  # robust path
 hamiltonian = construct_matrix_v3(h6h.tolist())
+# Densify to avoid sparse+functorch kernel issues during optimization
+hamiltonian = K.to_dense(hamiltonian)
+# Infer qubit count from term length in the data
+n = int(len(h6h[0]) - 1)
 
 
 vqeinstance = VQNHE(
-    10,
+    n,
     hamiltonian,
     {"width": 16, "stddev": 0.001, "choose": "complex-rbm"},  # model parameter
-    {"filled_qubit": [0, 1, 3, 4, 5, 6, 8, 9], "epochs": 2},  # circuit parameter
+    {"filled_qubit": [i for i in [0, 1, 3, 4, 5, 6, 8, 9] if i < n], "epochs": 1},  # circuit parameter
     shortcut=True,  # enable shortcut for full Hamiltonian matrix evaluation
 )
 # 1110011100
 
 rs = vqeinstance.multi_training(
-    tries=2,  # 10
-    maxiter=500,  # 10000
+    tries=1,
+    maxiter=50,
     threshold=0.5e-8,
-    optq=JointSchedule(200, 0.01, 800, 0.002, 800),
-    optc=JointSchedule(200, 0.0006, 10000, 0.008, 5000),
+    optq=JointSchedule(50, 0.01, 200, 0.002, 200),
+    optc=JointSchedule(50, 0.0006, 200, 0.008, 200),
     onlyq=0,
     debug=200,
-    checkpoints=[(900, -3.18), (2600, -3.19), (4500, -3.2)],
+    checkpoints=[],
 )
 print(rs)

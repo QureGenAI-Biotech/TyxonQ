@@ -155,14 +155,25 @@ def qiskit_compile(
     ncircuit = transpile(circuit, **compiled_options)
     ncircuit = RemoveBarriers()(ncircuit)
 
+    # Helper to dump OpenQASM2 across Qiskit versions
+    def _qasm2_dumps(qc: Any) -> str:
+        try:
+            # Qiskit >= 1.0
+            from qiskit.qasm2 import dumps  # type: ignore
+
+            return dumps(qc)
+        except Exception:
+            # Older Qiskit
+            return qc.qasm()  # type: ignore
+
     if output.lower() in ["qasm", "openqasm"]:
-        r0 = ncircuit.qasm()
+        r0 = _qasm2_dumps(ncircuit)
 
     elif output.lower() in ["qiskit", "ibm"]:
         r0 = ncircuit
 
     elif output.lower() in ["tq", "tyxonq"]:
-        s = _free_pi(ncircuit.qasm())
+        s = _free_pi(_qasm2_dumps(ncircuit))
         r0 = Circuit.from_openqasm(
             s,
             keep_measure_order=True,

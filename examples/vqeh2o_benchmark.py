@@ -39,8 +39,12 @@ lsb, wb = tq.templates.chems.get_ps(b, 12)
 print("%s terms in H2O qubit Hamiltonian" % len(wb))
 mb = tq.quantum.PauliStringSum2COO_numpy(lsb, wb)
 mbd = mb.todense()
+# Infer qubit count from Hamiltonian dimension
+dim = mb.shape[0]
+n = int(np.log2(dim))
+# Ensure sparse shape matches actual Hamiltonian
 mb = K.coo_sparse_matrix(
-    np.transpose(np.stack([mb.row, mb.col])), mb.data, shape=(2**n, 2**n)
+    np.transpose(np.stack([mb.row, mb.col])), mb.data, shape=(dim, dim)
 )
 mbd = tq.array_to_tensor(mbd)
 
@@ -57,7 +61,7 @@ def ansatz(param):
     return c
 
 
-def benchmark(vqef, tries=3):
+def benchmark(vqef, tries=2):
     if tries < 0:
         vagf = K.value_and_grad(vqef)
     else:

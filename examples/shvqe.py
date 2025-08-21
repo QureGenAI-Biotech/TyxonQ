@@ -5,6 +5,7 @@ DQAS part is modified from: examples/clifford_optimization.py
 """
 
 import sys
+import os
 
 sys.path.insert(0, "../")
 
@@ -27,7 +28,9 @@ epochs = 10
 batch = 16
 
 # Hamiltonian
-h6h = np.load("./examples/h6_hamiltonian.npy")  # reported in 0.99 A
+# Use robust path so it works when run from a temp directory
+_DATA_PATH = os.path.join(os.path.dirname(__file__), "h6_hamiltonian.npy")
+h6h = np.load(_DATA_PATH)  # reported in 0.99 A
 hamiltonian = construct_matrix_v3(h6h.tolist())
 # Avoid functorch + sparse issues by densifying once
 try:
