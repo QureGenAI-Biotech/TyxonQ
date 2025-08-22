@@ -4,7 +4,6 @@ import re
 from typing import Any, Dict, List
 
 
-# Minimal gate/op mapping aligned with current basis gates.
 OP_MAPPING: Dict[str, str] = {
     "h": "h",
     "rz": "rz",
@@ -13,33 +12,24 @@ OP_MAPPING: Dict[str, str] = {
 
 
 DEFAULT_BASIS_GATES: List[str] = ["h", "rz", "cx"]
-DEFAULT_OPT_LEVEL: int = 2  # level 3 can induce issues depending on versions
+DEFAULT_OPT_LEVEL: int = 2
 
 
 def normalize_transpile_options(options: Dict[str, Any] | None) -> Dict[str, Any]:
-    """Return normalized qiskit.transpile options with TyxonQ defaults.
-
-    - basis_gates defaults to ["h", "rz", "cx"] unless provided
-    - optimization_level defaults to 2 unless provided
-    Other keys from `options` are preserved.
-    """
-
     norm: Dict[str, Any] = {}
     options = options or {}
     norm.update(options)
+    if "opt_level" in norm and "optimization_level" not in norm:
+        try:
+            norm["optimization_level"] = int(norm.pop("opt_level"))
+        except Exception:
+            norm.pop("opt_level", None)
     norm.setdefault("basis_gates", list(DEFAULT_BASIS_GATES))
     norm.setdefault("optimization_level", DEFAULT_OPT_LEVEL)
     return norm
 
 
 def free_pi(s: str) -> str:
-    """Replace symbolic `pi` in OpenQASM-like argument lists with numbers.
-
-    This mirrors historical behavior to make QASM downstream consumers robust
-    against symbolic constants. Only parenthesized argument tuples are parsed
-    and evaluated.
-    """
-
     rs: List[str] = []
     pistr = "3.141592653589793"
     s = s.replace("pi", pistr)
@@ -49,18 +39,16 @@ def free_pi(s: str) -> str:
             rs.append(r)
         else:
             v = r[inc.start() : inc.end()]
-            v = eval(v)  # nosec - maintained for compatibility with legacy behavior
+            v = eval(v)  # nosec
             if not isinstance(v, tuple):
                 r = r[: inc.start()] + "(" + str(v) + ")" + r[inc.end() :]
-            else:  # u gate case
+            else:
                 r = r[: inc.start()] + str(v) + r[inc.end() :]
             rs.append(r)
     return "\n".join(rs)
 
 
 def comment_qasm(s: str) -> str:
-    """Return QASM string wrapped as line comments for embedding in logs/files."""
-
     nslist: List[str] = []
     nslist.append("//circuit begins")
     for line in s.split("\n"):
@@ -70,8 +58,6 @@ def comment_qasm(s: str) -> str:
 
 
 def comment_dict(d: Dict[int, int], name: str = "logical_physical_mapping") -> str:
-    """Serialize a mapping dictionary into a commented QASM-like block."""
-
     nslist: List[str] = []
     nslist.append(f"//{name} begins")
     for k, v in d.items():
@@ -84,7 +70,13 @@ def _get_positional_logical_mapping_from_qiskit(qc: Any) -> Dict[int, int]:
     i = 0
     positional_logical_mapping: Dict[int, int] = {}
     for inst in qc.data:
-        if inst[0].name == "measure":
+        # Use modern attributes if available to avoid deprecation warnings
+        op = getattr(inst, "operation", None)
+        qubits = getattr(inst, "qubits", None)
+        if op is not None and getattr(op, "name", "") == "measure" and qubits:
+            positional_logical_mapping[i] = qc.find_bit(qubits[0]).index
+            i += 1
+        elif isinstance(inst, (list, tuple)) and inst and getattr(inst[0], "name", "") == "measure":  # fallback
             positional_logical_mapping[i] = qc.find_bit(inst[1][0]).index
             i += 1
     return positional_logical_mapping
@@ -93,19 +85,29 @@ def _get_positional_logical_mapping_from_qiskit(qc: Any) -> Dict[int, int]:
 def _get_logical_physical_mapping_from_qiskit(qc_after: Any, qc_before: Any | None = None) -> Dict[int, int]:
     logical_physical_mapping: Dict[int, int] = {}
     for inst in qc_after.data:
-        if inst[0].name == "measure":
+        op_after = getattr(inst, "operation", None)
+        qubits_after = getattr(inst, "qubits", None)
+        clbits_after = getattr(inst, "clbits", None)
+        is_measure_after = (getattr(op_after, "name", "") == "measure") if op_after is not None else False
+        if is_measure_after or (isinstance(inst, (list, tuple)) and getattr(inst[0], "name", "") == "measure"):
             if qc_before is None:
-                logical_q = qc_after.find_bit(inst[2][0]).index
+                cbit = clbits_after[0] if clbits_after else inst[2][0]
+                logical_q = qc_after.find_bit(cbit).index
             else:
                 for instb in qc_before.data:
-                    if (
-                        instb[0].name == "measure"
-                        and qc_before.find_bit(instb[2][0]).index
-                        == qc_after.find_bit(inst[2][0]).index
-                    ):
-                        logical_q = qc_before.find_bit(instb[1][0]).index
-                        break
-            logical_physical_mapping[logical_q] = qc_after.find_bit(inst[1][0]).index
+                    op_before = getattr(instb, "operation", None)
+                    qubits_before = getattr(instb, "qubits", None)
+                    clbits_before = getattr(instb, "clbits", None)
+                    is_measure_before = (getattr(op_before, "name", "") == "measure") if op_before is not None else False
+                    if is_measure_before or (isinstance(instb, (list, tuple)) and getattr(instb[0], "name", "") == "measure"):
+                        c_before = clbits_before[0] if clbits_before else instb[2][0]
+                        c_after = clbits_after[0] if clbits_after else inst[2][0]
+                        if qc_before.find_bit(c_before).index == qc_after.find_bit(c_after).index:
+                            q_before = qubits_before[0] if qubits_before else instb[1][0]
+                            logical_q = qc_before.find_bit(q_before).index
+                            break
+            q_after = qubits_after[0] if qubits_after else inst[1][0]
+            logical_physical_mapping[logical_q] = qc_after.find_bit(q_after).index
     return logical_physical_mapping
 
 
@@ -119,8 +121,6 @@ def _add_measure_all_if_none(qc: Any) -> Any:
 
 
 def qasm2_dumps_compat(qc: Any) -> str:
-    """Dump OpenQASM2 from a qiskit QuantumCircuit across versions."""
-
     try:
         from qiskit.qasm2 import dumps  # type: ignore
 

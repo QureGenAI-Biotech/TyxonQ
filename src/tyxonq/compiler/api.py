@@ -40,3 +40,51 @@ class Compiler(Protocol):
     def compile(self, request: CompileRequest) -> CompileResult: ...
 
 
+def compile(
+    circuit: "Circuit",
+    *,
+    provider: str = "default",
+    output: str = "ir",
+    target: "DeviceCapabilities" | None = None,
+    options: Dict[str, Any] | None = None,
+) -> CompileResult:
+    """Unified compile entry.
+
+    Parameters:
+        circuit: IR circuit to compile
+        provider: 'tyxonq' | 'qiskit'
+        output: 'ir' | 'qasm2' | 'qiskit'  # 'ir' accepted as alias of 'tyxonq'
+        target: device capabilities for provider-aware compilation
+        options: provider-specific compile options
+    """
+
+    target = target or {}  # type: ignore[assignment]
+    options = options or {}
+    # Map generic output to provider-specific
+    prov = provider.lower()
+    if prov in ("tyxonq", "native"):
+        prov = "default"
+    out = output.lower()
+
+    if prov == "qiskit":
+        from .providers.qiskit import QiskitCompiler
+
+        if out == "qiskit":
+            out_opt = "qiskit"
+        elif out == "qasm2":
+            out_opt = "qasm2"
+        elif out in ("ir", "tyxonq"):
+            # Request original IR
+            out_opt = "ir"
+        else:
+            out_opt = "ir"
+        opts = dict(options)
+        opts["output"] = out_opt
+        return QiskitCompiler().compile({"circuit": circuit, "target": target, "options": opts})  # type: ignore[arg-type]
+
+    # default native provider (TyxonQ)
+    from .native_compiler import NativeCompiler
+
+    return NativeCompiler().compile({"circuit": circuit, "target": target, "options": dict(options)})  # type: ignore[arg-type]
+
+

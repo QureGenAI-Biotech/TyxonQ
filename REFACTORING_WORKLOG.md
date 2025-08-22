@@ -24,7 +24,7 @@ This file records the ongoing refactor progress, design rationale, and future op
   - Shot scheduler bridges grouping to executable segments: supports explicit shot vectors and group-based weighted allocation; segments carry `basis`/`wires`/`basis_map`.
   - `devices/session.execute_plan()` consumes scheduler plan and aggregates results with per-segment context.
 - Targets
-  - Qiskit target skeleton: `compiler/targets/qiskit` with defaults and dialect helpers. (Transpile path not yet wired.)
+  - Qiskit 编译器：从 `compiler/targets/qiskit` 迁移到新命名 `compiler/compilers/qiskit`（计划），统一“编译器”语义，避免双重“targets/…/compiler.py”的命名冗余。
 - Postprocessing
   - Readout mitigation refactored under `postprocessing/readout/ReadoutMit` (no legacy imports), supports inverse and constrained least squares with per-qubit 2x2 calibration.
   - `postprocessing/metrics.py` (normalized counts, KL, diagonal expectation) and `postprocessing/io.py` (counts CSV round-trip).
@@ -71,8 +71,11 @@ This file records the ongoing refactor progress, design rationale, and future op
   - tests: TDD suite with progress; all green
 
 - Pending / Next
-  - Targets
-    - Qiskit target: real transpile path, basis/dialect mapping, layout/routing and opt-level handling, plus tests.
+  - Compilers（原 Targets）
+    - 完成目录更名：`compiler/targets/*` → `compiler/compilers/*`，新增 `compiler/compilers/registry.py` 管理选择与能力；
+    - Qiskit 编译器：实装 transpile 路径（已连通）、basis/dialect、layout/routing 与 opt-level 兼容层，完善测试；
+    - QASM2 编译器：IR→OpenQASM2 直出；
+    - Native 编译器：IR→TyxonQ 原生执行路线（模拟器/自有硬件）对接。
   - Devices
     - Simulators split (densitymatrix, mps) under `devices/simulators/*` and hardware adapters under `devices/hardware/*`.
     - Session: richer execution policies (async, retry, parallelism), capture runtime metrics.
@@ -105,5 +108,19 @@ This document will be incrementally updated as we complete the next milestones.
 
 
 ## Update Timestamp
-
 - Last update: 2025-08-22 00:26:14 CST
+
+
+
+## 7.new update 
+- Providers 重构：统一 `compiler/api.compile(provider, output)`，默认 provider=`default`，output=`ir`；删除旧 `compiler/targets`；
+- Qiskit 兼容清理：移除弃用的 iterable 访问，保持 transpile 选项过滤；
+- 测量与调度：分组增强（元数据/成本），调度支持设备约束（`max_shots_per_job`、`batch_id`）；
+- 梯度阶段：新增 `gradients/parameter_shift` 并接入 `pipeline`；
+- 原生编译器：迁至 `compiler/native_compiler.py`，端到端（编译→调度→会话执行）闭环；
+- 模拟器：目录对齐 `devices/simulators/{wavefunction,density_matrix,compressed_state}`，实现 `WavefunctionEngine` 最小可用；
+- ArrayBackend 计划：在 MIGRATION_PLAN 增补三阶段切换路线，并在模拟器注入后端句柄；
+- 测试：新增例子型端到端测试与模拟器冒烟测试，现有测试绿色。
+
+## Update Timestamp
+- Last update: 2025-08-23 00:54:00 CST

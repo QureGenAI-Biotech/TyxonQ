@@ -99,8 +99,9 @@ src/tyxonq/
       fermion_to_qubit.py     # 费米子→量子比特哈密顿量映射（JW/Parity/BK）
 
   compiler/
-    api.py                    # Compiler、Stage、Pipeline 抽象
+    api.py                    # Compiler、Stage、Pipeline 抽象 统一
     pipeline.py               # 可组合流水线定义与构建器
+    native_complier.py        # 自带编译器
     stages/
       layout/
       decompose/
@@ -113,12 +114,11 @@ src/tyxonq/
       parameter_shift.py
       adjoint.py
       finite_diff.py
-    targets/
+    providers/                # 统一编译器提供方
       qiskit/
-        __init__.py
-        compiler.py           # 目标平台专属编译适配
-        dialect.py            # 可选：目标方言（门/指令映射）
-        stages/               # 可选：目标相关的额外 stage
+        __init__.py           # 暴露 Qiskit 编译器（IR→QuantumCircuit/QASM2）
+        qiskit_compiler.py    # 具体实现；文件名避免与目录“compiler”混淆
+        dialect.py            # 可选：Qiskit 方言/兼容层（门/指令映射）
 
   devices/
     base.py                   # Device 抽象/能力声明
@@ -715,6 +715,32 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 - `session` 负责：批量/异步提交、重试、合并、记录 metadata（向量化/回退/每段耗时）。
 - 支持 shot vectors 与分段执行计划；
 
+#### 数值后端（ArrayBackend）切换计划（新增）
+
+目标：在不破坏既有端到端通路的前提下，将模拟器与编译器逐步迁移到统一的 `numerics/ArrayBackend`（numpy/pytorch/cupynumeric），获得矢量化与加速能力。
+
+阶段性路线：
+- 第 1 阶段（已开始）
+  - 在模拟器引擎构造器中注入后端句柄：`self.backend = get_backend(backend_name)`；
+  - 元数据回传所用后端名称，保证可观测；
+  - 保持 numpy 运算路径，端到端测试绿（稳定契约）。
+
+- 第 2 阶段（进行中）
+  - 将波函数引擎内部状态从 ndarray 过渡为后端 array；
+  - 单比特门、双比特门的应用改用后端的 `matmul/einsum`；
+  - 在可用时启用 `vectorize_or_fallback` 做批量/shot 维度的安全矢量化；
+  - 为 pytorch（可选安装）增加跳过逻辑的测试，验证一致性。
+
+- 第 3 阶段（计划）
+  - density_matrix 引擎语义迁移：基于后端线代原语实现 rho 的演化与观测；
+  - compressed_state 定义 backends 协议与最小实现，串联 numerics 后端选择；
+  - 在编译器侧将多参数 shift/测量分组作为批量维度，落地矢量化执行与回退路径。
+
+兼容性与风险控制：
+- 通过测试切分保障每一步落地不破坏端到端绿；
+- 对可选依赖（pytorch/cupynumeric）使用条件跳过与清晰的报错信息；
+- 保留 eager 路径作为回退，记录回退原因与成本（后续在 metadata 中增强）。
+
 #### 真实硬件支持与接口不变更承诺
 - 接口不变更（签名级别）：对外 `Device` 的核心方法保持不变，特别是：
   - `run(circuit, shots: int | None = None, **kwargs) -> RunResult`
@@ -744,52 +770,6 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 ### config/ 与 utils/
 - 目的：配置解析/合并与通用工具（日志、并行、缓存、随机数）。
 
-## 架构层次关系图（numerics ↔ simulators/backends）
-
-```mermaid
-flowchart TD
-  subgraph Numerics["numerics (数组/线性代数/自动微分)"]
-    NB[backends: numpy / pytorch / cupynumeric]
-    ACC[accelerators: cutensornet, custatevec, custom_ops]
-    CHECKS[vectorization_checks: vmap safety]
-    NB --> ACC
-    NB --> CHECKS
-  end
-
-  subgraph Simulators["devices/simulators (模拟策略)"]
-    WF[wavefunction]
-    DM[density_matrix]
-    CS[compressed_state]
-
-    subgraph CSB["compressed_state/backends"]
-      CSPT[pytorch_backend]
-      CSNP[numpy_backend]
-      CSCP[cupynumeric_backend]
-    end
-
-    CS --> CSPT
-    CS --> CSNP
-    CS --> CSCP
-  end
-
-  ACC --> CSCP
-  ACC --> WF
-  ACC --> DM
-
-  subgraph Vendor["devices/simulators/vendor"]
-    CUQ[cuquantum]
-  end
-
-  Numerics --> Simulators
-  CUQ --> Simulators
-
-  subgraph Devices["devices/hardware"]
-    IBM[ibm]
-    BRA[braket]
-  end
-
-  Simulators --> Devices
-```
 
 ---
 
@@ -874,5 +854,44 @@ flowchart TD
   - 通用优化/布局/分解逻辑（应放 `compiler/stages`）。
   - 与 `devices/` 的直接耦合（通过编译产物与能力描述对接）。
 
+### 附录 C: `core和compiler`的关系
 
+#### 简明回答
+- 核心关系：**core 提供“稳定的数据模型与语义（IR/operations/measurements）”，compiler 提供“对这些模型的变换与落地（passes/pipeline/providers）”**。前者是“语言”，后者是“编译器与调度器”。
+
+#### 各层职责与依赖方向
+- **core/**
+  - **ir/**: `Circuit`, `Hamiltonian`, `Pulse` 等“统一中间表示”。所有上层（apps）产出、下游（compiler/devices/postprocessing）消费的唯一载体。
+  - **operations/**: `GateSpec` 注册表与梯度元数据（如 parameter-shift 支持）。被 compiler 的分解/重写/梯度阶段、以及模拟器共同使用，保证“门的语义”一致。
+  - **measurements/**: 期望值/采样等度量的定义。compiler 的 measurement-rewrite 会基于它生成分组与 `basis_map`，放入 `Circuit.metadata`，供调度/设备复用设置。
+  - 方向性：core 对外零依赖；compiler/providers/devices 只读 core，不反向依赖。
+
+- **compiler/**
+  - **stages/**: 各种“语义保持/优化/布局/调度/梯度”等 Pass，输入/输出都是 core 的 `Circuit`（必要信息写入 `Circuit.metadata`）。
+  - **pipeline.py**: 只是“组合器”，顺序执行 passes，不替代 core。它让“如何编译”与“编什么”解耦。
+  - **providers/**: 面向目标生态的“最终产物适配器”
+    - `tyxonq/`：原生路径，当前默认把分组与 shot 计划写回 IR/metadata，便于直接交给 `devices/session` 执行。
+    - `qiskit/`：将 core IR 降到 `QuantumCircuit` 或 `qasm2`，并保留逻辑-物理映射元数据。
+
+- **devices/**
+  - 消费 compiler 写入的 `Circuit.metadata`（如 measurement_groups，shot segments），按计划执行并返回结果；不关心编译细节。
+
+- **postprocessing/**
+  - 在结果面做指标与误差缓解等，与 core/IR 定义的测量语义对齐。
+
+#### 为什么 core 必不可少
+- **IR 是稳定契约**：apps、compiler、devices、postprocessing 之间通过 IR 解耦。pipeline 只是“怎么变换 IR”的组织者。
+- **语义一致性**：`operations` 的门定义与梯度信息，在分解、重写、梯度生成（parameter-shift）与模拟器里“同源”，避免语义漂移。
+- **测量优化闭环**：`measurements` 定义→编译阶段产出 `basis_map`/分组→`scheduling` 生成 shot plan→`devices` 复用设置执行→`postprocessing` 基于同一语义解释结果。
+- **向下延展**：`pulse` IR 为未来硬件/方言下沉准备承载层，而非直接绑死到某个 provider。
+
+#### 典型流转（最小闭环）
+- 应用层用 `CircuitBuilder` 产出 `Circuit`（core/ir）。
+- `compiler.api.compile(provider='tyxonq', output='tyxonq')`：
+  - pipeline 运行 `rewrite/measurement` → `scheduling/shot_scheduler`，把分组/shot 计划写入 `Circuit.metadata`。
+  - 原生 provider 返回“可执行 IR + 元数据”。
+- `devices.session.execute_plan` 执行 shot segments，聚合结果。
+- `postprocessing` 做指标与误差缓解（与 core/measurements 语义对齐）。
+
+一句话：core 定义“我们说什么”；compiler/pipeline/providers 定义“我们怎么把这件事做成、做高效、做对硬件”；devices 执行；postprocessing 总结。core 不会被 pipeline 取代，pipeline 只是 orchestration。
 

@@ -39,6 +39,10 @@ def _resolve_stage(name: str) -> "Pass":
         from .stages.scheduling.shot_scheduler import ShotSchedulerPass
 
         return ShotSchedulerPass()
+    if name == "gradients/parameter_shift":
+        from .stages.gradients.parameter_shift_pass import ParameterShiftPass
+
+        return ParameterShiftPass()
 
     raise ValueError(f"Unknown stage: {name}")
 
