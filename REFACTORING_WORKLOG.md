@@ -118,7 +118,7 @@ This document will be incrementally updated as we complete the next milestones.
 - 测量与调度：分组增强（元数据/成本），调度支持设备约束（`max_shots_per_job`、`batch_id`）；
 - 梯度阶段：新增 `gradients/parameter_shift` 并接入 `pipeline`；
 - 原生编译器：迁至 `compiler/native_compiler.py`，端到端（编译→调度→会话执行）闭环；
-- 模拟器：目录对齐 `devices/simulators/{wavefunction,density_matrix,compressed_state}`，实现 `WavefunctionEngine` 最小可用；
+- 模拟器：目录对齐 `devices/simulators/{statevector,density_matrix,compressed_state}`，实现 `StatevectorEngine` 最小可用；
 - ArrayBackend 计划：在 MIGRATION_PLAN 增补三阶段切换路线，并在模拟器注入后端句柄；
 - 测试：新增例子型端到端测试与模拟器冒烟测试，现有测试绿色。
 
@@ -183,3 +183,55 @@ This document will be incrementally updated as we complete the next milestones.
 ## MPO converters
 
 - `compiler/translation/mpo_converters.py`: duck-typed converters for Tensornetwork/Quimb MPO to dense matrix; unit tests added.
+
+
+
+## 8. Latest simulator/provider/IR updates
+- IR: `compose`, `remap_qubits`, `inverse`, JSON IO, instructions (`measure/reset/barrier`).
+- Provider/Qiskit: IR↔Qiskit adapters, OpenQASM read/write; round-trip tests added.
+- Simulators: wavefunction renamed to `statevector`; added `state/probability/amplitude/perfect_sampling`; mid-measure/postselect hooks (`project_z`, `reset`).
+- Density-matrix: engines wired to unified kernels; fixed Z expectation axis alignment and mid-circuit project/reset semantics. Tests updated and green.
+- Gates kernels: unified `devices/simulators/gates.py` expanded（ry/phase/cz/rxx/ryy/rzz/multi-control）；修正 1q/密度矩阵 einsum 标签冲突与输出下标重复问题。
+- Tests: `tests_refactor/test_mid_measure_postselect.py` 调整 DM 预期（|+> 的 Z=0.0），并验证 reset 后 Z1=1.0、投影后 Z0=-1.0；全套 tests_refactor 99 passed, 1 skipped（cuNumeric 未安装）。
+- Pending cleanup: legacy `gates.py` split、`results/*`、`shadows.py`、`mps_base.py`、`mpscircuit.py`、`simplify.py`（见 TODO）。
+
+## 9. Legacy audit (marked for removal, not deleted)
+
+Audited top-level legacy modules under `src/tyxonq/`. The following are marked for removal after parity tests, no functional edits will be made to them:
+
+- Ready to remove (fully migrated):
+  - `results/*` → `postprocessing/*` (io/metrics/qem/readout); tests exist
+  - `shadows.py` → `postprocessing/classical_shadows` (tests exist)
+  - `mps_base.py`, `mpscircuit.py` → `devices/simulators/matrix_product_state/*` (tests exist)
+  - `channels.py` (top-level) → `devices/simulators/noise/channels.py` + `postprocessing/noise_analysis.py`
+  - `quantum.py` → split across `core/operations/pauli`, `postprocessing/*`, `compiler/translation/mpo_converters.py` (tests exist)
+
+- Pending (partially migrated; keep until parity is green):
+  - `densitymatrix.py` → `devices/simulators/density_matrix/engine.py` (axis alignment for expZ/measure pending)
+  - `gates.py` (legacy) → split between `core/operations/unitary.py` and `devices/simulators/gates.py` (marked in-file as legacy; do not add new code)
+  - `simplify.py` → compiler `stages/simplify/lightcone` (impl TBD)
+  - `translation.py` → provider adapters + IR converters（已在文件头标注 legacy；迁移目标：`compiler/providers/qiskit/dialect.py` 与 `compiler/translation/mpo_converters.py`）
+  - `utils.py` → logging/parallel/cache/rng + config loader (planned split)
+  - `vis.py` → `vis/` package using IR/providers (planned)
+
+We will not delete these files yet. They are tracked in TODOs and this worklog; once parity is confirmed via `tests_refactor`, they will be removed in batches.
+
+### First removal batch (scheduled)
+- Now that density-matrix mid-measure axis and Z expectation are fixed and tests are green:
+  - Remove `densitymatrix.py`（已由 `devices/simulators/density_matrix/engine.py` 完全替代）
+  - Remove `results/*`（已由 `postprocessing/*` 覆盖）
+  - Remove `shadows.py`（已由 `postprocessing/classical_shadows` 覆盖）
+  - Remove `mps_base.py`, `mpscircuit.py`（已由 `devices/simulators/compressed_state/*` 覆盖）
+
+## 10. This update snapshot (2025-08-23)
+- DensityMatrixEngine：修复 Z 期望/测量轴对齐；投影与复位语义走统一 kernel；用例调整并通过。
+- Gates kernels：补全常见门集与多控；修正 einsum 冲突；密度矩阵快速路径 `exp_z_density` 基于对角简化。
+- Qiskit provider：IR↔Qiskit/QASM 适配与往返测试稳定。
+- 测试：`tests_refactor` 全绿（99 passed, 1 skipped）。
+- Legacy 标注：`densitymatrix.py` 进入首批可删清单；其余待删项保持不变，待后续 parity/文档同步后清理。
+
+These are blocked only by the single xfail; all other tests are green.
+
+
+## Update Timestamp
+- Last update: 2025-08-24 00:54:00 CST

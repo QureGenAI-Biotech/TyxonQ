@@ -3,6 +3,14 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
+try:
+    # Optional import: only required when user chooses qiskit provider
+    from qiskit import QuantumCircuit, ClassicalRegister  # type: ignore
+except Exception:  # pragma: no cover - keep import optional
+    QuantumCircuit = None  # type: ignore
+    ClassicalRegister = None  # type: ignore
+
+from ....core.ir import Circuit
 
 OP_MAPPING: Dict[str, str] = {
     "h": "h",
@@ -128,4 +136,96 @@ def qasm2_dumps_compat(qc: Any) -> str:
     except Exception:
         return qc.qasm()  # type: ignore[attr-defined]
 
+
+# -------- IR <-> Qiskit adapters (provider-scoped) --------
+
+def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
+    """Convert IR `Circuit` to a Qiskit `QuantumCircuit`.
+
+    Supports ops: h, rz(theta), cx, measure_z.
+    """
+    if QuantumCircuit is None:
+        raise RuntimeError("qiskit is not available; please install qiskit to use this provider")
+    qc = QuantumCircuit(circuit.num_qubits)
+
+    measure_indices: List[int] = []
+    for op in circuit.ops:
+        name = op[0]
+        if name == "h":
+            qc.h(int(op[1]))
+        elif name == "rz":
+            qc.rz(float(op[2]), int(op[1]))
+        elif name == "cx":
+            qc.cx(int(op[1]), int(op[2]))
+        elif name == "measure_z":
+            measure_indices.append(int(op[1]))
+        else:
+            raise NotImplementedError(f"Unsupported op for qiskit adapter: {name}")
+
+    if add_measures and measure_indices:
+        if ClassicalRegister is None:
+            raise RuntimeError("qiskit classical register not available")
+        creg = ClassicalRegister(len(measure_indices))
+        qc.add_register(creg)
+        for i, q in enumerate(measure_indices):
+            qc.measure(q, creg[i])
+    return qc
+
+
+def from_qiskit(qc: Any) -> Circuit:
+    """Convert a Qiskit `QuantumCircuit` to IR `Circuit`.
+
+    Recognizes: h, rz(theta), cx, measure.
+    """
+    ops: List[Any] = []
+    for inst in getattr(qc, "data", []):
+        op = getattr(inst, "operation", None)
+        qubits = getattr(inst, "qubits", None)
+        params = getattr(op, "params", []) if op is not None else []
+        name = getattr(op, "name", None) if op is not None else None
+
+        # fallback older tuple format
+        if op is None and isinstance(inst, (list, tuple)) and inst:
+            op = inst[0]
+            name = getattr(op, "name", None)
+            qubits = inst[1]
+            params = getattr(op, "params", [])
+
+        if name == "h":
+            ops.append(("h", int(qc.find_bit(qubits[0]).index)))
+        elif name == "rz":
+            theta = float(params[0]) if params else 0.0
+            ops.append(("rz", int(qc.find_bit(qubits[0]).index), theta))
+        elif name == "cx":
+            c = int(qc.find_bit(qubits[0]).index)
+            t = int(qc.find_bit(qubits[1]).index)
+            ops.append(("cx", c, t))
+        elif name == "measure":
+            q = int(qc.find_bit(qubits[0]).index)
+            ops.append(("measure_z", q))
+        else:
+            raise NotImplementedError(f"Unsupported qiskit op in adapter: {name}")
+
+    return Circuit(num_qubits=qc.num_qubits, ops=ops)
+
+
+# -------- OpenQASM adapters via Qiskit provider --------
+
+def qasm_to_ir(qasm_str: str) -> Circuit:
+    """Parse OpenQASM 2 string to IR `Circuit` using Qiskit if available."""
+    if QuantumCircuit is None:
+        raise RuntimeError("qiskit is not available; please install qiskit to use this provider")
+    try:
+        from qiskit.qasm2 import loads  # type: ignore
+
+        qc = loads(qasm_str)
+    except Exception:
+        qc = QuantumCircuit.from_qasm_str(qasm_str)  # type: ignore[attr-defined]
+    return from_qiskit(qc)
+
+
+def ir_to_qasm(circuit: Circuit) -> str:
+    """Serialize IR `Circuit` to OpenQASM 2 string via Qiskit."""
+    qc = to_qiskit(circuit, add_measures=True)
+    return qasm2_dumps_compat(qc)
 

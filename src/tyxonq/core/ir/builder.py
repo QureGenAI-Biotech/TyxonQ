@@ -50,4 +50,8 @@ class CircuitBuilder:
     def circuit(self) -> Circuit:
         return Circuit(num_qubits=self._num_qubits, ops=list(self._ops))
 
+    # Convenience: batch extend ops
+    def extend(self, ops: List[Tuple[Any, ...]]) -> None:
+        self._ops.extend(list(ops))
+
 

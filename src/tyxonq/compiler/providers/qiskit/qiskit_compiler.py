@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 from .dialect import (
     normalize_transpile_options,
     qasm2_dumps_compat,
+    to_qiskit as ir_to_qiskit,
+    from_qiskit as qiskit_to_ir,
     _get_logical_physical_mapping_from_qiskit,
     _get_positional_logical_mapping_from_qiskit,
 )
@@ -38,29 +40,11 @@ class QiskitCompiler:
             ClassicalRegister = None  # type: ignore
 
         if QuantumCircuit is not None:
-            qc = QuantumCircuit(circuit.num_qubits)
+            qc = ir_to_qiskit(circuit, add_measures=True)
         else:
             qc = None
 
-        measure_indices = []
-        for op in circuit.ops:
-            name = op[0]
-            if name == "h" and qc is not None:
-                qc.h(int(op[1]))
-            elif name == "rz" and qc is not None:
-                qc.rz(float(op[2]), int(op[1]))
-            elif name == "cx" and qc is not None:
-                qc.cx(int(op[1]), int(op[2]))
-            elif name == "measure_z":
-                measure_indices.append(int(op[1]))
-            else:
-                raise NotImplementedError(f"Unsupported op for qiskit target: {name}")
-
-        if measure_indices and qc is not None:
-            creg = ClassicalRegister(len(measure_indices))
-            qc.add_register(creg)
-            for i, q in enumerate(measure_indices):
-                qc.measure(q, creg[i])
+        # circuit already encoded into qc by adapter
 
         compiled_qc = qc
         if do_transpile and qc is not None:
@@ -93,5 +77,9 @@ class QiskitCompiler:
         if output == "ir":
             return {"circuit": circuit, "metadata": metadata}
         return {"circuit": compiled_qc, "metadata": metadata}
+
+
+# Convenience exports
+__all__ = ["QiskitCompiler", "ir_to_qiskit", "qiskit_to_ir"]
 
 

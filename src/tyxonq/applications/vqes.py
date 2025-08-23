@@ -21,7 +21,6 @@ import torch.optim as optim
 from tqdm import tqdm
 
 from ..circuit import Circuit
-from ..quantum import generate_local_hamiltonian
 from .. import gates as G
 from ..cons import backend
 
@@ -89,7 +88,15 @@ def construct_matrix_tf(ham: List[List[float]], dtype: Any = None) -> Tensor:
     return h
 
 
-_generate_local_hamiltonian = generate_local_hamiltonian
+# Local replacement for legacy generate_local_hamiltonian: tensor product of local terms
+def _generate_local_hamiltonian(*hlist: Any) -> Any:
+    mats = [backend.numpy(h) for h in hlist]
+    if not mats:
+        return np.array([[1.0 + 0.0j]])
+    out = mats[0]
+    for m in mats[1:]:
+        out = np.kron(out, m)
+    return out
 
 
 def construct_matrix_v2(ham: List[List[float]], dtype: Any = None) -> Tensor:
@@ -111,12 +118,13 @@ def construct_matrix_v2(ham: List[List[float]], dtype: Any = None) -> Tensor:
 
 
 def construct_matrix_v3(ham: List[List[float]], dtype: Any = None) -> Tensor:
-    from ..quantum import PauliStringSum2COO
+    # Dense fallback using pauli helpers
+    from ..core.operations.pauli import pauli_string_sum_dense
 
-    sparsem = PauliStringSum2COO([h[1:] for h in ham], [h[0] for h in ham])  # type: ignore
-    return sparsem
-    # densem = backend.to_dense(sparsem)
-    # return backend.cast(densem, dtype)
+    H = pauli_string_sum_dense([h[1:] for h in ham], [h[0] for h in ham])
+    if dtype is None:
+        dtype = backend.dtype
+    return backend.convert_to_tensor(H, dtype=dtype)
 
 
 def vqe_energy(c: Circuit, h: List[List[float]], reuse: bool = True) -> Tensor:

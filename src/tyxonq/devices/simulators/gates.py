@@ -34,6 +34,16 @@ def gate_rx(theta: float) -> np.ndarray:
     return np.array([[c, s], [s, c]], dtype=np.complex128)
 
 
+def gate_ry(theta: float) -> np.ndarray:
+    c = np.cos(theta / 2.0)
+    s = np.sin(theta / 2.0)
+    return np.array([[c, -s], [s, c]], dtype=np.complex128)
+
+
+def gate_phase(theta: float) -> np.ndarray:
+    return np.array([[1.0, 0.0], [0.0, np.exp(1j * theta)]], dtype=np.complex128)
+
+
 def gate_cx_4x4() -> np.ndarray:
     return np.array([
         [1, 0, 0, 0],
@@ -48,6 +58,88 @@ def gate_cx_rank4() -> np.ndarray:
     return U
 
 
+def gate_cz_4x4() -> np.ndarray:
+    return np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, -1],
+    ], dtype=np.complex128)
+
+
+def gate_x() -> np.ndarray:
+    return np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.complex128)
+
+
+def gate_s() -> np.ndarray:
+    return gate_phase(np.pi / 2.0)
+
+
+def gate_sd() -> np.ndarray:
+    return gate_phase(-np.pi / 2.0)
+
+
+def gate_t() -> np.ndarray:
+    return gate_phase(np.pi / 4.0)
+
+
+def gate_td() -> np.ndarray:
+    return gate_phase(-np.pi / 4.0)
+
+
+def gate_rxx(theta: float) -> np.ndarray:
+    # exp(-i theta/2 X⊗X) = cos(theta/2) I - i sin(theta/2) X⊗X
+    c = np.cos(theta / 2.0)
+    s = -1j * np.sin(theta / 2.0)
+    X = gate_x()
+    XX = np.kron(X, X)
+    return (c * np.eye(4) + s * XX).astype(np.complex128)
+
+
+def gate_ryy(theta: float) -> np.ndarray:
+    Y = np.array([[0.0, -1j], [1j, 0.0]], dtype=np.complex128)
+    YY = np.kron(Y, Y)
+    c = np.cos(theta / 2.0)
+    s = -1j * np.sin(theta / 2.0)
+    return (c * np.eye(4) + s * YY).astype(np.complex128)
+
+
+def gate_rzz(theta: float) -> np.ndarray:
+    Z = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=np.complex128)
+    ZZ = np.kron(Z, Z)
+    c = np.cos(theta / 2.0)
+    s = -1j * np.sin(theta / 2.0)
+    return (c * np.eye(4) + s * ZZ).astype(np.complex128)
+
+
+def build_controlled_unitary(U: np.ndarray, num_controls: int, ctrl_state: list[int] | None = None) -> np.ndarray:
+    """Build a dense multi-controlled unitary.
+
+    Layout: [controls..., targets...]. If controls match ctrl_state, apply U on targets, else identity.
+    U must be shape (2^k, 2^k) for some k>=1.
+    """
+    if num_controls < 1:
+        return U.astype(np.complex128)
+    dim_t = U.shape[0]
+    k = int(np.log2(dim_t))
+    assert dim_t == (1 << k) and U.shape == (dim_t, dim_t)
+    m = num_controls
+    if ctrl_state is None:
+        ctrl_state = [1] * m
+    assert len(ctrl_state) == m
+    dim_c = 1 << m
+    dim = dim_c * dim_t
+    out = np.zeros((dim, dim), dtype=np.complex128)
+    for mask in range(dim_c):
+        # block row/col slice for this control pattern
+        row = mask * dim_t
+        if all(((mask >> i) & 1) == ctrl_state[m - 1 - i] for i in range(m)):
+            out[row:row + dim_t, row:row + dim_t] = U
+        else:
+            out[row:row + dim_t, row:row + dim_t] = np.eye(dim_t, dtype=np.complex128)
+    return out
+
+
 # ---- Statevector helpers ----
 def init_statevector(num_qubits: int) -> np.ndarray:
     if num_qubits <= 0:
@@ -60,10 +152,11 @@ def init_statevector(num_qubits: int) -> np.ndarray:
 def apply_1q_statevector(backend: Any, state: np.ndarray, gate2: np.ndarray, qubit: int, num_qubits: int) -> np.ndarray:
     psi = state.reshape([2] * num_qubits)
     letters = list("abcdefghijklmnopqrstuvwxyz")
-    in_letters = letters[:num_qubits]
-    in_letters_q = in_letters.copy(); in_letters_q[qubit] = 'b'
-    out_letters = in_letters.copy(); out_letters[qubit] = 'a'
-    spec = f"ab,{''.join(in_letters_q)}->{''.join(out_letters)}"
+    # Reserve 'a','b' for gate indices; use distinct axis symbols starting from 'c'
+    axes = letters[2:2 + num_qubits]
+    in_axes = axes.copy(); in_axes[qubit] = 'b'
+    out_axes = axes.copy(); out_axes[qubit] = 'a'
+    spec = f"ab,{''.join(in_axes)}->{''.join(out_axes)}"
     arr = _einsum_backend(backend, spec, gate2, psi)
     return arr.reshape(-1)
 
@@ -73,10 +166,11 @@ def apply_2q_statevector(backend: Any, state: np.ndarray, gate4: np.ndarray, q0:
         return state
     psi = state.reshape([2] * num_qubits)
     letters = list("abcdefghijklmnopqrstuvwxyz")
-    in_letters = letters[:num_qubits]
-    in_letters_q = in_letters.copy(); in_letters_q[q0] = 'c'; in_letters_q[q1] = 'd'
-    out_letters = in_letters.copy(); out_letters[q0] = 'a'; out_letters[q1] = 'b'
-    spec = f"abcd,{''.join(in_letters_q)}->{''.join(out_letters)}"
+    # Reserve 'a','b','c','d' for gate indices; use distinct axis symbols starting from 'e'
+    axes = letters[4:4 + num_qubits]
+    in_axes = axes.copy(); in_axes[q0] = 'c'; in_axes[q1] = 'd'
+    out_axes = axes.copy(); out_axes[q0] = 'a'; out_axes[q1] = 'b'
+    spec = f"abcd,{''.join(in_axes)}->{''.join(out_axes)}"
     arr = _einsum_backend(backend, spec, gate4.reshape(2, 2, 2, 2), psi)
     return arr.reshape(-1)
 
@@ -98,11 +192,15 @@ def init_density(num_qubits: int) -> np.ndarray:
 
 def apply_1q_density(backend: Any, rho: np.ndarray, U: np.ndarray, q: int, n: int) -> np.ndarray:
     psi = rho.reshape([2] * (2 * n))
-    letters = list("abcdefghijklmnopqrstuvwxyz")
-    r = letters[:n]; c = letters[n:2*n]
-    r_in = r.copy(); c_in = c.copy()
+    letters = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    reserved = set(['a', 'b', 'x', 'y'])
+    # choose axis symbols disjoint from reserved
+    axis_symbols = [ch for ch in letters if ch not in reserved]
+    r_axes = axis_symbols[:n]
+    c_axes = axis_symbols[n:2 * n]
+    r_in = r_axes.copy(); c_in = c_axes.copy()
     r_in[q] = 'a'; c_in[q] = 'b'
-    r_out = r.copy(); c_out = c.copy()
+    r_out = r_axes.copy(); c_out = c_axes.copy()
     r_out[q] = 'x'; c_out[q] = 'y'
     spec = f"xa,{''.join(r_in + c_in)},by->{''.join(r_out + c_out)}"
     Udag = np.conj(U.T)
@@ -114,12 +212,15 @@ def apply_2q_density(backend: Any, rho: np.ndarray, U4: np.ndarray, q0: int, q1:
     if q0 == q1:
         return rho
     psi = rho.reshape([2] * (2 * n))
-    letters = list("abcdefghijklmnopqrstuvwxyz")
-    r = letters[:n]; c = letters[n:2*n]
-    r_in = r.copy(); c_in = c.copy()
+    letters = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    reserved = set(['a', 'b', 'c', 'd', 'w', 'x', 'y', 'z'])
+    axis_symbols = [ch for ch in letters if ch not in reserved]
+    r_axes = axis_symbols[:n]
+    c_axes = axis_symbols[n:2 * n]
+    r_in = r_axes.copy(); c_in = c_axes.copy()
     r_in[q0] = 'a'; r_in[q1] = 'b'
     c_in[q0] = 'c'; c_in[q1] = 'd'
-    r_out = r.copy(); c_out = c.copy()
+    r_out = r_axes.copy(); c_out = c_axes.copy()
     r_out[q0] = 'w'; r_out[q1] = 'x'
     c_out[q0] = 'y'; c_out[q1] = 'z'
     spec = f"wxab,{''.join(r_in + c_in)},yzcd->{''.join(r_out + c_out)}"
@@ -130,14 +231,11 @@ def apply_2q_density(backend: Any, rho: np.ndarray, U4: np.ndarray, q0: int, q1:
 
 
 def exp_z_density(backend: Any, rho: np.ndarray, q: int, n: int) -> float:
-    rho_t = rho.reshape([2] * (2 * n))
-    letters = list("abcdefghijklmnopqrstuvwxyz")
-    r = letters[:n]; c = letters[n:2*n]
-    r_in = r.copy(); c_in = c.copy()
-    r_in[q] = 'a'; c_in[q] = 'b'
-    spec = f"ab,{''.join(r_in + c_in)}->"
-    Z = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=np.complex128)
-    val = _einsum_backend(backend, spec, Z, rho_t)
-    return float(np.real_if_close(val))
+    # Fast path via diagonal populations; correct for Z expectation
+    dim = 1 << n
+    diag = np.real(np.diag(rho))
+    bits = (np.arange(dim) >> (n - 1 - q)) & 1
+    signs = 1.0 - 2.0 * bits
+    return float(np.sum(diag * signs))
 
 

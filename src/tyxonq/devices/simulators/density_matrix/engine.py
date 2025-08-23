@@ -1,3 +1,13 @@
+"""Density matrix simulator engine.
+
+This engine simulates the mixed state rho with a dense 2^n x 2^n matrix.
+Characteristics:
+- Complexity: memory O(4^n), time ~O(poly(gates)*4^n) (more expensive than statevector)
+- Noise: native Kraus channel application via devices.simulators.noise.channels
+- Features: supports h/rz/rx/cx, measure_z expectations; best suited for noise studies
+- Numerics: uses unified kernels in devices.simulators.gates with ArrayBackend.
+"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, TYPE_CHECKING
@@ -45,6 +55,11 @@ class DensityMatrixEngine:
                 rho = self._apply_noise_if_any(rho, noise, [c, t], n)
             elif name == "measure_z":
                 measures.append(int(op[1]))
+            elif name == "project_z":
+                q = int(op[1]); keep = int(op[2])
+                rho = self._project_z(rho, q, keep, n)
+            elif name == "reset":
+                q = int(op[1]); rho = self._project_z(rho, q, 0, n)
 
         expectations: Dict[str, float] = {}
         for q in measures:
@@ -84,5 +99,17 @@ class DensityMatrixEngine:
         except Exception:
             return rho
         return rho
+    
+    def _project_z(self, rho: np.ndarray, qubit: int, keep: int, n: int) -> np.ndarray:
+        # Projector |0><0| or |1><1| on `qubit` using apply_1q_density
+        if int(keep) == 0:
+            P = np.array([[1.0, 0.0], [0.0, 0.0]], dtype=np.complex128)
+        else:
+            P = np.array([[0.0, 0.0], [0.0, 1.0]], dtype=np.complex128)
+        rho2 = apply_1q_density(self.backend, rho, P, qubit, n)
+        tr = np.trace(rho2)
+        if abs(tr) > 0:
+            rho2 = rho2 / tr
+        return rho2
 
 

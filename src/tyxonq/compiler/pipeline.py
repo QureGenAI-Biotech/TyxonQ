@@ -51,6 +51,10 @@ def _resolve_stage(name: str) -> "Pass":
         from .stages.gradients.parameter_shift_pass import ParameterShiftPass
 
         return ParameterShiftPass()
+    if name == "simplify/lightcone":
+        from .stages.simplify.lightcone import LightconeSimplifyPass
+
+        return LightconeSimplifyPass()
 
     raise ValueError(f"Unknown stage: {name}")
 

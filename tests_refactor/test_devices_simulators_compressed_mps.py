@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tyxonq.devices.simulators.compressed_state.matrix_product_state import (
+from tyxonq.devices.simulators.matrix_product_state.matrix_product_state import (
     MPSState,
     init_product_state,
     apply_1q,

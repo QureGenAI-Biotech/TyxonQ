@@ -123,9 +123,9 @@ src/tyxonq/
   devices/
     base.py                   # Device 抽象/能力声明
     simulators/
-      wavefunction/           # 波函数法（原 statevector）
-      density_matrix/         # 密度矩阵法（原 densitymatrix）
-      compressed_state/       # 压缩态模拟器（面向大尺度/低秩态的高效模拟）
+      statevector/            # 纯态（原 wavefunction）
+      density_matrix/         # 密度矩阵法
+      matrix_product_state/       # 压缩态模拟器（面向大尺度/低秩态态的高效模拟）
         backends/
           backend_base.py     # 压缩态后端协议
           pytorch_backend.py  # 基于 PyTorch 的实现
@@ -140,7 +140,7 @@ src/tyxonq/
     executor.py
 
   numerics/
-    api.py                    # ArrayBackend 协议与工厂
+    api.py                    # ArrayBackend 协议与工厂（已用于模拟器内核）
     backends/
       numpy_backend.py
       pytorch_backend.py
@@ -155,7 +155,7 @@ src/tyxonq/
       custatevec.py           # NVIDIA cuStateVec（波函数加速）
       custom_ops.py           # 自定义核/优化路径
 
-  postprocessing/             # 原 results/ 更名
+  postprocessing/             # 原 results/ 更名（io/metrics/readout/qem 已迁移）
     mitigation/
     readout/
     metrics.py
@@ -192,14 +192,14 @@ src/tyxonq/
 | `src/tyxonq/channels.py` | `src/tyxonq/core/operations/` | 通道操作合并管理 |
 | `src/tyxonq/quantum.py` | `src/tyxonq/core/ir/` | 电路/算符表示拆分至 circuit/hamiltonian |
 | `src/tyxonq/circuit.py` | `src/tyxonq/core/ir/circuit.py` | 作为 IR 的核心对象 |
-| `src/tyxonq/densitymatrix.py` | `src/tyxonq/devices/simulators/densitymatrix/` | 执行层模拟器实现 |
+| `src/tyxonq/densitymatrix.py` | `src/tyxonq/devices/simulators/density_matrix/engine.py` | 执行层模拟器实现（已达语义对齐，可删 legacy） |
 | `src/tyxonq/mpscircuit.py` | `src/tyxonq/devices/simulators/mps/` | MPS 模拟器内核与包装 |
 | `src/tyxonq/mps_base.py` | `src/tyxonq/devices/simulators/mps/` | 与上同 |
 | `src/tyxonq/noisemodel.py` | `src/tyxonq/postprocessing/mitigation/` | 噪声/误差缓解归后处理；必要时设备校准配合 |
 | `src/tyxonq/results/` | `src/tyxonq/postprocessing/` | 目录整体更名（保持语义） |
 | `src/tyxonq/results/readout_mitigation.py` | `src/tyxonq/postprocessing/readout/` | 读出校正 |
 | `src/tyxonq/results/qem/` | `src/tyxonq/postprocessing/mitigation/` | 误差缓解方法 |
-| `src/tyxonq/compiler/qiskit_compiler.py` | `src/tyxonq/compiler/targets/qiskit/compiler.py` | 目标平台适配，解耦通用 stage |
+| `src/tyxonq/compiler/qiskit_compiler.py` | `src/tyxonq/compiler/providers/qiskit/{qiskit_compiler.py,dialect.py}` | 目标适配放入 provider；方言/映射在 `dialect.py` |
 | `src/tyxonq/backends/*` | `src/tyxonq/numerics/backends/*` + `src/tyxonq/devices/simulators/*` | 前端数值与执行后端解耦 |
 | `src/tyxonq/torchnn.py` | `examples/` 或 `app/chem/` 相关 | 训练流程示例化/领域化 |
 | `src/tyxonq/templates/*` | 移除（合并到 applications 或 examples） | 以应用为准，不再单列模板 |
@@ -714,6 +714,56 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 #### 会话与执行策略
 - `session` 负责：批量/异步提交、重试、合并、记录 metadata（向量化/回退/每段耗时）。
 - 支持 shot vectors 与分段执行计划；
+
+### devices/hardware 与 cloud API 一体化（新增）
+
+为满足“保留 set_token + 指定 provider/device 即可上真机”的体验并便于多供应商接入（如 TyxonQ 自研、IBM Quantum），我们将硬件适配与云 API 门面一体化：
+
+- 目录设计（与模拟器平行）
+  - `cloud/apis.py`（对外门面，仅路由）
+    - `set_token(token, provider)`、`set_default(provider, device, **opts)`
+    - `device("tyxonq.homebrew_s2", shots=...)` 语法糖
+    - `run/submit/result/cancel/status`
+  - `devices/hardware/`
+    - `config.py`：统一配置中心（默认 provider/device、通用运行选项、token/endpoint 注册与校验，支持环境变量覆盖）
+    - `session.py`：作业生命周期（JobHandle、轮询/重试、结果规约、错误类别统一）
+    - `tyxonq/driver.py`：TyxonQ 云后端适配（HTTP 提交/查询），IR→TQASM/QASM 打包与解析
+    - `ibm/driver.py`：IBM Quantum 适配，复用 `compiler/providers/qiskit/dialect.py` 做 IR↔Qiskit 转换与作业提交
+
+- 职责边界
+  - `cloud/apis.py`：仅做外观层与参数解析；不含业务逻辑
+  - `devices/hardware/config.py`：集中读写与缓存默认项与 token；provider 子配置仅声明 schema/校验
+  - `devices/hardware/session.py`：统一 Job 接口与轮询策略、错误规约、结果标准化（counts + metadata）
+  - `devices/hardware/<vendor>/driver.py`：供应商特定实现，完成“IR→方言→提交→结果解析”的闭环
+
+- 设计要点
+  - 不再单独维护 `cloud.registry` 文件；provider 映射采用轻量字典，驻留在 `cloud/apis.py` 或 `devices/hardware/__init__.py`
+  - 设备命名统一为 `"{provider}.{device_name}"`，同时支持显式 `provider=..., device=...`
+  - 结果规约与后处理对齐 `postprocessing/io.py` 与 `postprocessing/metrics.py`
+
+- 最小落地清单（DoD）
+  1. `cloud/apis.py`：`set_token/set_default/device/run/submit_task/result/cancel`
+  2. `devices/hardware/config.py`：默认项、token、endpoint 的集中管理（含环境变量覆盖）
+  3. `devices/hardware/session.py`：`JobHandle`、`status`、指数退避轮询、错误规约、`RunResult` 标准结构
+  4. `devices/hardware/tyxonq/driver.py`：迁移现有 TyxonQ HTTP 调用流到统一接口
+  5. `devices/hardware/ibm/driver.py`：基于 qiskit 方言的最小可用提交流程
+  6. 兼容层：`cloud/apis.py` 保留旧函数名薄封装（deprecated），内部路由到 `cloud/api.py`
+  7. 冒烟测试：stubbed providers 下 `run/submit/result` 的最小用例与 counts 规约
+
+- 使用示例（对齐现 README 流程）
+  - TyxonQ：
+    - `tq.apis.set_token("<TQ_API_KEY>", provider="tyxonq")`
+    - `dev = tq.apis.device("tyxonq.homebrew_s2", shots=100)`
+    - `res = tq.apis.run(circuit, device=dev)` 或 `job = tq.cloud.submit_task(...); res = tq.apis.result(job)`
+    - `provider = "tyxonq"  device = "homebrew_s2"  task = tq.apis.submit_task(provider = provider,device = device,circuit = c,shots = 100)`
+  - IBM Quantum：
+    - `tq.apis.set_token({"ibm": "<IBMQ_TOKEN>"}, provider="ibm")`
+    - `dev = tq.apis.device("ibm.ibm_backend", shots=1024)`
+    - `res = tq.apis.run(circuit, device=dev, transpile_opts={...})`
+
+- 迁移提示
+  - 旧 `cloud/apis.py` 与现 TyxonQ 真机例子维持可用（经薄封装）；新项目推荐使用 `cloud/apis.py`
+  - provider 扩展遵循 `devices/hardware/<vendor>/driver.py` 模式增量接入
 
 #### 数值后端（ArrayBackend）切换计划（新增）
 

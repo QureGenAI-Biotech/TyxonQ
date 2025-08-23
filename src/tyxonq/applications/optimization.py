@@ -9,8 +9,45 @@ import tensorflow as tf
 import scipy.optimize as optimize
 
 from ..cons import backend
-from ..quantum import measurement_results
-from ..interfaces import scipy_interface
+from ..postprocessing.io import sample2all as measurement_results
+def scipy_interface(fun, shape=None, jit=True, gradient=True):
+    from typing import Any, Tuple
+    import numpy as np
+    from ..cons import backend, dtypestr
+
+    if gradient:
+        vg = backend.value_and_grad(fun, argnums=0)
+        if jit:
+            vg = backend.jit(vg)
+
+        def scipy_vg(*args: Any, **kws: Any) -> Tuple[Any, Any]:
+            # Expect numpy input, convert to backend tensor
+            a0 = args[0]
+            a0 = backend.convert_to_tensor(a0)
+            if shape is not None:
+                a0 = backend.reshape(a0, shape)
+            rest = args[1:]
+            vs, gs = vg(a0, *rest, **kws)
+            vs = backend.numpy(vs).real.astype(np.float64)
+            gs = backend.numpy(backend.reshape(gs, [-1])).real.astype(np.float64)
+            return vs, gs
+
+        return scipy_vg
+
+    if jit:
+        fun = backend.jit(fun)
+
+    def scipy_v(*args: Any, **kws: Any) -> Any:
+        import numpy as np
+        a0 = backend.convert_to_tensor(args[0], dtype=dtypestr)
+        if shape is not None:
+            a0 = backend.reshape(a0, shape)
+        rest = args[1:]
+        vs = fun(a0, *rest, **kws)
+        vs = backend.numpy(vs).real.astype(np.float64)
+        return vs
+
+    return scipy_v
 from ..templates.ansatz import QAOA_ansatz_for_Ising
 from ..templates.conversions import QUBO_to_Ising
 

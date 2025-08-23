@@ -8,7 +8,6 @@ from typing import Any
 
 from ..circuit import Circuit
 from ..cons import backend, dtypestr
-from ..quantum import QuOperator
 from .. import gates as G
 
 Tensor = Any
@@ -164,9 +163,7 @@ def operator_expectation(c: Circuit, hamiltonian: Any) -> Tensor:
     :return: a real and scalar tensor of shape [] as the expectation value
     :rtype: Tensor
     """
-    if isinstance(hamiltonian, QuOperator):
-        return mpo_expectation(c, hamiltonian)
-    elif backend.is_sparse(hamiltonian):
+    if backend.is_sparse(hamiltonian):
         return sparse_expectation(c, hamiltonian)
     else:
         w = c.state(form="ket")
@@ -201,21 +198,7 @@ def sparse_expectation(c: Circuit, hamiltonian: Tensor) -> Tensor:
         return backend.real(contrib.sum())
 
 
-def mpo_expectation(c: Circuit, mpo: QuOperator) -> Tensor:
-    """
-    Evaluate expectation of operator ``mpo`` defined in ``QuOperator`` MPO format
-    with the output quantum state from circuit ``c``.
-
-    :param c: The circuit for the output state
-    :type c: Circuit
-    :param mpo: MPO operator
-    :type mpo: QuOperator
-    :return: a real and scalar tensor of shape [] as the expectation value
-    :rtype: Tensor
-    """
-    mps = c.get_quvector()
-    e = (mps.adjoint() @ mpo @ mps).eval_matrix()
-    return backend.real(e)[0, 0]
+## MPO expectation via QuOperator is deprecated with removal of legacy quantum.
 
 
 def heisenberg_measurements(
