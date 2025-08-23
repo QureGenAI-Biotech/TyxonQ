@@ -122,5 +122,64 @@ This document will be incrementally updated as we complete the next milestones.
 - ArrayBackend 计划：在 MIGRATION_PLAN 增补三阶段切换路线，并在模拟器注入后端句柄；
 - 测试：新增例子型端到端测试与模拟器冒烟测试，现有测试绿色。
 
+## 当下进度
+- 我现在开始实现 DensityMatrixEngine：用 ArrayBackend 优先的 einsum 路径完成 U ρ U†（单/双比特门），Z 期望 Tr(ρ·Z_q)；参考原始 densitymatrix 实现思路取长补短，并补端到端测试。
+
+对照 MIGRATION_PLAN 进度
+- 已完成（可用态）:
+  - 核心与编译：core/ir 与 builder，providers 重构（默认 provider=default, output=ir），pipeline 与 stages（rewrite/measurement、shot_scheduler），parameter_shift 阶段接入。
+  - 调度与会话：shot 调度融合设备约束（max_shots_per_job、batch_id），session.execute_plan 贯通。
+  - 模拟器骨架：wavefunction/density_matrix/compressed_state 目录建立；WavefunctionEngine 最小可用并接入 ArrayBackend 注入点。
+  - Qiskit 路径：弃用 API 清理、选项过滤；兼容测试通过。
+  - 读出与指标：readout mitigation、metrics/io 迁移；端到端与示例型测试新增。
+  - 计划与文档：ArrayBackend 三阶段切换计划写入 MIGRATION_PLAN；REFACTORING_WORKLOG 已更新。
+
+- 进行中/下一步（近期交付）:
+  - WavefunctionEngine：把内部运算全面切到 ArrayBackend matmul/einsum（已起步，继续覆盖更多门）。
+  - DensityMatrixEngine：完成门语义与 Z 期望（当前开始落实）并补测试。
+  - compressed_state：定义 backends 协议与最小实现，串联 numerics 选择。
+
+- 未完成（后续阶段）:
+  - 编译器：QASM2 直出、Qiskit 路线布局/路由更完整的优化映射与选项矩阵。
+  - 会话/执行策略：异步、重试、并行与运行时指标采集（设备/段耗时、回退原因）。
+  - Numerics 深化：矢量化安全诊断、autodiff/bridge、性能基线与回退统计。
+  - 应用层与工具：chem/finance（RHF/积分/映射 JW/Parity/BK）、config/loader、utils 拆分。
+  - 文档：PySCF 风格文档体系内容充实（Quickstart/UG/API/教程与案例）。
+
+- 粗略完成度（按模块）:
+  - IR/编译/调度/会话：~70%（核心链路可用，优化与策略未完）
+  - 模拟器：~40%（WF 可跑，DM/CS 待实装）
+  - Numerics 集成：~30%（注入就绪，算子运算迁移中）
+  - 文档与应用：~15%（骨架就绪，内容待补）
+
+我现在继续落地 DensityMatrixEngine 的语义实现与测试，完成后回报。
+
 ## Update Timestamp
 - Last update: 2025-08-23 00:54:00 CST
+
+
+
+## Quantum module split (completed)
+
+- Mapped legacy `quantum.py` functions to new modules:
+  - core.operations.pauli: `ps2xyz`/`xyz2ps`, dense/COO Pauli sum, `heisenberg_hamiltonian`
+  - postprocessing.io: sampling/counts/transform helpers
+  - postprocessing.metrics: entropy/renyi/free energies, distances, partial transpose/negativity, reduced_density_matrix/mutual_information, `taylorlnm`, `truncated_free_energy`, `reduced_wavefunction`
+  - compiler.translation.mpo_converters: tensornetwork/quimb MPO → dense matrix
+
+- Tests: added/updated tests under `tests_refactor/` for pauli ops, metrics extras, mpo converters.
+- Status: full suite green; legacy `quantum.py` marked for deletion after final docs update.
+
+## MPS integration (completed)
+
+- `devices/simulators/compressed_state/matrix_product_state.py`: minimal MPS ops (1q/2q with SVD, swap routing, bond dims) with tests.
+- Engine integration: `compressed_state/engine.py` now uses MPS path; expectations via reconstructed statevector.
+
+## Postprocessing modules
+
+- `postprocessing/io.py`: counts CSV, reverse/sort/normalize, vec↔count, marginal, plot, sampling/count transforms, correlations.
+- `postprocessing/metrics.py`: metrics and state transforms (see above). All functions documented and tested.
+
+## MPO converters
+
+- `compiler/translation/mpo_converters.py`: duck-typed converters for Tensornetwork/Quimb MPO to dense matrix; unit tests added.

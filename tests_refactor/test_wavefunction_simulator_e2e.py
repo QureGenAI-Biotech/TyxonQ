@@ -10,6 +10,7 @@ def test_wavefunction_simulator_minimal_end_to_end():
     plan = schedule(circ, total_shots=12)
     out = execute_plan(sim, plan)
     assert out["metadata"]["total_shots"] == 12
-    assert out["expectations"].get("Z1", 0.0) == 12.0
+    # Bell state |00>+|11| / sqrt(2) => Z on qubit 1 has expectation 0.0
+    assert out["expectations"].get("Z1", 0.0) == 0.0
 
 

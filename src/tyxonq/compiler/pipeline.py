@@ -23,10 +23,18 @@ def _resolve_stage(name: str) -> "Pass":
         from .stages.decompose import NoOpDecomposePass
 
         return NoOpDecomposePass()
+    if name == "decompose/rotations":
+        from .stages.decompose.rotations import RotationsDecomposePass
+
+        return RotationsDecomposePass()
     if name == "rewrite/measurement":
         from .stages.rewrite.measurement import MeasurementRewritePass
 
         return MeasurementRewritePass()
+    if name == "rewrite/merge_prune":
+        from .stages.rewrite.merge_prune import MergePrunePass
+
+        return MergePrunePass()
     if name == "layout":
         from .stages.layout import NoOpLayoutPass
 
