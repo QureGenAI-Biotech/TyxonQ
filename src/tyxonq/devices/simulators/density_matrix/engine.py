@@ -55,6 +55,9 @@ class DensityMatrixEngine:
                 rho = self._apply_noise_if_any(rho, noise, [c, t], n)
             elif name == "measure_z":
                 measures.append(int(op[1]))
+            elif name == "barrier":
+                # no-op for simulation
+                continue
             elif name == "project_z":
                 q = int(op[1]); keep = int(op[2])
                 rho = self._project_z(rho, q, keep, n)

@@ -14,12 +14,13 @@ from ....core.ir import Circuit
 
 OP_MAPPING: Dict[str, str] = {
     "h": "h",
+    "rx": "rx",
     "rz": "rz",
     "cx": "cx",
 }
 
 
-DEFAULT_BASIS_GATES: List[str] = ["h", "rz", "cx"]
+DEFAULT_BASIS_GATES: List[str] = ["h", "rx", "rz", "cx"]
 DEFAULT_OPT_LEVEL: int = 2
 
 
@@ -142,7 +143,7 @@ def qasm2_dumps_compat(qc: Any) -> str:
 def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
     """Convert IR `Circuit` to a Qiskit `QuantumCircuit`.
 
-    Supports ops: h, rz(theta), cx, measure_z.
+    Supports ops: h, rx(theta), rz(theta), cx, measure_z.
     """
     if QuantumCircuit is None:
         raise RuntimeError("qiskit is not available; please install qiskit to use this provider")
@@ -153,6 +154,8 @@ def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
         name = op[0]
         if name == "h":
             qc.h(int(op[1]))
+        elif name == "rx":
+            qc.rx(float(op[2]), int(op[1]))
         elif name == "rz":
             qc.rz(float(op[2]), int(op[1]))
         elif name == "cx":
@@ -162,20 +165,24 @@ def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
         else:
             raise NotImplementedError(f"Unsupported op for qiskit adapter: {name}")
 
-    if add_measures and measure_indices:
-        if ClassicalRegister is None:
-            raise RuntimeError("qiskit classical register not available")
-        creg = ClassicalRegister(len(measure_indices))
-        qc.add_register(creg)
-        for i, q in enumerate(measure_indices):
-            qc.measure(q, creg[i])
+    if add_measures:
+        if measure_indices:
+            if ClassicalRegister is None:
+                raise RuntimeError("qiskit classical register not available")
+            creg = ClassicalRegister(len(measure_indices))
+            qc.add_register(creg)
+            for i, q in enumerate(measure_indices):
+                qc.measure(q, creg[i])
+        else:
+            # No explicit measure ops in IR: measure all for execution outputs
+            qc.measure_all()
     return qc
 
 
 def from_qiskit(qc: Any) -> Circuit:
     """Convert a Qiskit `QuantumCircuit` to IR `Circuit`.
 
-    Recognizes: h, rz(theta), cx, measure.
+    Recognizes: h, rx(theta), rz(theta), cx, measure.
     """
     ops: List[Any] = []
     for inst in getattr(qc, "data", []):
@@ -193,6 +200,9 @@ def from_qiskit(qc: Any) -> Circuit:
 
         if name == "h":
             ops.append(("h", int(qc.find_bit(qubits[0]).index)))
+        elif name == "rx":
+            theta = float(params[0]) if params else 0.0
+            ops.append(("rx", int(qc.find_bit(qubits[0]).index), theta))
         elif name == "rz":
             theta = float(params[0]) if params else 0.0
             ops.append(("rz", int(qc.find_bit(qubits[0]).index), theta))
@@ -203,6 +213,9 @@ def from_qiskit(qc: Any) -> Circuit:
         elif name == "measure":
             q = int(qc.find_bit(qubits[0]).index)
             ops.append(("measure_z", q))
+        elif name == "barrier":
+            # Non-unitary barrier: ignore for IR ops; layout/scheduling info not preserved here
+            continue
         else:
             raise NotImplementedError(f"Unsupported qiskit op in adapter: {name}")
 

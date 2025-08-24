@@ -18,6 +18,8 @@ def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
     # Skeleton: return empty for now; will populate via qiskit providers.
     return []
 
+def run(*args,**kwargs):
+    return submit_task(*args,**kwargs)
 
 def submit_task(
     device: str,

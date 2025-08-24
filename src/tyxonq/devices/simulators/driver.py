@@ -74,6 +74,10 @@ def run(
         def results(self) -> Dict[str, Any]:
             return dict(self._results)
 
+        # Normalize: add details() same as hardware task
+        def details(self) -> list:
+            return self.results()
+
     def _one(c: Any) -> Any:
         out = eng.run(c, shots=shots)
         results = out.get("results") or out.get("expectations") or {}

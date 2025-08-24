@@ -9,7 +9,7 @@ import sys as _sys
 import importlib as _importlib
 
 __version__ = "0.5.0"
-__author__ = "TyxonQ Authors"
+__author__ = "TyxonQ Development Team"
 
 # --- Cloud API re-exports and module aliases ---
 # We alias `tyxonq.api` and `tyxonq.apis` to `tyxonq.cloud.apis` so both old and
@@ -130,6 +130,15 @@ try:  # best-effort; keep import robust if chem is not present
 except Exception:
     pass
 
+# --- Top-level core IR exports ---
+try:
+    from .core import Circuit, Hamiltonian  # type: ignore
+    
+    # expose in module namespace and __all__
+    __all__.extend(["Circuit", "Hamiltonian"])
+except Exception:
+    pass
+
 # --- Top-level numerics backend selection convenience ---
 try:
     from .numerics.context import set_backend as _set_backend  # type: ignore
@@ -144,5 +153,28 @@ try:
 
     # expose in module namespace and __all__
     __all__.append("set_backend")
+except Exception:
+    pass
+
+# --- Top-level noise controls (simulator) ---
+try:
+    from .devices import base as _devbase  # type: ignore
+
+    def enable_noise(enabled: bool = True, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Globally enable/disable simulator noise and optionally set default config.
+
+        Example:
+            tyxonq.enable_noise(True, {"type": "depolarizing", "p": 0.01})
+        """
+
+        return _devbase.enable_noise(enabled=enabled, config=config)
+
+    def is_noise_enabled() -> bool:
+        return _devbase.is_noise_enabled()
+
+    def get_noise_config() -> Dict[str, Any]:
+        return _devbase.get_noise_config()
+
+    __all__.extend(["enable_noise", "is_noise_enabled", "get_noise_config"])
 except Exception:
     pass

@@ -101,6 +101,10 @@ class MatrixProductStateEngine:
                     self._attenuate(noise, z_atten, [q1, q2])
             elif name == "measure_z":
                 measures.append(int(op[1]))
+            elif name == "barrier":
+                # no-op
+                continue
+        # Barrier 不是量子门（非幺正、无矩阵表示），它是编译/调度指令，用来限制优化重排或做分段同步，对量子态本身不产生物理作用。
         expectations: Dict[str, float] = {}
         # Compute expectations by reconstructing statevector for now (small n tests)
         psi = mps_to_statevector(state)

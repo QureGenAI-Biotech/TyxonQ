@@ -98,6 +98,105 @@ def resolve_driver(provider: str, device: str):
     raise ValueError(f"Unsupported provider: {provider}")
 
 
+def init(*, provider: Optional[str] = None, device: Optional[str] = None, token: Optional[str] = None) -> None:
+    """Initialize default provider/device and optionally set token.
+
+    This is a light wrapper around hardware.config helpers.
+    """
+    from .hardware import config as hwcfg
+
+    if token is not None:
+        hwcfg.set_token(token, provider=provider, device=device, persist=True)
+    if provider is not None or device is not None:
+        hwcfg.set_default(provider=provider, device=device)
+
+
+_NOISE_ENABLED: bool = False
+_NOISE_CONFIG: Dict[str, Any] | None = None
+_DEFAULT_NOISE: Dict[str, Any] = {"type": "depolarizing", "p": 0.0}
+
+def enable_noise(enabled: bool = True, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    global _NOISE_ENABLED, _NOISE_CONFIG
+    _NOISE_ENABLED = bool(enabled)
+    if config is not None:
+        _NOISE_CONFIG = dict(config)
+    return {"enabled": _NOISE_ENABLED, "config": _NOISE_CONFIG or {}}
+
+def is_noise_enabled() -> bool:
+    return _NOISE_ENABLED
+
+def get_noise_config() -> Dict[str, Any]:
+    return dict(_NOISE_CONFIG or {})
+
+def run(
+    *,
+    provider: Optional[str] = None,
+    device: Optional[str] = None,
+    circuit: Optional["Circuit"] = None,
+    source: Optional[Union[str, Sequence[str]]] = None,
+    shots: Union[int, Sequence[int]] = 1024,
+    **opts: Any,
+) -> Any:
+    """Unified device-level selector to execute circuits or sources.
+
+    Responsibilities:
+    - Choose driver via provider/device defaults
+    - If `source` provided, submit directly (no compilation here)
+    - If `circuit` provided:
+      - simulator/local: call simulator driver run
+      - hardware: require caller to have compiled to `source`
+    - Normalize return: single submission -> single task; batch -> list of tasks
+    """
+    from .hardware import config as hwcfg
+
+    prov = provider or hwcfg.get_default_provider()
+    dev = device or hwcfg.get_default_device()
+    tok = hwcfg.get_token(provider=prov, device=dev)
+
+    drv = resolve_driver(prov, dev)
+
+    def _normalize(out: Any) -> List[Any]:
+        # Always return a list of task-like objects for uniform handling
+        if isinstance(out, list):
+            return out
+        return [out]
+
+    # Assemble noise settings to pass to simulators if not explicitly set
+    def _inject_noise(kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        use_noise = bool(kwargs.get("use_noise", _NOISE_ENABLED))
+        noise_cfg = kwargs.get("noise")
+        if use_noise and noise_cfg is None:
+            noise_cfg = _NOISE_CONFIG or _DEFAULT_NOISE
+        if use_noise:
+            new = dict(kwargs)
+            new["use_noise"] = True
+            if noise_cfg is not None:
+                new["noise"] = noise_cfg
+            return new
+        return kwargs
+
+    # direct source path (already compiled or raw program)
+    if source is not None:
+        if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
+            if circuit is not None:
+                return _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
+            else:
+                return _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
+        else:
+            return _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
+    else:
+        # circuit path
+        if circuit is None:
+            raise ValueError("run requires either circuit or source")
+        
+        if prov not in ("simulator", "local"):
+            # hardware path requires source (compilation should have been done by caller)
+            raise ValueError("hardware run without source is not supported at device layer; compile in circuit layer")
+        if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
+            return _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
+        return _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **opts))
+
+
 def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = None, **kws: Any) -> List[str]:
     from .hardware import config as hwcfg
 

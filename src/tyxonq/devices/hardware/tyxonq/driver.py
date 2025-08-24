@@ -22,6 +22,10 @@ class TyxonQTask:
     def results(self) -> Dict[str, Any]:
         return {"results": self.results_dict or {}}
 
+    # Normalize: expose details() for compatibility with examples
+    def details(self, token: Optional[str] = None) -> list:
+        return get_task_details(self, token)
+
 
 def _endpoint(cmd: str) -> str:
     base = ENDPOINTS["tyxonq"]["base_url"]
@@ -52,6 +56,9 @@ def list_properties(device: str, token: Optional[str] = None) -> Dict[str, Any]:
         raise ValueError(f"No device details for {device}")
     return data["device"]
 
+
+def run(*args,**kwargs):
+    return submit_task(*args,**kwargs)
 
 def submit_task(
     device: str,

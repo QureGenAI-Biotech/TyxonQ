@@ -62,6 +62,9 @@ class StatevectorEngine:
                     self._attenuate(noise, z_atten, [c, t])
             elif name == "measure_z":
                 measures.append(int(op[1]))
+            elif name == "barrier":
+                # no-op for simulation
+                continue
             elif name == "project_z":
                 q = int(op[1]); keep = int(op[2])
                 state = self._project_z(state, q, keep, num_qubits)

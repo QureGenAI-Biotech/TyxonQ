@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 from typing import Any, List, Dict, Optional, Sequence, Tuple
+import warnings
 import json
 from ...compiler.api import compile as compile_api  # lazy import to avoid hard deps
 
@@ -18,9 +19,25 @@ class Circuit:
     """
 
     num_qubits: int
-    ops: List[Any]
+    ops: List[Any] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     instructions: List[Tuple[str, Tuple[int, ...]]] = field(default_factory=list)
+
+    def __init__(self, num_qubits: int, ops: Optional[List[Any]] = None, 
+                 metadata: Optional[Dict[str, Any]] = None,
+                 instructions: Optional[List[Tuple[str, Tuple[int, ...]]]] = None):
+        """Initialize a Circuit.
+        
+        Args:
+            num_qubits: Number of qubits in the circuit.
+            ops: List of operations. Defaults to empty list if not provided.
+            metadata: Circuit metadata. Defaults to empty dict if not provided.
+            instructions: List of instructions. Defaults to empty list if not provided.
+        """
+        self.num_qubits = num_qubits
+        self.ops = ops if ops is not None else []
+        self.metadata = metadata if metadata is not None else {}
+        self.instructions = instructions if instructions is not None else []
 
     def __post_init__(self) -> None:
         if self.num_qubits < 0:
@@ -235,49 +252,62 @@ class Circuit:
         *,
         provider: Optional[str] = None,
         device: Optional[str] = None,
+        source: Optional[str] = None,
         shots: int = 1024,
         compiler: str = "qiskit",
         auto_compile: bool = True,
         **opts: Any,
     ) -> Any:
-        """Submit this circuit to a provider/device.
+        """Submit this circuit via the unified device layer selector.
 
-        - simulator/local: 直接以 IR 运行
-        - 其它 provider:
-          - auto_compile=True: compile→openqasm 后提交
-          - auto_compile=False: 原样以 IR 提交（驱动需支持 IR）
+        Policy:
+        - If provider is simulator/local: delegate with circuit (no compilation here).
+        - Else (hardware): if auto_compile=True, compile to QASM2 (qiskit) then submit as source.
+          If auto_compile=False, require caller to provide source externally (raise here).
         """
-        # Resolve defaults
+        from ...devices import base as device_base
         from ...devices.hardware import config as hwcfg
 
-        prov = provider or hwcfg.get_default_provider()
-        dev = device or hwcfg.get_default_device()
-        tok = hwcfg.get_token(provider=prov, device=dev)
+        # Auto-add Z measurements across all qubits if none present (warn, non-destructive)
+        has_meas = any((op and isinstance(op, (list, tuple)) and str(op[0]).lower() == "measure_z") for op in self.ops)
+        prepared = self
+        if not has_meas:
+            nq = int(getattr(self, "num_qubits", 0))
+            if nq > 0:
+                prepared = self.extended([("measure_z", q) for q in range(nq)])
+                warnings.warn(
+                    "No explicit measurements found; auto-added Z measurements on all qubits for execution.",
+                    UserWarning,
+                )
 
-        # Simulator: IR直跑
-        if prov in ("simulator", "local"):
-            from ...devices.simulators import driver as sdrv
+        prov = (provider or hwcfg.get_default_provider() or "tyxonq").lower()
 
-            return sdrv.run(dev, tok, circuit=self, shots=shots, **opts)
-
-        # Hardware providers
-        def _hw_driver(p: str):
-            if p == "tyxonq":
-                from ...devices.hardware.tyxonq import driver as drv
-
-                return drv
-            if p == "ibm":
-                from ...devices.hardware.ibm import driver as drv
-
-                return drv
-            raise ValueError(f"Unsupported provider: {p}")
-
-        drv = _hw_driver(prov)
         if auto_compile:
-            qasm = self.compile(target="openqasm", provider="qiskit")
-            return drv.submit_task(dev, tok, source=qasm, shots=shots, **opts)
-        # No compile: submit IR as-is (driver must support IR path)
-        return drv.submit_task(dev, tok, circuit=self, shots=shots, **opts)
+            if prov in ("simulator", "local"):
+                return device_base.run(
+                    provider=provider,
+                    device=device,
+                    circuit=prepared,
+                    shots=shots,
+                    **opts,
+                )
+            qasm = prepared.compile(target="openqasm", provider="qiskit")
+            return device_base.run(
+                provider=provider,
+                device=device,
+                source=qasm,
+                shots=shots,
+                **opts,
+            )
+        else:
+            return device_base.run(
+                provider=provider,
+                device=device,
+                circuit=prepared,
+                source=source,
+                shots=shots,
+                **opts,
+            )
 
     # ---- Task helpers for cloud.api thin wrappers ----
     def get_task_details(self, task: Any, *, prettify: bool = False) -> Dict[str, Any]:
