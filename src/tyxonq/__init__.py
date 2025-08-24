@@ -64,7 +64,7 @@ if _cloud_apis is not None:
         Delegates to ``tyxonq.cloud.apis.submit_task`` and returns a Task or a list of Tasks.
         """
 
-        return _cloud_apis.submit_task(  # type: ignore[attr-defined]
+        return _cloud_apis.run(  # type: ignore[attr-defined]
             provider=provider, device=device, token=token, **task_kws
         )
 
@@ -84,7 +84,7 @@ if _cloud_apis is not None:
         - If ``wait`` is False, returns the Task or list of Tasks.
         """
 
-        tasks = _cloud_apis.submit_task(  # type: ignore[attr-defined]
+        tasks = _cloud_apis.run(  # type: ignore[attr-defined]
             provider=provider,
             device=device,
             shots=shots,
@@ -127,5 +127,22 @@ try:  # best-effort; keep import robust if chem is not present
             _sys.modules[f"tyxonq.chem.{_sub}"] = _m
         except Exception:
             pass
+except Exception:
+    pass
+
+# --- Top-level numerics backend selection convenience ---
+try:
+    from .numerics.context import set_backend as _set_backend  # type: ignore
+
+    def set_backend(name_or_instance: Any) -> None:
+        """Set global/default numerics backend (e.g., 'numpy' | 'pytorch').
+
+        This is a thin alias to ``tyxonq.numerics.context.set_backend``.
+        """
+
+        _set_backend(name_or_instance)
+
+    # expose in module namespace and __all__
+    __all__.append("set_backend")
 except Exception:
     pass

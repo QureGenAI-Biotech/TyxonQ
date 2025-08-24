@@ -26,6 +26,7 @@ class QiskitCompiler:
         target: "DeviceCapabilities" = request.get("target", {})  # type: ignore[assignment]
         options: Dict[str, Any] = request.get("options", {})
         output = str(options.get("output", "qiskit")).lower()
+        add_measures = bool(options.get("add_measures", True))
         do_transpile = bool(options.get("transpile", True))
         norm_opts = normalize_transpile_options(options)
 
@@ -40,7 +41,7 @@ class QiskitCompiler:
             ClassicalRegister = None  # type: ignore
 
         if QuantumCircuit is not None:
-            qc = ir_to_qiskit(circuit, add_measures=True)
+            qc = ir_to_qiskit(circuit, add_measures=add_measures)
         else:
             qc = None
 

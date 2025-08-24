@@ -52,7 +52,7 @@ def compile(
 
     Parameters:
         circuit: IR circuit to compile
-        provider: 'tyxonq' | 'qiskit'
+        provider: 'tyxonq' | 'qiskit'|'default' | 'native'
         output: 'ir' | 'qasm2' | 'qiskit'  # 'ir' accepted as alias of 'tyxonq'
         target: device capabilities for provider-aware compilation
         options: provider-specific compile options

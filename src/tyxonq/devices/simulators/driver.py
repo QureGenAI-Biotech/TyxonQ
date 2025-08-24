@@ -48,6 +48,17 @@ def submit_task(
     shots: Union[int, Sequence[int]] = 1024,
     **opts: Any,
 ) -> List[Any]:
+    return run(device, token, circuit=circuit, source=source, shots=shots, **opts)
+
+def run(
+    device: str,
+    token: Optional[str] = None,
+    *,
+    circuit: Optional[Union[Any, Sequence[Any]]] = None,
+    source: Optional[Union[str, Sequence[str]]] = None,
+    shots: Union[int, Sequence[int]] = 1024,
+    **opts: Any,
+) -> List[Any]:
     circuit = _qasm_to_ir_if_needed(circuit, source)
     Engine = _select_engine(device)
     eng = Engine()

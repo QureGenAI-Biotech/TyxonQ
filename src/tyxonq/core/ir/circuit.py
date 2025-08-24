@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from typing import Any, List, Dict, Optional, Sequence, Tuple
 import json
-
+from ...compiler.api import compile as compile_api  # lazy import to avoid hard deps
 
 @dataclass
 class Circuit:
@@ -180,22 +180,151 @@ class Circuit:
     def to_json_str(self, *, indent: Optional[int] = None) -> str:
         return json.dumps(self.to_json_obj(), ensure_ascii=False, indent=indent)
 
-    @classmethod
-    def from_json_obj(cls, obj: Dict[str, Any]) -> "Circuit":
-        inst_raw = obj.get("instructions", [])
-        inst: List[Tuple[str, Tuple[int, ...]]] = []
-        for n, idxs in inst_raw:
-            inst.append((str(n), tuple(int(x) for x in idxs)))
-        return cls(
-            num_qubits=int(obj.get("num_qubits", 0)),
-            ops=list(obj.get("ops", [])),
-            metadata=dict(obj.get("metadata", {})),
-            instructions=inst,
-        )
 
-    @classmethod
-    def from_json_str(cls, s: str) -> "Circuit":
-        return cls.from_json_obj(json.loads(s))
+    # ---- Provider adapters (thin convenience wrappers) ----
+    def to_openqasm(self) -> str:
+        """Serialize this IR circuit to OpenQASM 2 using the compiler facade.
+
+        Delegates to compiler API (provider='qiskit', output='qasm2').
+        """
+
+        r = compile_api(self, provider="qiskit", output="qasm2")
+        return r["circuit"]  # type: ignore[return-value]
+
+    def compile(self, *, target: str = "ir", provider: str = "default", add_measures: bool = True, **options: Any) -> Any:
+        """Compile/convert this circuit via the compiler facade.
+
+        - target: 编译产物类型或执行目标：
+          - "ir"/"native"/"tyxonq": 返回 IR（经 native pipeline 降低后）
+          - "openqasm": OpenQASM 2 字符串（需 provider='qiskit'）
+          - "qiskit": qiskit.QuantumCircuit（需 provider='qiskit'）
+          - "json": 先经 native compiler 降低 IR，再返回 JSON 序列化
+        """
+        t = str(target).lower()
+        prov = str(provider).lower()
+        if prov in ("native", "tyxonq", "default"):
+            prov = "default"
+
+        if t in ("ir", "native", "tyxonq"):
+            # Always lower via native pipeline first, returning IR
+            r = compile_api(self, provider="default", output="ir")
+            return r["circuit"]
+        if t == "json":
+            # Lower then serialize, so结构变化能反映到JSON
+            r = compile_api(self, provider="default", output="ir")
+            lowered = r["circuit"]
+            try:
+                return lowered.to_json_str()  # type: ignore[attr-defined]
+            except Exception:
+                return self.to_json_str()
+        if t == "openqasm":
+            # provider selection: default to qiskit for qasm emission
+            out = compile_api(self, provider="qiskit", output="qasm2", options={"add_measures": add_measures})
+            return out["circuit"]
+        if t == "qiskit":
+            r = compile_api(self, provider="qiskit", output="qiskit", options={"add_measures": add_measures})
+            return r["circuit"]
+        raise ValueError(f"Unsupported compile target: {target}")
+
+    def run(
+        self,
+        *,
+        provider: Optional[str] = None,
+        device: Optional[str] = None,
+        shots: int = 1024,
+        compiler: str = "qiskit",
+        auto_compile: bool = True,
+        **opts: Any,
+    ) -> Any:
+        """Submit this circuit to a provider/device.
+
+        - simulator/local: 直接以 IR 运行
+        - 其它 provider:
+          - auto_compile=True: compile→openqasm 后提交
+          - auto_compile=False: 原样以 IR 提交（驱动需支持 IR）
+        """
+        # Resolve defaults
+        from ...devices.hardware import config as hwcfg
+
+        prov = provider or hwcfg.get_default_provider()
+        dev = device or hwcfg.get_default_device()
+        tok = hwcfg.get_token(provider=prov, device=dev)
+
+        # Simulator: IR直跑
+        if prov in ("simulator", "local"):
+            from ...devices.simulators import driver as sdrv
+
+            return sdrv.run(dev, tok, circuit=self, shots=shots, **opts)
+
+        # Hardware providers
+        def _hw_driver(p: str):
+            if p == "tyxonq":
+                from ...devices.hardware.tyxonq import driver as drv
+
+                return drv
+            if p == "ibm":
+                from ...devices.hardware.ibm import driver as drv
+
+                return drv
+            raise ValueError(f"Unsupported provider: {p}")
+
+        drv = _hw_driver(prov)
+        if auto_compile:
+            qasm = self.compile(target="openqasm", provider="qiskit")
+            return drv.submit_task(dev, tok, source=qasm, shots=shots, **opts)
+        # No compile: submit IR as-is (driver must support IR path)
+        return drv.submit_task(dev, tok, circuit=self, shots=shots, **opts)
+
+    # ---- Task helpers for cloud.api thin wrappers ----
+    def get_task_details(self, task: Any, *, prettify: bool = False) -> Dict[str, Any]:
+        # For simulator tasks, the object carries a .results() method
+        if hasattr(task, "results"):
+            try:
+                return task.results()
+            except Exception:
+                pass
+        # Hardware tasks: delegate to provider driver via device string
+        dev = getattr(task, "device", None)
+        if dev is None:
+            raise ValueError("Task handle missing device information")
+        dev_str = str(dev)
+        prov = (dev_str.split("::", 1)[0]) if "::" in dev_str else "simulator"
+        from ...devices.base import resolve_driver
+        from ...devices.hardware import config as hwcfg
+
+        tok = hwcfg.get_token(provider=prov, device=dev_str)
+        drv = resolve_driver(prov, dev_str)
+        return drv.get_task_details(task, tok)
+
+    def cancel(self, task: Any) -> Any:
+        dev = getattr(task, "device", None)
+        if dev is None:
+            raise ValueError("Task handle missing device information")
+        dev_str = str(dev)
+        prov = (dev_str.split("::", 1)[0]) if "::" in dev_str else "simulator"
+        from ...devices.base import resolve_driver
+        from ...devices.hardware import config as hwcfg
+
+        tok = hwcfg.get_token(provider=prov, device=dev_str)
+        drv = resolve_driver(prov, dev_str)
+        if hasattr(drv, "remove_task"):
+            return drv.remove_task(task, tok)
+        raise NotImplementedError("cancel not supported for this provider/task type")
+
+    def submit_task(
+        self,
+        *,
+        provider: Optional[str] = None,
+        device: Optional[str] = None,
+        shots: int = 1024,
+        compiler: str = "qiskit",
+        auto_compile: bool = True,
+        **opts: Any,
+    ) -> Any:
+        # Submit is an alias of run with identical semantics
+        return self.run(provider=provider, device=device, shots=shots, compiler=compiler, auto_compile=auto_compile, **opts)
+
+    # Note: builder-style gate helpers have been moved to `CircuitBuilder`.
 
     # Instruction helpers
     def add_measure(self, *qubits: int) -> "Circuit":
@@ -218,6 +347,65 @@ class Circuit:
             new_inst.append(("barrier", tuple(range(self.num_qubits))))
         return replace(self, instructions=new_inst)
 
+    # ---- Builder-style ergonomic gate helpers (in-place; return self) ----
+    def h(self, q: int):
+        self.ops.append(("h", int(q)))
+        return self
+
+    def H(self, q: int):
+        return self.h(q)
+
+    def rz(self, q: int, theta: Any):
+        self.ops.append(("rz", int(q), theta))
+        return self
+
+    def RZ(self, q: int, theta: Any):
+        return self.rz(q, theta)
+
+    def rx(self, q: int, theta: Any):
+        self.ops.append(("rx", int(q), theta))
+        return self
+
+    def RX(self, q: int, theta: Any):
+        return self.rx(q, theta)
+
+    def cx(self, c: int, t: int):
+        self.ops.append(("cx", int(c), int(t)))
+        return self
+
+    def CX(self, c: int, t: int):
+        return self.cx(c, t)
+
+    def cnot(self, c: int, t: int):
+        return self.cx(c, t)
+
+    def CNOT(self, c: int, t: int):
+        return self.cx(c, t)
+
+    def measure_z(self, q: int):
+        self.ops.append(("measure_z", int(q)))
+        return self
+
+    def MEASURE_Z(self, q: int):
+        return self.measure_z(q)
+    
+    @classmethod
+    def from_json_obj(cls, obj: Dict[str, Any]) -> "Circuit":
+        inst_raw = obj.get("instructions", [])
+        inst: List[Tuple[str, Tuple[int, ...]]] = []
+        for n, idxs in inst_raw:
+            inst.append((str(n), tuple(int(x) for x in idxs)))
+        return cls(
+            num_qubits=int(obj.get("num_qubits", 0)),
+            ops=list(obj.get("ops", [])),
+            metadata=dict(obj.get("metadata", {})),
+            instructions=inst,
+        )
+
+    @classmethod
+    def from_json_str(cls, s: str) -> "Circuit":
+        return cls.from_json_obj(json.loads(s))
+
 
 @dataclass
 class Hamiltonian:
@@ -230,4 +418,40 @@ class Hamiltonian:
 
     terms: Any
 
+
+# ---- Module-level task helpers (for cloud.api thin delegation) ----
+def get_task_details(task: Any, *, prettify: bool = False) -> Dict[str, Any]:
+    dev = getattr(task, "device", None)
+    if dev is None:
+        # simulator inline task may still provide results()
+        if hasattr(task, "results"):
+            try:
+                return task.results()
+            except Exception:
+                pass
+        raise ValueError("Task handle missing device information")
+    dev_str = str(dev)
+    prov = (dev_str.split("::", 1)[0]) if "::" in dev_str else "simulator"
+    from ...devices.base import resolve_driver
+    from ...devices.hardware import config as hwcfg
+
+    tok = hwcfg.get_token(provider=prov, device=dev_str)
+    drv = resolve_driver(prov, dev_str)
+    return drv.get_task_details(task, tok)
+
+
+def cancel_task(task: Any) -> Any:
+    dev = getattr(task, "device", None)
+    if dev is None:
+        raise ValueError("Task handle missing device information")
+    dev_str = str(dev)
+    prov = (dev_str.split("::", 1)[0]) if "::" in dev_str else "simulator"
+    from ...devices.base import resolve_driver
+    from ...devices.hardware import config as hwcfg
+
+    tok = hwcfg.get_token(provider=prov, device=dev_str)
+    drv = resolve_driver(prov, dev_str)
+    if hasattr(drv, "remove_task"):
+        return drv.remove_task(task, tok)
+    raise NotImplementedError("cancel not supported for this provider/task type")
 
