@@ -235,3 +235,37 @@ These are blocked only by the single xfail; all other tests are green.
 
 ## Update Timestamp
 - Last update: 2025-08-24 00:54:00 CST
+
+## 11. Latest batch (2025-08-24)
+- Cloud API unification complete: `cloud/api.py` exposes `run/result/cancel`; drivers under `devices/hardware/{tyxonq,ibm}`; session/config centralized.
+- Simulator provider path: `devices/simulators/driver.py` handles OpenQASM→IR and dispatches to MPS/Statevector/DensityMatrix engines; default device set to MPS.
+- Legacy cleanup: removed `cloud/abstraction.py`, `cloud/wrapper.py`, `cloud/utils.py`; pruned legacy `src/tyxonq/backends/*` in favor of `numerics/backends/*` + `numerics/api.py`.
+- Templates→circuits_library: retained `qaoa_ising_ir`; removed low‑value blocks/measurements/datasets.
+- Utils lean-down: kept `arg_alias/return_partial/append/benchmark/is_sequence/is_number/gpu_memory_share` only.
+- Visualization: added IR-based `visualization/dot.py`; removed legacy `vis.py`.
+- Experimental: introduced minimal, NumPy-only QNG metric at `compiler/stages/gradients/qng.py`; removed `experimental.py`.
+- Applications: migrated `origin/chem` → `applications/chem` (`static/`, `dynamic/`, `utils/`); added import alias in `tyxonq/__init__.py` so `tyxonq.chem` maps to `tyxonq.applications.chem` without a separate package.
+- Tests: added `tests/test_cloud_api_smoke.py` covering list/submit/run/result/cancel for simulator provider; all smoke tests green.
+
+## 12. Summary: New vs Legacy Architecture and Advantages
+
+- New architecture
+  - Clear layering: applications → compiler (stages/pipeline) → devices (simulators/hardware + session) → postprocessing → numerics.
+  - Unified Cloud API facade with provider/device abstraction; local simulators behave like real devices.
+  - ArrayBackend protocol consolidates numpy/pytorch (cupynumeric optional), enabling vectorization and accelerators without leaking into devices.
+  - IR-first visualization and gradients (parameter-shift, QNG) colocated with compiler stages.
+  - Applications (chem) live under `applications/`, with top-level aliasing for backwards-compatible imports.
+
+- Migration relationship
+  - `cloud/*` legacy providers → `devices/hardware/*` drivers; facade reduced to `cloud/api.py`.
+  - `results/*` → `postprocessing/*`; `templates/*` → `circuits_library/*` or removed; `backends/*` → `numerics/backends/*`.
+  - Legacy simulators (statevector/densitymatrix/mps) unified under `devices/simulators/*` engines and `devices/simulators/driver.py`.
+  - `experimental.py` split/removed; QNG moved into compiler gradients; `vis.py` replaced by IR-based `visualization/dot.py`.
+
+- Advantages
+  - Simplicity & cohesion: single facade, single job/session model, fewer cross-couplings.
+  - Extensibility: add providers by dropping a `devices/hardware/<vendor>/driver.py`; add numerics backends without touching devices.
+  - Performance safety: vectorization policy with safe fallback; clear numerics boundary for acceleration.
+  - Testability: compiler stages and device session are independently testable; smoke tests ensure API contract.
+  - Backwards compatibility: stable top-level convenience (`tyxonq.run/submit_task/set_token`) and import alias (`tyxonq.chem`).
+  - Maintainability: deprecated modules removed; responsibilities documented; naming aligned.

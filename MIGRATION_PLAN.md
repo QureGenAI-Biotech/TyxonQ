@@ -163,12 +163,8 @@ src/tyxonq/
 
   plugins/
     registry.py
-
-  integrations/
     openfermion.py            # OpenFermion 适配（FO/QO → Hamiltonian）
     openqaoa.py               # OpenQAOA 适配（QASM/Qiskit → Circuit）
-    qiskit_import.py          # Qiskit QuantumCircuit → IR Circuit
-    qasm_import.py            # QASM → IR Circuit
 
   utils/
   config/
@@ -720,10 +716,10 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 为满足“保留 set_token + 指定 provider/device 即可上真机”的体验并便于多供应商接入（如 TyxonQ 自研、IBM Quantum），我们将硬件适配与云 API 门面一体化：
 
 - 目录设计（与模拟器平行）
-  - `cloud/apis.py`（对外门面，仅路由）
+  - `cloud/api.py`（对外门面，仅路由）
     - `set_token(token, provider)`、`set_default(provider, device, **opts)`
     - `device("tyxonq.homebrew_s2", shots=...)` 语法糖
-    - `run/submit/result/cancel/status`
+    - `list_devices/submit_task/get_task_details`
   - `devices/hardware/`
     - `config.py`：统一配置中心（默认 provider/device、通用运行选项、token/endpoint 注册与校验，支持环境变量覆盖）
     - `session.py`：作业生命周期（JobHandle、轮询/重试、结果规约、错误类别统一）
@@ -731,18 +727,18 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
     - `ibm/driver.py`：IBM Quantum 适配，复用 `compiler/providers/qiskit/dialect.py` 做 IR↔Qiskit 转换与作业提交
 
 - 职责边界
-  - `cloud/apis.py`：仅做外观层与参数解析；不含业务逻辑
+  - `cloud/api.py`：仅做外观层与参数解析；不含业务逻辑
   - `devices/hardware/config.py`：集中读写与缓存默认项与 token；provider 子配置仅声明 schema/校验
   - `devices/hardware/session.py`：统一 Job 接口与轮询策略、错误规约、结果标准化（counts + metadata）
   - `devices/hardware/<vendor>/driver.py`：供应商特定实现，完成“IR→方言→提交→结果解析”的闭环
 
 - 设计要点
-  - 不再单独维护 `cloud.registry` 文件；provider 映射采用轻量字典，驻留在 `cloud/apis.py` 或 `devices/hardware/__init__.py`
+  - 不再单独维护 `cloud.registry` 文件；provider 映射采用轻量字典，驻留在 `cloud/api.py` 或 `devices/hardware/__init__.py`
   - 设备命名统一为 `"{provider}.{device_name}"`，同时支持显式 `provider=..., device=...`
   - 结果规约与后处理对齐 `postprocessing/io.py` 与 `postprocessing/metrics.py`
 
 - 最小落地清单（DoD）
-  1. `cloud/apis.py`：`set_token/set_default/device/run/submit_task/result/cancel`
+  1. `cloud/api.py`：`set_token/set_default/device/list_devices/submit_task/get_task_details`
   2. `devices/hardware/config.py`：默认项、token、endpoint 的集中管理（含环境变量覆盖）
   3. `devices/hardware/session.py`：`JobHandle`、`status`、指数退避轮询、错误规约、`RunResult` 标准结构
   4. `devices/hardware/tyxonq/driver.py`：迁移现有 TyxonQ HTTP 调用流到统一接口
@@ -752,14 +748,12 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 
 - 使用示例（对齐现 README 流程）
   - TyxonQ：
-    - `tq.apis.set_token("<TQ_API_KEY>", provider="tyxonq")`
-    - `dev = tq.apis.device("tyxonq.homebrew_s2", shots=100)`
-    - `res = tq.apis.run(circuit, device=dev)` 或 `job = tq.cloud.submit_task(...); res = tq.apis.result(job)`
-    - `provider = "tyxonq"  device = "homebrew_s2"  task = tq.apis.submit_task(provider = provider,device = device,circuit = c,shots = 100)`
-  - IBM Quantum：
-    - `tq.apis.set_token({"ibm": "<IBMQ_TOKEN>"}, provider="ibm")`
-    - `dev = tq.apis.device("ibm.ibm_backend", shots=1024)`
-    - `res = tq.apis.run(circuit, device=dev, transpile_opts={...})`
+    - `tq.api.set_token("<TQ_API_KEY>", provider="tyxonq")`
+    - `dev = tq.api.device("tyxonq.homebrew_s2", shots=100)`
+    - `tasks = tq.api.submit_task(provider="tyxonq", device=dev["device"], circuit=circuit, shots=100)`
+  - Simulator（本地）：
+    - `dev = tq.api.device(provider="simulator", id="matrix_product_state")`
+    - `tasks = tq.api.submit_task(provider="simulator", device=dev["device"], circuit=c, shots=1000)`
 
 - 迁移提示
   - 旧 `cloud/apis.py` 与现 TyxonQ 真机例子维持可用（经薄封装）；新项目推荐使用 `cloud/apis.py`
@@ -944,4 +938,45 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 - `postprocessing` 做指标与误差缓解（与 core/measurements 语义对齐）。
 
 一句话：core 定义“我们说什么”；compiler/pipeline/providers 定义“我们怎么把这件事做成、做高效、做对硬件”；devices 执行；postprocessing 总结。core 不会被 pipeline 取代，pipeline 只是 orchestration。
+
+---
+
+## 最终落地更新（2025-08-24）
+
+本次迭代完成了“cloud API 一体化 + 模拟器/硬件统一驱动 + 应用与数值后端梳理”的主要落地，关键结果如下：
+
+- Cloud API 门面统一：`src/tyxonq/cloud/api.py`
+  - 提供 `set_token/set_default/device/list_devices/submit_task/get_task_details/run/result/cancel` 一致入口。
+  - 路由至硬件驱动或模拟器驱动（见下）。
+- 硬件驱动与会话：`src/tyxonq/devices/hardware/`
+  - `config.py` 统一管理 token、默认 provider/device 与 endpoints（允许环境变量覆盖）。
+  - `session.py` 统一 `JobHandle`、轮询/重试策略与结果规约。
+  - `tyxonq/driver.py`：TyxonQ 云平台 HTTP 驱动完成迁移；`ibm/driver.py` 骨架到位。
+- 模拟器提供方（如同真机一致）：`src/tyxonq/devices/simulators/driver.py`
+  - Cloud API 将 `provider="simulator"` 路由到本驱动。
+  - 在驱动内完成 OpenQASM→IR 转换，然后调用相应引擎（MPS/Statevector/DensityMatrix）。
+  - 默认设备已设置为 MPS 引擎（推荐）。
+- 目录清理与重命名：
+  - 旧 `cloud/abstraction.py`、`cloud/wrapper.py`、`cloud/utils.py` 删除。
+  - `templates/` 重命名为 `circuits_library/`，保留 `qaoa_ising_ir`，删除低价值实现。
+  - `utils.py` 精简，仅保留高价值方法：`arg_alias/return_partial/append/benchmark/is_sequence/is_number/gpu_memory_share`。
+  - 旧 `src/tyxonq/backends/*` 全部删除，统一至 `src/tyxonq/numerics/backends/*` 与 `numerics/api.py` 的 ArrayBackend 协议。
+- 可视化：新增 `visualization/dot.py`（基于 IR）；旧 `vis.py` 删除。
+- 实验功能：将 QNG 以无依赖的数值实现落地于 `compiler/stages/gradients/qng.py`；旧 `experimental.py` 删除。
+- 化学应用迁移：
+  - 将 `origin/chem` 分支的 `src/tyxonq/chem` 迁移为 `src/tyxonq/applications/chem`（含 `static/`、`dynamic/`、`utils/`）。
+  - 顶层包不新增 `tyxonq/chem/` 目录，转而在 `tyxonq/__init__.py` 中通过 `sys.modules` 提供别名：`tyxonq.chem` → `tyxonq.applications.chem`，同时映射常用子模块路径（例如 `tyxonq.chem.static.uccsd`）。
+- 冒烟测试：新增 `tests/test_cloud_api_smoke.py`，覆盖模拟器 provider 的 list/submit/run/result/cancel。
+
+以上变更均已在当前代码树落地并通过冒烟测试验证。
+
+---
+
+## 化学应用（applications/chem）迁移与兼容策略（新增）
+
+- 源代码迁移：将 `origin/chem` 分支下的 `src/tyxonq/chem/*` 完整迁移至 `src/tyxonq/applications/chem/*`，保留 `static/`、`dynamic/`、`utils/` 子模块。
+- 兼容导入：不新增独立的 `tyxonq/chem` 目录；在 `tyxonq/__init__.py` 中注册别名：
+  - `tyxonq.chem` → `tyxonq.applications.chem`
+  - 同时映射 `constants/molecule/dynamic/static/utils` 等常见子模块，保证 `import tyxonq.chem.static.uccsd` 这类历史用法继续可用。
+- 后续规划：逐步将 `static/` 中的 VQE 类算子（UCC/HEA 等）向 IR 构建与编译阶段收敛；将 `utils/backend.py` 中与数值后端相关的逻辑迁往 `numerics/` 或以 ArrayBackend 方式接入。
 
