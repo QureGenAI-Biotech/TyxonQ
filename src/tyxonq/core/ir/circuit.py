@@ -207,7 +207,7 @@ class Circuit:
 
         if t in ("ir", "native", "tyxonq"):
             # Always lower via native pipeline first, returning IR
-            r = compile_api(self, provider="default", output="ir")
+            r = compile_api(self, provider="default", output="ir", options=dict(options))
             return r["circuit"]
         if t == "json":
             # Lower then serialize, so结构变化能反映到JSON
@@ -219,10 +219,14 @@ class Circuit:
                 return self.to_json_str()
         if t == "openqasm":
             # provider selection: default to qiskit for qasm emission
-            out = compile_api(self, provider="qiskit", output="qasm2", options={"add_measures": add_measures})
+            opts = dict(options)
+            opts.setdefault("add_measures", add_measures)
+            out = compile_api(self, provider="qiskit", output="qasm2", options=opts)
             return out["circuit"]
         if t == "qiskit":
-            r = compile_api(self, provider="qiskit", output="qiskit", options={"add_measures": add_measures})
+            opts = dict(options)
+            opts.setdefault("add_measures", add_measures)
+            r = compile_api(self, provider="qiskit", output="qiskit", options=opts)
             return r["circuit"]
         raise ValueError(f"Unsupported compile target: {target}")
 

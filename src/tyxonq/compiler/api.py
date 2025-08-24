@@ -85,6 +85,7 @@ def compile(
     # default native provider (TyxonQ)
     from .native_compiler import NativeCompiler
 
+    # Run native pipeline (stages list resolved inside NativeCompiler)
     return NativeCompiler().compile({"circuit": circuit, "target": target, "options": dict(options)})  # type: ignore[arg-type]
 
 

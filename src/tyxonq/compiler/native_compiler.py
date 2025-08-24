@@ -25,19 +25,24 @@ class NativeCompiler:
 
         # Auto-derive measurement items when not provided, based on IR ops
         if "measurements" not in options:
+            # Use core.measurements types to describe intent for downstream stages
             try:
-                from types import SimpleNamespace
+                from ..core.measurements import Expectation  # type: ignore
+            except Exception:  # pragma: no cover
+                Expectation = None  # type: ignore
 
-                derived = []
-                for op in getattr(circuit, "ops", []) or []:
-                    if isinstance(op, (list, tuple)) and op:
-                        if op[0] == "measure_z" and len(op) >= 2:
-                            derived.append(SimpleNamespace(wires=(int(op[1]),), obs="Z"))
-                if derived:
-                    options = dict(options)
-                    options["measurements"] = derived
-            except Exception:
-                pass
+            derived = []
+            for op in getattr(circuit, "ops", []) or []:
+                if isinstance(op, (list, tuple)) and op:
+                    if str(op[0]).lower() == "measure_z" and len(op) >= 2:
+                        if Expectation is not None:
+                            derived.append(Expectation(obs="Z", wires=(int(op[1]),)))
+                        else:
+                            # Lightweight fallback if core.measurements is unavailable
+                            derived.append({"obs": "Z", "wires": (int(op[1]),)})
+            if derived:
+                options = dict(options)
+                options["measurements"] = derived
 
         pipe = build_pipeline(pipeline_names)
         lowered = pipe.run(circuit, target, **options)
