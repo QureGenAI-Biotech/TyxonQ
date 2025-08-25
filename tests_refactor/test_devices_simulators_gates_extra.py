@@ -1,6 +1,6 @@
 import numpy as np
 
-from tyxonq.devices.simulators.gates import (
+from tyxonq.libs.quantum_library.kernels.gates import (
     gate_h,
     gate_rx,
     gate_ry,

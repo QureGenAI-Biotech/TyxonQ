@@ -14,9 +14,14 @@ from __future__ import annotations
 from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend
-from ..gates import (
+from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
-    init_statevector, apply_1q_statevector, apply_2q_statevector, expect_z_statevector,
+)
+from ....libs.quantum_library.kernels.statevector import (
+    init_statevector,
+    apply_1q_statevector,
+    apply_2q_statevector,
+    expect_z_statevector,
 )
 
 if TYPE_CHECKING:  # pragma: no cover

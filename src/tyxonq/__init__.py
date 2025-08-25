@@ -143,13 +143,21 @@ except Exception:
 try:
     from .numerics.context import set_backend as _set_backend  # type: ignore
 
-    def set_backend(name_or_instance: Any) -> None:
+    def set_backend(name_or_instance: Any):
         """Set global/default numerics backend (e.g., 'numpy' | 'pytorch').
 
         This is a thin alias to ``tyxonq.numerics.context.set_backend``.
         """
 
         _set_backend(name_or_instance)
+        try:
+            from .numerics.api import get_backend as _get_backend  # type: ignore
+            # return a backend handle like legacy K = tq.set_backend('pytorch')
+            if isinstance(name_or_instance, str):
+                return _get_backend(name_or_instance)
+            return name_or_instance
+        except Exception:
+            return None
 
     # expose in module namespace and __all__
     __all__.append("set_backend")

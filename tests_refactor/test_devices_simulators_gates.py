@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from tyxonq.numerics import get_backend
-from tyxonq.devices.simulators.gates import (
+from tyxonq.libs.quantum_library.kernels.gates import (
     gate_h,
     gate_cx_rank4,
 )

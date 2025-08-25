@@ -61,4 +61,47 @@ class CuPyNumericBackend:
     def detach(self, x: Any) -> Any:
         return x
 
+    # K-like helpers (no-op on jit; finite-diff gradient via numpy fallback)
+    def jit(self, fn):
+        return fn
+
+    def value_and_grad(self, fn, argnums: int | tuple[int, ...] = 0):
+        # Use numpy fallback by converting arrays
+        import numpy as _np
+
+        eps = 1e-6
+
+        def to_np(a):
+            try:
+                import cupy as _cp  # type: ignore
+                return _cp.asnumpy(a) if hasattr(a, "__array__") else _np.asarray(a)
+            except Exception:
+                return _np.asarray(a)
+
+        def wrapped(*args: Any, **kwargs: Any):
+            def _to_tuple(idx) -> tuple[int, ...]:
+                return (idx,) if isinstance(idx, int) else tuple(idx)
+
+            arg_idx = _to_tuple(argnums)
+            args_list = list(args)
+            val = fn(*args_list, **kwargs)
+            grads: list[Any] = []
+            for ai in arg_idx:
+                x = to_np(args_list[ai]).astype(float)
+                g = _np.zeros_like(x)
+                it = _np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
+                while not it.finished:
+                    idx = it.multi_index
+                    x_plus = x.copy(); x_plus[idx] += eps
+                    x_minus = x.copy(); x_minus[idx] -= eps
+                    args_list[ai] = x_plus; f_plus = fn(*args_list, **kwargs)
+                    args_list[ai] = x_minus; f_minus = fn(*args_list, **kwargs)
+                    g[idx] = (f_plus - f_minus) / (2 * eps)
+                    it.iternext()
+                args_list[ai] = x
+                grads.append(g)
+            return val, grads[0] if len(grads) == 1 else tuple(grads)
+
+        return wrapped
+
 

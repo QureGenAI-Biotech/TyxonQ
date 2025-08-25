@@ -10,7 +10,7 @@ from tyxonq.libs.quantum_library.kernels.matrix_product_state import (
     to_statevector,
     bond_dims,
 )
-from tyxonq.devices.simulators.gates import gate_h, gate_cx_rank4
+from tyxonq.libs.quantum_library.kernels.gates import gate_h, gate_cx_rank4
 
 
 def test_mps_builds_bell_state_and_matches_full_state():
