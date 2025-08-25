@@ -972,6 +972,70 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 
 ---
 
+## 代码结构现状快照与模块目标（2025-08-25 更新）
+
+当前 `src/tyxonq` 目录结构：
+
+```
+core/           # IR、operations 元信息、errors、measurements（数据模型与契约）
+compiler/       # 编译 API、流水线与 stages、providers（Qiskit 方言等）
+devices/        # 统一设备层：simulators/*、hardware/*、session/base 驱动
+numerics/       # 统一 ArrayBackend 与后端工厂（numpy/pytorch/cunumeric）
+libs/           # 复用型库：circuits_library/*（构电路模板），quantum_library/*（内核、动力学）
+postprocessing/ # IO、metrics、readout、QEM 等后处理
+cloud/          # 对外云 API 门面（路由到 devices）
+config.py       # 包级常量、后端归一化、向量化策略校验、默认 dtype
+```
+
+### 与旧结构的差异与动机
+
+- 将“数学内核”下沉并集中于 `libs/quantum_library/kernels`：
+  - statevector/density_matrix/matrix_product_state 的纯数值核（初始化、单/双比特门态更新、Z 期待）集中管理；
+  - 门矩阵与构造器统一于 `kernels/gates.py`；
+  - 优势：单一事实来源、避免重复实现、便于向量化与加速；
+  - 风险：严格保持“纯净”边界（无噪声/采样/IR），防止引擎逻辑下沉造成循环依赖。
+
+- 模拟器引擎改为直接消费 kernels：
+  - `devices/simulators/{statevector,density_matrix,matrix_product_state}/engine.py` 均直接从 `libs.quantum_library.kernels` 导入；
+  - 移除旧 `devices/simulators/gates.py`（已删除）；
+  - 优势：职责清晰、可替换性增强；
+  - 冲击：需更新测试与示例的导入路径（已完成对引擎与测试的适配）。
+
+- 新增 `libs/quantum_library/dynamics.py`（原 time_evolution）
+  - 提供 `PauliSumCOO`（兼容旧 `PauliStringSum2COO`）、`evolve_state`（兼容旧 `evolve_state_numeric`）、`expectation`（兼容旧 `expval_dense`）；
+  - `examples-ng/analog_evolution_interface.py` 已迁移至该模块，示例运行通过；
+  - 优势：将量子动力学数值工具与设备/IR 解耦，供示例与研究性代码复用；
+  - 风险：需保持命名与文档一致性，提供向后兼容别名（已完成）。
+
+- `core/types.py` 瘦身 + 新增 `config.py`
+  - 将包级常量（PACKAGE_NAME/默认 dtype/支持后端）与归一化/策略校验迁至 `config.py`；
+  - `core/types.py` 保留领域数据模型（`Problem`），其余通过 re-export 维持兼容（建议过渡期保留）；
+  - 优势：配置与类型解耦，早期导入更安全；
+  - 冲击：历史从 `core.types` 导入常量/函数的代码需平滑迁移或依赖 re-export 层。
+
+- `core/operations` 职责明确
+  - 仅保留门规格注册（`GateSpec`/`registry`）与最小元数据；
+  - 门矩阵与 Pauli 构造迁至 `libs/quantum_library/kernels/{gates,pauli}.py`，`core/operations/__init__.py` 转而从 kernels 重导出 `get_unitary`；
+  - 优势：语义定义（core）与数值实现（libs）分离，避免双实现；
+  - 风险：需避免 core 反向依赖 libs 的实现细节（当前只做函数重导出，契约稳定）。
+
+### 现阶段优劣对比
+
+- 优势
+  - 职责分明：IR/契约（core）、变换（compiler）、执行（devices）、数值（numerics/kernels）。
+  - 代码复用：模拟器与数值工具共享 kernels，减少维护面与偏差。
+  - 性能演进空间：统一在 kernels/numerics 做向量化与加速，无需改动引擎层。
+  - 可测试性：kernels 可单测，engines 做端到端，层次清晰。
+
+- 劣势/风险
+  - 迁移期路径调整多，需要 re-export 兼容层，短期增加导入复杂度。
+  - 核心/库层边界需要持续审计，避免“引擎策略”下沉。
+  - 文档/示例需同步更新，确保用户可发现新路径与别名。
+
+
+
+---
+
 ## 化学应用（applications/chem）迁移与兼容策略（新增）
 
 - 源代码迁移：将 `origin/chem` 分支下的 `src/tyxonq/chem/*` 完整迁移至 `src/tyxonq/applications/chem/*`，保留 `static/`、`dynamic/`、`utils/` 子模块。
