@@ -1,12 +1,12 @@
 import math
 
-from tyxonq.core.ir import CircuitBuilder
+from tyxonq.core.ir import Circuit
 from tyxonq.compiler.gradients.parameter_shift import generate_shifted_circuits
 
 
 def test_generate_shifted_circuits_for_rz_single_param():
     theta = 0.3
-    with CircuitBuilder(num_qubits=1) as cb:
+    with Circuit(num_qubits=1) as cb:
         cb.rz(0, theta)
         cb.measure_z(0)
     circ = cb.circuit()

@@ -1,9 +1,6 @@
 import numpy as np
 
 from tyxonq.devices.simulators.gates import (
-    init_statevector,
-    apply_1q_statevector,
-    apply_2q_statevector,
     gate_h,
     gate_rx,
     gate_ry,
@@ -14,6 +11,12 @@ from tyxonq.devices.simulators.gates import (
     gate_ryy,
     gate_rzz,
     build_controlled_unitary,
+)
+
+from tyxonq.libs.quantum_library.kernels.statevector import (
+    init_statevector,
+    apply_1q_statevector,
+    apply_2q_statevector,
 )
 from tyxonq.numerics.api import get_backend
 

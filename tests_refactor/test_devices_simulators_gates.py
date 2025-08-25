@@ -4,14 +4,15 @@ import numpy as np
 
 from tyxonq.numerics import get_backend
 from tyxonq.devices.simulators.gates import (
-    init_statevector,
     gate_h,
     gate_cx_rank4,
+)
+from tyxonq.libs.quantum_library.kernels.statevector import (
+    init_statevector,
     apply_1q_statevector,
     apply_2q_statevector,
     expect_z_statevector,
 )
-
 
 def test_bell_state_construction_and_expectations():
     n = 2
