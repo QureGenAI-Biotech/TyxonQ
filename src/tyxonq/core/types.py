@@ -5,6 +5,18 @@ from typing import Any, Dict, Literal
 from abc import ABCMeta
 
 
+# ---- Core constants ----
+# Package name for global lookups and integration points
+PACKAGE_NAME: str = "tyxonq"
+
+# Default numeric dtype strings for new architecture (complex64/float32)
+DEFAULT_COMPLEX_DTYPE_STR: str = "complex64"
+DEFAULT_REAL_DTYPE_STR: str = "float32"
+
+# Canonical backend names supported by numerics
+SUPPORTED_BACKENDS: tuple[str, ...] = ("numpy", "pytorch", "cupynumeric")
+
+
 # Lightweight runtime string subtypes for readability and isinstance checks
 class BackendName(str, metaclass=ABCMeta):
     """Type for backend names (e.g., 'numpy', 'torch', 'cunumeric')."""
@@ -49,6 +61,15 @@ def is_valid_vectorization_policy(value: str) -> bool:
     """Return True if value is a supported vectorization policy."""
 
     return value in {"auto", "force", "off"}
+
+
+def default_dtypes() -> tuple[str, str]:
+    """Return default complex/real dtype strings for numerics.
+
+    This is a stable source of truth for dtype defaults used across the
+    refactored architecture.
+    """
+    return DEFAULT_COMPLEX_DTYPE_STR, DEFAULT_REAL_DTYPE_STR
 
 
 @dataclass(frozen=True)

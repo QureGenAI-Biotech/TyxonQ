@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
+# Public helpers
+from .unitary import get_unitary  # noqa: F401
+
 
 @dataclass(frozen=True)
 class GateSpec:
@@ -53,10 +56,11 @@ class _Registry:
 
 registry = _Registry()
 
-__all__ = ["GateSpec", "Operation", "registry"]
+__all__ = ["GateSpec", "Operation", "registry", "get_unitary"]
 
 
 # Register default gate specs aligned with migration plan and common dialect
+
 def _register_defaults() -> None:
     if registry.get("h") is None:
         registry.register(GateSpec(name="h", num_qubits=1, differentiable=False))

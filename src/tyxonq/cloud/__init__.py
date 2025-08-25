@@ -1,5 +1,9 @@
-from . import apis
-from . import abstraction
-from . import wrapper
-from .wrapper import batch_expectation_ps
-from .apis import submit_task
+from . import api as api
+
+# Back-compat: expose `apis` as an alias to `api`
+apis = api
+
+__all__ = [
+    "api",
+    "apis",
+]

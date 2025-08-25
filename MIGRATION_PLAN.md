@@ -99,8 +99,9 @@ src/tyxonq/
       fermion_to_qubit.py     # 费米子→量子比特哈密顿量映射（JW/Parity/BK）
 
   compiler/
-    api.py                    # Compiler、Stage、Pipeline 抽象
+    api.py                    # Compiler、Stage、Pipeline 抽象 统一
     pipeline.py               # 可组合流水线定义与构建器
+    native_complier.py        # 自带编译器
     stages/
       layout/
       decompose/
@@ -113,19 +114,18 @@ src/tyxonq/
       parameter_shift.py
       adjoint.py
       finite_diff.py
-    targets/
+    providers/                # 统一编译器提供方
       qiskit/
-        __init__.py
-        compiler.py           # 目标平台专属编译适配
-        dialect.py            # 可选：目标方言（门/指令映射）
-        stages/               # 可选：目标相关的额外 stage
+        __init__.py           # 暴露 Qiskit 编译器（IR→QuantumCircuit/QASM2）
+        qiskit_compiler.py    # 具体实现；文件名避免与目录“compiler”混淆
+        dialect.py            # 可选：Qiskit 方言/兼容层（门/指令映射）
 
   devices/
     base.py                   # Device 抽象/能力声明
     simulators/
-      wavefunction/           # 波函数法（原 statevector）
-      density_matrix/         # 密度矩阵法（原 densitymatrix）
-      compressed_state/       # 压缩态模拟器（面向大尺度/低秩态的高效模拟）
+      statevector/            # 纯态（原 wavefunction）
+      density_matrix/         # 密度矩阵法
+      matrix_product_state/       # 压缩态模拟器（面向大尺度/低秩态态的高效模拟）
         backends/
           backend_base.py     # 压缩态后端协议
           pytorch_backend.py  # 基于 PyTorch 的实现
@@ -140,7 +140,7 @@ src/tyxonq/
     executor.py
 
   numerics/
-    api.py                    # ArrayBackend 协议与工厂
+    api.py                    # ArrayBackend 协议与工厂（已用于模拟器内核）
     backends/
       numpy_backend.py
       pytorch_backend.py
@@ -155,7 +155,7 @@ src/tyxonq/
       custatevec.py           # NVIDIA cuStateVec（波函数加速）
       custom_ops.py           # 自定义核/优化路径
 
-  postprocessing/             # 原 results/ 更名
+  postprocessing/             # 原 results/ 更名（io/metrics/readout/qem 已迁移）
     mitigation/
     readout/
     metrics.py
@@ -163,12 +163,8 @@ src/tyxonq/
 
   plugins/
     registry.py
-
-  integrations/
     openfermion.py            # OpenFermion 适配（FO/QO → Hamiltonian）
     openqaoa.py               # OpenQAOA 适配（QASM/Qiskit → Circuit）
-    qiskit_import.py          # Qiskit QuantumCircuit → IR Circuit
-    qasm_import.py            # QASM → IR Circuit
 
   utils/
   config/
@@ -192,14 +188,14 @@ src/tyxonq/
 | `src/tyxonq/channels.py` | `src/tyxonq/core/operations/` | 通道操作合并管理 |
 | `src/tyxonq/quantum.py` | `src/tyxonq/core/ir/` | 电路/算符表示拆分至 circuit/hamiltonian |
 | `src/tyxonq/circuit.py` | `src/tyxonq/core/ir/circuit.py` | 作为 IR 的核心对象 |
-| `src/tyxonq/densitymatrix.py` | `src/tyxonq/devices/simulators/densitymatrix/` | 执行层模拟器实现 |
+| `src/tyxonq/densitymatrix.py` | `src/tyxonq/devices/simulators/density_matrix/engine.py` | 执行层模拟器实现（已达语义对齐，可删 legacy） |
 | `src/tyxonq/mpscircuit.py` | `src/tyxonq/devices/simulators/mps/` | MPS 模拟器内核与包装 |
 | `src/tyxonq/mps_base.py` | `src/tyxonq/devices/simulators/mps/` | 与上同 |
 | `src/tyxonq/noisemodel.py` | `src/tyxonq/postprocessing/mitigation/` | 噪声/误差缓解归后处理；必要时设备校准配合 |
 | `src/tyxonq/results/` | `src/tyxonq/postprocessing/` | 目录整体更名（保持语义） |
 | `src/tyxonq/results/readout_mitigation.py` | `src/tyxonq/postprocessing/readout/` | 读出校正 |
 | `src/tyxonq/results/qem/` | `src/tyxonq/postprocessing/mitigation/` | 误差缓解方法 |
-| `src/tyxonq/compiler/qiskit_compiler.py` | `src/tyxonq/compiler/targets/qiskit/compiler.py` | 目标平台适配，解耦通用 stage |
+| `src/tyxonq/compiler/qiskit_compiler.py` | `src/tyxonq/compiler/providers/qiskit/{qiskit_compiler.py,dialect.py}` | 目标适配放入 provider；方言/映射在 `dialect.py` |
 | `src/tyxonq/backends/*` | `src/tyxonq/numerics/backends/*` + `src/tyxonq/devices/simulators/*` | 前端数值与执行后端解耦 |
 | `src/tyxonq/torchnn.py` | `examples/` 或 `app/chem/` 相关 | 训练流程示例化/领域化 |
 | `src/tyxonq/templates/*` | 移除（合并到 applications 或 examples） | 以应用为准，不再单列模板 |
@@ -715,6 +711,80 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 - `session` 负责：批量/异步提交、重试、合并、记录 metadata（向量化/回退/每段耗时）。
 - 支持 shot vectors 与分段执行计划；
 
+### devices/hardware 与 cloud API 一体化（新增）
+
+为满足“保留 set_token + 指定 provider/device 即可上真机”的体验并便于多供应商接入（如 TyxonQ 自研、IBM Quantum），我们将硬件适配与云 API 门面一体化：
+
+- 目录设计（与模拟器平行）
+  - `cloud/api.py`（对外门面，仅路由）
+    - `set_token(token, provider)`、`set_default(provider, device, **opts)`
+    - `device("tyxonq.homebrew_s2", shots=...)` 语法糖
+    - `list_devices/submit_task/get_task_details`
+  - `devices/hardware/`
+    - `config.py`：统一配置中心（默认 provider/device、通用运行选项、token/endpoint 注册与校验，支持环境变量覆盖）
+    - `session.py`：作业生命周期（JobHandle、轮询/重试、结果规约、错误类别统一）
+    - `tyxonq/driver.py`：TyxonQ 云后端适配（HTTP 提交/查询），IR→TQASM/QASM 打包与解析
+    - `ibm/driver.py`：IBM Quantum 适配，复用 `compiler/providers/qiskit/dialect.py` 做 IR↔Qiskit 转换与作业提交
+
+- 职责边界
+  - `cloud/api.py`：仅做外观层与参数解析；不含业务逻辑
+  - `devices/hardware/config.py`：集中读写与缓存默认项与 token；provider 子配置仅声明 schema/校验
+  - `devices/hardware/session.py`：统一 Job 接口与轮询策略、错误规约、结果标准化（counts + metadata）
+  - `devices/hardware/<vendor>/driver.py`：供应商特定实现，完成“IR→方言→提交→结果解析”的闭环
+
+- 设计要点
+  - 不再单独维护 `cloud.registry` 文件；provider 映射采用轻量字典，驻留在 `cloud/api.py` 或 `devices/hardware/__init__.py`
+  - 设备命名统一为 `"{provider}.{device_name}"`，同时支持显式 `provider=..., device=...`
+  - 结果规约与后处理对齐 `postprocessing/io.py` 与 `postprocessing/metrics.py`
+
+- 最小落地清单（DoD）
+  1. `cloud/api.py`：`set_token/set_default/device/list_devices/submit_task/get_task_details`
+  2. `devices/hardware/config.py`：默认项、token、endpoint 的集中管理（含环境变量覆盖）
+  3. `devices/hardware/session.py`：`JobHandle`、`status`、指数退避轮询、错误规约、`RunResult` 标准结构
+  4. `devices/hardware/tyxonq/driver.py`：迁移现有 TyxonQ HTTP 调用流到统一接口
+  5. `devices/hardware/ibm/driver.py`：基于 qiskit 方言的最小可用提交流程
+  6. 兼容层：`cloud/apis.py` 保留旧函数名薄封装（deprecated），内部路由到 `cloud/api.py`
+  7. 冒烟测试：stubbed providers 下 `run/submit/result` 的最小用例与 counts 规约
+
+- 使用示例（对齐现 README 流程）
+  - TyxonQ：
+    - `tq.api.set_token("<TQ_API_KEY>", provider="tyxonq")`
+    - `dev = tq.api.device("tyxonq.homebrew_s2", shots=100)`
+    - `tasks = tq.api.submit_task(provider="tyxonq", device=dev["device"], circuit=circuit, shots=100)`
+  - Simulator（本地）：
+    - `dev = tq.api.device(provider="simulator", id="matrix_product_state")`
+    - `tasks = tq.api.submit_task(provider="simulator", device=dev["device"], circuit=c, shots=1000)`
+
+- 迁移提示
+  - 旧 `cloud/apis.py` 与现 TyxonQ 真机例子维持可用（经薄封装）；新项目推荐使用 `cloud/apis.py`
+  - provider 扩展遵循 `devices/hardware/<vendor>/driver.py` 模式增量接入
+
+#### 数值后端（ArrayBackend）切换计划（新增）
+
+目标：在不破坏既有端到端通路的前提下，将模拟器与编译器逐步迁移到统一的 `numerics/ArrayBackend`（numpy/pytorch/cupynumeric），获得矢量化与加速能力。
+
+阶段性路线：
+- 第 1 阶段（已开始）
+  - 在模拟器引擎构造器中注入后端句柄：`self.backend = get_backend(backend_name)`；
+  - 元数据回传所用后端名称，保证可观测；
+  - 保持 numpy 运算路径，端到端测试绿（稳定契约）。
+
+- 第 2 阶段（进行中）
+  - 将波函数引擎内部状态从 ndarray 过渡为后端 array；
+  - 单比特门、双比特门的应用改用后端的 `matmul/einsum`；
+  - 在可用时启用 `vectorize_or_fallback` 做批量/shot 维度的安全矢量化；
+  - 为 pytorch（可选安装）增加跳过逻辑的测试，验证一致性。
+
+- 第 3 阶段（计划）
+  - density_matrix 引擎语义迁移：基于后端线代原语实现 rho 的演化与观测；
+  - compressed_state 定义 backends 协议与最小实现，串联 numerics 后端选择；
+  - 在编译器侧将多参数 shift/测量分组作为批量维度，落地矢量化执行与回退路径。
+
+兼容性与风险控制：
+- 通过测试切分保障每一步落地不破坏端到端绿；
+- 对可选依赖（pytorch/cupynumeric）使用条件跳过与清晰的报错信息；
+- 保留 eager 路径作为回退，记录回退原因与成本（后续在 metadata 中增强）。
+
 #### 真实硬件支持与接口不变更承诺
 - 接口不变更（签名级别）：对外 `Device` 的核心方法保持不变，特别是：
   - `run(circuit, shots: int | None = None, **kwargs) -> RunResult`
@@ -744,52 +814,6 @@ exp = cs.expectation(psi, observable="Z", qubit=0)
 ### config/ 与 utils/
 - 目的：配置解析/合并与通用工具（日志、并行、缓存、随机数）。
 
-## 架构层次关系图（numerics ↔ simulators/backends）
-
-```mermaid
-flowchart TD
-  subgraph Numerics["numerics (数组/线性代数/自动微分)"]
-    NB[backends: numpy / pytorch / cupynumeric]
-    ACC[accelerators: cutensornet, custatevec, custom_ops]
-    CHECKS[vectorization_checks: vmap safety]
-    NB --> ACC
-    NB --> CHECKS
-  end
-
-  subgraph Simulators["devices/simulators (模拟策略)"]
-    WF[wavefunction]
-    DM[density_matrix]
-    CS[compressed_state]
-
-    subgraph CSB["compressed_state/backends"]
-      CSPT[pytorch_backend]
-      CSNP[numpy_backend]
-      CSCP[cupynumeric_backend]
-    end
-
-    CS --> CSPT
-    CS --> CSNP
-    CS --> CSCP
-  end
-
-  ACC --> CSCP
-  ACC --> WF
-  ACC --> DM
-
-  subgraph Vendor["devices/simulators/vendor"]
-    CUQ[cuquantum]
-  end
-
-  Numerics --> Simulators
-  CUQ --> Simulators
-
-  subgraph Devices["devices/hardware"]
-    IBM[ibm]
-    BRA[braket]
-  end
-
-  Simulators --> Devices
-```
 
 ---
 
@@ -874,5 +898,85 @@ flowchart TD
   - 通用优化/布局/分解逻辑（应放 `compiler/stages`）。
   - 与 `devices/` 的直接耦合（通过编译产物与能力描述对接）。
 
+### 附录 C: `core和compiler`的关系
 
+#### 简明回答
+- 核心关系：**core 提供“稳定的数据模型与语义（IR/operations/measurements）”，compiler 提供“对这些模型的变换与落地（passes/pipeline/providers）”**。前者是“语言”，后者是“编译器与调度器”。
+
+#### 各层职责与依赖方向
+- **core/**
+  - **ir/**: `Circuit`, `Hamiltonian`, `Pulse` 等“统一中间表示”。所有上层（apps）产出、下游（compiler/devices/postprocessing）消费的唯一载体。
+  - **operations/**: `GateSpec` 注册表与梯度元数据（如 parameter-shift 支持）。被 compiler 的分解/重写/梯度阶段、以及模拟器共同使用，保证“门的语义”一致。
+  - **measurements/**: 期望值/采样等度量的定义。compiler 的 measurement-rewrite 会基于它生成分组与 `basis_map`，放入 `Circuit.metadata`，供调度/设备复用设置。
+  - 方向性：core 对外零依赖；compiler/providers/devices 只读 core，不反向依赖。
+
+- **compiler/**
+  - **stages/**: 各种“语义保持/优化/布局/调度/梯度”等 Pass，输入/输出都是 core 的 `Circuit`（必要信息写入 `Circuit.metadata`）。
+  - **pipeline.py**: 只是“组合器”，顺序执行 passes，不替代 core。它让“如何编译”与“编什么”解耦。
+  - **providers/**: 面向目标生态的“最终产物适配器”
+    - `tyxonq/`：原生路径，当前默认把分组与 shot 计划写回 IR/metadata，便于直接交给 `devices/session` 执行。
+    - `qiskit/`：将 core IR 降到 `QuantumCircuit` 或 `qasm2`，并保留逻辑-物理映射元数据。
+
+- **devices/**
+  - 消费 compiler 写入的 `Circuit.metadata`（如 measurement_groups，shot segments），按计划执行并返回结果；不关心编译细节。
+
+- **postprocessing/**
+  - 在结果面做指标与误差缓解等，与 core/IR 定义的测量语义对齐。
+
+#### 为什么 core 必不可少
+- **IR 是稳定契约**：apps、compiler、devices、postprocessing 之间通过 IR 解耦。pipeline 只是“怎么变换 IR”的组织者。
+- **语义一致性**：`operations` 的门定义与梯度信息，在分解、重写、梯度生成（parameter-shift）与模拟器里“同源”，避免语义漂移。
+- **测量优化闭环**：`measurements` 定义→编译阶段产出 `basis_map`/分组→`scheduling` 生成 shot plan→`devices` 复用设置执行→`postprocessing` 基于同一语义解释结果。
+- **向下延展**：`pulse` IR 为未来硬件/方言下沉准备承载层，而非直接绑死到某个 provider。
+
+#### 典型流转（最小闭环）
+- 应用层用 `CircuitBuilder` 产出 `Circuit`（core/ir）。
+- `compiler.api.compile(provider='tyxonq', output='tyxonq')`：
+  - pipeline 运行 `rewrite/measurement` → `scheduling/shot_scheduler`，把分组/shot 计划写入 `Circuit.metadata`。
+  - 原生 provider 返回“可执行 IR + 元数据”。
+- `devices.session.execute_plan` 执行 shot segments，聚合结果。
+- `postprocessing` 做指标与误差缓解（与 core/measurements 语义对齐）。
+
+一句话：core 定义“我们说什么”；compiler/pipeline/providers 定义“我们怎么把这件事做成、做高效、做对硬件”；devices 执行；postprocessing 总结。core 不会被 pipeline 取代，pipeline 只是 orchestration。
+
+---
+
+## 最终落地更新（2025-08-24）
+
+本次迭代完成了“cloud API 一体化 + 模拟器/硬件统一驱动 + 应用与数值后端梳理”的主要落地，关键结果如下：
+
+- Cloud API 门面统一：`src/tyxonq/cloud/api.py`
+  - 提供 `set_token/set_default/device/list_devices/submit_task/get_task_details/run/result/cancel` 一致入口。
+  - 路由至硬件驱动或模拟器驱动（见下）。
+- 硬件驱动与会话：`src/tyxonq/devices/hardware/`
+  - `config.py` 统一管理 token、默认 provider/device 与 endpoints（允许环境变量覆盖）。
+  - `session.py` 统一 `JobHandle`、轮询/重试策略与结果规约。
+  - `tyxonq/driver.py`：TyxonQ 云平台 HTTP 驱动完成迁移；`ibm/driver.py` 骨架到位。
+- 模拟器提供方（如同真机一致）：`src/tyxonq/devices/simulators/driver.py`
+  - Cloud API 将 `provider="simulator"` 路由到本驱动。
+  - 在驱动内完成 OpenQASM→IR 转换，然后调用相应引擎（MPS/Statevector/DensityMatrix）。
+  - 默认设备已设置为 MPS 引擎（推荐）。
+- 目录清理与重命名：
+  - 旧 `cloud/abstraction.py`、`cloud/wrapper.py`、`cloud/utils.py` 删除。
+  - `templates/` 重命名为 `circuits_library/`，保留 `qaoa_ising_ir`，删除低价值实现。
+  - `utils.py` 精简，仅保留高价值方法：`arg_alias/return_partial/append/benchmark/is_sequence/is_number/gpu_memory_share`。
+  - 旧 `src/tyxonq/backends/*` 全部删除，统一至 `src/tyxonq/numerics/backends/*` 与 `numerics/api.py` 的 ArrayBackend 协议。
+- 可视化：新增 `visualization/dot.py`（基于 IR）；旧 `vis.py` 删除。
+- 实验功能：将 QNG 以无依赖的数值实现落地于 `compiler/stages/gradients/qng.py`；旧 `experimental.py` 删除。
+- 化学应用迁移：
+  - 将 `origin/chem` 分支的 `src/tyxonq/chem` 迁移为 `src/tyxonq/applications/chem`（含 `static/`、`dynamic/`、`utils/`）。
+  - 顶层包不新增 `tyxonq/chem/` 目录，转而在 `tyxonq/__init__.py` 中通过 `sys.modules` 提供别名：`tyxonq.chem` → `tyxonq.applications.chem`，同时映射常用子模块路径（例如 `tyxonq.chem.static.uccsd`）。
+- 冒烟测试：新增 `tests/test_cloud_api_smoke.py`，覆盖模拟器 provider 的 list/submit/run/result/cancel。
+
+以上变更均已在当前代码树落地并通过冒烟测试验证。
+
+---
+
+## 化学应用（applications/chem）迁移与兼容策略（新增）
+
+- 源代码迁移：将 `origin/chem` 分支下的 `src/tyxonq/chem/*` 完整迁移至 `src/tyxonq/applications/chem/*`，保留 `static/`、`dynamic/`、`utils/` 子模块。
+- 兼容导入：不新增独立的 `tyxonq/chem` 目录；在 `tyxonq/__init__.py` 中注册别名：
+  - `tyxonq.chem` → `tyxonq.applications.chem`
+  - 同时映射 `constants/molecule/dynamic/static/utils` 等常见子模块，保证 `import tyxonq.chem.static.uccsd` 这类历史用法继续可用。
+- 后续规划：逐步将 `static/` 中的 VQE 类算子（UCC/HEA 等）向 IR 构建与编译阶段收敛；将 `utils/backend.py` 中与数值后端相关的逻辑迁往 `numerics/` 或以 ArrayBackend 方式接入。
 

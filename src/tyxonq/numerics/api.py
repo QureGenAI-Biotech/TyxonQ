@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Literal, Protocol, Tuple
 from .backends.numpy_backend import NumpyBackend
+from .context import get_configured_backend_instance, get_configured_backend_name
 try:  # optional imports
     from .backends.pytorch_backend import PyTorchBackend  # type: ignore
 except Exception:  # pragma: no cover
@@ -122,6 +123,13 @@ def get_backend(name: str | None) -> ArrayBackend:
         - 'pytorch' (requires torch)
         - 'cupynumeric' (requires cunumeric)
     """
+
+    # If no explicit name is provided, try global configuration first
+    if name is None:
+        inst = get_configured_backend_instance()
+        if inst is not None:
+            return inst  # type: ignore[return-value]
+        name = get_configured_backend_name()
 
     if name is None or name == "numpy":
         return NumpyBackend()  # type: ignore[return-value]

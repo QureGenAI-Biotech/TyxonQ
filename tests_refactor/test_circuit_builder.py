@@ -14,3 +14,11 @@ def test_circuit_builder_basic_usage():
     assert names == ["h", "cx", "measure_z"]
 
 
+def test_circuit_builder_extend_ops():
+    with CircuitBuilder(num_qubits=2) as cb:
+        cb.extend([("h", 0), ("rz", 1, 0.5)])
+    circ = cb.circuit()
+    assert circ.num_qubits == 2
+    assert circ.ops == [("h", 0), ("rz", 1, 0.5)]
+
+

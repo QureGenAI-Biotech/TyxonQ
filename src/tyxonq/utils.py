@@ -5,7 +5,6 @@ Helper functions
 from typing import Any, Callable, Union, Sequence, Tuple, Dict
 from functools import wraps
 import os
-import platform
 import re
 import time
 
@@ -96,20 +95,6 @@ def append(f: Callable[..., Any], *op: Callable[..., Any]) -> Any:
         return rs
 
     return wrapper
-
-
-def is_m1mac() -> bool:
-    """
-    check whether the running platform is MAC with M1 chip
-
-    :return: True for MAC M1 platform
-    :rtype: bool
-    """
-    if platform.processor() != "arm":
-        return False
-    if not platform.platform().startswith("macOS"):
-        return False
-    return True
 
 
 def is_sequence(x: Any) -> bool:
