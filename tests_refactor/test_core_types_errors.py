@@ -1,8 +1,7 @@
 from tyxonq.core.types import (
-    Problem,
-    normalize_backend_name,
-    is_valid_vectorization_policy,
+    Problem
 )
+from tyxonq.config import normalize_backend_name, is_valid_vectorization_policy
 from tyxonq.core.errors import TyxonQError, CompilationError, DeviceExecutionError
 
 

@@ -77,4 +77,35 @@ class PyTorchBackend:
 
             return _fallback
 
+    # --- K-like helpers ---
+    def jit(self, fn):  # PyTorch eager; return original or torch.compile if available
+        if torch is None:
+            raise RuntimeError("torch not available")
+        try:
+            compiled = torch.compile(fn)  # type: ignore[attr-defined]
+            return compiled
+        except Exception:
+            return fn
+
+    def value_and_grad(self, fn, argnums: int | tuple[int, ...] = 0):
+        if torch is None:
+            raise RuntimeError("torch not available")
+
+        def wrapped(*args: Any, **kwargs: Any):
+            # ensure selected args require grad
+            arg_idx = (argnums,) if isinstance(argnums, int) else tuple(argnums)
+            args_list = list(args)
+            for i in arg_idx:
+                xi = args_list[i]
+                if hasattr(xi, 'requires_grad'):
+                    xi.requires_grad_(True)
+                    args_list[i] = xi
+            y = fn(*args_list, **kwargs)
+            if not isinstance(y, torch.Tensor):
+                y = torch.as_tensor(y, dtype=torch.float32)
+            grads = torch.autograd.grad(y, [args_list[i] for i in arg_idx], allow_unused=True, retain_graph=False, create_graph=False)
+            return y, grads[0] if len(grads) == 1 else tuple(grads)
+
+        return wrapped
+
 

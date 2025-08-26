@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tyxonq.core.operations.pauli import (
+from tyxonq.libs.quantum_library.kernels.pauli import (
     ps2xyz,
     xyz2ps,
     pauli_string_to_matrix,

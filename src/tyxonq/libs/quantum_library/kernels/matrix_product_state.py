@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
+import numpy as np
+
 """Matrix Product State (MPS) minimal utilities for compressed-state simulation.
 
 This module provides a small, readable subset of MPS operations used by the
@@ -221,5 +225,4 @@ def bond_dims(mps: MPSState) -> List[Tuple[int, int]]:
         Dl, _, Dr = T.shape
         dims.append((Dl, Dr))
     return dims
-
 

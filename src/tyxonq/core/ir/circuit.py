@@ -38,6 +38,20 @@ class Circuit:
         self.ops = ops if ops is not None else []
         self.metadata = metadata if metadata is not None else {}
         self.instructions = instructions if instructions is not None else []
+        # Ensure structural validation runs even with custom __init__
+        self.__post_init__()
+
+    # Context manager support for simple builder-style usage in tests
+    def __enter__(self) -> "Circuit":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        # Do not suppress exceptions
+        return False
+
+    # Builder compatibility: expose .circuit() to return self
+    def circuit(self) -> "Circuit":
+        return self
 
     def __post_init__(self) -> None:
         if self.num_qubits < 0:

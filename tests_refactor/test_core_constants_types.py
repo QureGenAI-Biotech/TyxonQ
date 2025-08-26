@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from tyxonq.core.types import (
+from tyxonq.config import (
     PACKAGE_NAME,
     DEFAULT_COMPLEX_DTYPE_STR,
     DEFAULT_REAL_DTYPE_STR,

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
 # Public helpers
-from .unitary import get_unitary  # noqa: F401
+from ...libs.quantum_library.kernels.unitary import get_unitary  # noqa: F401
 
 
 @dataclass(frozen=True)

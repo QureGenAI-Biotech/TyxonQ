@@ -16,14 +16,14 @@ from __future__ import annotations
 from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend, ArrayBackend
-from ..gates import (
+from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
 )
-from .matrix_product_state import (
-    MPSState,
+from ....libs.quantum_library.kernels.matrix_product_state import (
     init_product_state,
     apply_1q as mps_apply_1q,
     apply_2q as mps_apply_2q,
+    MPSState,
     to_statevector as mps_to_statevector,
 )
 

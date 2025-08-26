@@ -14,9 +14,14 @@ from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend
 from ..noise import channels as noise_channels
-from ..gates import (
+from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
-    init_density, apply_1q_density, apply_2q_density, exp_z_density,
+)
+from ....libs.quantum_library.kernels.density_matrix import (
+    init_density,
+    apply_1q_density,
+    apply_2q_density,
+    exp_z_density,
 )
 
 if TYPE_CHECKING:  # pragma: no cover

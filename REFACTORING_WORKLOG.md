@@ -269,3 +269,32 @@ These are blocked only by the single xfail; all other tests are green.
   - Testability: compiler stages and device session are independently testable; smoke tests ensure API contract.
   - Backwards compatibility: stable top-level convenience (`tyxonq.run/submit_task/set_token`) and import alias (`tyxonq.chem`).
   - Maintainability: deprecated modules removed; responsibilities documented; naming aligned.
+
+
+## 13. Update batch (2025-08-25)
+
+- Kernel consolidation and simulator alignment
+  - Added `libs/quantum_library/kernels/` with `gates.py`, `statevector.py`, `density_matrix.py`, `matrix_product_state.py`, and `common.py`.
+  - Engines `devices/simulators/{statevector,density_matrix,matrix_product_state}/engine.py` now import kernels directly.
+  - Removed `devices/simulators/gates.py` and replaced all usages.
+
+- Quantum dynamics utilities
+  - Introduced `libs/quantum_library/dynamics.py`:
+    - `PauliSumCOO` + compat alias `PauliStringSum2COO`.
+    - `evolve_state` + compat alias `evolve_state_numeric`.
+    - `expectation` + compat alias `expval_dense`.
+  - Updated `examples-ng/analog_evolution_interface.py` to use the new module; runs successfully.
+
+- Core types and unified config
+  - Created `config.py` centralizing `PACKAGE_NAME`, default dtype strings, supported backends, backend-name normalization, vectorization policy checks, and `default_dtypes()`.
+  - Slimmed down `core/types.py` to keep only the `Problem` dataclass (domain model). Tests referring to constants should transition to `tyxonq.config` or rely on temporary re-exports if needed.
+
+- Operations boundary
+  - `core/operations/__init__.py` re-exports `get_unitary` from `libs/quantum_library/kernels/unitary.py`.
+  - Pauli builders live in `libs/quantum_library/kernels/pauli.py` (core keeps registry/metadata, not math kernels).
+
+- Docs and plan
+  - MIGRATION_PLAN updated with a “code structure snapshot and module goals (2025‑08‑25)” section detailing differences vs legacy, pros/cons, and next steps.
+
+Notes:
+- During this batch we validated simulator paths against the refactor tests; when `core/types.py` stopped re-exporting config symbols, tests expecting imports from `core.types` must be adapted to import from `tyxonq.config`. For downstream stability, a temporary re-export layer can be restored if required by consumers.

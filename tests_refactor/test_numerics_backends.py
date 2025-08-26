@@ -3,7 +3,7 @@ import importlib
 import numpy as np
 import pytest
 
-from tyxonq.core.types import normalize_backend_name
+from tyxonq.config import normalize_backend_name
 from tyxonq.numerics import get_backend
 
 
