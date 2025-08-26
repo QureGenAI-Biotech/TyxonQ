@@ -12,6 +12,7 @@ All implementations use NumPy only to avoid optional heavy deps.
 
 from typing import Dict, List, Optional, Sequence, Tuple
 import numpy as np
+from ....numerics import NumericBackend as nb
 
 
 def ps2xyz(ps: List[int]) -> Dict[str, List[int]]:
@@ -49,50 +50,40 @@ def xyz2ps(xyz: Dict[str, List[int]], n: Optional[int] = None) -> List[int]:
     return ps
 
 
-def _pauli_matrix(code: int) -> np.ndarray:
+def _pauli_matrix_backend(code: int):
     if code == 0:
-        return np.eye(2, dtype=np.complex128)
+        return nb.array(np.eye(2, dtype=np.complex128), dtype=nb.complex128)
     if code == 1:
-        return np.array([[0, 1], [1, 0]], dtype=np.complex128)
+        return nb.array([[0.0, 1.0], [1.0, 0.0]], dtype=nb.complex128)
     if code == 2:
-        return np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
+        return nb.array([[0.0, -1j], [1j, 0.0]], dtype=nb.complex128)
     if code == 3:
-        return np.array([[1, 0], [0, -1]], dtype=np.complex128)
+        return nb.array([[1.0, 0.0], [0.0, -1.0]], dtype=nb.complex128)
     raise ValueError(f"Invalid Pauli code: {code}")
 
 
-def pauli_string_to_matrix(ps: Sequence[int]) -> np.ndarray:
-    """Return the dense matrix for a single Pauli string on n qubits.
-
-    ps[i] in {0,1,2,3} encodes I,X,Y,Z on qubit i (little-endian not required
-    for matrix building; conventional left-to-right kron is used).
-    """
-    mats = [_pauli_matrix(code) for code in ps]
-    out = np.array([[1.0 + 0.0j]])
+def pauli_string_to_matrix(ps: Sequence[int]):
+    """Return backend-native dense matrix for a single Pauli term on n qubits."""
+    mats = [_pauli_matrix_backend(code) for code in ps]
+    out = nb.array([[1.0 + 0.0j]], dtype=nb.complex128)
     for m in mats:
-        out = np.kron(out, m)
+        out = nb.kron(out, m)
     return out
 
 
 def pauli_string_sum_dense(
     ls: Sequence[Sequence[int]], weights: Optional[Sequence[float]] = None
-) -> np.ndarray:
-    """Build a dense Hamiltonian matrix from a list of Pauli strings.
-
-    Parameters
-    ----------
-    ls: list of Pauli strings, each entry ps is length-n with entries in {0,1,2,3}
-    weights: real weights per term (defaults to 1.0)
-    """
+):
+    """Build a backend-native dense Hamiltonian from a list of Pauli strings."""
     if not ls:
-        return np.array([[0.0 + 0.0j]])
+        return nb.array([[0.0 + 0.0j]], dtype=nb.complex128)
     n = len(ls[0])
-    dim = 2 ** n
-    H = np.zeros((dim, dim), dtype=np.complex128)
+    dim = 1 << n
+    H = nb.zeros((dim, dim), dtype=nb.complex128)
     if weights is None:
         weights = [1.0] * len(ls)
     for ps, w in zip(ls, weights):
-        H += float(w) * pauli_string_to_matrix(ps)
+        H = H + float(w) * pauli_string_to_matrix(ps)
     return H
 
 
@@ -119,7 +110,8 @@ def pauli_string_sum_coo(
             np.array([0.0 + 0.0j], dtype=np.complex128),
             (1, 1),
         )
-    H = pauli_string_sum_dense(ls, weights)
+    H_bk = pauli_string_sum_dense(ls, weights)
+    H = nb.to_numpy(H_bk)
     rows, cols = np.nonzero(H)
     vals = H[rows, cols]
     shape = H.shape
@@ -136,7 +128,7 @@ def heisenberg_hamiltonian(
     hz: float = 0.0,
     hx: float = 0.0,
     hy: float = 0.0,
-) -> np.ndarray:
+) -> object:
     """Build Heisenberg Hamiltonian (dense) from edge list and fields.
 
     Parameters

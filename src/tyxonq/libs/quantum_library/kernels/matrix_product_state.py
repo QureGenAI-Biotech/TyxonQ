@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
+from ....numerics import NumericBackend as nb
 
 """Matrix Product State (MPS) minimal utilities for compressed-state simulation.
 
@@ -31,8 +32,6 @@ Design notes
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-import numpy as np
-
 
 @dataclass
 class MPSState:
@@ -42,7 +41,7 @@ class MPSState:
     bond dimensions respectively.
     """
 
-    tensors: List[np.ndarray]
+    tensors: List[Any]
 
 
 def init_product_state(num_qubits: int, bit: int = 0) -> MPSState:
@@ -56,8 +55,8 @@ def init_product_state(num_qubits: int, bit: int = 0) -> MPSState:
         If 0, initialize |0..0>; if 1, initialize |1..1>.
     """
 
-    v = np.array([1.0, 0.0], dtype=np.complex128) if bit == 0 else np.array([0.0, 1.0], dtype=np.complex128)
-    tensors = [v.reshape(1, 2, 1).copy() for _ in range(num_qubits)]
+    v = nb.array([1.0, 0.0], dtype=nb.complex128) if bit == 0 else nb.array([0.0, 1.0], dtype=nb.complex128)
+    tensors = [nb.reshape(v, (1, 2, 1)) for _ in range(num_qubits)]
     return MPSState(tensors)
 
 
@@ -65,18 +64,19 @@ def apply_1q(mps: MPSState, U: np.ndarray, site: int) -> None:
     """Apply a single-qubit unitary on the specified site in-place."""
 
     A = mps.tensors[site]
+    U2 = nb.asarray(U)
     # U_{a s} * A_{i s j} -> A'_{i a j}
-    A2 = np.einsum("as, isj -> iaj", U, A)
+    A2 = nb.einsum("as, isj -> iaj", U2, A)
     mps.tensors[site] = A2
 
 
 def _truncate_svd(
-    Um: np.ndarray,
-    Sm: np.ndarray,
-    Vh: np.ndarray,
+    Um: Any,
+    Sm: Any,
+    Vh: Any,
     max_bond: Optional[int],
     svd_cutoff: Optional[float],
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[Any, Any, Any]:
     # Start with all singular values
     r = Sm.shape[0]
     # Apply cutoff by absolute threshold on singular values
@@ -125,20 +125,26 @@ def apply_2q_nn(
     A = mps.tensors[i]
     B = mps.tensors[i + 1]
     # Merge two site tensors into theta_{Dl, s0, s1, Dr}
-    theta = np.einsum("isj, jtk -> istk", A, B)
+    theta = nb.einsum("isj, jtk -> istk", A, B)
     # Apply gate: U_{a b s t} * theta_{i s t k} -> theta'_{i a b k}
-    theta2 = np.einsum("abst, istk -> iabk", U4.reshape(2, 2, 2, 2), theta)
+    U4r = nb.reshape(nb.asarray(U4), (2, 2, 2, 2))
+    theta2 = nb.einsum("abst, istk -> iabk", U4r, theta)
     Dl, _, _, Dr = theta2.shape
     # Reshape to matrix for SVD: (Dl*2) x (2*Dr)
-    mat = theta2.reshape(Dl * 2, 2 * Dr)
-    Um, Sm, Vh = np.linalg.svd(mat, full_matrices=False)
+    mat = nb.reshape(theta2, (Dl * 2, 2 * Dr))
+    # Use backend SVD if available (PyTorch), else NumPy
+    try:
+        Um, Sm, Vh = nb.svd(mat, full_matrices=False)
+    except Exception:
+        Um_np = np.linalg.svd(nb.to_numpy(mat), full_matrices=False)
+        Um, Sm, Vh = Um_np
     Um, Sm, Vh = _truncate_svd(Um, Sm, Vh, max_bond, svd_cutoff)
     r = Sm.shape[0]
     # Left tensor: reshape U to (Dl, 2, r)
-    A_new = Um.reshape(Dl, 2, r)
+    A_new = nb.reshape(Um, (Dl, 2, r))
     # Right tensor: S @ Vh -> (r, 2*Dr) -> (r, 2, Dr)
     SV = (Sm[:, None] * Vh)
-    B_new = SV.reshape(r, 2, Dr)
+    B_new = nb.reshape(SV, (r, 2, Dr))
     mps.tensors[i] = A_new
     mps.tensors[i + 1] = B_new
 
@@ -195,7 +201,7 @@ def apply_2q(
         apply_swap_nn(mps, s, max_bond=max_bond, svd_cutoff=svd_cutoff)
 
 
-def to_statevector(mps: MPSState) -> np.ndarray:
+def to_statevector(mps: MPSState) -> Any:
     """Reconstruct the full statevector from an MPS.
 
     Intended for small systems and testing; complexity is exponential in the
@@ -208,13 +214,13 @@ def to_statevector(mps: MPSState) -> np.ndarray:
     for j in range(1, len(mps.tensors)):
         B = mps.tensors[j]
         # cur_{L, s, M} * B_{M, t, R} -> cur_{L, s, t, R}
-        cur = np.einsum("lsm, mtr -> lstr", cur, B)
+        cur = nb.einsum("lsm, mtr -> lstr", cur, B)
         # merge the two physical indices into one leading physical axis (2^k) while keeping bonds on ends
         L = cur.shape[0]
         R = cur.shape[-1]
-        cur = cur.reshape(L, -1, R)
+        cur = nb.reshape(cur, (L, -1, R))
     # Now cur shape (1, 2^n, 1)
-    psi = cur.reshape(-1)
+    psi = nb.reshape(cur, (-1,))
     return psi
 
 
