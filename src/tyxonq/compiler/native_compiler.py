@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, TYPE_CHECKING
+import warnings
 
 if TYPE_CHECKING:
     from .api import CompileRequest, CompileResult
@@ -22,6 +23,25 @@ class NativeCompiler:
             "rewrite/measurement",
             "scheduling/shot_scheduler",
         ])
+
+        # If circuit contains no explicit measurements, auto-insert Z measurements on all qubits.
+        # Emit a non-fatal warning to inform users.
+        try:
+            has_meas = any(
+                (op and isinstance(op, (list, tuple)) and str(op[0]).lower() == "measure_z")
+                for op in getattr(circuit, "ops", []) or []
+            )
+            if not has_meas:
+                nq = int(getattr(circuit, "num_qubits", 0))
+                if nq > 0:
+                    circuit = circuit.extended([("measure_z", q) for q in range(nq)])
+                    warnings.warn(
+                        "No explicit measurements found; auto-added Z measurements on all qubits during compilation.",
+                        UserWarning,
+                    )
+        except Exception:
+            # Best-effort; keep compilation robust
+            pass
 
         # Auto-derive measurement items when not provided, based on IR ops
         if "measurements" not in options:
