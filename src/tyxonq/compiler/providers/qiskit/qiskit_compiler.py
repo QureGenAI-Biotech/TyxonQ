@@ -50,7 +50,7 @@ class QiskitCompiler:
         compiled_qc = qc
         if do_transpile and qc is not None:
             # Strip non-transpile options before passing to qiskit.transpile
-            tp_opts = {k: v for k, v in norm_opts.items() if k not in ("output", "transpile", "add_measures")}
+            tp_opts = {k: v for k, v in norm_opts.items() if k not in ("output", "transpile", "add_measures", "compile_engine")}
             compiled_qc = qk_transpile(qc, **tp_opts)
 
         try:

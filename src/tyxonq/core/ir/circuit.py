@@ -5,6 +5,7 @@ from typing import Any, List, Dict, Optional, Sequence, Tuple, overload
 import warnings
 import json
 from ...compiler.api import compile as compile_api  # lazy import to avoid hard deps
+import warnings
 
 # ---- Global defaults for chainable stages (configurable via top-level API) ----
 _GLOBAL_COMPILE_DEFAULTS: Dict[str, Any] = {}
@@ -167,10 +168,12 @@ class Circuit:
 
     # ---- Chainable configuration stages ----
     def device(self, **options: Any) -> "Circuit":
+        """Set device options for chainable configuration."""
         self._device_opts.update(dict(options))
         return self
 
     def postprocessing(self, **options: Any) -> "Circuit":
+        """Set postprocessing options for chainable configuration."""
         self._post_opts.update(dict(options))
         if "method" not in self._post_opts:
             self._post_opts["method"] = None
@@ -542,6 +545,18 @@ class Circuit:
 
     def MEASURE_Z(self, q: int):
         return self.measure_z(q)
+
+    def reset(self, q: int):
+        """Warning: reset operation is typically not supported by hardware in logical circuits.
+        This is a simulation-only operation that projects qubit to |0⟩ state."""
+        warnings.warn("reset operation is typically not supported by hardware in logical circuits. "
+                    "This is a simulation-only operation that projects qubit to |0⟩ state.", 
+                    UserWarning, stacklevel=2)
+        self.ops.append(("reset", int(q)))
+        return self
+
+    def RESET(self, q: int):
+        return self.reset(q)
     
     @classmethod
     def from_json_obj(cls, obj: Dict[str, Any]) -> "Circuit":
