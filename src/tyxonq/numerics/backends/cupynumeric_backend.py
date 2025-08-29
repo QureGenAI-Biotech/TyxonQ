@@ -100,6 +100,11 @@ class CuPyNumericBackend:
             raise RuntimeError("cupynumeric not available")
         return cn.zeros(shape, dtype=dtype)
 
+    def ones(self, shape: tuple[int, ...], dtype: Any | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.ones(shape, dtype=dtype)
+
     def zeros_like(self, a: Any) -> Any:
         if cn is None:
             raise RuntimeError("cupynumeric not available")
@@ -141,6 +146,21 @@ class CuPyNumericBackend:
             raise RuntimeError("cupynumeric not available")
         return cn.sqrt(a)
 
+    def square(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.square(a)
+
+    def log(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.log(a)
+
+    def log2(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.log2(a)
+
     # Linear algebra (fallback to numpy on host for SVD)
     def svd(self, a: Any, full_matrices: bool = False) -> Tuple[Any, Any, Any]:
         if cn is None:
@@ -165,6 +185,23 @@ class CuPyNumericBackend:
 
         out = rng.normal(size=shape)
         return out.astype(dtype) if dtype is not None else out
+
+    # Discrete ops / sampling helpers
+    def choice(self, rng: Any, a: int, *, size: int, p: Any | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        # cupynumeric mirrors numpy API
+        return rng.choice(a, size=size, p=p)
+
+    def bincount(self, x: Any, minlength: int = 0) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.bincount(x, minlength=minlength)
+
+    def nonzero(self, x: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.nonzero(x)
 
     def requires_grad(self, x: Any, flag: bool = True) -> Any:
         return x

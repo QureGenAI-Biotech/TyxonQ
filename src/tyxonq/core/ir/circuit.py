@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Any, List, Dict, Optional, Sequence, Tuple, overload
+from typing import Any, List, Dict, Optional, Sequence, Tuple, overload, Literal
+import time
 import warnings
 import json
 from ...compiler.api import compile as compile_api  # lazy import to avoid hard deps
@@ -77,6 +78,8 @@ class Circuit:
                  # Postprocessing defaults
                  postprocessing_method: Optional[str] = None,
                  postprocessing_options: Optional[Dict[str, Any]] = None,
+                 # Draw defaults
+                 draw_output: Optional[str] = None,
                  # Optional pre-compiled or provider-native source
                  source: Optional[Any] = None):
         """Initialize a Circuit.
@@ -115,6 +118,8 @@ class Circuit:
 
         # Optional direct-execution source (e.g., QASM string or provider object)
         self._source = source
+        # Draw defaults (e.g., "text", "mpl", "latex")
+        self._draw_output: Optional[str] = str(draw_output) if draw_output is not None else None
 
         # Ensure structural validation runs even with custom __init__
         self.__post_init__()
@@ -423,12 +428,14 @@ class Circuit:
 
         results = [_task_to_result_dict(t) for t in task_list]
 
-        # Attach postprocessing stub for each result
-        method = self._post_opts.get("method") if isinstance(self._post_opts, dict) else None
+        # Attach postprocessing via router
+        from ...postprocessing import apply_postprocessing  # 延迟导入，保持解耦
+
         enriched = []
         for r in results:
             rr = dict(r)
-            rr["postprocessing"] = {"method": method, "results": None}
+            post = apply_postprocessing(rr, self._post_opts if isinstance(self._post_opts, dict) else {})
+            rr["postprocessing"] = post
             enriched.append(rr)
         return enriched if isinstance(tasks, list) else enriched[0]
 
@@ -558,6 +565,89 @@ class Circuit:
     def RESET(self, q: int):
         return self.reset(q)
     
+    # --- Additional common gates to preserve legacy examples ---
+    def x(self, q: int):
+        self.ops.append(("x", int(q)))
+        return self
+
+    def X(self, q: int):
+        return self.x(q)
+
+    def y(self, q: int):
+        self.ops.append(("y", int(q)))
+        return self
+
+    def Y(self, q: int):
+        return self.y(q)
+
+    def ry(self, q: int, theta: Any):
+        self.ops.append(("ry", int(q), theta))
+        return self
+
+    def RY(self, q: int, theta: Any):
+        return self.ry(q, theta)
+
+    def cz(self, c: int, t: int):
+        self.ops.append(("cz", int(c), int(t)))
+        return self
+
+    def CZ(self, c: int, t: int):
+        return self.cz(c, t)
+
+    def cy(self, c: int, t: int):
+        self.ops.append(("cy", int(c), int(t)))
+        return self
+
+    def CY(self, c: int, t: int):
+        return self.cy(c, t)
+
+    def rxx(self, c: int, t: int, theta: Any):
+        self.ops.append(("rxx", int(c), int(t), theta))
+        return self
+
+    def RXX(self, c: int, t: int, theta: Any):
+        return self.rxx(c, t, theta)
+
+    def rzz(self, c: int, t: int, theta: Any):
+        self.ops.append(("rzz", int(c), int(t), theta))
+        return self
+
+    def RZZ(self, c: int, t: int, theta: Any):
+        return self.rzz(c, t, theta)
+    
+    # --- draw() typing overloads to improve IDE/linter navigation ---
+    @overload
+    def draw(self, output: Literal["text"], *args: Any, **kwargs: Any) -> str: ...
+
+    @overload
+    def draw(self, output: Literal["mpl"], *args: Any, **kwargs: Any) -> Any: ...
+
+    @overload
+    def draw(self, output: Literal["latex"], *args: Any, **kwargs: Any) -> str: ...
+
+    @overload
+    def draw(self, *args: Any, **kwargs: Any) -> Any: ...
+
+    # --- Draw via Qiskit provider: compile IR→QuantumCircuit and delegate draw ---
+    def draw(self, *args: Any, **kwargs: Any) -> Any:
+        """Render the circuit using Qiskit if available.
+
+        Behavior:
+        - Convert IR → Qiskit QuantumCircuit directly (no intermediate qasm2 dump),
+          auto-adding measurements if none present.
+        - Delegate all args/kwargs to `QuantumCircuit.draw`.
+        - If Qiskit is not installed, return a minimal textual `gate_summary()` string.
+        """
+        try:
+            from ...compiler.providers.qiskit.dialect import to_qiskit  # type: ignore
+
+            qc = to_qiskit(self, add_measures=True)
+            # Resolve default output: prefer per-circuit _draw_output, else 'text'
+            if "output" not in kwargs and (len(args) == 0):
+                kwargs["output"] = self._draw_output or "text"
+            return qc.draw(*args, **kwargs)
+        except Exception:
+            return str(self.gate_summary())
     @classmethod
     def from_json_obj(cls, obj: Dict[str, Any]) -> "Circuit":
         inst_raw = obj.get("instructions", [])

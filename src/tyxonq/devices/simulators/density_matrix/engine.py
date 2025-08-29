@@ -69,6 +69,49 @@ class DensityMatrixEngine:
             elif name == "reset":
                 q = int(op[1]); rho = self._project_z(rho, q, 0, n)
 
+        # If shots requested and there are measurements, return sampled counts from diagonal of rho
+        if shots > 0 and len(measures) > 0:
+            nb = self.backend
+            diag_b = nb.diag(rho)
+            p_np = np.asarray(nb.real(diag_b), dtype=float)
+            p_np[p_np < 0.0] = 0.0
+            s = float(np.sum(p_np))
+            dim = int(p_np.size)
+            # Optional noise injection
+            if bool(kwargs.get("use_noise", False)):
+                noise = kwargs.get("noise", {}) or {}
+                ntype = str(noise.get("type", "")).lower()
+                if ntype == "readout":
+                    A = None
+                    cals = noise.get("cals", {}) or {}
+                    for q in range(n):
+                        m = cals.get(q)
+                        if m is None:
+                            m = nb.eye(2)
+                        m = nb.asarray(m)
+                        A = m if A is None else nb.kron(A, m)
+                    p_np = np.asarray(nb.to_numpy(A), dtype=float) @ p_np
+                elif ntype == "depolarizing":
+                    pval = float(noise.get("p", 0.0))
+                    alpha = max(0.0, min(1.0, 4.0 * pval / 3.0))
+                    p_np = (1.0 - alpha) * p_np + alpha * (1.0 / dim)
+                p_np = np.clip(p_np, 0.0, 1.0)
+                s = float(np.sum(p_np))
+            if s > 0:
+                p_np = p_np / s
+            else:
+                p_np = np.full((dim,), 1.0 / dim, dtype=float)
+            rng = nb.rng(None)
+            idx_samples = nb.choice(rng, dim, size=shots, p=p_np)
+            counts_arr = nb.bincount(nb.asarray(idx_samples), minlength=dim)
+            results: Dict[str, int] = {}
+            nz = nb.nonzero(counts_arr)[0]
+            for idx in nz:
+                ii = int(idx)
+                bitstr = ''.join('1' if (ii >> (n - 1 - k)) & 1 else '0' for k in range(n))
+                results[bitstr] = int(nb.to_numpy(counts_arr)[ii])
+            return {"results": results, "metadata": {"shots": shots, "backend": self.backend.name}}
+
         expectations: Dict[str, float] = {}
         for q in measures:
             e = exp_z_density(self.backend, rho, q, n)

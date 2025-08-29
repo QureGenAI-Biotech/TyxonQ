@@ -105,15 +105,62 @@ class MatrixProductStateEngine:
                 # no-op
                 continue
         # Barrier 不是量子门（非幺正、无矩阵表示），它是编译/调度指令，用来限制优化重排或做分段同步，对量子态本身不产生物理作用。
+        # If shots requested and there are measurements, return sampled counts via reconstructed probabilities
+        if shots > 0 and len(measures) > 0:
+            nb = self.backend
+            psi = mps_to_statevector(state)
+            p = nb.square(nb.abs(psi)) if hasattr(nb, 'square') else (np.abs(psi) ** 2)
+            p_np = np.asarray(nb.to_numpy(p), dtype=float)
+            dim = int(p_np.size)
+            # Optional noise mixing via kwargs
+            if bool(kwargs.get("use_noise", False)):
+                noise = kwargs.get("noise", {}) or {}
+                ntype = str(noise.get("type", "")).lower()
+                if ntype == "readout":
+                    A = None
+                    cals = noise.get("cals", {}) or {}
+                    for q in range(n):
+                        m = cals.get(q)
+                        if m is None:
+                            m = nb.eye(2)
+                        m = nb.asarray(m)
+                        A = m if A is None else nb.kron(A, m)
+                    p_np = np.asarray(nb.to_numpy(A), dtype=float) @ p_np
+                elif ntype == "depolarizing":
+                    pval = float(noise.get("p", 0.0))
+                    alpha = max(0.0, min(1.0, 4.0 * pval / 3.0))
+                    p_np = (1.0 - alpha) * p_np + alpha * (1.0 / dim)
+                p_np = np.clip(p_np, 0.0, 1.0)
+                s = float(np.sum(p_np))
+                p_np = p_np / (s if s > 1e-12 else 1.0)
+            else:
+                if p_np.sum() > 0:
+                    p_np = p_np / float(p_np.sum())
+                else:
+                    p_np = np.full((dim,), 1.0 / dim, dtype=float)
+            rng = nb.rng(None)
+            idx_samples = nb.choice(rng, dim, size=shots, p=p_np)
+            counts_arr = nb.bincount(nb.asarray(idx_samples), minlength=dim)
+            results: Dict[str, int] = {}
+            nz = nb.nonzero(counts_arr)[0]
+            for idx in nz:
+                ii = int(idx)
+                bitstr = ''.join('1' if (ii >> (n - 1 - k)) & 1 else '0' for k in range(n))
+                results[bitstr] = int(nb.to_numpy(counts_arr)[ii])
+            return {"results": results, "metadata": {"shots": shots, "backend": getattr(self.backend, 'name', 'unknown')}}
+
         expectations: Dict[str, float] = {}
         # Compute expectations by reconstructing statevector for now (small n tests)
         psi = mps_to_statevector(state)
-        # reuse existing kernel's exp-z on statevector logic inline
+        nb = self.backend
+        psi_b = nb.asarray(psi)
         for q in measures:
-            s_perm = np.moveaxis(psi.reshape([2] * n), q, 0)
-            s2 = np.abs(s_perm.reshape(2, -1)) ** 2
-            probs = np.sum(s2, axis=1)
-            val = float(probs[0] - probs[1])
+            s = nb.reshape(psi_b, (2,) * n)
+            s_perm = nb.moveaxis(s, q, 0)
+            s2 = nb.abs(nb.reshape(s_perm, (2, -1))) ** 2  # type: ignore[operator]
+            probs = nb.sum(s2, axis=1)
+            probs_np = nb.to_numpy(probs)
+            val = float(probs_np[0] - probs_np[1])
             if use_noise and z_atten is not None:
                 val *= z_atten[q]
             expectations[f"Z{q}"] = val

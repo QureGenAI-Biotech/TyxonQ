@@ -17,7 +17,12 @@ def demo_set_numeric_backend(backend_name: str = "numpy"):
 
     c = _build_sample_circuit()
     # Prefer IR on local simulators; shots=0 for fast deterministic expectations
-    tasks = c.run(provider="local", device="statevector", shots=0)
+    tasks = (
+        c.compile()
+         .device(provider="local", device="statevector", shots=0)
+         .postprocessing(method=None)
+         .run()
+    )
     for t in tasks:
         print("Result:", t.details())
     return tasks

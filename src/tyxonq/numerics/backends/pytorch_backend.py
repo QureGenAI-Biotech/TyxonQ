@@ -94,6 +94,10 @@ class PyTorchBackend:
         td = self._to_torch_dtype(dtype)
         return torch.zeros(shape, dtype=td)
 
+    def ones(self, shape: tuple[int, ...], dtype: Any | None = None) -> Any:
+        td = self._to_torch_dtype(dtype)
+        return torch.ones(shape, dtype=td)
+
     def zeros_like(self, a: Any) -> Any:
         return torch.zeros_like(a)
 
@@ -120,6 +124,15 @@ class PyTorchBackend:
     def sqrt(self, a: Any) -> Any:
         return torch.sqrt(a)
 
+    def square(self, a: Any) -> Any:
+        return torch.square(a)
+
+    def log(self, a: Any) -> Any:
+        return torch.log(a)
+
+    def log2(self, a: Any) -> Any:
+        return torch.log2(a)
+
     # Linear algebra
     def svd(self, a: Any, full_matrices: bool = False) -> Tuple[Any, Any, Any]:
         # torch.linalg.svd returns U, S, Vh similar to numpy when full_matrices=False
@@ -134,6 +147,25 @@ class PyTorchBackend:
 
     def normal(self, rng: Any, shape: Tuple[int, ...], dtype: Any | None = None) -> Any:
         return torch.normal(mean=0.0, std=1.0, size=shape, generator=rng, dtype=dtype)
+
+    # Discrete ops / sampling helpers
+    def choice(self, rng: Any, a: int, *, size: int, p: Any | None = None) -> Any:
+        # PyTorch doesn't expose choice with prob directly; implement via multinomial
+        if p is None:
+            probs = torch.full((a,), 1.0 / a, dtype=torch.float64)
+        else:
+            probs = torch.as_tensor(p, dtype=torch.float64)
+        idx = torch.multinomial(probs, num_samples=size, replacement=True, generator=rng)
+        return idx.cpu().numpy() if hasattr(idx, 'cpu') else idx
+
+    def bincount(self, x: Any, minlength: int = 0) -> Any:
+        t = torch.as_tensor(x, dtype=torch.int64)
+        return torch.bincount(t, minlength=minlength).cpu().numpy()
+
+    def nonzero(self, x: Any) -> Any:
+        t = torch.as_tensor(x)
+        nz = torch.nonzero(t, as_tuple=False).squeeze(-1)
+        return (nz.cpu().numpy(),)
 
     def requires_grad(self, x: Any, flag: bool = True) -> Any:
         if hasattr(x, "requires_grad"):

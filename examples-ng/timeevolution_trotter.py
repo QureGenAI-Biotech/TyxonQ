@@ -1,47 +1,58 @@
 """
-Time evolution of Heisenberg model realized by Trotter decomposition
+Heisenberg time evolution via Trotterization (refactored to new API).
+
+This example builds a Trotterized circuit from Pauli terms and runs it on the
+local statevector simulator using the chainable run API. It avoids legacy
+methods (exp1/state/expectation_ps).
 """
 
-import numpy as np
 import tyxonq as tq
-
-K = tq.set_backend("pytorch")
-K.set_dtype("complex128")
-
-xx = tq.gates._xx_matrix
-yy = tq.gates._yy_matrix
-zz = tq.gates._zz_matrix
-
-nqubit = 4
-t = 0.5
-tau = 0.1
+from tyxonq.libs.circuits_library.trotter_circuit import build_trotter_circuit
 
 
-def Trotter_step_unitary(input_state, tau, nqubit):
-    c = tq.Circuit(nqubit, inputs=input_state)
-    for i in range(nqubit - 1):  ### U_zz
-        c.exp1(i, i + 1, theta=tau, unitary=zz)
-    for i in range(nqubit - 1):  ### U_yy
-        c.exp1(i, i + 1, theta=tau, unitary=yy)
-    for i in range(nqubit - 1):  ### U_xx
-        c.exp1(i, i + 1, theta=tau, unitary=xx)
-    TSUstate = c.state()  ### return state U(τ)|ψ_i>
-    z0 = c.expectation_ps(z=[0])
-    return TSUstate, z0
+def heisenberg_chain_terms(num_qubits: int):
+    # Encode Pauli strings as lists with 0=I,1=X,2=Y,3=Z on each qubit
+    terms = []
+    weights = []
+    jx = jy = jz = 1.0
+    for i in range(num_qubits - 1):
+        # XX on neighbors i,i+1
+        t_xx = [0] * num_qubits
+        t_xx[i] = 1; t_xx[i + 1] = 1
+        terms.append(t_xx); weights.append(jx)
+        # YY
+        t_yy = [0] * num_qubits
+        t_yy[i] = 2; t_yy[i + 1] = 2
+        terms.append(t_yy); weights.append(jy)
+        # ZZ
+        t_zz = [0] * num_qubits
+        t_zz[i] = 3; t_zz[i + 1] = 3
+        terms.append(t_zz); weights.append(jz)
+    return terms, weights
 
 
-TSU_vmap = K.jit(
-    K.vmap(
-        Trotter_step_unitary,
-        vectorized_argnums=0,
+def run_demo(num_qubits: int = 4, total_time: float = 0.5, steps: int = 10):
+    tq.set_backend("numpy")
+    terms, weights = heisenberg_chain_terms(num_qubits)
+    c = build_trotter_circuit(terms, weights=weights, time=total_time, steps=steps, num_qubits=num_qubits)
+    # Add measurements to observe Z on each qubit
+    for q in range(num_qubits):
+        c.measure_z(q)
+    results = (
+        c.compile()
+         .device(provider="local", device="statevector", shots=0)
+         .postprocessing(method=None)
+         .run()
     )
-)
+    print("Simulator results:", results)
+    # Also demonstrate omit-style auto completion: direct .run() works
+    c2 = build_trotter_circuit(terms, weights=weights, time=total_time, steps=steps, num_qubits=num_qubits)
+    for q in range(num_qubits):
+        c2.measure_z(q)
+    auto_results = c2.run()
+    print("Auto-completed run results:", auto_results)
+    return results
 
-ninput = 2
-input_state = np.zeros((ninput, 2**nqubit))
-input_state[0, 0] = 1.0
-input_state[1, -1] = 1.0
 
-for _ in range(int(t / tau)):
-    input_state, z0 = TSU_vmap(input_state, tau, nqubit)
-    print("z: ", z0)
+if __name__ == "__main__":
+    run_demo()

@@ -62,6 +62,9 @@ class NumpyBackend:
     def zeros(self, shape: Tuple[int, ...], dtype: Any | None = None) -> Any:
         return np.zeros(shape, dtype=dtype)
 
+    def ones(self, shape: Tuple[int, ...], dtype: Any | None = None) -> Any:
+        return np.ones(shape, dtype=dtype)
+
     def zeros_like(self, a: Any) -> Any:
         return np.zeros_like(a)
 
@@ -73,6 +76,9 @@ class NumpyBackend:
 
     def kron(self, a: Any, b: Any) -> Any:
         return np.kron(a, b)
+
+    def square(self, a: Any) -> Any:
+        return np.square(a)
 
     # Elementary math
     def exp(self, a: Any) -> Any:
@@ -87,6 +93,12 @@ class NumpyBackend:
     def sqrt(self, a: Any) -> Any:
         return np.sqrt(a)
 
+    def log(self, a: Any) -> Any:
+        return np.log(a)
+
+    def log2(self, a: Any) -> Any:
+        return np.log2(a)
+
     # Linear algebra
     def svd(self, a: Any, full_matrices: bool = False) -> Tuple[Any, Any, Any]:
         return np.linalg.svd(a, full_matrices=full_matrices)
@@ -97,6 +109,16 @@ class NumpyBackend:
     def normal(self, rng: Any, shape: Tuple[int, ...], dtype: Any | None = None) -> Any:
         out = rng.normal(size=shape)
         return out.astype(dtype) if dtype is not None else out
+
+    # Discrete ops / sampling helpers
+    def choice(self, rng: Any, a: int, *, size: int, p: Any | None = None) -> Any:
+        return rng.choice(a, size=size, p=p)
+
+    def bincount(self, x: Any, minlength: int = 0) -> Any:
+        return np.bincount(x, minlength=minlength)
+
+    def nonzero(self, x: Any) -> Any:
+        return np.nonzero(x)
 
     def requires_grad(self, x: Any, flag: bool = True) -> Any:
         return x

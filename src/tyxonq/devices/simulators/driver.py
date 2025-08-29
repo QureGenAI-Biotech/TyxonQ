@@ -79,7 +79,7 @@ def run(
             return self.results()
 
     def _one(c: Any) -> Any:
-        out = eng.run(c, shots=shots)
+        out = eng.run(c, shots=shots, **opts)
         results = out.get("results") or out.get("expectations") or {}
         return _SimTask(id_=str(uuid4()), device=device, results=results)
 

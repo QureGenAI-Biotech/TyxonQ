@@ -1,56 +1,90 @@
 """
-perfect sampling vs. state sampling
-the benchmark results show that only use perfect/tensor sampling when the wavefunction doesn't fit in memory
+Sampling benchmark (chain-style API) with backend comparison.
+
+- Use numeric backend RNG uniformly (nb.rng / nb.choice)
+- Compare numpy, pytorch, cupynumeric (if available)
 """
 
+from __future__ import annotations
+
+import argparse
 import time
-import numpy as np
 import tyxonq as tq
-
-K = tq.set_backend("pytorch")
-K.set_dtype("complex64")
+from tyxonq.numerics.api import get_backend
 
 
-def construct_circuit(n, nlayers):
+def construct_circuit(n: int, nlayers: int, *, seed: int) -> tq.Circuit:
     c = tq.Circuit(n)
     for i in range(n):
         c.h(i)
+    nb = get_backend(None)
+    rng = nb.rng(seed)
     for _ in range(nlayers):
         for i in range(n):
-            r = np.random.randint(n - 1) + 1
+            # uniform in [1, n-1]
+            r = int(nb.choice(rng, n - 1, size=1)[0]) + 1
             c.cnot(i, (i + r) % n)
+    for q in range(n):
+        c.measure_z(q)
     return c
 
 
-for n in [8, 10]:
-    for nlayers in [2, 6]:
-        print("n: ", n, " nlayers: ", nlayers)
-        c = construct_circuit(n, nlayers)
-        time0 = time.time()
-        s = c.sample(allow_state=True)
-        time1 = time.time()
-        # print(smp)
-        print("state sampling time: ", time1 - time0)
-        time0 = time.time()
-        smp = c.sample()
-        # print(smp)
-        time1 = time.time()
-        print("nonjit tensor sampling time: ", time1 - time0)
-        time0 = time.time()
-        s = c.sample(allow_state=True, batch=10)
-        time1 = time.time()
-        print("batch state sampling time: ", (time1 - time0) / 10)
+def run_once(c: tq.Circuit, shots: int) -> float:
+    t0 = time.perf_counter()
+    _ = (
+        c.device(provider="simulator", device="statevector", shots=shots)
+         .postprocessing(method=None)
+         .run()
+    )
+    t1 = time.perf_counter()
+    return (t1 - t0)
 
-        @K.jit
-        def f():
-            return c.sample()
 
-        time0 = time.time()
-        smp = f()
-        time1 = time.time()
-        for _ in range(5):
-            smp = f()
-            # print(smp)
-        time2 = time.time()
-        print("jittable tensor sampling staginging time: ", time1 - time0)
-        print("jittable tensor sampling running time: ", (time2 - time1) / 5)
+def mean_std(values: list[float]) -> tuple[float, float]:
+    if not values:
+        return 0.0, 0.0
+    m = sum(values) / len(values)
+    v = sum((x - m) * (x - m) for x in values) / len(values)
+    return m, v ** 0.5
+
+
+def benchmark_backend(backend_name: str, n_list: list[int], layers_list: list[int], shots: int, repeats: int, seed: int) -> None:
+    try:
+        nb = tq.set_backend(backend_name)
+    except Exception as e:
+        print(f"skip backend {backend_name}: {e}")
+        return
+    nb_name = getattr(nb, "name", str(backend_name)) if nb is not None else str(backend_name)
+    print(f"\nBackend = {nb_name}")
+    for n in n_list:
+        for nl in layers_list:
+            c = construct_circuit(n, nl, seed=seed)
+            times: list[float] = []
+            for _ in range(repeats):
+                times.append(run_once(c, shots))
+            avg, std = mean_std(times)
+            print(f"n={n:2d}, layers={nl:2d}, shots={shots:5d} | time_avg={avg:.4f}s, time_std={std:.4f}s")
+
+#TODO 增加不同backend特性的测试 例如 tensor的处理
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--shots", type=int, default=8192)
+    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--n", type=int, nargs="*", default=[8, 10])
+    parser.add_argument("--layers", type=int, nargs="*", default=[2, 6])
+    args = parser.parse_args()
+
+    # args.n = [8, 10]
+    # args.layers = [2, 6]
+    # args.shots = 8192
+    # args.repeats = 3
+    # args.seed = 0
+
+    for b in ["numpy", "pytorch", "cupynumeric"]:
+        benchmark_backend(b, args.n, args.layers, args.shots, args.repeats, args.seed)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,77 +1,52 @@
 """
-compilation utilities in tyxonq
+Compilation utilities demo (refactored to chain-style API).
 """
 
 import tyxonq as tq
 
 
-c = tq.Circuit(3)
-c.rx(0, theta=0.2)
-c.rz(0, theta=-0.3)
-c.ry(1, theta=0.1)
-c.h(2)
-c.cx(0, 1)
-c.cz(2, 1)
-c.x(0)
-c.y(0)
-c.rxx(1, 2, theta=1.7)
+def build_demo_circuit() -> tq.Circuit:
+    c = tq.Circuit(3)
+    c.rx(0, theta=0.2)
+    c.rz(0, theta=-0.3)
+    c.h(2)
+    c.cx(0, 1)
+    c.measure_z(0).measure_z(1).measure_z(2)
+    # Prefer text draw by default
+    c._draw_output = "text"
+    return c
 
 
-c0, _ = tq.compiler.qiskit_compiler.qiskit_compile(
-    c,
-    compiled_options={"optimization_level": 0, "basis_gates": ["cx", "cz", "h", "rz"]},
-)
-
-c1, _ = tq.compiler.qiskit_compiler.qiskit_compile(
-    c,
-    compiled_options={"optimization_level": 1, "basis_gates": ["cx", "cz", "h", "rz"]},
-)
-
-
-c2, _ = tq.compiler.qiskit_compiler.qiskit_compile(
-    c,
-    compiled_options={"optimization_level": 2, "basis_gates": ["cx", "cz", "h", "rz"]},
-)
-
-
-c3, _ = tq.compiler.qiskit_compiler.qiskit_compile(
-    c,
-    compiled_options={"optimization_level": 3, "basis_gates": ["cx", "cz", "h", "rz"]},
-)
-
-print(
-    "qiskit can become worse with higher level optimization when the target gate is not U3 but rz"
-)
-print("level 0:\n")
-print(c0.draw())
-print("level 1:\n")
-print(c1.draw())
-print("level 2:\n")
-print(c2.draw())
-print("level 3:\n")
-print(c3.draw())
+def qiskit_compile_levels():
+    c = build_demo_circuit()
+    levels = [0, 1, 2, 3]
+    compiled = []
+    for lvl in levels:
+        try:
+            # output='ir' uses native compiler by default; request qiskit artifacts explicitly below
+            cc = c.compile(
+                compile_engine="default",
+                output="ir",
+                options={"optimization_level": lvl, "basis_gates": ["cx", "cz", "h", "rz"]},
+            )
+            compiled.append((lvl, cc))
+        except Exception as e:
+            print(f"qiskit compile failed at level {lvl}: {e}")
+    for lvl, cc in compiled:
+        # Directly use our Circuit.draw() which compiles to qiskit under the hood
+        print(f"level {lvl} drawing:")
+        print(cc.draw())
 
 
-compiler_wo_mapping = tq.compiler.DefaultCompiler()
-c4, _ = compiler_wo_mapping(c)
-print(
-    "compiled with tq default compiler: combining the good from qiskit and our tq own"
-)
-# we always uuggest using DefaultCompiler for tasks on qcloud
-# internally we run optimized compiling using U3 basis with qiskit which has good performance
-# and we unroll u3 with rz and apply replace/prune/merge loop developed in tq to further optimize the circuit
-print(c4.draw())
+def main():
+    qiskit_compile_levels()
+    try:
+        c = build_demo_circuit()
+        qasm = c.compile(compile_engine="qiskit", output="qasm2", options={"basis_gates": ["cx", "cz", "h", "rz"]})
+        print("qasm2 length:", len(qasm))
+    except Exception:
+        pass
 
-print("gate number comparison (last ours vs before qiskit (0, 1, 2, 3))")
-for c in [c0, c1, c2, c3, c4]:
-    print(c.gate_count())
 
-# if we want to apply routing/qubit mapping
-
-compiler_w_mapping = tq.compiler.DefaultCompiler(
-    {"coupling_map": [[0, 2], [2, 0], [1, 0], [0, 1]]}
-)
-c5, info = compiler_w_mapping(c)
-print("circuit with qubit mapping")
-print(c5.draw())
-print(info)
+if __name__ == "__main__":
+    main()

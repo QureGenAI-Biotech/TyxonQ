@@ -2,8 +2,14 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
+# Prefer numeric backend operations; use NumPy only when strictly necessary (e.g., SciPy interop)
+from ...numerics.api import get_backend
 import numpy as np
 from scipy.optimize import minimize
+from scipy.linalg import pinv as scipy_pinv
+
+numeric_backend = get_backend(None)
+nb = numeric_backend
 
 
 class ReadoutMit:
@@ -22,16 +28,16 @@ class ReadoutMit:
 
     def __init__(self, execute: Optional[Callable[..., List[Dict[str, int]]]] = None) -> None:
         self.execute_fun = execute
-        self.single_qubit_cals: Dict[int, np.ndarray] = {}
+        self.single_qubit_cals: Dict[int, Any] = {}
 
-    def set_single_qubit_cals(self, cals: Dict[int, np.ndarray]) -> None:
+    def set_single_qubit_cals(self, cals: Dict[int, Any]) -> None:
         """Set per-qubit 2x2 calibration matrices.
 
         The matrix maps true probabilities to measured probabilities.
         """
 
         for q, m in cals.items():
-            arr = np.asarray(m, dtype=float)
+            arr = nb.asarray(m)
             if arr.shape != (2, 2):
                 raise ValueError(f"Calibration for qubit {q} must be 2x2")
             self.single_qubit_cals[q] = arr
@@ -40,9 +46,9 @@ class ReadoutMit:
         n = len(next(iter(counts.keys())))
         return list(range(n))
 
-    def _kron_cal_matrix(self, qubits: Sequence[int]) -> np.ndarray:
+    def _kron_cal_matrix(self, qubits: Sequence[int]) -> Any:
         if not qubits:
-            return np.eye(1)
+            return nb.eye(1)
         mats = []
         for q in qubits:
             if q not in self.single_qubit_cals:
@@ -50,53 +56,77 @@ class ReadoutMit:
             mats.append(self.single_qubit_cals[q])
         full = mats[0]
         for m in mats[1:]:
-            full = np.kron(full, m)
+            full = nb.kron(full, m)
         return full
 
     @staticmethod
-    def _count2vec(counts: Dict[str, int]) -> np.ndarray:
+    def _count2vec(counts: Dict[str, int]) -> Any:
         n = len(next(iter(counts.keys())))
         size = 2**n
-        vec = np.zeros(size, dtype=float)
+        vec_np = np.zeros((size,), dtype=float)
         for bitstr, c in counts.items():
             idx = int(bitstr, 2)
-            vec[idx] = float(c)
-        shots = max(1.0, vec.sum())
-        return vec / shots
+            vec_np[idx] = float(c)
+        shots = float(np.sum(vec_np))
+        if shots <= 0:
+            shots = 1.0
+        vec_np = vec_np / shots
+        return nb.asarray(vec_np)
 
     @staticmethod
-    def _vec2count(prob: np.ndarray, shots: int) -> Dict[str, int]:
-        prob = np.clip(prob, 0.0, 1.0)
-        prob = prob / max(1e-12, prob.sum())
-        vec = np.round(prob * shots).astype(int)
-        n = int(np.log2(len(vec)))
+    def _vec2count(prob: Any, shots: int) -> Dict[str, int]:
+        arr_np = np.asarray(nb.to_numpy(prob), dtype=float)
+        arr_np = np.clip(arr_np, 0.0, 1.0)
+        s = float(np.sum(arr_np))
+        if s <= 1e-12:
+            s = 1.0
+        arr_np = arr_np / s
+        vec_np = np.rint(arr_np * float(shots)).astype(int)
+        size = int(vec_np.size)
+        n = int(np.log2(size)) if size > 0 else 0
         counts: Dict[str, int] = {}
-        for idx, v in enumerate(vec):
-            if v <= 0:
-                continue
-            bitstr = format(idx, f"0{n}b")
-            counts[bitstr] = int(v)
+        nz_idx = np.nonzero(vec_np)[0]
+        for idx in nz_idx:
+            bitstr = format(int(idx), f"0{n}b")
+            counts[bitstr] = int(vec_np[int(idx)])
         return counts
 
-    def mitigate_probability(self, prob_measured: np.ndarray, qubits: Sequence[int], method: str = "inverse") -> np.ndarray:
+    def mitigate_probability(self, prob_measured: Any, qubits: Sequence[int], method: str = "inverse") -> Any:
         A = self._kron_cal_matrix(qubits)
         if method == "inverse":
-            X = np.linalg.pinv(A)
-            prob_true = X @ prob_measured
-            prob_true = np.clip(prob_true, 0.0, 1.0)
-            return prob_true / max(1e-12, prob_true.sum())
+            # Use SciPy pinv for stability; convert via backend
+            A_np = nb.to_numpy(A)
+            pm_np = nb.to_numpy(prob_measured)
+            X = scipy_pinv(A_np)
+            pt_np = np.asarray(X @ pm_np, dtype=float)
+            pt_np = np.clip(pt_np, 0.0, 1.0)
+            s = float(np.sum(pt_np))
+            if s <= 1e-12:
+                s = 1.0
+            pt_np = pt_np / s
+            return [float(x) for x in pt_np]
 
         # constrained least squares on simplex
-        def fun(x: Any) -> Any:
-            return float(np.sum((prob_measured - A @ x) ** 2))
+        A_np = nb.to_numpy(A)
+        pm_np = nb.to_numpy(prob_measured)
 
-        n = len(prob_measured)
-        x0 = np.ones(n, dtype=float) / n
-        cons = {"type": "eq", "fun": lambda x: 1.0 - float(np.sum(x))}
+        def fun(x: Any) -> Any:
+            y = A_np @ x
+            diff = y - pm_np
+            return float(np.dot(diff, diff))
+
+        n = len(pm_np)
+        x0 = [1.0 / n] * n
+        cons = {"type": "eq", "fun": lambda x: 1.0 - float(sum(x))}
         bnds = tuple((0.0, 1.0) for _ in range(n))
         res = minimize(fun, x0, method="SLSQP", constraints=cons, bounds=bnds, tol=1e-6)
-        x = np.clip(res.x, 0.0, 1.0)
-        return x / max(1e-12, x.sum())
+        x_np = np.asarray(res.x, dtype=float)
+        x_np = np.clip(x_np, 0.0, 1.0)
+        s = float(np.sum(x_np))
+        if s <= 1e-12:
+            s = 1.0
+        x_np = x_np / s
+        return [float(v) for v in x_np]
 
     def apply_readout_mitigation(self, raw_count: Dict[str, int], method: str = "inverse", qubits: Optional[Sequence[int]] = None, shots: Optional[int] = None) -> Dict[str, int]:
         if qubits is None:

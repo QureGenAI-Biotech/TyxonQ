@@ -19,8 +19,14 @@ class NativeCompiler:
 
         from .pipeline import build_pipeline
 
+        # Default basis_gates for native pipeline (can be overridden by options)
+        basis_gates = list(options.get("basis_gates", ["h", "rx", "rz", "cx", "cz"]))
+        optimization_level = int(options.get("optimization_level", 0))
+
         pipeline_names = options.get("pipeline", [
             "rewrite/measurement",
+            # Enable simple merge/prune when opt level >= 1
+            *( ["rewrite/merge_prune"] if optimization_level >= 1 else [] ),
             "scheduling/shot_scheduler",
         ])
 
@@ -65,6 +71,32 @@ class NativeCompiler:
                 options["measurements"] = derived
 
         pipe = build_pipeline(pipeline_names)
+        # Basis rewrite: map a few common gates into chosen basis before pipeline
+        def _rewrite_to_basis(c: "Circuit") -> "Circuit":
+            new_ops = []
+            for op in getattr(c, "ops", []) or []:
+                if not (isinstance(op, (list, tuple)) and op):
+                    new_ops.append(op)
+                    continue
+                name = str(op[0]).lower()
+                if name == "x" and "rx" in basis_gates:
+                    q = int(op[1]); new_ops.append(("rx", q, 3.141592653589793))
+                elif name == "y" and "ry" in basis_gates:
+                    q = int(op[1]); new_ops.append(("ry", q, 3.141592653589793))
+                elif name in ("cx", "cz", "h", "rx", "ry", "rz"):
+                    new_ops.append(tuple(op))
+                elif name == "rxx" and "rxx" in basis_gates:
+                    new_ops.append(tuple(op))
+                elif name == "rzz" and "rzz" in basis_gates:
+                    new_ops.append(tuple(op))
+                elif name == "cy" and "cy" in basis_gates:
+                    new_ops.append(tuple(op))
+                else:
+                    # Unknown or unsupported for rewrite: keep as-is
+                    new_ops.append(tuple(op))
+            return type(c)(c.num_qubits, ops=new_ops, metadata=dict(getattr(c, "metadata", {})), instructions=list(getattr(c, "instructions", [])))
+
+        circuit = _rewrite_to_basis(circuit)
         lowered = pipe.run(circuit, target, **options)
 
         # Optional: emit an execution plan when shot_plan/total_shots is provided
@@ -87,6 +119,8 @@ class NativeCompiler:
             "options": dict(options),
             "caps": dict(target),
             "pipeline": list(pipeline_names),
+            "basis_gates": list(basis_gates),
+            "optimization_level": optimization_level,
             "execution_plan": execution_plan,
         }
         return {"circuit": lowered, "metadata": metadata}

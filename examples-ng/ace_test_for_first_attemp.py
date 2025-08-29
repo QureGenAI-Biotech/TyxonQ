@@ -6,6 +6,15 @@ import time
 provider = "local"
 device = "mps"
 
+tq.devices
+tq.complier
+
+
+
+#可视化。  context  ，，
+# 
+#  任务 task  
+
 # Create and execute quantum circuit on real hardware
 def quantum_hello_world():
     c = tq.Circuit(2)
