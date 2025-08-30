@@ -15,10 +15,12 @@ Naming policy:
   - expval_dense -> expectation
 """
 
-from typing import Optional, Sequence, Tuple, Callable
+from typing import Optional, Sequence, Tuple, Callable, Any
 import numpy as np
+from ...numerics import NumericBackend as nb
+from ...numerics.api import ArrayBackend
 
-from ...core.operations.pauli import pauli_string_sum_dense, pauli_string_sum_coo
+from .kernels.pauli import pauli_string_sum_dense, pauli_string_sum_coo
 
 
 class PauliSumCOO:
@@ -43,7 +45,7 @@ class PauliSumCOO:
         self._terms = [list(t) for t in terms]
         self._weights = list(weights) if weights is not None else None
 
-    def to_dense(self) -> np.ndarray:
+    def to_dense(self):
         return pauli_string_sum_dense(self._terms, self._weights)
 
     def to_coo(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Tuple[int, int]]:
@@ -51,14 +53,15 @@ class PauliSumCOO:
 
 
 def evolve_state(
-    H_or_terms: np.ndarray | Sequence[Sequence[int]] | Callable[[float], np.ndarray],
-    psi0: np.ndarray,
+    H_or_terms: Any | Sequence[Sequence[int]] | Callable[[float], Any],
+    psi0: Any,
     t: float,
     *,
     steps: int = 128,
     weights: Optional[Sequence[float]] = None,
     method: str = "euler",
-) -> np.ndarray:
+    backend: ArrayBackend | None = None,
+) -> Any:
     """Integrate Schrödinger dynamics for small statevectors.
 
     Solves dψ/dt = -i H(t) ψ using a simple fixed-step scheme.
@@ -91,27 +94,36 @@ def evolve_state(
         if isinstance(H_or_terms, (list, tuple)):
             H = pauli_string_sum_dense(H_or_terms, weights)
         else:
-            H = np.asarray(H_or_terms)
+            H = nb.asarray(H_or_terms)
         H_fun = lambda _t: H
 
-    dt = float(t) / float(max(1, int(steps)))
-    psi = np.asarray(psi0, dtype=np.complex128)
-    for i in range(max(1, int(steps))):
-        Hi = H_fun(i * dt)
-        rhs = -1j * (Hi @ psi)
-        psi = psi + dt * rhs
-        nrm = np.linalg.norm(psi)
-        if nrm > 0:
+    K = backend or nb
+    n_steps = max(1, int(steps))
+    dt = float(t) / float(n_steps)
+    dt_b = K.array(dt, dtype=K.float64)
+    j = K.array(1j, dtype=K.complex128)
+    psi = K.asarray(psi0)
+    for i in range(n_steps):
+        Hi = K.asarray(H_fun(i * dt))
+        rhs = -j * K.matmul(Hi, psi)
+        psi = psi + dt_b * rhs
+        nrm2 = K.sum(K.abs(psi) ** 2)
+        nrm = K.sqrt(nrm2)
+        if float(np.asarray(K.to_numpy(nrm))) > 0.0:
             psi = psi / nrm
     return psi
 
 
-def expectation(psi: np.ndarray, H: np.ndarray) -> float:
+def expectation(psi: Any, H: Any, *, backend: ArrayBackend | None = None) -> Any:
     """Compute the dense expectation value ⟨ψ|H|ψ⟩.
 
     For small systems where H is explicitly dense.
     """
-    return float(np.real(np.conj(psi) @ (H @ psi)))
+    K = backend or nb
+    psiK = K.asarray(psi)
+    HK = K.asarray(H)
+    val = K.matmul(K.conj(psiK), K.matmul(HK, psiK))  # type: ignore[arg-type]
+    return K.real(val)
 
 
 # ---- Backwards compatibility aliases ----

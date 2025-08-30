@@ -4,14 +4,27 @@ from typing import Any, Tuple
 
 try:
     import cupynumeric as cn
+    _CUNUM_AVAILABLE = True
 except Exception:  # pragma: no cover - optional dependency
     cn = None  # type: ignore
+    _CUNUM_AVAILABLE = False
 
 
 class CuPyNumericBackend:
     """Array backend backed by cupynumeric (GPU/accelerated)."""
 
     name = "cupynumeric"
+    available = _CUNUM_AVAILABLE
+
+    if _CUNUM_AVAILABLE:  # pragma: no cover - simple dtype exposure
+        complex64 = cn.complex64
+        complex128 = cn.complex128
+        float32 = cn.float32
+        float64 = cn.float64
+        int32 = cn.int32
+        int64 = cn.int64
+        bool = cn.bool_
+        int = cn.int64
 
     def array(self, data: Any, dtype: Any | None = None) -> Any:
         if cn is None:
@@ -40,6 +53,124 @@ class CuPyNumericBackend:
             raise RuntimeError("cupynumeric not available")
         return cn.einsum(subscripts, *operands)
 
+    # Array ops
+    def reshape(self, a: Any, shape: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.reshape(a, shape)
+
+    def moveaxis(self, a: Any, source: int, destination: int) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.moveaxis(a, source, destination)
+
+    def sum(self, a: Any, axis: int | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.sum(a, axis=axis) if axis is not None else cn.sum(a)
+
+    def mean(self, a: Any, axis: int | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.mean(a, axis=axis) if axis is not None else cn.mean(a)
+
+    def abs(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.abs(a)
+
+    def real(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.real(a)
+
+    def conj(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.conj(a)
+
+    def diag(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        import numpy as _np
+        return _np.diag(_np.asarray(a))
+
+    def zeros(self, shape: tuple[int, ...], dtype: Any | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.zeros(shape, dtype=dtype)
+
+    def ones(self, shape: tuple[int, ...], dtype: Any | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.ones(shape, dtype=dtype)
+
+    def zeros_like(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.zeros_like(a)
+
+    def ones_like(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.ones_like(a)
+
+    def eye(self, n: int, dtype: Any | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.eye(n, dtype=dtype)
+
+    def kron(self, a: Any, b: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.kron(a, b)
+
+    # Elementary math
+    def exp(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.exp(a)
+
+    def sin(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.sin(a)
+
+    def cos(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.cos(a)
+
+    def sqrt(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.sqrt(a)
+
+    def square(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.square(a)
+
+    def log(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.log(a)
+
+    def log2(self, a: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.log2(a)
+
+    # Linear algebra (fallback to numpy on host for SVD)
+    def svd(self, a: Any, full_matrices: bool = False) -> Tuple[Any, Any, Any]:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        # Fallback: move to numpy for SVD
+        import numpy as _np
+        A = _np.asarray(a)
+        U, S, Vh = _np.linalg.svd(A, full_matrices=full_matrices)
+        return U, S, Vh
+
     def rng(self, seed: int | None = None) -> Any:
         if cn is None:
             raise RuntimeError("cupynumeric not available")
@@ -54,6 +185,23 @@ class CuPyNumericBackend:
 
         out = rng.normal(size=shape)
         return out.astype(dtype) if dtype is not None else out
+
+    # Discrete ops / sampling helpers
+    def choice(self, rng: Any, a: int, *, size: int, p: Any | None = None) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        # cupynumeric mirrors numpy API
+        return rng.choice(a, size=size, p=p)
+
+    def bincount(self, x: Any, minlength: int = 0) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.bincount(x, minlength=minlength)
+
+    def nonzero(self, x: Any) -> Any:
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.nonzero(x)
 
     def requires_grad(self, x: Any, flag: bool = True) -> Any:
         return x

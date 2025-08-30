@@ -1,96 +1,133 @@
 """
-Demonstration on readout error mitigation usage
+Readout error mitigation demo (refactored to new API).
+
+This example builds a small Bell-like circuit, constructs synthetic measured counts
+with readout errors, and applies readout mitigation to recover the ideal counts.
 """
 
-import numpy as np
+from __future__ import annotations
 
 import tyxonq as tq
 from tyxonq.postprocessing.readout import ReadoutMit
-from tyxonq.postprocessing.io import marginal_count, expectation
+
+from tyxonq.numerics import NumericBackend as nb
+
+import numpy as np
 
 
-def partial_sample(c, batch, readout_error=None):
-    measure_index = []
-    for inst in c._extra_qir:
-        if inst["name"] == "measure":
-            measure_index.append(inst["index"][0])
-    if len(measure_index) == 0:
-        measure_index = list(range(c._nqubits))
-
-    ct = c.sample(
-        allow_state=True,
-        batch=batch,
-        readout_error=readout_error,
-        format="count_dict_bin",
-    )
-    return marginal_count(ct, measure_index)
-
-
-def simulator(c, shots, logical_physical_mapping=None):
-    # with readout_error noise
-    nqubit = c._nqubits
-    if logical_physical_mapping is None:
-        logical_physical_mapping = {i: i for i in range(nqubit)}
-
-    gg = []
-    for i in range(200):
-        gg.append(np.sin(i) * 0.02 + 0.978)
-        # mocked readout error
-    readout_error = np.reshape(gg[0 : nqubit * 2], (nqubit, 2))
-    mapped_readout_error = [[1, 1]] * nqubit
-    for lq, phyq in logical_physical_mapping.items():
-        mapped_readout_error[lq] = readout_error[phyq]
-    return partial_sample(c, shots, mapped_readout_error)
-
-
-def run(cs, shots):
-    # customized backend for mitigation test
-    # a simulator with readout error and qubit mapping supporting batch submission
-    ts = []
-    for c in cs:
-        count = simulator(c, shots)
-        ts.append(count)
-    return ts
-
-
-def apply_readout_mitigation():
-    nqubit = 4
+def build_bell_circuit(nqubit: int = 2) -> tq.Circuit:
     c = tq.Circuit(nqubit)
-    c.h(0)
-    c.cnot(0, 1)
-    c.x(3)
+    c.h(0).cx(0, 1)
+    c.measure_z(0).measure_z(1)
+    return c
 
+
+def ideal_counts_for_bell(shots: int) -> dict[str, int]:
+    # |Φ+> = (|00>+|11>)/sqrt(2) measured in Z basis → 00 and 11 with 50%-50%
+    half = shots // 2
+    return {"00": half, "11": shots - half}
+
+
+    # Removed old local channel; now provided by postprocessing.readout.apply_readout_noise_to_counts
+    pass
+
+
+def apply_readout_noise_to_counts(raw_counts: Dict[str, int], single_qubit_cals: Dict[int, Any]) -> Dict[str, int]:
+    """Apply per-qubit readout calibration matrices to ideal counts to simulate readout noise.
+
+    Parameters:
+        raw_counts: counts dict mapping bitstring→frequency (ideal ground truth)
+        single_qubit_cals: mapping qubit index→2x2 matrix A so that measured_prob = A @ true_prob
+
+    Returns:
+        counts dict after applying readout channel.
+    """
+    if not raw_counts:
+        return {}
+    n = len(next(iter(raw_counts.keys())))
+    size = 2**n
+    prob_true = nb.zeros((size,), dtype=nb.float64)
+    shots = 0.0
+    for bstr, cnt in raw_counts.items():
+        idx = int(bstr, 2)
+        arr = nb.to_numpy(prob_true)
+        arr[idx] = float(cnt)
+        prob_true = nb.asarray(arr)
+        shots += float(cnt)
+    if shots <= 0:
+        return dict(raw_counts)
+    prob_true = nb.asarray(nb.to_numpy(prob_true) / shots)
+    # kron A on ascending wires (0..n-1)
+    A = None
+    for q in range(n):
+        m = single_qubit_cals.get(q)
+        if m is None:
+            m = nb.eye(2)
+        A = m if A is None else nb.kron(A, m)
+    # Convert to numpy for final rounding and indexing ops
+    prob_meas_np = np.asarray(nb.to_numpy(A) @ nb.to_numpy(prob_true), dtype=float)
+    prob_meas_np = np.clip(prob_meas_np, 0.0, 1.0)
+    s = float(np.sum(prob_meas_np))
+    if s <= 1e-12:
+        s = 1.0
+    prob_meas_np = prob_meas_np / s
+    vecm = np.rint(prob_meas_np * shots).astype(int)
+    out: Dict[str, int] = {}
+    nz_idx = np.nonzero(vecm)[0]
+    for idx in nz_idx:
+        out[format(int(idx), f"0{n}b")] = int(vecm[int(idx)])
+    return out
+
+
+def demo_readout_mitigation():
+    c = build_bell_circuit(2)
     shots = 10000
 
-    raw_count = run([c], shots)[0]
+    # Ideal counts (synthetic)
+    ideal = ideal_counts_for_bell(shots)
 
-    cal_qubits = [0, 1, 2, 3]
-    use_qubits = [0, 1]
+    # Define per-qubit calibration matrices (measured_prob = A @ true_prob), row-stochastic
+    # Example: mild flip biases
+    nb = tq.set_backend("numpy")  # choose numeric backend
+    A0 = nb.array([[0.97, 0.03], [0.05, 0.95]], dtype=nb.float64)
+    A1 = nb.array([[0.98, 0.02], [0.04, 0.96]], dtype=nb.float64)
 
-    # idea_value = c.expectation_ps(z=[0,1])
-    idea_count = partial_sample(c, batch=shots)
-    idea_count = marginal_count(idea_count, use_qubits)
-    idea_value = expectation(idea_count, z=[0, 1])
+    # Synthesize raw counts as if readout errors were applied
+    raw = apply_readout_noise_to_counts(ideal, {0: A0, 1: A1})
 
-    # use case 1
-    mit = ReadoutMit(execute=run)
-    mit.cals_from_system(cal_qubits, shots=shots, method="local")
-    mit_count = mit.apply_correction(raw_count, use_qubits, method="inverse")
-    mit_value1 = expectation(mit_count, z=[0, 1])
+    # Configure mitigation with known calibrations (numeric path)
+    mit = ReadoutMit()
+    # nb.to_numpy exists via API: convert backend arrays to numpy for scipy interop inside mitigation
+    mit.set_single_qubit_cals({0: nb.to_numpy(A0), 1: nb.to_numpy(A1)})
+    corrected = mit.apply_readout_mitigation(raw, method="inverse", qubits=[0, 1], shots=shots)
 
-    # use case 2: directly mitigation on expectation
-    mit = ReadoutMit(execute=run)
-    mit.cals_from_system(cal_qubits, shots=shots, method="local")
-    mit_value2 = mit.expectation(raw_count, z=[0, 1])
+    # Chainable circuit execution path (proper noise injection via device layer)
+    run_results = (
+        c
+        .device(
+            provider="simulator",
+            device="statevector",
+            shots=shots,
+            use_noise=True,
+            noise={"type": "readout", "cals": {0: A0, 1: A1}},
+        )
+        .postprocessing(method="readout_mitigation", cals={0: nb.to_numpy(A0), 1: nb.to_numpy(A1)}, mitigation="inverse")
+        .run()
+    )
+    counts_from_run = run_results.get("results", {}) if isinstance(run_results, dict) else run_results[0].get("results", {})
+    # Postprocessing is performed by Circuit.run when method="readout_mitigation" and cals provided
 
-    # use case 3: global calibriation
-    mit = ReadoutMit(execute=run)
-    mit.cals_from_system(cal_qubits, shots=shots, method="global")
-    mit_value3 = mit.expectation(raw_count, z=[0, 1], method="square")
-
-    print("idea expectation value:", idea_value)
-    print("mitigated expectation value:", mit_value1, mit_value2, mit_value3)
+    print("Ideal:", ideal)
+    print("Raw (with readout error):", raw)
+    print("Corrected (mitigated, numeric):", corrected)
+    print("Run(raw with device-injected readout noise):", counts_from_run)
+    postproc_payload = (
+        run_results.get("postprocessing", {})
+        if isinstance(run_results, dict)
+        else (run_results[0].get("postprocessing", {}) if run_results else {})
+    )
+    print("Postprocessing payload:", postproc_payload)
 
 
 if __name__ == "__main__":
-    apply_readout_mitigation()
+    demo_readout_mitigation()

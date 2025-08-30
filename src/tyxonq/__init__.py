@@ -139,9 +139,50 @@ try:
 except Exception:
     pass
 
+# --- Top-level global pipeline defaults (device/postprocessing/compile) ---
+try:
+    from .core.ir.circuit import (
+        set_global_device_defaults as _set_dev_defaults,
+        get_global_device_defaults as _get_dev_defaults,
+        set_global_postprocessing_defaults as _set_post_defaults,
+        get_global_postprocessing_defaults as _get_post_defaults,
+        set_global_compile_defaults as _set_compile_defaults,
+        get_global_compile_defaults as _get_compile_defaults,
+    )
+
+    def device(**options: Any) -> Dict[str, Any]:
+        return _set_dev_defaults(dict(options))
+
+    def get_device_defaults() -> Dict[str, Any]:
+        return _get_dev_defaults()
+
+    def postprocessing(**options: Any) -> Dict[str, Any]:
+        return _set_post_defaults(dict(options))
+
+    def get_postprocessing_defaults() -> Dict[str, Any]:
+        return _get_post_defaults()
+
+    def compile(**options: Any) -> Dict[str, Any]:
+        return _set_compile_defaults(dict(options))
+
+    def get_compile() -> Dict[str, Any]:
+        return _get_compile_defaults()
+
+    __all__.extend([
+        "device",
+        "get_device_defaults",
+        "postprocessing",
+        "get_postprocessing_defaults",
+        "compile",
+        "get_compile",
+    ])
+except Exception:
+    pass
+
 # --- Top-level numerics backend selection convenience ---
 try:
     from .numerics.context import set_backend as _set_backend  # type: ignore
+    from .numerics.api import get_backend as _get_backend  # type: ignore
 
     def set_backend(name_or_instance: Any):
         """Set global/default numerics backend (e.g., 'numpy' | 'pytorch').
@@ -149,18 +190,51 @@ try:
         This is a thin alias to ``tyxonq.numerics.context.set_backend``.
         """
 
+        # String name: allow graceful fallback when unavailable
+        if isinstance(name_or_instance, str):
+            name = str(name_or_instance).lower()
+            if name == "cupynumeric":
+                try:
+                    _set_backend(name)
+                    return _get_backend(name)
+                except Exception:
+                    # Fallback to numpy with a warning
+                    try:
+                        import warnings as _warnings
+
+                        _warnings.warn("cupynumeric not installed, falling back to numpy backend", UserWarning)
+                    except Exception:
+                        pass
+                    _set_backend("numpy")
+                    try:
+                        return _get_backend("numpy")
+                    except Exception:
+                        return None
+            else:
+                _set_backend(name)
+                try:
+                    return _get_backend(name)
+                except Exception:
+                    return None
+
+        # Instance path
         _set_backend(name_or_instance)
         try:
-            from .numerics.api import get_backend as _get_backend  # type: ignore
-            # return a backend handle like legacy K = tq.set_backend('pytorch')
-            if isinstance(name_or_instance, str):
-                return _get_backend(name_or_instance)
-            return name_or_instance
+            return _get_backend(None)
         except Exception:
             return None
 
+    def get_backend(name: Any | None = None):
+        """Get an ArrayBackend instance.
+
+        - name is optional; when None, returns the currently configured backend.
+        - name can be 'numpy' | 'pytorch' | 'cupynumeric' to explicitly fetch.
+        """
+
+        return _get_backend(name)
+
     # expose in module namespace and __all__
-    __all__.append("set_backend")
+    __all__.extend(["set_backend", "get_backend"])
 except Exception:
     pass
 

@@ -80,6 +80,55 @@ class StatevectorEngine:
                 # unsupported ops ignored in this minimal engine
                 continue
 
+        # If shots requested and there are measurements, return sampled counts over computational basis
+        if shots > 0 and len(measures) > 0:
+            nb = self.backend
+            probs = nb.square(nb.abs(state)) if hasattr(nb, 'square') else nb.abs(state) ** 2  # type: ignore[operator]
+            # Sample indices according to probabilities
+            rng = nb.rng(None)
+            p_np = np.asarray(nb.to_numpy(probs), dtype=float)
+            dim = int(p_np.size)
+            # Optional noise mixing / readout channel application
+            if bool(kwargs.get("use_noise", False)):
+                noise = kwargs.get("noise", {}) or {}
+                ntype = str(noise.get("type", "")).lower()
+                if ntype == "readout":
+                    # Apply full calibration matrix A = kron(A0, A1, ...)
+                    A = None
+                    cals = noise.get("cals", {}) or {}
+                    for q in range(num_qubits):
+                        m = cals.get(q)
+                        if m is None:
+                            m = nb.eye(2)
+                        m = nb.asarray(m)
+                        A = m if A is None else nb.kron(A, m)
+                    p_np = np.asarray(nb.to_numpy(A), dtype=float) @ p_np
+                elif ntype == "depolarizing":
+                    p = float(noise.get("p", 0.0))
+                    alpha = max(0.0, min(1.0, 4.0 * p / 3.0))
+                    p_np = (1.0 - alpha) * p_np + alpha * (1.0 / dim)
+                # Clamp and renormalize
+                p_np = np.clip(p_np, 0.0, 1.0)
+                s = float(np.sum(p_np))
+                p_np = p_np / (s if s > 1e-12 else 1.0)
+            if p_np.sum() > 0:
+                p_np = p_np / float(p_np.sum())
+            else:
+                p_np = np.full((dim,), 1.0 / dim, dtype=float)
+            idx_samples = nb.choice(rng, dim, size=shots, p=p_np)
+            # Bin counts
+            idx_samples_backend = nb.asarray(idx_samples)
+            counts_arr = nb.bincount(idx_samples_backend, minlength=dim)
+            # Build bitstrings in big-endian order (q0 is left)
+            n = num_qubits
+            results: Dict[str, int] = {}
+            nz = nb.nonzero(counts_arr)[0]
+            for idx in nz:
+                ii = int(idx)
+                bitstr = ''.join('1' if (ii >> (n - 1 - k)) & 1 else '0' for k in range(n))
+                results[bitstr] = int(nb.to_numpy(counts_arr)[ii])
+            return {"results": results, "metadata": {"shots": shots, "backend": self.backend.name}}
+
         expectations: Dict[str, float] = {}
         for q in measures:
             val = float(expect_z_statevector(state, q, num_qubits))

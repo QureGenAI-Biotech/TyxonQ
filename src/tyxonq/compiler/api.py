@@ -17,7 +17,7 @@ class CompileRequest(TypedDict):
     """
 
     circuit: "Circuit"
-    target: "DeviceCapabilities"
+    target: Any
     options: Dict[str, Any]
 
 
@@ -43,9 +43,9 @@ class Compiler(Protocol):
 def compile(
     circuit: "Circuit",
     *,
-    provider: str = "default",
+    compile_engine: str = "default",
     output: str = "ir",
-    target: "DeviceCapabilities" | None = None,
+    target: str | None = None,
     options: Dict[str, Any] | None = None,
 ) -> CompileResult:
     """Unified compile entry.
@@ -58,13 +58,41 @@ def compile(
         options: provider-specific compile options
     """
 
-    target = target or {}  # type: ignore[assignment]
+    # Parse target string to capability dict if provided
+    def _parse_target(target_str: str) -> Dict[str, Any]:
+        # expected forms: "simulator::statevector", "simulator::density_matrix", "hardware::ibm::ibm_oslo"
+        parts = [p for p in (target_str or "").split("::") if p]
+        obj: Dict[str, Any] = {}
+        if not parts:
+            return {"scope": "simulator", "variant": "statevector"}
+        if len(parts) == 1:
+            obj["scope"] = parts[0]
+            obj["variant"] = "statevector" if parts[0] == "simulator" else parts[0]
+        elif len(parts) == 2:
+            obj["scope"], obj["variant"] = parts
+        else:
+            obj["scope"], obj["variant"], obj["detail"] = parts[0], parts[1], "::".join(parts[2:])
+        return obj
+
+    cap_target: Dict[str, Any] = _parse_target(target) if isinstance(target, str) else {}
     options = options or {}
     # Map generic output to provider-specific
-    prov = provider.lower()
+    prov = compile_engine.lower()
     if prov in ("tyxonq", "native"):
         prov = "default"
     out = output.lower()
+
+    # Auto-switch to qiskit compile engine for TyxonQ cloud hardware targets
+    try:
+        scope = str(cap_target.get("scope", "")).lower()
+        variant = str(cap_target.get("variant", "")).lower()
+        detail = str(cap_target.get("detail", "")).lower()
+        is_tyxonq_hw = scope in ("hardware", "cloud") and ("tyxonq" in variant or "tyxonq" in detail)
+        if is_tyxonq_hw and prov != "qiskit":
+            print("Info: target requires TyxonQ cloud hardware; switching compile_engine to 'qiskit'.")
+            prov = "qiskit"
+    except Exception:
+        pass
 
     if prov == "qiskit":
         from .providers.qiskit import QiskitCompiler
@@ -80,12 +108,12 @@ def compile(
             out_opt = "ir"
         opts = dict(options)
         opts["output"] = out_opt
-        return QiskitCompiler().compile({"circuit": circuit, "target": target, "options": opts})  # type: ignore[arg-type]
+        return QiskitCompiler().compile({"circuit": circuit, "target": cap_target, "options": opts})  # type: ignore[arg-type]
 
     # default native provider (TyxonQ)
     from .native_compiler import NativeCompiler
 
     # Run native pipeline (stages list resolved inside NativeCompiler)
-    return NativeCompiler().compile({"circuit": circuit, "target": target, "options": dict(options)})  # type: ignore[arg-type]
+    return NativeCompiler().compile({"circuit": circuit, "target": cap_target, "options": dict(options)})  # type: ignore[arg-type]
 
 

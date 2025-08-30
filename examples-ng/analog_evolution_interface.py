@@ -1,71 +1,65 @@
 """
-pytorch backend is required, experimental built-in interface for parameterized hamiltonian evolution
-# warning: this script requires torchdiffeq, pip install torchdiffeq
+Analog time-evolution interface demo (refactored).
+
+This example shows how to:
+- Build a simple Hamiltonian from Pauli strings
+- Construct a Trotterized evolution circuit
+- Run on the local statevector simulator and view Z-expectations
+- Optionally compare with a small numeric evolve (dense) on CPU
 """
-import torch
+
+import numpy as np
 import tyxonq as tq
-from tyxonq.experimental import evol_global, evol_local
-
-K = tq.set_backend("pytorch")
-
-
-def manual_evol_global(c, h_fun, t, *args):
-    s = c.state()
-    n = c._nqubits
-    dt = min(0.1, t / 10)
-    steps = max(1, int(t / dt))
-    dt = t / steps
-    current_state = s
-    for i in range(steps):
-        current_time = i * dt
-        h = -1.0j * h_fun(current_time, *args)
-        try:
-            if K.is_sparse(h):
-                h = K.to_dense(h)
-        except Exception:
-            pass
-        y_col = K.reshape(current_state, [-1, 1])
-        tmp = h @ y_col
-        current_state = current_state + dt * K.reshape(tmp, [-1])
-    return type(c)(n, inputs=current_state)
-
-def h_fun(t, b):
-    return b * tq.gates.x().tensor
+from tyxonq.libs.circuits_library.trotter_circuit import build_trotter_circuit
+from tyxonq.libs.quantum_library.dynamics import (
+    PauliSumCOO as PauliStringSum2COO,  # compat alias for example text
+    evolve_state as evolve_state_numeric,  # compat alias for example text
+    expectation as expval_dense,  # compat alias for example text
+)
 
 
-hy = tq.quantum.PauliStringSum2COO([[2, 0]])
-# Densify once to avoid sparse autograd issues
-try:
-    hy_dense = K.to_dense(hy)
-except Exception:
-    hy_dense = hy
+def build_demo_hamiltonian():
+    # Two-qubit Hamiltonian: H = 1.0 * Z0 Z1 + 0.5 * X0
+    # Pauli encoding: 0=I,1=X,2=Y,3=Z
+    # Z0Z1 -> [3,3];  X0 -> [1,0]
+    terms = [[3, 3], [1, 0]]
+    weights = [1.0, 0.5]
+    return terms, weights
 
 
-def h_fun2(t, b):
-    return b[2] * K.cos(b[0] * t + b[1]) * hy_dense
+def run_trotter_example(time: float = 1.0, steps: int = 8):
+    terms, weights = build_demo_hamiltonian()
+
+    # Build trotterized circuit
+    c = build_trotter_circuit(terms, weights=weights, time=time, steps=steps, num_qubits=2)
+
+    # Run on local simulator (chain-style with postprocessing)
+    results = (
+        c.compile()
+         .device(provider="local", device="statevector", shots=0)
+         .postprocessing(method=None)
+         .run()
+    )
+    for result in results:
+        print("Simulator result:", result)
 
 
-# warning pytorch might be unable to do this jit optimization on value_and_grad
-# @K.jit
-# @K.value_and_grad
-def hybrid_evol(params):
-    c = tq.Circuit(2)
-    c.x([0, 1])
-    c = evol_local(c, [1], h_fun, 1.0, params[0])
-    c.cx(1, 0)
-    c.h(0)
-    # Use local dense evolution to avoid sparse mm shape issues
-    c = manual_evol_global(c, h_fun2, 1.0, params[1:])
-    return K.real(c.expectation_ps(z=[0, 1]))
+def compare_numeric(time: float = 1.0, steps: int = 256):
+    terms, weights = build_demo_hamiltonian()
+    # Build dense H for small n
+    H = PauliStringSum2COO(terms, weights).to_dense()
+    # Start from |11>
+    psi0 = np.zeros(4, dtype=np.complex128); psi0[-1] = 1.0
+    psi_t = evolve_state_numeric(H, psi0, time, steps=steps)
+    e = expval_dense(psi_t, H)
+    print("Numeric evolve expval(H):", e)
 
 
+def main():
+    tq.set_backend("pytorch")  # or "numpy"
+    run_trotter_example(time=1.0, steps=8)
+    compare_numeric(time=1.0, steps=256)
 
-b = torch.randn([4], requires_grad=True)
-opt = torch.optim.Adam([b], lr=0.1)
 
-for _ in range(50):
-    opt.zero_grad()
-    v = hybrid_evol(b)
-    v.backward()
-    opt.step()
-    print(v.item(), b)
+if __name__ == "__main__":
+    main()

@@ -1,10 +1,49 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Any, List, Dict, Optional, Sequence, Tuple
+from typing import Any, List, Dict, Optional, Sequence, Tuple, overload, Literal
+import time
 import warnings
 import json
 from ...compiler.api import compile as compile_api  # lazy import to avoid hard deps
+import warnings
+
+# ---- Global defaults for chainable stages (configurable via top-level API) ----
+_GLOBAL_COMPILE_DEFAULTS: Dict[str, Any] = {}
+_GLOBAL_DEVICE_DEFAULTS: Dict[str, Any] = {}
+_GLOBAL_POSTPROC_DEFAULTS: Dict[str, Any] = {"method": None}
+
+
+def set_global_compile_defaults(options: Dict[str, Any]) -> Dict[str, Any]:
+    _GLOBAL_COMPILE_DEFAULTS.update(dict(options))
+    return dict(_GLOBAL_COMPILE_DEFAULTS)
+
+
+def get_global_compile_defaults() -> Dict[str, Any]:
+    return dict(_GLOBAL_COMPILE_DEFAULTS)
+
+
+def set_global_device_defaults(options: Dict[str, Any]) -> Dict[str, Any]:
+    _GLOBAL_DEVICE_DEFAULTS.update(dict(options))
+    return dict(_GLOBAL_DEVICE_DEFAULTS)
+
+
+def get_global_device_defaults() -> Dict[str, Any]:
+    return dict(_GLOBAL_DEVICE_DEFAULTS)
+
+
+def set_global_postprocessing_defaults(options: Dict[str, Any]) -> Dict[str, Any]:
+    _GLOBAL_POSTPROC_DEFAULTS.update(dict(options))
+    if "method" not in _GLOBAL_POSTPROC_DEFAULTS:
+        _GLOBAL_POSTPROC_DEFAULTS["method"] = None
+    return dict(_GLOBAL_POSTPROC_DEFAULTS)
+
+
+def get_global_postprocessing_defaults() -> Dict[str, Any]:
+    base = dict(_GLOBAL_POSTPROC_DEFAULTS)
+    if "method" not in base:
+        base["method"] = None
+    return base
 
 @dataclass
 class Circuit:
@@ -25,7 +64,24 @@ class Circuit:
 
     def __init__(self, num_qubits: int, ops: Optional[List[Any]] = None, 
                  metadata: Optional[Dict[str, Any]] = None,
-                 instructions: Optional[List[Tuple[str, Tuple[int, ...]]]] = None):
+                 instructions: Optional[List[Tuple[str, Tuple[int, ...]]]] = None,
+                 # Compile-stage defaults (visible, with defaults)
+                 compile_engine: str = "default",
+                 compile_output: str = "ir",
+                 compile_target: str = "simulator::statevector",
+                 compile_options: Optional[Dict[str, Any]] = None,
+                 # Device-stage defaults
+                 device_provider: str = "simulator",
+                 device_device: str = "statevector",
+                 device_shots: int = 1024,
+                 device_options: Optional[Dict[str, Any]] = None,
+                 # Postprocessing defaults
+                 postprocessing_method: Optional[str] = None,
+                 postprocessing_options: Optional[Dict[str, Any]] = None,
+                 # Draw defaults
+                 draw_output: Optional[str] = None,
+                 # Optional pre-compiled or provider-native source
+                 source: Optional[Any] = None):
         """Initialize a Circuit.
         
         Args:
@@ -38,6 +94,33 @@ class Circuit:
         self.ops = ops if ops is not None else []
         self.metadata = metadata if metadata is not None else {}
         self.instructions = instructions if instructions is not None else []
+        # Chainable stage options seeded from global defaults
+        self._compile_opts: Dict[str, Any] = get_global_compile_defaults()
+        self._device_opts: Dict[str, Any] = get_global_device_defaults()
+        self._post_opts: Dict[str, Any] = get_global_postprocessing_defaults()
+        # Visible defaults applied (constructor-specified overrides)
+        self._compile_engine: str = str(compile_engine)
+        self._compile_output: str = str(compile_output)
+        self._compile_target: str = str(compile_target)
+        if compile_options:
+            self._compile_opts.update(dict(compile_options))
+        # Device defaults
+        self._device_opts.setdefault("provider", str(device_provider))
+        self._device_opts.setdefault("device", str(device_device))
+        self._device_opts.setdefault("shots", int(device_shots))
+        if device_options:
+            self._device_opts.update(dict(device_options))
+        # Postprocessing defaults
+        if postprocessing_options:
+            self._post_opts.update(dict(postprocessing_options))
+        if "method" not in self._post_opts:
+            self._post_opts["method"] = postprocessing_method
+
+        # Optional direct-execution source (e.g., QASM string or provider object)
+        self._source = source
+        # Draw defaults (e.g., "text", "mpl", "latex")
+        self._draw_output: Optional[str] = str(draw_output) if draw_output is not None else None
+
         # Ensure structural validation runs even with custom __init__
         self.__post_init__()
 
@@ -87,6 +170,19 @@ class Circuit:
         new_meta = dict(self.metadata)
         new_meta.update(kwargs)
         return replace(self, metadata=new_meta)
+
+    # ---- Chainable configuration stages ----
+    def device(self, **options: Any) -> "Circuit":
+        """Set device options for chainable configuration."""
+        self._device_opts.update(dict(options))
+        return self
+
+    def postprocessing(self, **options: Any) -> "Circuit":
+        """Set postprocessing options for chainable configuration."""
+        self._post_opts.update(dict(options))
+        if "method" not in self._post_opts:
+            self._post_opts["method"] = None
+        return self
 
     # ---- Lightweight helpers ----
     def gate_count(self, gate_list: Optional[Sequence[str]] = None) -> int:
@@ -222,106 +318,126 @@ class Circuit:
         r = compile_api(self, provider="qiskit", output="qasm2")
         return r["circuit"]  # type: ignore[return-value]
 
-    def compile(self, *, target: str = "ir", provider: str = "default", add_measures: bool = True, **options: Any) -> Any:
-        """Compile/convert this circuit via the compiler facade.
+    @overload
+    def compile(self, *, provider: None = ..., output: None = ..., target: Any | None = ..., options: Dict[str, Any] | None = ...) -> "Circuit": ...
 
-        - target: 编译产物类型或执行目标：
-          - "ir"/"native"/"tyxonq": 返回 IR（经 native pipeline 降低后）
-          - "openqasm": OpenQASM 2 字符串（需 provider='qiskit'）
-          - "qiskit": qiskit.QuantumCircuit（需 provider='qiskit'）
-          - "json": 先经 native compiler 降低 IR，再返回 JSON 序列化
+    @overload
+    def compile(self, *, provider: str = ..., output: str = ..., target: Any | None = ..., options: Dict[str, Any] | None = ...) -> Any: ...
+
+    def compile(
+        self,
+        *,
+        compile_engine: Optional[str] = None,
+        output: Optional[str] = None,
+        target: Any | None = None,
+        options: Dict[str, Any] | None = None,
+    ) -> Any:
+        """Delegate to compiler.api.compile or act as chainable setter when no args.
+
+        - Chainable模式：若 provider/output/target/options 全为 None，则返回 self（不触发编译）。
+        - 编译模式：转发到 compiler.api.compile，options 与已记录的 _compile_opts 合并。
         """
-        t = str(target).lower()
-        prov = str(provider).lower()
-        if prov in ("native", "tyxonq", "default"):
-            prov = "default"
+        # Chainable: no explicit args means only marking intent
+        if compile_engine is None and output is None and target is None and options is None:
+            return self
 
-        if t in ("ir", "native", "tyxonq"):
-            # Always lower via native pipeline first, returning IR
-            r = compile_api(self, provider="default", output="ir", options=dict(options))
-            return r["circuit"]
-        if t == "json":
-            # Lower then serialize, so结构变化能反映到JSON
-            r = compile_api(self, provider="default", output="ir")
-            lowered = r["circuit"]
-            try:
-                return lowered.to_json_str()  # type: ignore[attr-defined]
-            except Exception:
-                return self.to_json_str()
-        if t == "openqasm":
-            # provider selection: default to qiskit for qasm emission
-            opts = dict(options)
-            opts.setdefault("add_measures", add_measures)
-            out = compile_api(self, provider="qiskit", output="qasm2", options=opts)
-            return out["circuit"]
-        if t == "qiskit":
-            opts = dict(options)
-            opts.setdefault("add_measures", add_measures)
-            r = compile_api(self, provider="qiskit", output="qiskit", options=opts)
-            return r["circuit"]
-        raise ValueError(f"Unsupported compile target: {target}")
+        # If a direct source is present, skip compilation entirely
+        if self._source is not None:
+            return self
+
+        # Delegate to compiler facade exactly following its contract
+        prov = compile_engine or "default"
+        out = output or "ir"
+        merged_opts = dict(self._compile_opts)
+        if options:
+            merged_opts.update(options)
+        res = compile_api(self, compile_engine=prov, output=out, target=target, options=merged_opts)
+        return res["circuit"]
 
     def run(
         self,
         *,
         provider: Optional[str] = None,
         device: Optional[str] = None,
-        source: Optional[str] = None,
         shots: int = 1024,
-        compiler: str = "qiskit",
-        auto_compile: bool = True,
         **opts: Any,
     ) -> Any:
-        """Submit this circuit via the unified device layer selector.
-
-        Policy:
-        - If provider is simulator/local: delegate with circuit (no compilation here).
-        - Else (hardware): if auto_compile=True, compile to QASM2 (qiskit) then submit as source.
-          If auto_compile=False, require caller to provide source externally (raise here).
+        """执行电路：
+        - 若构造时提供了 source，则直接按 source 提交给设备层；
+        - 否则，先按 compile_engine/output/target 进行编译，再根据产物类型提交。
+        注意：不在此处补测量或发出告警；该逻辑归属编译阶段。
         """
         from ...devices import base as device_base
         from ...devices.hardware import config as hwcfg
 
-        # Auto-add Z measurements across all qubits if none present (warn, non-destructive)
-        has_meas = any((op and isinstance(op, (list, tuple)) and str(op[0]).lower() == "measure_z") for op in self.ops)
-        prepared = self
-        if not has_meas:
-            nq = int(getattr(self, "num_qubits", 0))
-            if nq > 0:
-                prepared = self.extended([("measure_z", q) for q in range(nq)])
-                warnings.warn(
-                    "No explicit measurements found; auto-added Z measurements on all qubits for execution.",
-                    UserWarning,
-                )
+        # Merge device options with call-time overrides and extract reserved keys
+        dev_opts = {**self._device_opts, **opts}
+        dev_provider = dev_opts.pop("provider", provider)
+        dev_device = dev_opts.pop("device", device)
+        dev_shots = int(dev_opts.pop("shots", shots))
 
-        prov = (provider or hwcfg.get_default_provider() or "tyxonq").lower()
-
-        if auto_compile:
-            if prov in ("simulator", "local"):
-                return device_base.run(
-                    provider=provider,
-                    device=device,
-                    circuit=prepared,
-                    shots=shots,
-                    **opts,
-                )
-            qasm = prepared.compile(target="openqasm", provider="qiskit")
-            return device_base.run(
-                provider=provider,
-                device=device,
-                source=qasm,
-                shots=shots,
-                **opts,
+        # If pre-compiled/native source exists, submit directly
+        if self._source is not None:
+            tasks = device_base.run(
+                provider=dev_provider,
+                device=dev_device,
+                source=self._source,
+                shots=dev_shots,
+                **dev_opts,
             )
         else:
-            return device_base.run(
-                provider=provider,
-                device=device,
-                circuit=prepared,
-                source=source,
-                shots=shots,
-                **opts,
+            # Compile first using current defaults
+            compiled = self.compile(
+                compile_engine=self._compile_engine,
+                output=self._compile_output,
+                target=self._compile_target,
+                options=self._compile_opts,
             )
+            # Decide submission path by compiled artifact type
+            if isinstance(compiled, str):
+                tasks = device_base.run(
+                    provider=dev_provider,
+                    device=dev_device,
+                    source=compiled,
+                    shots=dev_shots,
+                    **dev_opts,
+                )
+            else:
+                # Assume IR Circuit
+                tasks = device_base.run(
+                    provider=dev_provider,
+                    device=dev_device,
+                    circuit=compiled,
+                    shots=dev_shots,
+                    **dev_opts,
+                )
+
+        # Normalize to list of tasks
+        task_list = tasks if isinstance(tasks, list) else [tasks]
+
+        # Gather result dicts
+        def _task_to_result_dict(t: Any) -> Dict[str, Any]:
+            if hasattr(t, "results"):
+                try:
+                    r = t.results()
+                    if isinstance(r, dict):
+                        return r
+                except Exception:
+                    pass
+            return self.get_task_details(t)
+
+        results = [_task_to_result_dict(t) for t in task_list]
+
+        # Attach postprocessing via router
+        from ...postprocessing import apply_postprocessing  # 延迟导入，保持解耦
+
+        enriched = []
+        for r in results:
+            rr = dict(r)
+            post = apply_postprocessing(rr, self._post_opts if isinstance(self._post_opts, dict) else {})
+            rr["postprocessing"] = post
+            enriched.append(rr)
+        return enriched if isinstance(tasks, list) else enriched[0]
 
     # ---- Task helpers for cloud.api thin wrappers ----
     def get_task_details(self, task: Any, *, prettify: bool = False) -> Dict[str, Any]:
@@ -436,7 +552,102 @@ class Circuit:
 
     def MEASURE_Z(self, q: int):
         return self.measure_z(q)
+
+    def reset(self, q: int):
+        """Warning: reset operation is typically not supported by hardware in logical circuits.
+        This is a simulation-only operation that projects qubit to |0⟩ state."""
+        warnings.warn("reset operation is typically not supported by hardware in logical circuits. "
+                    "This is a simulation-only operation that projects qubit to |0⟩ state.", 
+                    UserWarning, stacklevel=2)
+        self.ops.append(("reset", int(q)))
+        return self
+
+    def RESET(self, q: int):
+        return self.reset(q)
     
+    # --- Additional common gates to preserve legacy examples ---
+    def x(self, q: int):
+        self.ops.append(("x", int(q)))
+        return self
+
+    def X(self, q: int):
+        return self.x(q)
+
+    def y(self, q: int):
+        self.ops.append(("y", int(q)))
+        return self
+
+    def Y(self, q: int):
+        return self.y(q)
+
+    def ry(self, q: int, theta: Any):
+        self.ops.append(("ry", int(q), theta))
+        return self
+
+    def RY(self, q: int, theta: Any):
+        return self.ry(q, theta)
+
+    def cz(self, c: int, t: int):
+        self.ops.append(("cz", int(c), int(t)))
+        return self
+
+    def CZ(self, c: int, t: int):
+        return self.cz(c, t)
+
+    def cy(self, c: int, t: int):
+        self.ops.append(("cy", int(c), int(t)))
+        return self
+
+    def CY(self, c: int, t: int):
+        return self.cy(c, t)
+
+    def rxx(self, c: int, t: int, theta: Any):
+        self.ops.append(("rxx", int(c), int(t), theta))
+        return self
+
+    def RXX(self, c: int, t: int, theta: Any):
+        return self.rxx(c, t, theta)
+
+    def rzz(self, c: int, t: int, theta: Any):
+        self.ops.append(("rzz", int(c), int(t), theta))
+        return self
+
+    def RZZ(self, c: int, t: int, theta: Any):
+        return self.rzz(c, t, theta)
+    
+    # --- draw() typing overloads to improve IDE/linter navigation ---
+    @overload
+    def draw(self, output: Literal["text"], *args: Any, **kwargs: Any) -> str: ...
+
+    @overload
+    def draw(self, output: Literal["mpl"], *args: Any, **kwargs: Any) -> Any: ...
+
+    @overload
+    def draw(self, output: Literal["latex"], *args: Any, **kwargs: Any) -> str: ...
+
+    @overload
+    def draw(self, *args: Any, **kwargs: Any) -> Any: ...
+
+    # --- Draw via Qiskit provider: compile IR→QuantumCircuit and delegate draw ---
+    def draw(self, *args: Any, **kwargs: Any) -> Any:
+        """Render the circuit using Qiskit if available.
+
+        Behavior:
+        - Convert IR → Qiskit QuantumCircuit directly (no intermediate qasm2 dump),
+          auto-adding measurements if none present.
+        - Delegate all args/kwargs to `QuantumCircuit.draw`.
+        - If Qiskit is not installed, return a minimal textual `gate_summary()` string.
+        """
+        try:
+            from ...compiler.providers.qiskit.dialect import to_qiskit  # type: ignore
+
+            qc = to_qiskit(self, add_measures=True)
+            # Resolve default output: prefer per-circuit _draw_output, else 'text'
+            if "output" not in kwargs and (len(args) == 0):
+                kwargs["output"] = self._draw_output or "text"
+            return qc.draw(*args, **kwargs)
+        except Exception:
+            return str(self.gate_summary())
     @classmethod
     def from_json_obj(cls, obj: Dict[str, Any]) -> "Circuit":
         inst_raw = obj.get("instructions", [])

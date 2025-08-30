@@ -19,6 +19,8 @@ ordering, where multi-qubit unitaries are ordered on computational basis
 """
 
 import numpy as np
+from ....numerics import NumericBackend as nb
+
 
 __all__ = ["get_unitary"]
 
@@ -45,7 +47,7 @@ def _u_cx() -> np.ndarray:
     )
 
 
-def get_unitary(name: str, *params: float) -> np.ndarray:
+def get_unitary(name: str, *params: float):
     """Return the unitary matrix for a supported gate.
 
     Parameters
@@ -67,14 +69,14 @@ def get_unitary(name: str, *params: float) -> np.ndarray:
     """
     key = name.lower()
     if key == "h":
-        return _u_h()
+        return nb.array(_u_h(), dtype=nb.complex128)
     if key == "rz":
         if len(params) != 1:
             raise ValueError("rz expects exactly one parameter: theta")
         (theta,) = params
-        return _u_rz(float(theta))
+        return nb.array(_u_rz(float(theta)), dtype=nb.complex128)
     if key == "cx":
-        return _u_cx()
+        return nb.array(_u_cx(), dtype=nb.complex128)
     raise ValueError(f"Unknown gate name: {name}")
 
 
