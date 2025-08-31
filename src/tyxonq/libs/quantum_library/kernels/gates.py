@@ -138,6 +138,16 @@ def gate_rzz(theta: Any) -> Any:
     return c * I4 + (-nb.array(1j, dtype=nb.complex128) * s) * ZZ
 
 
+# --- ZZ Hamiltonian matrix (not exponential) ---
+
+def zz_matrix() -> Any:
+    """Return Z⊗Z (4x4 Hermitian) as backend-native array.
+    Useful for exp(i theta Z⊗Z) style APIs that take a Hamiltonian matrix.
+    """
+    Z = nb.array([[1.0, 0.0], [0.0, -1.0]], dtype=nb.complex128)
+    return nb.kron(Z, Z)
+
+
 def build_controlled_unitary(U: np.ndarray, num_controls: int, ctrl_state: list[int] | None = None) -> Any:
     """Build a dense multi-controlled unitary (backend-native array).
 

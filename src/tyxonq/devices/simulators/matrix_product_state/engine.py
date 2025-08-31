@@ -147,7 +147,7 @@ class MatrixProductStateEngine:
                 ii = int(idx)
                 bitstr = ''.join('1' if (ii >> (n - 1 - k)) & 1 else '0' for k in range(n))
                 results[bitstr] = int(nb.to_numpy(counts_arr)[ii])
-            return {"results": results, "metadata": {"shots": shots, "backend": getattr(self.backend, 'name', 'unknown')}}
+            return {"result": results, "metadata": {"shots": shots, "backend": getattr(self.backend, 'name', 'unknown')}}
 
         expectations: Dict[str, float] = {}
         # Compute expectations by reconstructing statevector for now (small n tests)

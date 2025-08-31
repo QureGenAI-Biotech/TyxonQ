@@ -73,7 +73,7 @@ class DensityMatrixEngine:
         if shots > 0 and len(measures) > 0:
             nb = self.backend
             diag_b = nb.diag(rho)
-            p_np = np.asarray(nb.real(diag_b), dtype=float)
+            p_np = np.asarray(nb.real(diag_b), dtype=float).copy()
             p_np[p_np < 0.0] = 0.0
             s = float(np.sum(p_np))
             dim = int(p_np.size)
@@ -90,7 +90,7 @@ class DensityMatrixEngine:
                             m = nb.eye(2)
                         m = nb.asarray(m)
                         A = m if A is None else nb.kron(A, m)
-                    p_np = np.asarray(nb.to_numpy(A), dtype=float) @ p_np
+                    p_np = (np.asarray(nb.to_numpy(A), dtype=float) @ p_np).copy()
                 elif ntype == "depolarizing":
                     pval = float(noise.get("p", 0.0))
                     alpha = max(0.0, min(1.0, 4.0 * pval / 3.0))
@@ -110,7 +110,7 @@ class DensityMatrixEngine:
                 ii = int(idx)
                 bitstr = ''.join('1' if (ii >> (n - 1 - k)) & 1 else '0' for k in range(n))
                 results[bitstr] = int(nb.to_numpy(counts_arr)[ii])
-            return {"results": results, "metadata": {"shots": shots, "backend": self.backend.name}}
+            return {"result": results, "metadata": {"shots": shots, "backend": self.backend.name}}
 
         expectations: Dict[str, float] = {}
         for q in measures:

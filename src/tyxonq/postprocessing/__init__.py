@@ -17,15 +17,15 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
     """Apply postprocessing to a single task result dict.
 
     Parameters:
-        result: 单个任务的结果字典，期望包含 `results` 与可选的 `metadata`（含 shots）。
+        result: 单个任务的结果字典，期望包含 `result` 与可选的 `metadata`（含 shots）。
         options: 后处理选项，至少包含 `method`，其余参数根据方法不同而不同。
 
     Returns:
-        一个形如 {"method": str|None, "results": Any|None} 的后处理产物。
+        一个形如 {"method": str|None, "result": Any|None} 的后处理产物。
     """
     opts = dict(options or {})
     method = opts.get("method")
-    post = {"method": method, "results": None}
+    post = {"method": method, "result": None}
 
     if not method:
         return post
@@ -36,7 +36,7 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
 
             cals = opts.get("cals")
             mit_method = opts.get("mitigation", "inverse")
-            counts = result.get("results") or result.get("counts") or {}
+            counts = result.get("result") or result.get("counts") or {}
             meta = result.get("metadata") or {}
             try:
                 shots_meta = int(meta.get("shots", 0))
@@ -57,16 +57,16 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
                     counts, method=str(mit_method), qubits=None, shots=shots_meta
                 )
                 _elapsed_ms = (time.perf_counter() - _t0) * 1000.0
-                post["results"] = {
+                post["result"] = {
                     "raw_counts": counts,
                     "mitigated_counts": corrected,
                     "mitigation_time_ms": float(_elapsed_ms),
                 }
             else:
-                post["results"] = {
+                post["result"] = {
                     "raw_counts": counts,
                     "mitigated_counts": None,
-                    "reason": "missing cals or empty results",
+                    "reason": "missing cals or empty result",
                 }
         except Exception:
             # 失败时保持占位结构，避免在 Circuit 层抛出
@@ -74,7 +74,7 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
         return post
 
     # 未识别的方法：返回占位信息，便于上层识别
-    post["results"] = {"reason": f"unsupported method: {method}"}
+    post["result"] = {"reason": f"unsupported method: {method}"}
     return post
 
 

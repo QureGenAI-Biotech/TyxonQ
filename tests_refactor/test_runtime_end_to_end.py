@@ -19,7 +19,7 @@ def test_runtime_run_end_to_end():
     circ = Circuit(num_qubits=1, ops=[("h", 0), ("measure_z", 0)])
     dev = _DummyDevice()
 
-    comp = compile_ir(circ, provider="default", output="ir", options={"total_shots": 25})
+    comp = compile_ir(circ, compile_engine="default", output="ir", options={"total_shots": 25})
     plan = comp["metadata"].get("execution_plan") or schedule(comp["circuit"], total_shots=25)
     plan["circuit"] = comp["circuit"]
 

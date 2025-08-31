@@ -52,10 +52,10 @@ def compile(
 
     Parameters:
         circuit: IR circuit to compile
-        provider: 'tyxonq' | 'qiskit'|'default' | 'native'
+        compile_engine: 'tyxonq' | 'qiskit'|'default' | 'native'
         output: 'ir' | 'qasm2' | 'qiskit'  # 'ir' accepted as alias of 'tyxonq'
         target: device capabilities for provider-aware compilation
-        options: provider-specific compile options
+        options: compile_engine-specific compile options
     """
 
     # Parse target string to capability dict if provided
@@ -107,6 +107,9 @@ def compile(
         else:
             out_opt = "ir"
         opts = dict(options)
+        # fill default basis_gates if missing/empty for qiskit path
+        if not opts.get("basis_gates"):
+            opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
         opts["output"] = out_opt
         return QiskitCompiler().compile({"circuit": circuit, "target": cap_target, "options": opts})  # type: ignore[arg-type]
 

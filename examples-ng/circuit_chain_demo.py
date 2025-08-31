@@ -106,7 +106,6 @@ def demo_global_defaults():
     
     # 设置全局默认值
     tq.device(provider="simulator", device="statevector", shots=2048)
-    tq.postprocessing(method="none")
     tq.compile(compile_engine="default")
     
     # 使用全局默认值执行
@@ -301,31 +300,5 @@ if __name__ == "__main__":
     print("所有演示完成!")
     print("=" * 60)
 
-
-def demo_global_defaults():
-    print("\n[Demo 4] Global defaults: tyxonq.device / tyxonq.postprocessing")
-    # Set global defaults once
-    tq.device(provider="simulator", device="statevector", shots=256)
-    tq.postprocessing(method="none")
-
-    c = Circuit(2).H(0).CX(0, 1)
-    result = c.run()
-    print("Result (dict):", result)
-    return result
-
-
-def demo_qasm_compile_view():
-    print("\n[Demo 5] Compile to OpenQASM for inspection (does not submit)")
-    c = Circuit(2).H(0).CX(0, 1).compile()
-    qasm = c.compile(output="qasm2", compile_engine="qiskit")
-    print("QASM:\n", qasm)
-    return qasm
-
-
-if __name__ == "__main__":
-    # Run demos sequentially and print their outputs
-    demo_automatic_completion()
-    demo_global_defaults()
-    demo_qasm_compile_view()
 
 

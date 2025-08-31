@@ -75,6 +75,8 @@ class Circuit:
                  device_device: str = "statevector",
                  device_shots: int = 1024,
                  device_options: Optional[Dict[str, Any]] = None,
+                 # Result handling: whether to fetch final result (None=auto)
+                 wait_async_result: Optional[bool] = False,
                  # Postprocessing defaults
                  postprocessing_method: Optional[str] = None,
                  postprocessing_options: Optional[Dict[str, Any]] = None,
@@ -110,6 +112,8 @@ class Circuit:
         self._device_opts.setdefault("shots", int(device_shots))
         if device_options:
             self._device_opts.update(dict(device_options))
+        # Result handling
+        self._wait_async_result: Optional[bool] = wait_async_result
         # Postprocessing defaults
         if postprocessing_options:
             self._post_opts.update(dict(postprocessing_options))
@@ -360,6 +364,7 @@ class Circuit:
         provider: Optional[str] = None,
         device: Optional[str] = None,
         shots: int = 1024,
+        wait_async_result: Optional[bool] = False,
         **opts: Any,
     ) -> Any:
         """执行电路：
@@ -393,17 +398,32 @@ class Circuit:
                 target=self._compile_target,
                 options=self._compile_opts,
             )
-            # Decide submission path by compiled artifact type
+            # For hardware providers, ensure we submit provider-native source (e.g., qasm2)
+            prov_norm = (dev_provider or "").lower() if isinstance(dev_provider, str) else str(dev_provider).lower()
+            # is_hw = prov_norm not in ("simulator", "local", "")
+            is_tyxonq_hw = prov_norm in ("tyxonq")
             if isinstance(compiled, str):
+                source_to_submit = compiled
+            elif is_tyxonq_hw:
+                # Auto-compile to qasm2 for hardware submission via qiskit provider
+                qiskit_opts = dict(self._compile_opts)
+                if not qiskit_opts.get("basis_gates"):
+                    qiskit_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
+                qasm_res = compile_api(self, compile_engine="qiskit", output="qasm2", target=self._compile_target, options=qiskit_opts)
+                source_to_submit = qasm_res["circuit"]
+            else:
+                source_to_submit = None
+
+            if source_to_submit is not None:
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
-                    source=compiled,
+                    source=source_to_submit,
                     shots=dev_shots,
                     **dev_opts,
                 )
             else:
-                # Assume IR Circuit
+                # Submit IR directly (simulator/local)
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
@@ -412,53 +432,50 @@ class Circuit:
                     **dev_opts,
                 )
 
-        # Normalize to list of tasks
-        task_list = tasks if isinstance(tasks, list) else [tasks]
+        # unified_list = tasks if isinstance(tasks, list) else [tasks]
+        unified_result_list=[]
+        # Normalize to list of unified payloads
+        if wait_async_result is False:
+            for t in tasks:
+                task_result = t.get_result(wait=False)
+                unified_result_list.append(task_result)
 
-        # Gather result dicts
-        def _task_to_result_dict(t: Any) -> Dict[str, Any]:
-            if hasattr(t, "results"):
-                try:
-                    r = t.results()
-                    if isinstance(r, dict):
-                        return r
-                except Exception:
-                    pass
-            return self.get_task_details(t)
+        else:
+            for t in tasks:
+                task_result = t.get_result(wait=True)
+                unified_result_list.append(task_result)
 
-        results = [_task_to_result_dict(t) for t in task_list]
-
-        # Attach postprocessing via router
+    
+        # Fetch final results where needed and attach postprocessing
         from ...postprocessing import apply_postprocessing  # 延迟导入，保持解耦
-
-        enriched = []
-        for r in results:
-            rr = dict(r)
-            post = apply_postprocessing(rr, self._post_opts if isinstance(self._post_opts, dict) else {})
-            rr["postprocessing"] = post
-            enriched.append(rr)
-        return enriched if isinstance(tasks, list) else enriched[0]
+        results: List[Dict[str, Any]] = []
+        for rr in unified_result_list:
+            if isinstance(rr, dict):
+                if rr.get('result'):
+                    post = apply_postprocessing(rr, self._post_opts if isinstance(self._post_opts, dict) else {})
+                    rr["postprocessing"] = post
+                    results.append(rr)
+                else:
+                    error_result = {
+                        'result':{},
+                        'result_meta': rr.get('result_meta', {}),
+                        'postprocessing': {
+                            'method': None,
+                            'result': None
+                        }
+                    }
+                    results.append(error_result)
+            else:
+                raise TypeError('result is not a dict',rr)
+             
+        return results if isinstance(tasks, list) else results[0]
 
     # ---- Task helpers for cloud.api thin wrappers ----
-    def get_task_details(self, task: Any, *, prettify: bool = False) -> Dict[str, Any]:
-        # For simulator tasks, the object carries a .results() method
-        if hasattr(task, "results"):
-            try:
-                return task.results()
-            except Exception:
-                pass
-        # Hardware tasks: delegate to provider driver via device string
-        dev = getattr(task, "device", None)
-        if dev is None:
-            raise ValueError("Task handle missing device information")
-        dev_str = str(dev)
-        prov = (dev_str.split("::", 1)[0]) if "::" in dev_str else "simulator"
-        from ...devices.base import resolve_driver
-        from ...devices.hardware import config as hwcfg
-
-        tok = hwcfg.get_token(provider=prov, device=dev_str)
-        drv = resolve_driver(prov, dev_str)
-        return drv.get_task_details(task, tok)
+    def get_task_details(self,task: Any, *, wait: bool = False, poll_interval: float = 2.0, timeout: float = 15.0) -> Dict[str, Any]:
+        return task.get_result(task=task, wait=wait, poll_interval=poll_interval, timeout=timeout)
+    
+    def get_result(self, task: Any, *, wait: bool = False, poll_interval: float = 2.0, timeout: float = 15.0)-> Dict[str, Any]:
+        return task.get_result(task=task, wait=wait, poll_interval=poll_interval, timeout=timeout)
 
     def cancel(self, task: Any) -> Any:
         dev = getattr(task, "device", None)

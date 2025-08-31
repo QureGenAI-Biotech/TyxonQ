@@ -43,7 +43,7 @@ def test_scheduler_and_session_execute_plan_flow():
 
 def test_compile_emits_execution_plan_and_session_consumes():
     circ = Circuit(num_qubits=1, ops=[("h", 0), ("measure_z", 0)])
-    res = compile_ir(circ, provider="tyxonq", output="ir", options={"total_shots": 30})
+    res = compile_ir(circ, compile_engine="tyxonq", output="ir", options={"total_shots": 30})
     plan = res["metadata"].get("execution_plan")
     assert plan is not None and isinstance(plan, dict)
     assert plan["circuit"] is res["circuit"]

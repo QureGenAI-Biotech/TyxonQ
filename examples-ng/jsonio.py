@@ -27,7 +27,7 @@ def run_counts(c: tq.Circuit, shots: int = 4096):
          .run()
     )
     payload = res if isinstance(res, dict) else (res[0] if res else {})
-    return payload.get("results", {}), payload.get("metadata", {})
+    return payload.get("result", {}), payload.get("metadata", {})
 
 
 def main():
