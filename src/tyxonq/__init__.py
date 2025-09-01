@@ -34,22 +34,23 @@ if _cloud_apis is not None:
     # Top-level convenience wrappers
     def set_token(
         token: Optional[str] = None,
-        provider: Optional[Union[str, Any]] = None,
-        device: Optional[Union[str, Any]] = None,
-        cached: bool = True,
-        clear: bool = False,
+        provider: Optional[Union[str, Any]] = "tyxonq",
+        device: Optional[Union[str, Any]] = "homebrew_s2",
     ) -> Dict[str, Any]:
-        """Set API token at package level.
+        """Configure TyxonQ cloud API token (non-persistent).
 
-        Delegates to ``tyxonq.cloud.apis.set_token``.
+        Parameters:
+            token: API key string. If None, only defaults are set.
+            provider: Cloud provider id. Default "tyxonq".
+            device: Device id (without prefix). Default "homebrew_s2".
+        Security:
+            Token is never persisted to disk here.
         """
 
         return _cloud_apis.set_token(  # type: ignore[attr-defined]
             token=token,
             provider=provider,
             device=device,
-            cached=cached,
-            clear=clear,
         )
 
     def submit_task(
@@ -101,7 +102,8 @@ if _cloud_apis is not None:
         if not wait:
             return tasks
 
-        results = [t.results(blocked=True, mitigated=mitigated) for t in task_list]
+        # Fetch details via unified cloud API helper (supports polling)
+        results = [_cloud_apis.get_task_details(t, wait=True) for t in task_list]  # type: ignore[attr-defined]
         return results if isinstance(tasks, list) else results[0]
 
     __all__ = [
@@ -158,6 +160,7 @@ try:
 
     def postprocessing(**options: Any) -> Dict[str, Any]:
         return _set_post_defaults(dict(options))
+
 
     def get_postprocessing_defaults() -> Dict[str, Any]:
         return _get_post_defaults()

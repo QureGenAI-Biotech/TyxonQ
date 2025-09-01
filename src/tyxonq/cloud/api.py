@@ -19,8 +19,8 @@ from ..devices.hardware import config as hwcfg
 from ..devices.base import device_descriptor as _device_descriptor, resolve_driver as _resolve_driver, list_all_devices as _list_all_devices
 
 
-def set_token(token: str, *, provider: Optional[str] = None, device: Optional[str] = None, persist: bool = True) -> Dict[str, str]:
-    return hwcfg.set_token(token, provider=provider, device=device, persist=persist)
+def set_token(token: str, *, provider: Optional[str] = None, device: Optional[str] = None) -> Dict[str, str]:
+    return hwcfg.set_token(token, provider=provider, device=device)
 
 
 def set_default(*, provider: Optional[str] = None, device: Optional[str] = None) -> None:
@@ -50,54 +50,25 @@ def submit_task(
     auto_compile: bool = True,
     **opts: Any,
 ):
-    """Thin wrapper that delegates to Circuit.run semantics when possible.
+    # Delegate to base.run for unified behavior (no extra logic)
+    from ..devices import base as device_base
 
-    Preferred path: if `circuit` is an IR Circuit, use its `.run()` to decide
-    compile vs IR submission. Otherwise fall back to driver routing with `source`.
-    """
-
-    # If IR Circuit object(s) provided, delegate to Circuit.run for canonical behavior
-    def _is_ir(obj: Any) -> bool:
-        try:
-            from ..core.ir import Circuit as _C
-
-            return isinstance(obj, _C)
-        except Exception:
-            return False
-
-    if circuit is not None and (_is_ir(circuit) or (isinstance(circuit, (list, tuple)) and any(_is_ir(c) for c in circuit))):
-        # Import lazily to avoid cycles
-        if isinstance(circuit, (list, tuple)):
-            tasks = []
-            for c in circuit:
-                tasks.append(c.run(provider=provider, device=device, shots=int(shots) if isinstance(shots, int) else 1024, auto_compile=auto_compile, **opts))
-            return tasks
-        return circuit.run(provider=provider, device=device, shots=int(shots) if isinstance(shots, int) else 1024, auto_compile=auto_compile, **opts)
-
-    prov = provider or hwcfg.get_default_provider()
-    dev = device or hwcfg.get_default_device()
-    tok = token or hwcfg.get_token(provider=prov, device=dev)
-    drv = _driver(prov, dev)
-    return drv.run(dev, tok, source=source, shots=shots, **opts)
+    return device_base.run(
+        provider=provider,
+        device=device,
+        circuit=circuit,
+        source=source,
+        shots=shots,
+        **opts,
+    )
 
 
-def get_task_details(task: Any, *, token: Optional[str] = None) -> Dict[str, Any]:
-    # Delegate to Circuit helper when available
-    from ..core.ir import Circuit as _C
+def get_task_details(task: Any, *, token: Optional[str] = None, wait: bool = False, poll_interval: float = 2.0, timeout: float = 60.0) -> Dict[str, Any]:
+    # Delegate to base unified helper
+    from ..devices.base import get_task_details as _get
 
-    helper = getattr(_C, "get_task_details", None)
-    if callable(helper):
-        # call as unbound method with a dummy circuit instance is unnecessary; method is instance-based
-        # Instead, re-resolve via device driver if circuit instance not available
-        pass
-    # Fallback: driver-based resolution
-    dev = getattr(task, "device", None)
-    if dev is None:
-        raise ValueError("Unsupported task handle type")
-    dev_str = str(dev)
-    prov = (dev_str.split("::", 1)[0]) if "::" in dev_str else "simulator"
-    drv = _driver(prov, dev_str)
-    return drv.get_task_details(task, token)
+    # token currently unused in base helper; reserved for future
+    return _get(task, wait=wait, poll_interval=poll_interval, timeout=timeout)
 
 
 def run(
@@ -110,25 +81,17 @@ def run(
     token: Optional[str] = None,
     **opts: Any,
 ):
-    # Pure delegation: if circuit is IR, use Circuit.run; else fallback to submit_task with source
-    def _is_ir(obj: Any) -> bool:
-        try:
-            from ..core.ir import Circuit as _C
+    # Delegate directly to devices.base.run for unified behavior
+    from ..devices import base as device_base
 
-            return isinstance(obj, _C)
-        except Exception:
-            return False
-
-    if circuit is not None and (_is_ir(circuit) or (isinstance(circuit, (list, tuple)) and any(_is_ir(c) for c in circuit))):
-        if isinstance(circuit, (list, tuple)):
-            return [c.run(provider=provider, device=device, shots=int(shots) if isinstance(shots, int) else 1024, **opts) for c in circuit]
-        return circuit.run(provider=provider, device=device, shots=int(shots) if isinstance(shots, int) else 1024, **opts)
-    # Fallback to driver path (source)
-    prov = provider or hwcfg.get_default_provider()
-    dev = device or hwcfg.get_default_device()
-    tok = token or hwcfg.get_token(provider=prov, device=dev)
-    drv = _driver(prov, dev)
-    return drv.run(dev, tok, source=source, shots=shots, **opts)
+    return device_base.run(
+        provider=provider,
+        device=device,
+        circuit=circuit,
+        source=source,
+        shots=shots,
+        **opts,
+    )
 
 
 def result(task: Any, *, token: Optional[str] = None, prettify: bool = False) -> Dict[str, Any]:

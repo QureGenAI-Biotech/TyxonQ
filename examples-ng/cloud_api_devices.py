@@ -1,22 +1,28 @@
-import requests
+"""
+List available cloud devices using TyxonQ cloud API facade.
+
+- Reads token from env TYXONQ_API_KEY or uses existing configured token
+- Prints device ids with provider prefix
+"""
+
+from __future__ import annotations
+
+import os
 import json
+import tyxonq as tq
 import getpass
 
-token = getpass.getpass("Enter your token: ")
 
-url = "https://api.tyxonq.com/qau-cloud/tyxonq/api/v1/devices/list"
-headers = {"Authorization": "Bearer " + token}
-response = requests.post(url, json={}, headers=headers)
-response_json = response.json()
+def main():
+    token = getpass.getpass("Enter your token: ")
+    if token:
+        tq.set_token(token, provider="tyxonq", device=None)
+    devs = tq.api.list_devices(provider="tyxonq") if hasattr(tq, "api") else []
+    print(json.dumps(devs, indent=2, ensure_ascii=False))
 
-if 'success' in response_json and response_json['success']:
-    if 'devices' in response_json:
-        print(json.dumps(response_json['devices'], indent=4))
-    else:
-        print("No devices found")
-else:
-    print("Error:")
-    print(response_json['detail'])
+
+if __name__ == "__main__":
+    main()
 
 
 

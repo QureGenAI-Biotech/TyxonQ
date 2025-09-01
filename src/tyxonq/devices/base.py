@@ -1,10 +1,27 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Protocol, Sequence, TypedDict, TYPE_CHECKING, Union
+from dataclasses import dataclass
+import time
 
 if TYPE_CHECKING:  # pragma: no cover - type-only imports to avoid cycles
     from tyxonq.core.ir import Circuit
     Observable = Any
+
+
+# ---- Unified task wrapper ----
+@dataclass
+class DeviceTask:
+    provider: str
+    device: str
+    handle: Any
+    async_result: bool
+
+    def get_result(self, *, wait: bool = False, poll_interval: float = 2.0, timeout: float = 60.0) -> Dict[str, Any]:
+        return get_task_details(self,wait=wait, poll_interval=poll_interval, timeout=timeout)
+
+    def cancel(self) -> Any:
+        return remove_task(self)
 
 
 class DeviceCapabilities(TypedDict, total=False):
@@ -106,7 +123,7 @@ def init(*, provider: Optional[str] = None, device: Optional[str] = None, token:
     from .hardware import config as hwcfg
 
     if token is not None:
-        hwcfg.set_token(token, provider=provider, device=device, persist=True)
+        hwcfg.set_token(token, provider=provider, device=device)
     if provider is not None or device is not None:
         hwcfg.set_default(provider=provider, device=device)
 
@@ -146,6 +163,11 @@ def run(
       - simulator/local: call simulator driver run
       - hardware: require caller to have compiled to `source`
     - Normalize return: single submission -> single task; batch -> list of tasks
+
+    Returns:
+        List[DeviceTask] Unified task-handle wrapper:
+        - task.async_result=False (simulator): get_results() returns final result immediately
+        - task.async_result=True (hardware): get_results(wait=True) polls until completion
     """
     from .hardware import config as hwcfg
 
@@ -179,11 +201,11 @@ def run(
     if source is not None:
         if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
             if circuit is not None:
-                return _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
+                raw = _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
             else:
-                return _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
+                raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
         else:
-            return _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
+            raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
     else:
         # circuit path
         if circuit is None:
@@ -193,8 +215,21 @@ def run(
             # hardware path requires source (compilation should have been done by caller)
             raise ValueError("hardware run without source is not supported at device layer; compile in circuit layer")
         if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
-            return _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
-        return _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **opts))
+            raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
+        else:
+            raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **opts))
+
+    # Wrap into unified DeviceTask objects
+
+    device_task_list = []
+    for t in raw:
+        try:
+            async_result = t.async_result
+        except:
+            async_result = False
+        device_task_list.append(DeviceTask(provider=prov, device=dev, handle=t, async_result=async_result))
+    
+    return device_task_list
 
 
 def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = None, **kws: Any) -> List[str]:
@@ -216,4 +251,62 @@ def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = N
     except Exception:
         hw_list = []
     return sim_list + hw_list
+
+
+# ---- Unified task helpers (polling/wait) ----
+def get_task_details(task: Any, *, wait: bool = False, poll_interval: float = 2.0, timeout: float = 15.0) -> Dict[str, Any]:
+    """Get task details with optional polling, and unify result format.
+
+    Unified return format:
+        {
+          'result': Dict[str, int],      # normalized counts like {'00': 51, '11': 49}
+          'result_meta': Dict[str, Any], # original driver payload
+        }
+    """
+    if not isinstance(task, DeviceTask):
+        raise TypeError("Task handle should be a DeviceTask type")
+
+    drv = resolve_driver(task.provider, task.device)
+
+    def _fetch() -> Dict[str, Any]:
+        return drv.get_task_details(task.handle, None)
+
+    def _wrap(info: Dict[str, Any]) -> Dict[str, Any]:
+        src = info.get('result') or info.get('results') or {}
+        return {'result': src, 'result_meta': info}
+
+    if not wait:
+        return _wrap(_fetch())
+
+    start = time.perf_counter()
+    while True:
+        info = _fetch()
+        if not task.async_result:
+            return _wrap(info)
+        uni_status = str(info.get("uni_status", "completed")).lower()
+        if uni_status in ("done", "completed", "success", "finished"):
+            return _wrap(info)
+        if (time.perf_counter() - start) >= timeout:
+            return _wrap(info)
+        time.sleep(max(0.05, poll_interval))
+
+
+
+
+
+def remove_task(task: Any) -> Any:
+    if isinstance(task, DeviceTask):
+        prov = task.provider
+        dev_str = task.device
+        handle = task.handle
+    else:
+        raise TypeError("Task handle should be a DeviceTask type")
+
+    drv = resolve_driver(prov, dev_str)
+    if hasattr(drv, "remove_task"):
+        return drv.remove_task(handle, None)
+    raise NotImplementedError("remove_task not supported for this provider")
+
+
+
 

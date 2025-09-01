@@ -1,6 +1,20 @@
 from __future__ import annotations
-
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Union
+
+
+@dataclass
+class SimTask:
+    def __init__(self, id: str, device: str, result: Dict[str, Any]):
+        self.id = id
+        self.device = device
+        self._result = result
+        self.task_info = None
+        self.async_result = False
+
+    def get_result(self, *, wait: bool = False, poll_interval: float = 0.0, timeout: float = 0.0) -> Dict[str, Any]:
+        # Simulator tasks are always ready; ignore wait params
+        return self._result
 
 
 def _select_engine(device: str):
@@ -65,32 +79,21 @@ def run(
 
     from uuid import uuid4
 
-    class _SimTask:
-        def __init__(self, id_: str, device: str, results: Dict[str, Any]):
-            self.id_ = id_
-            self.device = device
-            self._results = {"results": results}
-
-        def results(self) -> Dict[str, Any]:
-            return dict(self._results)
-
-        # Normalize: add details() same as hardware task
-        def details(self) -> list:
-            return self.results()
-
     def _one(c: Any) -> Any:
         out = eng.run(c, shots=shots, **opts)
-        results = out.get("results") or out.get("expectations") or {}
-        return _SimTask(id_=str(uuid4()), device=device, results=results)
+        result = {
+            'result':out.get("result") or out.get("expectations") or {},
+            'result_meta':out.get("metadata",{}),
+        }        
+        return SimTask(id=str(uuid4()), device=device, result=result)
 
     if isinstance(circuit, (list, tuple)):
         return [_one(c) for c in circuit]  # type: ignore
     return [_one(circuit)]
 
 
-def get_task_details(task: Any, token: Optional[str] = None, prettify: bool = False) -> Dict[str, Any]:
-    return getattr(task, "results", lambda: {})()
-
+def get_task_details(task: SimTask, token: Optional[str] = None, prettify: bool = False) -> Dict[str, Any]:
+    return task.get_result()
 
 def remove_task(task: Any, token: Optional[str] = None) -> Any:
     return {"state": "cancelled"}

@@ -41,7 +41,7 @@ def y_expectation(c: tq.Circuit, q: int, shots: int = 0) -> float:
               .run()
         )
         payload = res if isinstance(res, dict) else (res[0] if res else {})
-        counts = payload.get("results", {})
+        counts = payload.get("result", {})
         # Diagonal op: Z on q, I elsewhere
         diag = [[1.0, 1.0] for _ in range(n)]
         diag[q] = [1.0, -1.0]

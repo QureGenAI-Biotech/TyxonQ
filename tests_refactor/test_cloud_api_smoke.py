@@ -48,7 +48,10 @@ def test_simulator_submit_run_result_cancel(sim_device: str):
     # result is alias of get_task_details
     details = tq.api.result(t)
     assert isinstance(details, dict)
-    assert "results" in details or "expectations" in details
+    # Accept both new and legacy result shapes
+    assert (
+        "result" in details or "results" in details or "expectations" in details
+    )
 
     # cancel is no-op for simulator but should return a dict
     cancelled = tq.api.cancel(t)

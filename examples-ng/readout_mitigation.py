@@ -9,9 +9,7 @@ from __future__ import annotations
 
 import tyxonq as tq
 from tyxonq.postprocessing.readout import ReadoutMit
-
-from tyxonq.numerics import NumericBackend as nb
-
+from typing import Any, Dict
 import numpy as np
 
 
@@ -44,6 +42,8 @@ def apply_readout_noise_to_counts(raw_counts: Dict[str, int], single_qubit_cals:
     """
     if not raw_counts:
         return {}
+    import tyxonq as tq
+    nb = tq.get_backend()  # use current numeric backend
     n = len(next(iter(raw_counts.keys())))
     size = 2**n
     prob_true = nb.zeros((size,), dtype=nb.float64)
@@ -114,7 +114,7 @@ def demo_readout_mitigation():
         .postprocessing(method="readout_mitigation", cals={0: nb.to_numpy(A0), 1: nb.to_numpy(A1)}, mitigation="inverse")
         .run()
     )
-    counts_from_run = run_results.get("results", {}) if isinstance(run_results, dict) else run_results[0].get("results", {})
+    counts_from_run = run_results.get("result", {}) if isinstance(run_results, dict) else run_results[0].get("result", {})
     # Postprocessing is performed by Circuit.run when method="readout_mitigation" and cals provided
 
     print("Ideal:", ideal)

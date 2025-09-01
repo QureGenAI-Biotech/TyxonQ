@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Dict, Optional
-import json
 import os
 
 
@@ -17,39 +16,28 @@ ENDPOINTS: Dict[str, Dict[str, str]] = {
 }
 
 
-def _save_tokens() -> None:
-    try:
-        with open(_AUTH_FILE, "w") as f:
-            json.dump(_TOKENS, f)
-    except Exception:
-        pass
 
 
-def _load_tokens() -> None:
-    global _TOKENS
-    if os.path.exists(_AUTH_FILE):
-        try:
-            with open(_AUTH_FILE, "r") as f:
-                _TOKENS = json.load(f)
-        except Exception:
-            _TOKENS = {}
-
-
-def set_token(token: str, *, provider: Optional[str] = None, device: Optional[str] = None, persist: bool = True) -> Dict[str, str]:
+def set_token(token: str, *, provider: Optional[str] = None, device: Optional[str] = None) -> Dict[str, str]:
     prov = (provider or _DEFAULTS.get("provider") or "tyxonq").lower()
-    key = prov + "::" + (device or "")
-    _TOKENS[key] = token
-    if persist:
-        _save_tokens()
+    # Store both device-scoped and provider-scoped entries for flexibility
+    key_device = prov + "::" + (device or "")
+    key_provider = prov + "::"
+    _TOKENS[key_device] = token
+    _TOKENS[key_provider] = token
     return dict(_TOKENS)
 
 
 def get_token(*, provider: Optional[str] = None, device: Optional[str] = None) -> Optional[str]:
     prov = (provider or _DEFAULTS.get("provider") or "tyxonq").lower()
-    key = prov + "::" + (device or "")
-    if not _TOKENS:
-        _load_tokens()
-    return _TOKENS.get(key)
+    key_device = prov + "::" + (device or "")
+    key_provider = prov + "::"
+    # Prefer in-memory tokens
+    tok = _TOKENS.get(key_device) or _TOKENS.get(key_provider)
+    if tok:
+        return tok
+    # Fallback to environment variable
+    return os.getenv("TYXONQ_API_KEY")
 
 
 def set_default(*, provider: Optional[str] = None, device: Optional[str] = None) -> None:

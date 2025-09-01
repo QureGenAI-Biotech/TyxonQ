@@ -127,7 +127,7 @@ class StatevectorEngine:
                 ii = int(idx)
                 bitstr = ''.join('1' if (ii >> (n - 1 - k)) & 1 else '0' for k in range(n))
                 results[bitstr] = int(nb.to_numpy(counts_arr)[ii])
-            return {"results": results, "metadata": {"shots": shots, "backend": self.backend.name}}
+            return {"result": results, "metadata": {"shots": shots, "backend": self.backend.name}}
 
         expectations: Dict[str, float] = {}
         for q in measures:
