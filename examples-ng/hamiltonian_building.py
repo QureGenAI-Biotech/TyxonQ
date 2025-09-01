@@ -1,131 +1,93 @@
 """
-benchmark sparse hamiltonian building
+Benchmark TFIM Hamiltonian construction and counts-based energy evaluation (chain API).
+
+- Hamiltonian represented as lightweight Pauli-term list: List[Tuple[float, List[Tuple[str, int]]]]
+- Energy estimated via measurement counts with basis rotations (X via H, Z native)
 """
 
-import time
+from __future__ import annotations
 
-import torch
-import numpy as np
-import quimb
-import scipy
+import time
+from typing import List, Tuple
 
 import tyxonq as tq
 
-tq.set_dtype("complex128")
-
-nwires = 20
-
-print("--------------------")
-
-# 1.1 tq approach for TFIM (numpy backend)
-
-tq.set_backend("numpy")
-print("hamiltonian building with tq (numpy backend)")
-print("numpy version: ", np.__version__)
-print("scipy version: ", scipy.__version__)
-
-g = tq.templates.graphs.Line1D(nwires, pbc=False)
-time0 = time.perf_counter()
-h11 = tq.quantum.heisenberg_hamiltonian(
-    g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True, numpy=True
-)
-time1 = time.perf_counter()
-
-print("tq (numpy) time: ", time1 - time0)
-print("--------------------")
-
-# 1.2 tq approach for TFIM (pytorch backend)
-
-tq.set_backend("pytorch")
-print("hamiltonian building with tq (pytorch backend)")
-print("pytorch version: ", torch.__version__)
-
-g = tq.templates.graphs.Line1D(nwires, pbc=False)
-time0 = time.perf_counter()
-h12 = tq.quantum.heisenberg_hamiltonian(
-    g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
-)
-time1 = time.perf_counter()
-
-print("tq (pytorch) time: ", time1 - time0)
-
-time0 = time.perf_counter()
-h12 = tq.quantum.heisenberg_hamiltonian(
-    g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
-)
-time1 = time.perf_counter()
-
-print("tq (pytorch) time (after jit): ", time1 - time0)
-print("--------------------")
-
-# 1.3 tq approach for TFIM (pytorch backend)
-
-tq.set_backend("pytorch")
-print("hamiltonian building with tq (pytorch backend)")
-print("pytorch version: ", torch.__version__)
-
-g = tq.templates.graphs.Line1D(nwires, pbc=False)
-time0 = time.perf_counter()
-h13 = tq.quantum.heisenberg_hamiltonian(
-    g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
-)
-time1 = time.perf_counter()
-
-print("tq (pytorch) time: ", time1 - time0)
-
-time0 = time.perf_counter()
-h13 = tq.quantum.heisenberg_hamiltonian(
-    g, hzz=1, hxx=0, hyy=0, hz=0, hx=-1, hy=0, sparse=True
-)
-time1 = time.perf_counter()
-
-print("tq (pytorch) time (after jit): ", time1 - time0)
-
-print("--------------------")
+Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
 
 
-# 2. quimb approach for TFIM
-
-print("hamiltonian building with quimb")
-print("quimb version: ", quimb.__version__)
-
-builder = quimb.tensor.SpinHam1D()
-# spin operator instead of Pauli matrix
-builder += 4, "Z", "Z"
-builder += -2, "X"
-time0 = time.perf_counter()
-h2 = builder.build_sparse(nwires)
-h2 = h2.tocoo()
-time1 = time.perf_counter()
-
-print("quimb time: ", time1 - time0)
+def build_tfim_terms(n: int, hzz: float = 1.0, hx: float = -1.0, pbc: bool = False) -> Hamiltonian:
+    terms: Hamiltonian = []
+    # Z Z couplings
+    for i in range(n - 1):
+        terms.append((hzz, [("Z", i), ("Z", i + 1)]))
+    if pbc and n > 1:
+        terms.append((hzz, [("Z", n - 1), ("Z", 0)]))
+    # X local fields
+    for i in range(n):
+        terms.append((hx, [("X", i)]))
+    return terms
 
 
-def assert_equal(h1, h2):
-    np.testing.assert_allclose(h1.row, h2.row, atol=1e-5)
-    np.testing.assert_allclose(h1.col, h2.col, atol=1e-5)
-    np.testing.assert_allclose(h1.data, h2.data, atol=1e-5)
+def _counts_from_circuit(c: tq.Circuit, shots: int) -> dict:
+    out = (
+        c.device(provider="simulator", device="statevector", shots=shots)
+         .postprocessing(method=None)
+         .run()
+    )
+    return out[0]["result"] if isinstance(out, list) else out.get("result", {})
 
 
-# numpy
-assert_equal(h11, h2)
+def _expectation_from_counts_z(counts: dict, n: int, sites: List[int]) -> float:
+    total = sum(counts.values()) or 1
+    acc = 0.0
+    for bitstr, cnt in counts.items():
+        val = 1.0
+        for q in sites:
+            val *= (1.0 if bitstr[q] == "0" else -1.0)
+        acc += val * cnt
+    return acc / total
 
-# pytorch
-scipy_coo = scipy.sparse.coo_matrix(
-    (
-        h12.data,
-        (h12.indices[:, 0], h12.indices[:, 1]),
-    ),
-    shape=h12.shape,
-)
-assert_equal(scipy_coo, h2)
 
-# pytorch
-scipy_coo = scipy.sparse.coo_matrix(
-    (
-        h13.values,
-        (h13.indices[:, 0], h13.indices[:, 1]),
-    ),
-    shape=h13.shape,
-)
-assert_equal(scipy_coo, h2)
+def energy_counts_tfim(n: int, terms: Hamiltonian, shots: int = 4096) -> float:
+    # One shot for all Z-only terms
+    cz = tq.Circuit(n)
+    for q in range(n):
+        cz.measure_z(q)
+    counts_z = _counts_from_circuit(cz, shots)
+
+    # Per-qubit shot for X terms (basis rotation H)
+    counts_x = {}
+    for i in range(n):
+        cx = tq.Circuit(n)
+        cx.h(i)
+        for q in range(n):
+            cx.measure_z(q)
+        counts_x[i] = _counts_from_circuit(cx, shots)
+
+    energy = 0.0
+    for coeff, ops in terms:
+        axes = [p for p, _ in ops]
+        qs = [q for _, q in ops]
+        if all(ax == "Z" for ax in axes):
+            energy += coeff * _expectation_from_counts_z(counts_z, n, qs)
+        elif len(ops) == 1 and axes[0] == "X":
+            energy += coeff * _expectation_from_counts_z(counts_x[qs[0]], n, [qs[0]])
+        else:
+            raise NotImplementedError("Only Z and X terms supported in this demo.")
+    return energy
+
+
+if __name__ == "__main__":
+    n = 10
+    shots = 4096
+    print("---- TFIM Hamiltonian building (list-of-terms) ----")
+    t0 = time.perf_counter()
+    H = build_tfim_terms(n, hzz=1.0, hx=-1.0, pbc=False)
+    t1 = time.perf_counter()
+    print({"n": n, "num_terms": len(H), "build_time_s": t1 - t0})
+
+    print("---- Counts-based energy estimation ----")
+    t2 = time.perf_counter()
+    e = energy_counts_tfim(n, H, shots=shots)
+    t3 = time.perf_counter()
+    print({"shots": shots, "energy": e, "eval_time_s": t3 - t2})

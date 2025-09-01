@@ -1,12 +1,18 @@
 """
-Time comparison for different evaluation approach on molecule VQE
+Time comparison for different evaluation approaches on molecule VQE (H2O minimal example).
+- Direct numeric path: quantum_library + pytorch (no shots), summing Pauli string expectations without building dense H
 """
 
-import os
+from __future__ import annotations
 
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 import time
 import numpy as np
+import torch
+import tyxonq as tq
+
+K = tq.set_backend("pytorch")
+
+# Problem setup via OpenFermion (keep as source of Pauli terms)
 from openfermion.chem import MolecularData
 from openfermion.transforms import (
     get_fermion_operator,
@@ -16,132 +22,141 @@ from openfermion.transforms import (
 )
 from openfermion.chem import geometry_from_pubchem
 from openfermion.utils import up_then_down
-from openfermionpyscf import run_pyscf
 
-import tyxonq as tq
-
-K = tq.set_backend("pytorch")
-
-
-n = 8
-nlayers = 2
 multiplicity = 1
 basis = "sto-3g"
-# 14 spin orbitals for H2O
 geometry = geometry_from_pubchem("h2o")
 description = "h2o"
 molecule = MolecularData(geometry, basis, multiplicity, description=description)
-molecule = run_pyscf(molecule, run_mp2=True, run_cisd=True, run_ccsd=True, run_fci=True)
+from openfermionpyscf import run_pyscf
+molecule = run_pyscf(molecule, run_mp2=False, run_cisd=False, run_ccsd=False, run_fci=True)
 mh = molecule.get_molecular_hamiltonian()
 fh = get_fermion_operator(mh)
 b = binary_code_transform(reorder(fh, up_then_down), 2 * checksum_code(7, 1))
-lsb, wb = tq.templates.chems.get_ps(b, 12)
-print("%s terms in H2O qubit Hamiltonian" % len(wb))
-mb = tq.quantum.PauliStringSum2COO_numpy(lsb, wb)
-mbd = mb.todense()
-# Infer qubit count from Hamiltonian dimension
-dim = mb.shape[0]
-n = int(np.log2(dim))
-# Ensure sparse shape matches actual Hamiltonian
-mb = K.coo_sparse_matrix(
-    np.transpose(np.stack([mb.row, mb.col])), mb.data, shape=(dim, dim)
-)
-mbd = tq.array_to_tensor(mbd)
+
+# Convert OpenFermion QubitOperator to (lsb, wb)
+from openfermion import QubitOperator  # type: ignore
+
+def qubitop_to_pauli_terms(op: QubitOperator):
+    terms = []
+    weights = []
+    max_idx = -1
+    for (term, coeff) in op.terms.items():
+        if term:
+            max_idx = max(max_idx, max(q for q, _ in term))
+        terms.append(term)
+        weights.append(coeff)
+    n_qubits = max_idx + 1 if max_idx >= 0 else 0
+    lsb = []
+    wb = []
+    for term, coeff in zip(terms, weights):
+        codes = [0] * n_qubits
+        for q, p in term:
+            if p == 'X': codes[q] = 1
+            elif p == 'Y': codes[q] = 2
+            elif p == 'Z': codes[q] = 3
+        lsb.append(codes)
+        wb.append(float(np.real(coeff)))
+    return lsb, wb, n_qubits
+
+lsb, wb, n = qubitop_to_pauli_terms(b)
+print(f"{len(wb)} terms in H2O qubit Hamiltonian, n={n}")
+
+nlayers = 2
 
 
-def ansatz(param):
-    c = tq.Circuit(n)
-    for i in [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]:
-        c.X(i)
+# def dense_h_from_ps(lsb, wb):
+#     I = np.array([[1, 0], [0, 1]], dtype=np.complex128)
+#     X = np.array([[0, 1], [1, 0]], dtype=np.complex128)
+#     Y = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
+#     Z = np.array([[1, 0], [0, -1]], dtype=np.complex128)
+#     H = np.zeros((1 << n, 1 << n), dtype=np.complex128)
+#     for codes, coeff in zip(lsb, wb):
+#         op = None
+#         for q in range(n):
+#             code = codes[q]
+#             m = I if code == 0 else (X if code == 1 else (Y if code == 2 else Z))
+#             op = m if op is None else np.kron(op, m)
+#         H = H + coeff * op
+#     return H
+
+# H_dense = dense_h_from_ps(lsb, wb)
+# H_dense_t = torch.as_tensor(H_dense, dtype=torch.complex128)
+
+def ansatz(param: torch.Tensor) -> torch.Tensor:
+    # param shape: [nlayers, n]
+    nb = tq.get_backend("pytorch")
+    from tyxonq.libs.quantum_library.kernels.statevector import (
+        init_statevector, apply_1q_statevector, apply_2q_statevector,
+    )
+    from tyxonq.libs.quantum_library.kernels.gates import gate_rx, gate_cz_4x4
+
+    psi = init_statevector(n, backend=nb)
     for j in range(nlayers):
         for i in range(n - 1):
-            c.cz(i, i + 1)
+            psi = apply_2q_statevector(nb, psi, gate_cz_4x4(), i, i + 1, n)
         for i in range(n):
-            c.rx(i, theta=param[j, i])
-    return c
+            psi = apply_1q_statevector(nb, psi, gate_rx(param[j, i]), i, n)
+    return psi
 
 
-def benchmark(vqef, tries=2):
-    if tries < 0:
-        vagf = K.value_and_grad(vqef)
-    else:
-        vagf = K.jit(K.value_and_grad(vqef))
-    time0 = time.time()
-    v, g = vagf(K.zeros([nlayers, n]))
-    time1 = time.time()
-    for _ in range(tries):
-        v, g = vagf(K.zeros([nlayers, n]))
-    time2 = time.time()
-    print("staging time: ", time1 - time0)
-    if tries > 0:
-        print("running time: ", (time2 - time1) / tries)
-    return (v, g), (time1 - time0, (time2 - time1) / tries)
+def exact_energy_terms(param: torch.Tensor) -> torch.Tensor:
+    # Sum of Pauli string expectations using basis rotations; no dense H built
+    nb = tq.get_backend("pytorch")
+    from tyxonq.libs.quantum_library.kernels.statevector import (
+        apply_1q_statevector,
+    )
+    from tyxonq.libs.quantum_library.kernels.gates import gate_h, gate_sd
+
+    psi = ansatz(param)
+
+    # Group terms by rotation pattern to reuse rotated states
+    from collections import defaultdict
+    groups = defaultdict(list)  # key: tuple(codes) with 0/Z/X->Z/Y->Z markers
+    for codes, w in zip(lsb, wb):
+        # rotation marker: 0->0, 1->'X', 2->'Y', 3->'Z'
+        key = tuple(codes)
+        groups[key].append((codes, w))
+
+    total = torch.zeros((), dtype=torch.float64)
+    for key, items in groups.items():
+        psi_rot = psi
+        # apply basis change per qubit once for the group
+        for q, code in enumerate(key):
+            if code == 1:  # X -> Z via H
+                psi_rot = apply_1q_statevector(nb, psi_rot, gate_h(), q, n)
+            elif code == 2:  # Y -> Z via S^ H (use S^ then H)
+                psi_rot = apply_1q_statevector(nb, psi_rot, gate_sd(), q, n)
+                psi_rot = apply_1q_statevector(nb, psi_rot, gate_h(), q, n)
+        # probs once
+        probs = nb.square(nb.abs(psi_rot)) if hasattr(nb, 'square') else nb.abs(psi_rot) ** 2
+        dim = 1 << n
+        # evaluate each term in group
+        for codes, w in items:
+            z_sites = [q for q, code in enumerate(codes) if code != 0]
+            if not z_sites:
+                continue
+            signs = [1.0] * dim
+            for k in range(dim):
+                s = 1.0
+                for q in z_sites:
+                    s *= (1.0 if ((k >> (n - 1 - q)) & 1) == 0 else -1.0)
+                signs[k] = s
+            total = total + float(w) * torch.sum(torch.as_tensor(signs, dtype=torch.float64) * probs)
+    return total
 
 
-# 1. plain Pauli sum
-
-
-def vqe1(param):
-    c = ansatz(param)
-    loss = 0.0
-    for ps, w in zip(lsb, wb):
-        obs = []
-        for i, p in enumerate(ps):
-            if p == 1:
-                obs.append([tq.gates.x(), [i]])
-            elif p == 2:
-                obs.append([tq.gates.y(), [i]])
-            elif p == 3:
-                obs.append([tq.gates.z(), [i]])
-
-        loss += w * c.expectation(*obs)
-    return K.real(loss)
-
-
-#!/usr/bin/env python3
-# vmap path disabled for PyTorch functorch compatibility in CI
-
-
-# 3. dense matrix
-
-
-def vqe3(param):
-    c = ansatz(param)
-    return tq.templates.measurements.operator_expectation(c, mbd)
-
-
-# 4. sparse matrix
-
-
-def vqe4(param):
-    c = ansatz(param)
-    # Use precomputed dense Hamiltonian to avoid sparse/functorch interactions
-    return tq.templates.measurements.operator_expectation(c, mbd)
-
-
-# 5. mpo (ommited, since it is not that applicable for molecule/long range Hamiltonian
-# due to large bond dimension)
+def benchmark(fn, *args, tries: int = 1):
+    t0 = time.time(); v0 = fn(*args); t1 = time.time()
+    for _ in range(max(0, tries)):
+        _ = fn(*args)
+    t2 = time.time()
+    stage = t1 - t0
+    run = (t2 - t1) / max(1, tries)
+    return v0, (stage, run)
 
 
 if __name__ == "__main__":
-    r0 = None
-    des = [
-        "plain Pauli sum",
-        "dense Hamiltonian matrix",
-        "sparse Hamiltonian matrix",
-    ]
-    vqef = [vqe1, vqe3, vqe4]
-    tries = [-1, 1, 1]
-    for i in range(len(vqef)):
-        print(des[i])
-        r1, _ = benchmark(vqef[i], tries=tries[i])
-        # plain approach takes too long to jit
-        if r0 is not None:
-            a0 = r0[0].detach().cpu().numpy()
-            a1 = r1[0].detach().cpu().numpy()
-            b0 = r0[1].detach().cpu().numpy()
-            b1 = r1[1].detach().cpu().numpy()
-            np.testing.assert_allclose(a0, a1, atol=1e-5)
-            np.testing.assert_allclose(b0, b1, atol=1e-5)
-        r0 = r1
-        print("------------------")
+    param0 = torch.zeros([nlayers, n], dtype=torch.float64)
+    v_e, (s_e, r_e) = benchmark(lambda p: exact_energy_terms(p).detach(), param0, tries=0)
+    print({"exact_energy_terms": float(v_e), "stage_s": s_e, "run_s": r_e})
