@@ -1,7 +1,7 @@
 from __future__ import annotations
 import importlib.util, sys, pathlib
 def test_example_compiles():
-    p = pathlib.Path('examples-ng/timeevolution_trotter.py')
+    p = pathlib.Path('examples/timeevolution_trotter.py')
     spec = importlib.util.spec_from_file_location(p.stem, str(p))
     mod = importlib.util.module_from_spec(spec)
     # Only compile module; do not execute top-level code if any heavy run guarded by __main__

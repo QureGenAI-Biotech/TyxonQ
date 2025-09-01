@@ -18,10 +18,12 @@ def gate_h() -> Any:
 def gate_rz(theta: Any) -> Any:
     th = nb.asarray(theta)
     half = nb.array(0.5, dtype=nb.float64)
-    j = nb.array(1j, dtype=nb.complex128)
-    e = nb.exp(-j * half * th)
-    zero = nb.array(0.0, dtype=nb.complex128)
-    return nb.array([[e, zero], [zero, nb.conj(e)]], dtype=nb.complex128)
+    # Rz = cos(th/2) I - i sin(th/2) Z
+    c = nb.cos(th * half)
+    s = nb.sin(th * half)
+    I = nb.eye(2, dtype=nb.complex128)
+    Z = nb.array([[1.0, 0.0], [0.0, -1.0]], dtype=nb.complex128)
+    return c * I + (-nb.array(1j, dtype=nb.complex128) * s) * Z
 
 
 def gate_rx(theta: Any) -> Any:

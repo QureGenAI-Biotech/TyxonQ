@@ -51,7 +51,9 @@ class PyTorchBackend:
 
     def array(self, data: Any, dtype: Any | None = None) -> Any:
         td = self._to_torch_dtype(dtype)
-        return torch.tensor(data, dtype=td)
+        if torch.is_tensor(data):
+            return data.to(td) if td is not None else data
+        return torch.as_tensor(data, dtype=td)
 
     def asarray(self, data: Any) -> Any:
         return torch.as_tensor(data)
