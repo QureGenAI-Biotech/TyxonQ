@@ -3,7 +3,7 @@ import importlib.util, pathlib
 
 
 def test_example_runs_with_noise_controls():
-    p = pathlib.Path('examples-ng/noise_controls_demo.py')
+    p = pathlib.Path('examples/noise_controls_demo.py')
     spec = importlib.util.spec_from_file_location(p.stem, str(p))
     mod = importlib.util.module_from_spec(spec)
     assert spec is not None and spec.loader is not None

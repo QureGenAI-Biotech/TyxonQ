@@ -59,10 +59,14 @@ def generate_circuit(param):
             theta = param[i, j, 0]
             # ZZ(2*theta) decomposition via CX-RZ-CX
             c.cx(i, i + 1)
-            c.rz(i + 1, theta=2.0 * float(theta))
+            # Avoid converting requires_grad tensor to float during graph construction
+            val = float(theta.detach().cpu().numpy()) if hasattr(theta, "detach") else float(theta)
+            c.rz(i + 1, theta=2.0 * val)
             c.cx(i, i + 1)
         for i in range(n):
-            c.rx(i, theta=float(param[i, j, 1]))
+            th = param[i, j, 1]
+            th_val = float(th.detach().cpu().numpy()) if hasattr(th, "detach") else float(th)
+            c.rx(i, theta=th_val)
     return c
 
 
@@ -221,8 +225,8 @@ for i in range(10):
     optimizer.step()
     if i % 5 == 4:
         print(f"Expectation value at iteration {i}: {float(e.detach())}", flush=True)
-    if (i + 1) % 10 == 0:
-        scheduler.step()
+    # step scheduler after optimizer.step per PyTorch recommendation
+    scheduler.step()
 print(">> Adam converged as:", float(exp_val_exact(param).detach()), flush=True)
 result["Adam (Gradient based)"].append(float(exp_val_exact(param).detach()))
 
@@ -272,8 +276,7 @@ for i in range(10):
     optimizer.step()
     if i % 5 == 4:
         print(f"Expectation value at iteration {i}: {float(exp_val_counts(param, shots=64))}", flush=True)
-    if (i + 1) % 10 == 0:
-        scheduler.step()
+    scheduler.step()
 
 print(">> Adam converged as:", float(exp_val_exact(param).detach()), flush=True)
 result["Adam (Gradient based)"].append(float(exp_val_exact(param).detach()))
