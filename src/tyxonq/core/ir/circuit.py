@@ -656,7 +656,7 @@ class Circuit:
         - If Qiskit is not installed, return a minimal textual `gate_summary()` string.
         """
         try:
-            from ...compiler.providers.qiskit.dialect import to_qiskit  # type: ignore
+            from ...compiler.compile_engine.qiskit.dialect import to_qiskit  # type: ignore
 
             qc = to_qiskit(self, add_measures=True)
             # Resolve default output: prefer per-circuit _draw_output, else 'text'

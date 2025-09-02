@@ -33,7 +33,7 @@ graph TD
 
 Module responsibilities:
 - Core (`src/tyxonq/core/*`): IR types (`ir/circuit.py`, `ir/pulse.py`), `operations`, `measurements`, error types.
-- Compiler (`src/tyxonq/compiler/*`): stages for rewrite, simplify, layout, scheduling, gradients; provider adapters under `compiler/providers/*`.
+- Compiler (`src/tyxonq/compiler/*`): stages for rewrite, simplify, layout, scheduling, gradients; different compiler engine adapters under `compiler/compile-engine/*`.
 - Devices (`src/tyxonq/devices/*`): base device contracts, simulators (statevector, density_matrix, MPS) and hardware drivers (`hardware/<vendor>/driver.py`), sessions.
 - Numerics (`src/tyxonq/numerics/*`): backend factory/context; backends for NumPy, PyTorch, CuPyNumeric.
 - Postprocessing (`src/tyxonq/postprocessing/*`): metrics, IO, readout mitigation, QEM; consumes counts/samples to produce expectations.
@@ -50,7 +50,7 @@ src/tyxonq/
     api.py
     native_compiler.py
     pipeline.py
-    providers/
+    compile_engine/
       qiskit/
         dialect.py
         qiskit_compiler.py
@@ -109,7 +109,7 @@ src/tyxonq/
 - Compiler
   - Pass pipeline orchestration; per-stage contracts and reproducible pass configs
   - Measurement rewrite and grouping; light-cone pruning; scheduling (shot segmentation)
-  - Gradient passes (parameter-shift, QNG); provider-specific dialect lowering
+  - Gradient passes (parameter-shift, QNG); different compiler-specific dialect lowering
 - Devices
   - Stable Device contract: run/compile interfaces, shot execution, result normalization
   - Simulators share numerics backend; unified noise controls; performance baselines

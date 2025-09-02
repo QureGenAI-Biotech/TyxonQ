@@ -1,4 +1,4 @@
-from tyxonq.compiler.providers.qiskit.dialect import (
+from tyxonq.compiler.compile_engine.qiskit.dialect import (
     DEFAULT_BASIS_GATES,
     DEFAULT_OPT_LEVEL,
     comment_dict,

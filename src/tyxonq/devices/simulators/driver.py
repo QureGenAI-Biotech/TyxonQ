@@ -42,7 +42,7 @@ def _qasm_to_ir_if_needed(circuit: Any, source: Any) -> Any:
     if source is None:
         return circuit
     try:
-        from ...compiler.providers.qiskit.dialect import qasm_to_ir  # type: ignore
+        from ...compiler.compile_engine.qiskit.dialect import qasm_to_ir  # type: ignore
 
         if isinstance(source, (list, tuple)):
             return [qasm_to_ir(s) for s in source]
