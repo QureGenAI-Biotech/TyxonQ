@@ -1,4 +1,4 @@
-"""Circuit building blocks (migrated from legacy templates.blocks).
+"""Circuit building blocks.
 
 Keep functions backend-agnostic: operate only on `tyxonq.core.ir.circuit.Circuit`
 and plain Python/sequence types. Do not depend on NumPy or torch here.
@@ -54,4 +54,30 @@ def example_block(c: Circuit, params: Any, *, nlayers: int) -> Circuit:
 
     return c
 
+
+# Hardware-efficient RY ansatz: interleaved RY layers and CX entanglers.
+def build_hwe_ry_ops(n_qubits: int, n_layers: int, params) -> Circuit:
+    """Construct HWE RY ansatz as a Circuit.
+
+    params shape: ((n_layers+1) * n_qubits,)
+    """
+    c = Circuit(n_qubits)
+    try:
+        mat = params.reshape(n_layers + 1, n_qubits)  # type: ignore[attr-defined]
+    except Exception:
+        # fall back to python slicing
+        flat = list(params)
+        mat = [flat[i * n_qubits : (i + 1) * n_qubits] for i in range(n_layers + 1)]
+    # initial RY layer
+    for i in range(n_qubits):
+        c.ry(i, theta=float(mat[0][i]))
+    c = c.add_barrier(*range(n_qubits))
+    # entangling + RY layers
+    for l in range(n_layers):
+        for i in range(n_qubits - 1):
+            c.cnot(i, i + 1)
+        for i in range(n_qubits):
+            c.ry(i, theta=float(mat[l + 1][i]))
+        c = c.add_barrier(*range(n_qubits))
+    return c
 

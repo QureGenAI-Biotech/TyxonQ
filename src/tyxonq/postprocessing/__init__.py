@@ -73,6 +73,27 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
             pass
         return post
 
+    if method in ("expval_pauli_term", "expval_pauli_terms", "expval_pauli_sum"):
+        try:
+            from . import counts_expval as _m
+            counts = result.get("result") or result.get("counts") or {}
+            payload = None
+            if method == "expval_pauli_term":
+                idxs = options.get("idxs") or options.get("indices") or []
+                payload = _m.expval_pauli_term(counts, idxs)
+            elif method == "expval_pauli_terms":
+                terms = options.get("terms") or (result.get("result_meta", {}) or {}).get("group_items") or []
+                payload = _m.expval_pauli_terms(counts, terms)
+            elif method == "expval_pauli_sum":
+                meta = (result.get("result_meta", {}) or {})
+                items = options.get("items") or options.get("group_items") or meta.get("group_items") or []
+                identity_const = float(options.get("identity_const", meta.get("identity_const", 0.0)))
+                payload = _m.expval_pauli_sum(counts, items, identity_const=identity_const)
+            post["result"] = payload
+        except Exception:
+            pass
+        return post
+
     # 未识别的方法：返回占位信息，便于上层识别
     post["result"] = {"reason": f"unsupported method: {method}"}
     return post

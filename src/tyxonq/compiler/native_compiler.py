@@ -16,6 +16,7 @@ class NativeCompiler:
         circuit: "Circuit" = request["circuit"]
         target: "DeviceCapabilities" = request.get("target", {})  # type: ignore[assignment]
         options: Dict[str, Any] = request.get("options", {})
+        output: str = str(options.get("output", "ir")).lower()
 
         from .pipeline import build_pipeline
 
@@ -97,6 +98,7 @@ class NativeCompiler:
             return type(c)(c.num_qubits, ops=new_ops, metadata=dict(getattr(c, "metadata", {})), instructions=list(getattr(c, "instructions", [])))
 
         circuit = _rewrite_to_basis(circuit)
+        # If Hamiltonian/QubitOperator provided in options, pass through to rewrite pass
         lowered = pipe.run(circuit, target, **options)
 
         # Optional: emit an execution plan when shot_plan/total_shots is provided
@@ -123,6 +125,31 @@ class NativeCompiler:
             "optimization_level": optimization_level,
             "execution_plan": execution_plan,
         }
+        # 输出格式选择：
+        if output in ("ir", "tyxonq"):
+            return {"circuit": lowered, "metadata": metadata}
+        if output in ("qasm", "qasm2"):
+            # 若本地未实现 QASM 降级，薄转发到 qiskit 实现
+            try:
+                from .compile_engine.qiskit import QiskitCompiler  # type: ignore
+
+                qk_opts = dict(options)
+                qk_opts["output"] = "qasm2"
+                # 需要将 lowered 作为输入传给 qiskit 方言适配
+                return QiskitCompiler().compile({"circuit": lowered, "target": target, "options": qk_opts})  # type: ignore[arg-type]
+            except Exception:
+                # 降级失败则仍返回 IR
+                return {"circuit": lowered, "metadata": metadata}
+        if output == "qiskit":
+            try:
+                from .compile_engine.qiskit import QiskitCompiler  # type: ignore
+
+                qk_opts = dict(options)
+                qk_opts["output"] = "qiskit"
+                return QiskitCompiler().compile({"circuit": lowered, "target": target, "options": qk_opts})  # type: ignore[arg-type]
+            except Exception:
+                return {"circuit": lowered, "metadata": metadata}
+        # 未识别：返回 IR
         return {"circuit": lowered, "metadata": metadata}
 
 

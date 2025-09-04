@@ -75,48 +75,21 @@ def compile(
         return obj
 
     cap_target: Dict[str, Any] = _parse_target(target) if isinstance(target, str) else {}
-    options = options or {}
-    # Map generic output to provider-specific
-    prov = compile_engine.lower()
-    if prov in ("tyxonq", "native"):
-        prov = "default"
-    out = output.lower()
+    opts = dict(options or {})
+    if output:
+        opts["output"] = output
 
-    # Auto-switch to qiskit compile engine for TyxonQ cloud hardware targets
-    try:
-        scope = str(cap_target.get("scope", "")).lower()
-        variant = str(cap_target.get("variant", "")).lower()
-        detail = str(cap_target.get("detail", "")).lower()
-        is_tyxonq_hw = scope in ("hardware", "cloud") and ("tyxonq" in variant or "tyxonq" in detail)
-        if is_tyxonq_hw and prov != "qiskit":
-            print("Info: target requires TyxonQ cloud hardware; switching compile_engine to 'qiskit'.")
-            prov = "qiskit"
-    except Exception:
-        pass
+    prov = (compile_engine or "default").lower()
+    if prov in ("default", "tyxonq", "native"):
+        from .native_compiler import NativeCompiler
 
+        return NativeCompiler().compile({"circuit": circuit, "target": cap_target, "options": opts})  # type: ignore[arg-type]
     if prov == "qiskit":
-        from .providers.qiskit import QiskitCompiler
+        from .compile_engine.qiskit import QiskitCompiler
 
-        if out == "qiskit":
-            out_opt = "qiskit"
-        elif out == "qasm2":
-            out_opt = "qasm2"
-        elif out in ("ir", "tyxonq"):
-            # Request original IR
-            out_opt = "ir"
-        else:
-            out_opt = "ir"
-        opts = dict(options)
-        # fill default basis_gates if missing/empty for qiskit path
-        if not opts.get("basis_gates"):
-            opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
-        opts["output"] = out_opt
         return QiskitCompiler().compile({"circuit": circuit, "target": cap_target, "options": opts})  # type: ignore[arg-type]
-
-    # default native provider (TyxonQ)
+    # Fallback to native
     from .native_compiler import NativeCompiler
-
-    # Run native pipeline (stages list resolved inside NativeCompiler)
-    return NativeCompiler().compile({"circuit": circuit, "target": cap_target, "options": dict(options)})  # type: ignore[arg-type]
+    return NativeCompiler().compile({"circuit": circuit, "target": cap_target, "options": opts})  # type: ignore[arg-type]
 
 

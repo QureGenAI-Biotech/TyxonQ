@@ -7,7 +7,7 @@ import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf import M, ao2mo
 
-from .static.hamiltonian import random_integral
+from .chem_libs.hamiltonians_chem_library import random_integral
 
 
 # Duck-typing PySCF Mole object. Not supposed to be an external user-interface
