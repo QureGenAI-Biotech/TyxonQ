@@ -1,6 +1,6 @@
 import pytest
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.providers.qiskit.dialect import to_qiskit, from_qiskit, ir_to_qasm, qasm_to_ir
+from tyxonq.compiler.compile_engine.qiskit.dialect import to_qiskit, from_qiskit, ir_to_qasm, qasm_to_ir
 
 
 @pytest.mark.skipif(__import__("importlib").util.find_spec("qiskit") is None, reason="qiskit not installed")

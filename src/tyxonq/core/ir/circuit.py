@@ -208,6 +208,49 @@ class Circuit:
             summary[k] = summary.get(k, 0) + 1
         return summary
 
+    # ---- Analysis helpers (lightweight, backend-agnostic) ----
+    def count_flop(self) -> Optional[int]:
+        """Return a heuristic FLOP estimate for statevector simulation.
+
+        This avoids tensor network dependencies. The estimate is coarse:
+        - 1q gate ~ O(2^n)
+        - 2q gate ~ O(2^(n+1))
+        - other gates ignored
+        Returns None if n is not available.
+        """
+        try:
+            n = int(self.num_qubits)
+        except Exception:
+            return None
+        flop: int = 0
+        for op in self.ops:
+            name = str(op[0]).lower()
+            if name in ("h", "rx", "ry", "rz", "x", "y", "z", "s", "sdg"):
+                flop += 1 << n
+            elif name in ("cx", "cz", "cy", "cnot", "rxx", "rzz"):
+                flop += 1 << (n + 1)
+        return flop
+
+    def get_circuit_summary(self):  # pragma: no cover - optional pandas
+        """Return a dict summarizing the circuit if pandas is available.
+
+        Columns: #qubits, #gates, #CNOT, #multicontrol, depth (if qiskit available), #FLOP (heuristic).
+        """
+
+        n_qubits = self.num_qubits
+        n_gates = len(self.ops)
+        n_cnot = self.gate_count(["cnot", "cx"])
+        n_mc = sum(1 for op in self.ops if "multicontrol" in str(op[0]).lower())
+        depth = None
+        try:
+            from ...compiler.compile_engine.qiskit.dialect import to_qiskit  # type: ignore
+            qc = to_qiskit(self, add_measures=False)
+            depth = qc.depth()
+        except Exception:
+            depth = None
+        flop = self.count_flop()
+        return {"#qubits": n_qubits, "#gates": [n_gates], "#CNOT": [n_cnot], "#multicontrol": [n_mc], "depth": [depth], "#FLOP": [flop]}
+
     def extended(self, extra_ops: Sequence[Sequence[Any]]) -> "Circuit":
         """Return a new Circuit with ops extended by extra_ops (no mutation)."""
         new_ops = list(self.ops) + [tuple(op) for op in extra_ops]
@@ -656,7 +699,7 @@ class Circuit:
         - If Qiskit is not installed, return a minimal textual `gate_summary()` string.
         """
         try:
-            from ...compiler.providers.qiskit.dialect import to_qiskit  # type: ignore
+            from ...compiler.compile_engine.qiskit.dialect import to_qiskit  # type: ignore
 
             qc = to_qiskit(self, add_measures=True)
             # Resolve default output: prefer per-circuit _draw_output, else 'text'

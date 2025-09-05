@@ -3,7 +3,7 @@ import pytest
 qiskit = pytest.importorskip("qiskit")
 
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.providers.qiskit.qiskit_compiler import ir_to_qiskit, qiskit_to_ir
+from tyxonq.compiler.compile_engine.qiskit.qiskit_compiler import ir_to_qiskit, qiskit_to_ir
 
 
 def test_ir_to_qiskit_and_back_minimal_roundtrip():

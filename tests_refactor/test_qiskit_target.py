@@ -2,7 +2,7 @@ import importlib
 
 import pytest
 
-from tyxonq.compiler.providers.qiskit import QiskitCompiler
+from tyxonq.compiler.compile_engine.qiskit import QiskitCompiler
 from tyxonq.core.ir import Circuit
 
 
