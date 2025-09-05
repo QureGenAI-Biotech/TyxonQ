@@ -8,6 +8,9 @@ from openfermion import QubitOperator
 
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.compiler.api import compile as compile_api
+from tyxonq.compiler.utils.hamiltonian_grouping import (
+    group_qubit_operator_terms,
+)
 
 
 try:
@@ -83,7 +86,8 @@ class UCCDeviceRuntime:
             tuple(self.ex_ops),
             tuple(self.param_ids) if self.param_ids is not None else None,
             mode=self.mode,
-            init_state=self.init_state,
+            # 设备路径不消费 init_state（无论 ndarray 还是 Circuit）
+            init_state=None,
             decompose_multicontrol=self.decompose_multicontrol,
             trotter=self.trotter,
         )
@@ -101,15 +105,15 @@ class UCCDeviceRuntime:
     ) -> float:
         # Prefer compiler-provided grouping when available
         # Fallback to internal grouping during transition
-        identity_const, groups = group_qubit_operator(self.h_qubit_op, self.n_qubits)
-        energy_val = identity_const
+        identity_const, groups = group_qubit_operator_terms(self.h_qubit_op, self.n_qubits)
+        energy_val = float(identity_const)
         for bases, items in groups.items():
             c = c_builder()
             for q, p in enumerate(bases):
                 if p == "X":
                     c.ops.append(("h", q))
                 elif p == "Y":
-                    c.ops.append(("sdg", q)); c.ops.append(("h", q))
+                    c.ops.append(("rz", q, -pi/2)); c.ops.append(("h", q))
             for q in range(self.n_qubits):
                 c.ops.append(("measure_z", q))
             dev = c.device(provider=provider, device=device, shots=shots)
@@ -123,6 +127,7 @@ class UCCDeviceRuntime:
             dev = dev.postprocessing(**pp_opts)
             res = dev.run()
             payload = res[0]["postprocessing"]["result"] if isinstance(res, list) else (res.get("postprocessing", {}) or {}).get("result", {})
+            # counts_expval.expval_pauli_sum returns dict with 'energy'
             energy_val += float((payload or {}).get("energy", 0.0))
         return float(energy_val)
 

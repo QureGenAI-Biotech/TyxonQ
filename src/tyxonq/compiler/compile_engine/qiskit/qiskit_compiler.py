@@ -23,7 +23,6 @@ class QiskitCompiler:
 
     def compile(self, request: "CompileRequest") -> "CompileResult":  # type: ignore[override]
         circuit: "Circuit" = request["circuit"]
-        target: "DeviceCapabilities" = request.get("target", {})  # type: ignore[assignment]
         options: Dict[str, Any] = request.get("options", {})
         output = str(options.get("output", "qiskit")).lower()
         add_measures = bool(options.get("add_measures", True))
@@ -65,9 +64,9 @@ class QiskitCompiler:
             plm = {}
 
         metadata: Dict[str, Any] = {
-            "target": "qiskit",
+            "output": "output",
             "options": dict(norm_opts),
-            "caps": dict(target),
+            "device_capabilitys": {},
             "logical_physical_mapping": lpm,
             "positional_logical_mapping": plm,
         }

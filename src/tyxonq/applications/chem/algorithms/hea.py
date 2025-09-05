@@ -36,11 +36,12 @@ class HEA:
     - 从分子积分/活性空间（PySCF）与费米子算符映射（parity/JW/BK）构建 HEA；
     - 与旧版 static/hea.py 的功能对应，但实现已迁移到 algorithms/runtimes/libs，移除张量网络依赖。
     """
-    def __init__(self, n: int, layers: int, hamiltonian: Hamiltonian, engine: str = "device"):
+    def __init__(self, n: int, layers: int, hamiltonian: Hamiltonian, runtime: str = "device", numeric_engine: str | None = None):
         self.n = int(n)
         self.layers = int(layers)
         self.hamiltonian = list(hamiltonian)
-        self.engine = engine
+        self.runtime = runtime
+        self.numeric_engine = numeric_engine
         # RY ansatz: (layers + 1) * n parameters
         self.n_params = (self.layers + 1) * self.n
         self.init_guess = np.zeros(self.n_params, dtype=np.float64)
@@ -80,7 +81,7 @@ class HEA:
         内部对哈密顿量进行按基分组的测量流程：对每个基组应用相应的基变换（X→H，Y→S^†H），
         然后做 Z 基测量并从计数中估计 <H>。
         """
-        if self.engine == "device":
+        if self.runtime == "device":
             rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian)
             p = self.init_guess if params is None else params
             return rt.energy(p, **device_opts)
@@ -93,7 +94,7 @@ class HEA:
             g_k = 0.5 * (E(θ_k+s) - E(θ_k-s))
         与 energy 一样采用计数估计。
         """
-        if self.engine == "device":
+        if self.runtime == "device":
             rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian)
             p = self.init_guess if params is None else params
             return rt.energy_and_grad(p, **device_opts)
@@ -168,7 +169,7 @@ class HEA:
         *,
         n_layers: int = 1,
         mapping: str = "parity",
-        engine: str = "device",
+        runtime: str = "device",
     ) -> "HEA":
         """从分子积分构建 HEA。
 
@@ -191,7 +192,7 @@ class HEA:
         if e_core and abs(e_core) > 0:
             terms = [(float(e_core), [])] + terms
         n_qubits = (n_sorb - 2) if mapping == "parity" else n_sorb
-        inst = cls(n=n_qubits, layers=int(n_layers), hamiltonian=terms, engine=engine)
+        inst = cls(n=n_qubits, layers=int(n_layers), hamiltonian=terms, runtime=runtime)
         # record chemistry metadata for downstream features (RDM等)
         inst.mapping = str(mapping)
         inst.int1e = np.array(int1e)
@@ -209,7 +210,7 @@ class HEA:
         active_space=None,
         n_layers: int = 1,
         mapping: str = "parity",
-        engine: str = "device",
+        runtime: str = "device",
     ) -> "HEA":
         """从 PySCF 分子对象构建 HEA。
 
@@ -234,7 +235,7 @@ class HEA:
             spin = 0
         na = (tot + spin) // 2
         nb = (tot - spin) // 2
-        inst = cls.from_integral(int1e, int2e, (na, nb), e_core, n_layers=n_layers, mapping=mapping, engine=engine)
+        inst = cls.from_integral(int1e, int2e, (na, nb), e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
         return inst
 
     @classmethod
@@ -247,14 +248,14 @@ class HEA:
         n_layers: int,
         *,
         mapping: str = "parity",
-        engine: str = "device",
+        runtime: str = "device",
     ) -> "HEA":
         """兼容旧接口的 RY 构造器（等价于 from_integral(..., n_layers, mapping, engine)）。"""
-        return cls.from_integral(int1e, int2e, n_elec, e_core, n_layers=n_layers, mapping=mapping, engine=engine)
+        return cls.from_integral(int1e, int2e, n_elec, e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
 
     # ---------- PySCF solver 适配（可选） ----------
     @classmethod
-    def as_pyscf_solver(cls, *, n_layers: int = 1, mapping: str = "parity", engine: str = "device", config_function: Callable | None = None):
+    def as_pyscf_solver(cls, *, n_layers: int = 1, mapping: str = "parity", runtime: str = "device", config_function: Callable | None = None):
         """返回一个最小 PySCF FCI 求解器兼容对象，内部以 HEA 优化。
 
         仅实现 kernel/make_rdm1/make_rdm2 所需的最小接口，便于与 CASSCF 对接。
@@ -265,7 +266,7 @@ class HEA:
                 self.instance: HEA | None = None
 
             def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0, **kwargs):
-                self.instance = cls.from_integral(h1, h2, nelec, ecore, n_layers=n_layers, mapping=mapping, engine=engine)
+                self.instance = cls.from_integral(h1, h2, nelec, ecore, n_layers=n_layers, mapping=mapping, runtime=runtime)
                 if config_function is not None:
                     config_function(self.instance)
                 e = self.instance.kernel()

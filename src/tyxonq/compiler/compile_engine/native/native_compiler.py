@@ -4,17 +4,16 @@ from typing import Any, Dict, TYPE_CHECKING
 import warnings
 
 if TYPE_CHECKING:
-    from .api import CompileRequest, CompileResult
-    from ..core.ir import Circuit
-    from ..devices import DeviceCapabilities
+    from ...api import CompileRequest, CompileResult
+    from ....core.ir import Circuit
+    from ....devices import DeviceCapabilities
 
 
 class NativeCompiler:
     name = "default"
 
     def compile(self, request: "CompileRequest") -> "CompileResult":  # type: ignore[override]
-        circuit: "Circuit" = request["circuit"]
-        target: "DeviceCapabilities" = request.get("target", {})  # type: ignore[assignment]
+        circuit: "Circuit" = request["circuit"] # type: ignore[assignment]
         options: Dict[str, Any] = request.get("options", {})
         output: str = str(options.get("output", "ir")).lower()
 
@@ -54,7 +53,7 @@ class NativeCompiler:
         if "measurements" not in options:
             # Use core.measurements types to describe intent for downstream stages
             try:
-                from ..core.measurements import Expectation  # type: ignore
+                from ....core.measurements import Expectation  # type: ignore
             except Exception:  # pragma: no cover
                 Expectation = None  # type: ignore
 
@@ -99,54 +98,68 @@ class NativeCompiler:
 
         circuit = _rewrite_to_basis(circuit)
         # If Hamiltonian/QubitOperator provided in options, pass through to rewrite pass
-        lowered = pipe.run(circuit, target, **options)
+
+        # Ensure scheduler passes receive default device_capabilitys
+        if "device_capabilitys" not in options:
+            options = dict(options)
+            options["device_capabilitys"] = {}
+        lowered = pipe.run(circuit, **options)
+
+        device_capabilitys = options.get("device_capabilitys",{})
 
         # Optional: emit an execution plan when shot_plan/total_shots is provided
         execution_plan = None
         try:
-            from .stages.scheduling.shot_scheduler import schedule  # lazy import
+            from ...stages.scheduling.shot_scheduler import schedule  # lazy import
 
             if "shot_plan" in options or "total_shots" in options:
                 execution_plan = schedule(
                     lowered,
                     options.get("shot_plan"),
                     total_shots=options.get("total_shots"),
-                    caps=target,
+                    device_capabilitys=device_capabilitys,
                 )
         except Exception:
             execution_plan = None
 
         metadata: Dict[str, Any] = {
-            "target": "tyxonq",
+            "output": output,
             "options": dict(options),
-            "caps": dict(target),
+            "device_capabilitys": dict(device_capabilitys),
             "pipeline": list(pipeline_names),
             "basis_gates": list(basis_gates),
             "optimization_level": optimization_level,
             "execution_plan": execution_plan,
         }
         # 输出格式选择：
-        if output in ("ir", "tyxonq"):
+        if output in ("ir","tyxonq"):
             return {"circuit": lowered, "metadata": metadata}
         if output in ("qasm", "qasm2"):
             # 若本地未实现 QASM 降级，薄转发到 qiskit 实现
+            # output = tyxonq equals to qasm2
             try:
-                from .compile_engine.qiskit import QiskitCompiler  # type: ignore
+                from ..qiskit import QiskitCompiler  # type: ignore
 
                 qk_opts = dict(options)
+                # 若未显式指定，使用 qiskit 偏好门集合
+                if not qk_opts.get("basis_gates"):
+                    qk_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
                 qk_opts["output"] = "qasm2"
                 # 需要将 lowered 作为输入传给 qiskit 方言适配
-                return QiskitCompiler().compile({"circuit": lowered, "target": target, "options": qk_opts})  # type: ignore[arg-type]
+                return QiskitCompiler().compile({"circuit": lowered, "options": qk_opts})  # type: ignore[arg-type]
             except Exception:
                 # 降级失败则仍返回 IR
                 return {"circuit": lowered, "metadata": metadata}
         if output == "qiskit":
             try:
-                from .compile_engine.qiskit import QiskitCompiler  # type: ignore
+                from ..qiskit import QiskitCompiler  # type: ignore
 
                 qk_opts = dict(options)
+                # 若未显式指定，使用 qiskit 偏好门集合
+                if not qk_opts.get("basis_gates"):
+                    qk_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
                 qk_opts["output"] = "qiskit"
-                return QiskitCompiler().compile({"circuit": lowered, "target": target, "options": qk_opts})  # type: ignore[arg-type]
+                return QiskitCompiler().compile({"circuit": lowered, "options": qk_opts})  # type: ignore[arg-type]
             except Exception:
                 return {"circuit": lowered, "metadata": metadata}
         # 未识别：返回 IR

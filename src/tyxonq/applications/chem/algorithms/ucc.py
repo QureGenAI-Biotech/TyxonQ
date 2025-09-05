@@ -34,7 +34,7 @@ class UCC:
         n_qubits: int,
         n_elec_s: Tuple[int, int],
         h_qubit_op: QubitOperator,
-        engine: str = "device",
+        runtime: str = "device",
         mode: str = "fermion",
         *,
         ex_ops: List[tuple] | None = None,
@@ -46,7 +46,7 @@ class UCC:
         self.n_qubits = int(n_qubits)
         self.n_elec_s = (int(n_elec_s[0]), int(n_elec_s[1]))
         self.h_qubit_op = h_qubit_op
-        self.engine = engine
+        self.runtime = runtime
         self.mode = mode
         self.e_core: float = 0.0
         self._params: np.ndarray | None = None
@@ -76,32 +76,71 @@ class UCC:
             trotter=self.trotter,
         )
 
-    def energy(self, params: np.ndarray | None = None, **device_opts) -> float:
-        if self.engine == "device":
+    def energy(self, params: np.ndarray | None = None, **opts) -> float:
+        runtime = str(opts.pop("runtime", self.runtime))
+        numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
+        if runtime == "device":
             rt = self._runtime()
-            e = rt.energy(params, **device_opts)
+            e = rt.energy(params, **opts)
             return float(e + self.e_core)
-        raise NotImplementedError("numeric engines to be added")
+        if runtime == "numeric":
+            # exact statevector path
+            rt = UCCNumericRuntime(
+                self.n_qubits,
+                self.n_elec_s,
+                self.h_qubit_op,
+                ex_ops=self.ex_ops,
+                param_ids=self.param_ids,
+                init_state=self.init_state,
+                mode=self.mode,
+                numeric_engine=numeric_engine,
+            )
+            base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
+            return float(rt.energy(base) + self.e_core)
+        raise ValueError(f"unknown runtime: {runtime}")
 
-    def energy_and_grad(self, params: np.ndarray | None = None, **device_opts):
-        if self.engine == "device":
+    def energy_and_grad(self, params: np.ndarray | None = None, **opts):
+        runtime = str(opts.pop("runtime", self.runtime))
+        numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
+        if runtime == "device":
             rt = self._runtime()
-            e, g = rt.energy_and_grad(params, **device_opts)
+            e, g = rt.energy_and_grad(params, **opts)
             return float(e + self.e_core), g
-        raise NotImplementedError("numeric engines to be added")
+        if runtime == "numeric":
+            rt = UCCNumericRuntime(
+                self.n_qubits,
+                self.n_elec_s,
+                self.h_qubit_op,
+                ex_ops=self.ex_ops,
+                param_ids=self.param_ids,
+                init_state=self.init_state,
+                mode=self.mode,
+                numeric_engine=numeric_engine,
+            )
+            base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
+            e0, g = rt.energy_and_grad(base)
+            return float(e0 + self.e_core), g
+        raise ValueError(f"unknown runtime: {runtime}")
 
-    def kernel(self) -> float:
-        """Optimize parameters via L-BFGS-B using device energy_and_grad."""
+    def kernel(self, **opts) -> float:
+        """Optimize parameters via L-BFGS-B.
+
+        Any options in **opts will be forwarded to energy_and_grad (e.g.,
+        shots/provider/device for device runtime, numeric_engine for numeric runtime).
+        """
         if self.n_params == 0:
             return float(self.e_core)
         x0 = np.asarray(self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params), dtype=np.float64)
 
+        # runtime options (shots/provider/device/numeric_engine/etc.) from caller
+        runtime_opts = dict(opts)
+
         def _obj(x: np.ndarray):
-            e, g = self.energy_and_grad(x)
+            e, g = self.energy_and_grad(x, **runtime_opts)
             return e, np.asarray(g, dtype=np.float64)
 
-        opts = self.scipy_minimize_options or {"ftol": 1e-9, "gtol": 1e-6}
-        res = minimize(lambda v: _obj(v), x0=x0, jac=True, method="L-BFGS-B", options=opts)
+        minimize_options = self.scipy_minimize_options or {"ftol": 1e-9, "gtol": 1e-6}
+        res = minimize(lambda v: _obj(v), x0=x0, jac=True, method="L-BFGS-B", options=minimize_options)
         self._params = np.asarray(getattr(res, "x", x0), dtype=np.float64)
         return float(getattr(res, "fun", self.energy(self._params)))
 
@@ -114,7 +153,7 @@ class UCC:
         n_elec: Union[int, Tuple[int, int]],
         *,
         mode: str = "fermion",
-        engine: str = "device",
+        runtime: str = "device",
         ex_ops: List[tuple] | None = None,
         param_ids: List[int] | None = None,
         init_state: np.ndarray | None = None,
@@ -138,7 +177,7 @@ class UCC:
             n_qubits=n_qubits,
             n_elec_s=n_elec_s,
             h_qubit_op=hq,
-            engine=engine,
+            runtime=runtime,
             mode=mode,
             ex_ops=ex_ops,
             param_ids=param_ids,
@@ -156,7 +195,7 @@ class UCC:
         active_space=None,
         aslst=None,
         mode: str = "fermion",
-        engine: str = "device",
+        runtime: str = "device",
         ex_ops: List[tuple] | None = None,
         param_ids: List[int] | None = None,
         init_state: np.ndarray | None = None,
@@ -174,7 +213,7 @@ class UCC:
             int2e,
             n_elec,
             mode=mode,
-            engine=engine,
+            runtime=runtime,
             ex_ops=ex_ops,
             param_ids=param_ids,
             init_state=init_state,
@@ -276,7 +315,7 @@ class UCC:
         return np.asarray(rdm2_cas, dtype=np.float64)
 
     # ---- CI helpers ----
-    def civector(self, params: Sequence[float] | None = None) -> np.ndarray:
+    def civector(self, params: Sequence[float] | None = None, *, numeric_engine: str | None = None) -> np.ndarray:
         p = self._check_params_argument(params, strict=False)
         rt = UCCNumericRuntime(
             self.n_qubits,
@@ -286,6 +325,7 @@ class UCC:
             param_ids=self.param_ids,
             init_state=self.init_state,
             mode=self.mode,
+            numeric_engine=numeric_engine,
         )
         psi = rt._state(p)
         ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)

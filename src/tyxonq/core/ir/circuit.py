@@ -398,7 +398,8 @@ class Circuit:
         merged_opts = dict(self._compile_opts)
         if options:
             merged_opts.update(options)
-        res = compile_api(self, compile_engine=prov, output=out, target=target, options=merged_opts)
+        # compiler/api.compile 现在只接受 (circuit, compile_engine, output, options)
+        res = compile_api(self, compile_engine=prov, output=out, options=merged_opts)
         return res["circuit"]
 
     def run(
@@ -452,7 +453,7 @@ class Circuit:
                 qiskit_opts = dict(self._compile_opts)
                 if not qiskit_opts.get("basis_gates"):
                     qiskit_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
-                qasm_res = compile_api(self, compile_engine="qiskit", output="qasm2", target=self._compile_target, options=qiskit_opts)
+                qasm_res = compile_api(self, compile_engine="qiskit", output="qasm2", options=qiskit_opts)
                 source_to_submit = qasm_res["circuit"]
             else:
                 source_to_submit = None
@@ -494,7 +495,8 @@ class Circuit:
         results: List[Dict[str, Any]] = []
         for rr in unified_result_list:
             if isinstance(rr, dict):
-                if rr.get('result'):
+                has_payload = (rr.get('result') is not None) or (rr.get('counts') is not None) or (rr.get('expectations') is not None)
+                if has_payload:
                     post = apply_postprocessing(rr, self._post_opts if isinstance(self._post_opts, dict) else {})
                     rr["postprocessing"] = post
                     results.append(rr)

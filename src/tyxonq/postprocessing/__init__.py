@@ -77,6 +77,16 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
         try:
             from . import counts_expval as _m
             counts = result.get("result") or result.get("counts") or {}
+            expectations = result.get("expectations") or {}
+            probabilities = result.get("probabilities") if isinstance(result.get("probabilities"), (list, tuple)) or hasattr(result.get("probabilities"), "shape") else None
+            if probabilities is None and result.get("statevector") is not None:
+                try:
+                    import numpy as _np
+                    psi = _np.asarray(result.get("statevector"))
+                    probabilities = _np.abs(psi) ** 2
+                except Exception:
+                    probabilities = None
+            num_qubits = (result.get("metadata", {}) or {}).get("num_qubits")
             payload = None
             if method == "expval_pauli_term":
                 idxs = options.get("idxs") or options.get("indices") or []
@@ -88,7 +98,8 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
                 meta = (result.get("result_meta", {}) or {})
                 items = options.get("items") or options.get("group_items") or meta.get("group_items") or []
                 identity_const = float(options.get("identity_const", meta.get("identity_const", 0.0)))
-                payload = _m.expval_pauli_sum(counts, items, identity_const=identity_const)
+                # If expectations exist (shots==0, statevector), prefer analytic aggregation
+                payload = _m.expval_pauli_sum(counts, items, identity_const=identity_const, expectations=expectations if expectations else None, probabilities=probabilities, num_qubits=num_qubits)
             post["result"] = payload
         except Exception:
             pass

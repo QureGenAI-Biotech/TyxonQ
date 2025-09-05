@@ -7,8 +7,8 @@ import numpy as np
 
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.libs.circuits_library.blocks import build_hwe_ry_ops
-from tyxonq.libs.quantum_library.measurement import (
-    group_hamiltonian_terms,  # deprecated; kept for transition
+from tyxonq.compiler.utils.hamiltonian_grouping import (
+    group_hamiltonian_pauli_terms,
 )
 
 
@@ -42,7 +42,7 @@ class HEADeviceRuntime:
             raise ValueError(f"params length {len(params)} != {self.n_params}")
 
         # simple grouping by basis pattern
-        identity_const, groups = group_hamiltonian_terms(self.hamiltonian, self.n)
+        identity_const, groups = group_hamiltonian_pauli_terms(self.hamiltonian, self.n)
 
         energy_val = identity_const
         for bases, items in groups.items():

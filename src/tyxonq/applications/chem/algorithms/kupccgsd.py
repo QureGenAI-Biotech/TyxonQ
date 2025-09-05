@@ -30,7 +30,7 @@ class KUPCCGSD(UCC):
         mo_coeff: np.ndarray = None,
         k: int = 3,
         n_tries: int = 1,
-        engine: str = None,
+        runtime: str = None,
         run_hf: bool = True,
         run_mp2: bool = True,
         run_ccsd: bool = True,
@@ -65,8 +65,8 @@ class KUPCCGSD(UCC):
             The number of different initial points used for VQE calculation.
             For large circuits usually a lot of runs are required for good accuracy.
             Defaults to 1.
-        engine: str, optional
-            The engine to run the calculation. See :ref:`advanced:Engines` for details.
+        runtime: str, optional
+            The runtime to run the calculation (e.g., 'device').
         run_hf: bool, optional
             Whether run HF for molecule orbitals. Defaults to ``True``.
         run_mp2: bool, optional
@@ -88,7 +88,7 @@ class KUPCCGSD(UCC):
             active_space=active_space,
             aslst=aslst,
             mo_coeff=mo_coeff,
-            engine=engine,
+            runtime=runtime,
             run_hf=run_hf,
             run_mp2=run_mp2,
             run_ccsd=run_ccsd,

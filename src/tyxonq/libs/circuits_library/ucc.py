@@ -92,7 +92,7 @@ def build_ucc_circuit(
         # start from provided circuit's ops
         ops = list(init_state.ops)
     else:
-        # 数组/CI 向量到电路的路径暂不在此实现，避免引入 static 依赖
+        # 严格：仅支持 None 或 Circuit。数值路径的向量请在 runtime 侧消费。
         raise NotImplementedError("init_state only supports None or Circuit in circuits_library.ucc")
 
     # parameterized excitations

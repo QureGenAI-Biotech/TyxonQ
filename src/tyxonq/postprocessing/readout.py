@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 # Prefer numeric backend operations; use NumPy only when strictly necessary (e.g., SciPy interop)
-from ...numerics.api import get_backend
+from ..numerics.api import get_backend
 import numpy as np
 from scipy.optimize import minimize
 from scipy.linalg import pinv as scipy_pinv
