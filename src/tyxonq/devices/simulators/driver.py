@@ -81,10 +81,31 @@ def run(
 
     def _one(c: Any) -> Any:
         out = eng.run(c, shots=shots, **opts)
+        # Normalize simulator outputs:
+        # - shots>0: counts in 'result'
+        # - shots==0: analytic expectations in 'expectations'; also provide probabilities for exact multi-Z
+        counts = out.get("result") or {}
+        expectations = out.get("expectations") or {}
+        meta = dict(out.get("metadata", {}))
+        prob = None
+        if int(shots) == 0:
+            try:
+                import numpy as _np
+                # Compute probabilities from exact state without changing engine API
+                psi = eng.state(c)
+                prob = _np.abs(_np.asarray(psi)) ** 2
+                meta.setdefault("num_qubits", int(getattr(c, "num_qubits", 0)))
+                statevec = _np.asarray(psi)
+            except Exception:
+                prob = None
+                statevec = None
         result = {
-            'result':out.get("result") or out.get("expectations") or {},
-            'result_meta':out.get("metadata",{}),
-        }        
+            'result': counts,
+            'expectations': expectations,
+            'probabilities': prob,
+            'statevector': statevec,
+            'metadata': meta,
+        }
         return SimTask(id=str(uuid4()), device=device, result=result)
 
     if isinstance(circuit, (list, tuple)):

@@ -20,39 +20,39 @@ def _resolve_stage(name: str) -> "Pass":
     """
 
     if name == "decompose":
-        from .stages.decompose import NoOpDecomposePass
+        from ...stages.decompose import NoOpDecomposePass
 
         return NoOpDecomposePass()
     if name == "decompose/rotations":
-        from .stages.decompose.rotations import RotationsDecomposePass
+        from ...stages.decompose.rotations import RotationsDecomposePass
 
         return RotationsDecomposePass()
     if name == "rewrite/measurement":
-        from .stages.rewrite.measurement import MeasurementRewritePass
+        from ...stages.rewrite.measurement import MeasurementRewritePass
 
         return MeasurementRewritePass()
     if name == "rewrite/merge_prune":
-        from .stages.rewrite.merge_prune import MergePrunePass
+        from ...stages.rewrite.merge_prune import MergePrunePass
 
         return MergePrunePass()
     if name == "layout":
-        from .stages.layout import NoOpLayoutPass
+        from ...stages.layout import NoOpLayoutPass
 
         return NoOpLayoutPass()
     if name == "scheduling":
-        from .stages.scheduling import NoOpSchedulingPass
+        from ...stages.scheduling import NoOpSchedulingPass
 
         return NoOpSchedulingPass()
     if name == "scheduling/shot_scheduler":
-        from .stages.scheduling.shot_scheduler import ShotSchedulerPass
+        from ...stages.scheduling.shot_scheduler import ShotSchedulerPass
 
         return ShotSchedulerPass()
     if name == "gradients/parameter_shift":
-        from .stages.gradients.parameter_shift_pass import ParameterShiftPass
+        from ...stages.gradients.parameter_shift_pass import ParameterShiftPass
 
         return ParameterShiftPass()
     if name == "simplify/lightcone":
-        from .stages.simplify.lightcone import LightconeSimplifyPass
+        from ...stages.simplify.lightcone import LightconeSimplifyPass
 
         return LightconeSimplifyPass()
 
@@ -74,10 +74,10 @@ class Pipeline:
     def passes(self) -> Sequence["Pass"]:
         return tuple(self._passes)
 
-    def run(self, circuit: "Circuit", caps: "DeviceCapabilities", **opts) -> "Circuit":
+    def run(self, circuit: "Circuit", **opts) -> "Circuit":
         current = circuit
         for p in self._passes:
-            current = p.run(current, caps, **opts)
+            current = p.run(current, **opts)
         return current
 
 

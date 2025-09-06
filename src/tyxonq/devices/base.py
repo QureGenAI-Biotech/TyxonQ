@@ -18,7 +18,22 @@ class DeviceTask:
     async_result: bool
 
     def get_result(self, *, wait: bool = False, poll_interval: float = 2.0, timeout: float = 60.0) -> Dict[str, Any]:
-        return get_task_details(self,wait=wait, poll_interval=poll_interval, timeout=timeout)
+        info = get_task_details(self,wait=wait, poll_interval=poll_interval, timeout=timeout)
+        # Normalize schema: ensure keys exist for downstream postprocessing
+        result = dict(info)
+        if 'result' not in result:
+            result['result'] = {}
+        # Promote provider-specific metadata
+        if 'result_meta' in result and 'metadata' not in result:
+            result['metadata'] = result['result_meta']
+        if 'metadata' not in result:
+            result['metadata'] = {}
+        # Ensure expectations/probabilities keys exist (optional)
+        if 'expectations' not in result:
+            result['expectations'] = {}
+        if 'probabilities' not in result:
+            result['probabilities'] = None
+        return result
 
     def cancel(self) -> Any:
         return remove_task(self)

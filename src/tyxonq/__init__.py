@@ -190,42 +190,43 @@ try:
     def set_backend(name_or_instance: Any):
         """Set global/default numerics backend (e.g., 'numpy' | 'pytorch').
 
-        This is a thin alias to ``tyxonq.numerics.context.set_backend``.
+        Also exposes ``tyxonq.backend`` and ``tyxonq.rdtypestr`` for legacy helpers.
         """
 
-        # String name: allow graceful fallback when unavailable
+        def _assign_backend_alias(fetch_name: Any | None) -> Any:
+            try:
+                bk = _get_backend(fetch_name)
+                globals()["backend"] = bk
+                try:
+                    globals()["rdtypestr"] = getattr(bk, "rdtypestr", "float64")
+                except Exception:
+                    globals()["rdtypestr"] = "float64"
+                return bk
+            except Exception:
+                return None
+
+        # String name path with minimal fallback for cupynumeric → numpy
         if isinstance(name_or_instance, str):
             name = str(name_or_instance).lower()
             if name == "cupynumeric":
                 try:
                     _set_backend(name)
-                    return _get_backend(name)
+                    return _assign_backend_alias(name)
                 except Exception:
-                    # Fallback to numpy with a warning
                     try:
                         import warnings as _warnings
-
                         _warnings.warn("cupynumeric not installed, falling back to numpy backend", UserWarning)
                     except Exception:
                         pass
                     _set_backend("numpy")
-                    try:
-                        return _get_backend("numpy")
-                    except Exception:
-                        return None
+                    return _assign_backend_alias("numpy")
             else:
                 _set_backend(name)
-                try:
-                    return _get_backend(name)
-                except Exception:
-                    return None
+                return _assign_backend_alias(name)
 
         # Instance path
         _set_backend(name_or_instance)
-        try:
-            return _get_backend(None)
-        except Exception:
-            return None
+        return _assign_backend_alias(None)
 
     def get_backend(name: Any | None = None):
         """Get an ArrayBackend instance.

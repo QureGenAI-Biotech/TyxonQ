@@ -36,7 +36,7 @@ class PUCCD(UCC):
         active_space: Tuple[int, int] = None,
         aslst: List[int] = None,
         mo_coeff: np.ndarray = None,
-        engine: str = None,
+        runtime: str = None,
         run_hf: bool = True,
         run_mp2: bool = True,
         run_ccsd: bool = True,
@@ -68,8 +68,8 @@ class PUCCD(UCC):
             Molecule coefficients. If provided then RHF is skipped.
             Can be used in combination with the ``init_state`` attribute.
             Defaults to None which means RHF orbitals are used.
-        engine: str, optional
-            The engine to run the calculation. See :ref:`advanced:Engines` for details.
+        runtime: str, optional
+            The runtime to run the calculation (e.g., 'device').
         run_hf: bool, optional
             Whether run HF for molecule orbitals. Defaults to ``True``.
         run_mp2: bool, optional
@@ -91,8 +91,8 @@ class PUCCD(UCC):
             active_space,
             aslst,
             mo_coeff,
+            runtime=runtime,
             mode="hcb",
-            engine=engine,
             run_hf=run_hf,
             run_mp2=run_mp2,
             run_ccsd=run_ccsd,

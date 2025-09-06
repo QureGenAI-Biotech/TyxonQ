@@ -25,6 +25,7 @@ class UCCNumericRuntime:
         mode: str = "fermion",
         trotter: bool = False,
         decompose_multicontrol: bool = False,
+        numeric_engine: str | None = None,
     ):
         self.n_qubits = int(n_qubits)
         self.n_elec_s = (int(n_elec_s[0]), int(n_elec_s[1]))
@@ -35,6 +36,7 @@ class UCCNumericRuntime:
         self.mode = str(mode)
         self.trotter = bool(trotter)
         self.decompose_multicontrol = bool(decompose_multicontrol)
+        self.numeric_engine = (numeric_engine or "statevector").lower()
 
         if self.ex_ops is not None:
             self.n_params = (max(self.param_ids) + 1) if (self.param_ids and len(self.param_ids) > 0) else len(self.ex_ops)
@@ -57,27 +59,84 @@ class UCCNumericRuntime:
         )
 
     def _state(self, params: Sequence[float]) -> np.ndarray:
+        if self.numeric_engine == "statevector":
+            c = self._build(params)
+            eng = StatevectorEngine()
+            return np.asarray(eng.state(c), dtype=np.complex128)
+        if self.numeric_engine in ("civector", "civector-large", "pyscf"):
+            # Build CI vector (fermion scheme) and embed into full statevector by CI strings
+            from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
+            from tyxonq.applications.chem.chem_libs.quantum_chem_library.pyscf_civector import get_civector_pyscf
+            base = np.zeros(self.n_params, dtype=np.float64) if (len(params) == 0 and self.n_params > 0) else np.asarray(params)
+            ex_ops = tuple(self.ex_ops) if self.ex_ops is not None else tuple()
+            param_ids = self.param_ids if self.param_ids is not None else list(range(self.n_params))
+
+            # Derive CI-initial vector when a statevector/Circuit is provided as init_state
+            civ_init = None
+            init = self.init_state
+            ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, "fermion")  # fermion basis for CI
+            if init is not None:
+                try:
+                    import numpy as _np
+                    if isinstance(init, Circuit):
+                        eng0 = StatevectorEngine()
+                        psi0 = _np.asarray(eng0.state(init), dtype=_np.complex128)
+                        civ_init = _np.real(psi0[ci_strings]).astype(_np.float64, copy=False)
+                    elif isinstance(init, _np.ndarray):
+                        arr = _np.asarray(init)
+                        if arr.size == (1 << self.n_qubits):
+                            civ_init = _np.real(arr[ci_strings]).astype(_np.float64, copy=False)
+                        elif arr.size == len(ci_strings):
+                            civ_init = _np.real(arr).astype(_np.float64, copy=False)
+                        else:
+                            civ_init = None
+                except Exception:
+                    civ_init = None
+
+            civ = get_civector_pyscf(base, self.n_qubits, self.n_elec_s, ex_ops, param_ids, mode="fermion", init_state=civ_init)
+            psi = np.zeros(1 << self.n_qubits, dtype=np.complex128)
+            # Embed CI amplitudes directly on CI addresses (consistent with ci_state_mapping)
+            psi[ci_strings] = np.asarray(civ, dtype=np.complex128)
+            # Normalize to unit norm to avoid tiny drift from CI embedding
+            nrm = np.linalg.norm(psi)
+            if nrm > 0:
+                psi = psi / nrm
+            return psi
+        if self.numeric_engine == "mps":
+            # TODO: replace with MatrixProductStateEngine exact MPS contraction when available
+            c = self._build(params)
+            eng = StatevectorEngine()
+            return np.asarray(eng.state(c), dtype=np.complex128)
+        # Fallback
         c = self._build(params)
         eng = StatevectorEngine()
         return np.asarray(eng.state(c), dtype=np.complex128)
 
     def _expect(self, psi: np.ndarray) -> float:
-        val = 0.0
-        for term, coeff in self.h_qubit_op.terms.items():
-            if term == ():
-                val += float(getattr(coeff, "real", float(coeff)))
-                continue
-            phi = psi
-            for q, p in term:
-                if p == "X":
-                    # X = |0><1| + |1><0|
-                    phi = self._apply_x(phi, q)
-                elif p == "Y":
-                    phi = self._apply_y(phi, q)
-                else:
-                    phi = self._apply_z(phi, q)
-            val += float(np.vdot(psi, phi) * coeff)
-        return float(val)
+        # Robust expectation via OpenFermion sparse operator
+        try:
+            from openfermion.linalg import get_sparse_operator  # type: ignore
+            H = get_sparse_operator(self.h_qubit_op, n_qubits=self.n_qubits)
+            vec = psi.reshape(-1)
+            e = np.vdot(vec, H.dot(vec))
+            return float(np.real(e))
+        except Exception:
+            # Fallback: simple Pauli product application (may be slower or risk index mismatch)
+            val = 0.0
+            for term, coeff in self.h_qubit_op.terms.items():
+                if term == ():
+                    val += float(getattr(coeff, "real", float(coeff)))
+                    continue
+                phi = psi
+                for q, p in term:
+                    if p == "X":
+                        phi = self._apply_x(phi, q)
+                    elif p == "Y":
+                        phi = self._apply_y(phi, q)
+                    else:
+                        phi = self._apply_z(phi, q)
+                val += float(np.vdot(psi, phi) * coeff)
+            return float(val)
 
     def _apply_x(self, psi: np.ndarray, q: int) -> np.ndarray:
         n = self.n_qubits
@@ -114,27 +173,43 @@ class UCCNumericRuntime:
         return out
 
     def energy(self, params: Sequence[float] | None = None) -> float:
-        base = np.zeros(self.n_params, dtype=np.float64) if (params is None and self.n_params > 0) else np.asarray(params or [], dtype=np.float64)
+        if params is None:
+            base = np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)
+        else:
+            base = np.asarray(params, dtype=np.float64)
         psi = self._state(base)
         return self._expect(psi)
 
     def energy_and_grad(self, params: Sequence[float] | None = None) -> Tuple[float, np.ndarray]:
-        base = np.zeros(self.n_params, dtype=np.float64) if (params is None and self.n_params > 0) else np.asarray(params or [], dtype=np.float64)
+        if params is None:
+            base = np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)
+        else:
+            base = np.asarray(params, dtype=np.float64)
         e0 = self.energy(base)
         if self.n_params == 0:
             return float(e0), np.zeros(0, dtype=np.float64)
         g = np.zeros_like(base)
-        s = 0.5 * pi
-        for i in range(len(base)):
-            p_plus = base.copy(); p_plus[i] += s
-            p_minus = base.copy(); p_minus[i] -= s
-            e_plus = self.energy(p_plus)
-            e_minus = self.energy(p_minus)
-            g[i] = 0.5 * (e_plus - e_minus)
+        # For CI-based engines, parameter-shift does not apply; use finite-difference
+        if self.numeric_engine in ("civector", "civector-large", "pyscf"):
+            eps = 1e-7
+            for i in range(len(base)):
+                p_plus = base.copy(); p_plus[i] += eps
+                p_minus = base.copy(); p_minus[i] -= eps
+                e_plus = self.energy(p_plus)
+                e_minus = self.energy(p_minus)
+                g[i] = (e_plus - e_minus) / (2.0 * eps)
+        else:
+            s = 0.5 * pi
+            for i in range(len(base)):
+                p_plus = base.copy(); p_plus[i] += s
+                p_minus = base.copy(); p_minus[i] -= s
+                e_plus = self.energy(p_plus)
+                e_minus = self.energy(p_minus)
+                g[i] = 0.5 * (e_plus - e_minus)
         return float(e0), g
 
 # Compatibility helper for tests (replaces legacy engine_ucc.apply_excitation)
-def apply_excitation(state: np.ndarray, n_qubits: int, n_elec_s, ex_op: tuple, mode: str, engine: str | None = None) -> np.ndarray:
+def apply_excitation(state: np.ndarray, n_qubits: int, n_elec_s, ex_op: tuple, mode: str, numeric_engine: str | None = None, engine: str | None = None) -> np.ndarray:
     from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import apply_excitation_statevector
     if isinstance(n_elec_s, (tuple, list)):
         n_elec = int(sum(n_elec_s))

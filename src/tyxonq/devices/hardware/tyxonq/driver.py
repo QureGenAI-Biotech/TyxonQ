@@ -168,7 +168,19 @@ def get_task_details(task: TyxonQTask, token: Optional[str] = None) -> Dict[str,
         }
     }
     """
-    return data
+    # Normalize to unified structure expected downstream
+    task_detail = data.get('task', {})
+    counts = task_detail.get('result', {}) or data.get('result', {})
+    shots = task_detail.get('shots') or data.get('shots')
+    out = {
+        'result': counts,
+        'result_meta': {
+            'shots': shots,
+            'device': task_detail.get('device') or task.device,
+            'raw': data,
+        },
+    }
+    return out
 
 
 def remove_task(task: TyxonQTask, token: Optional[str] = None) -> Dict[str, Any]:

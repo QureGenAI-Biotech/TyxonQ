@@ -171,6 +171,19 @@ def get_h_from_integral(int1e, int2e, n_elec_s, mode: str, htype: str):
     return get_h_fcifunc_hcb_from_integral(int1e, int2e, n_elec)
 
 
+def get_h_from_hf(hf: RHF, *, mode: str = "fermion", htype: str = "sparse", active_space: Tuple[int, int] | None = None, aslst: List[int] | None = None):
+    """Thin wrapper to preserve legacy import path used in tests.
+
+    Delegates to get_integral_from_hf + get_h_from_integral.
+    """
+    int1e, int2e, _ = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+    if active_space is None:
+        n_elec = int(getattr(hf.mol, "nelectron"))
+    else:
+        n_elec = int(active_space[0])
+    return get_h_from_integral(int1e, int2e, n_elec, mode, htype)
+
+
 __all__ = [
     "get_integral_from_hf",
     "get_hop_from_integral",

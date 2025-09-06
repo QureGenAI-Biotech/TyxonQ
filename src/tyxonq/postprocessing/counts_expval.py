@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Sequence, Tuple
+import numpy as _np
 
 
 def term_expectation_from_counts(counts: Dict[str, int], idxs: Sequence[int]) -> float:
@@ -51,17 +52,54 @@ def expval_pauli_terms(counts: Dict[str, int], terms: Sequence[Any]) -> List[flo
     return expvals
 
 
-def expval_pauli_sum(counts: Dict[str, int], items: Sequence[Any], identity_const: float = 0.0) -> Dict[str, Any]:
-    """Aggregate energy for a Pauli-sum from counts.
+def _expval_pauli_sum_analytic(expectations: Dict[str, float], items: Sequence[Any], identity_const: float = 0.0, *, probabilities: _np.ndarray | None = None, num_qubits: int | None = None) -> Dict[str, Any]:
+    """Aggregate energy when analytic per-qubit Z expectations are provided.
+
+    expectations: mapping like {"Z0": <Z0>, "Z1": <Z1>, ...} coming from statevector engine when shots=0.
+    For a product of Z on indices [q0, q1, ...], expectation equals product of individual expectations.
+    """
+    energy = float(identity_const)
+    expvals: List[float] = []
+    for entry in items:
+        term, coeff = _normalize_term_entry(entry)
+        idxs = [int(q) for (q, _p) in term]
+        # If full probabilities available, compute exact Z-product via probabilities; else multiply single Z expectations
+        if probabilities is not None and num_qubits is not None:
+            prod = 0.0
+            dim = 1 << int(num_qubits)
+            probs = _np.asarray(probabilities, dtype=float).reshape(-1)
+            for idx in range(dim):
+                bit = 1.0
+                for q in idxs:
+                    # Big-endian: q=0 is leftmost; index bit at (n-1-q)
+                    bit *= (1.0 if ((idx >> (num_qubits - 1 - q)) & 1) == 0 else -1.0)
+                prod += bit * float(probs[idx])
+        else:
+            prod = 1.0
+            for q in idxs:
+                prod *= float(expectations.get(f"Z{q}", 0.0))
+        expvals.append(prod)
+        if coeff is not None:
+            energy += float(coeff) * prod
+    return {"energy": float(energy), "expvals": expvals}
+
+
+def expval_pauli_sum(counts: Dict[str, int] | None, items: Sequence[Any], identity_const: float = 0.0, *, expectations: Dict[str, float] | None = None, probabilities: _np.ndarray | None = None, num_qubits: int | None = None) -> Dict[str, Any]:
+    """Aggregate energy for a Pauli-sum from counts or analytic expectations.
 
     Parameters:
-        counts: bitstring histogram {bitstr: count}
+        counts: bitstring histogram {bitstr: count}. If None and expectations provided, use analytic path.
         items:  list of either term_only or (term, coeff)
         identity_const: constant term to add
+        expectations: optional mapping of per-qubit Z expectations (shots=0, statevector engine)
 
     Returns:
         {"energy": float, "expvals": List[float]}
     """
+    if expectations is not None and (counts is None or len(counts) == 0):
+        return _expval_pauli_sum_analytic(expectations, items, identity_const=identity_const, probabilities=probabilities, num_qubits=num_qubits)
+
+    counts = counts or {}
     energy = float(identity_const)
     expvals: List[float] = []
     for entry in items:

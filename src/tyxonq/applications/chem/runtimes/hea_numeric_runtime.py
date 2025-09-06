@@ -8,17 +8,26 @@ from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
 
 
 class HEANumericRuntime:
-    def __init__(self, n: int, layers: int, hamiltonian: List[Tuple[float, List[Tuple[str, int]]]]):
+    def __init__(self, n: int, layers: int, hamiltonian: List[Tuple[float, List[Tuple[str, int]]]], numeric_engine: str | None = None):
         self.n = int(n)
         self.layers = int(layers)
         self.hamiltonian = list(hamiltonian)
+        self.numeric_engine = (numeric_engine or "statevector").lower()
 
     def _build(self, params: Sequence[float], get_circuit) -> Circuit:
         return get_circuit(params)
 
     def _state(self, c: Circuit) -> np.ndarray:
-        eng = StatevectorEngine()
-        return np.asarray(eng.state(c), dtype=np.complex128)
+        if self.numeric_engine == "statevector":
+            eng = StatevectorEngine()
+            return np.asarray(eng.state(c), dtype=np.complex128)
+        elif self.numeric_engine == "mps":
+            # TODO: Add MPS numeric path; fallback to exact for now
+            eng = StatevectorEngine()
+            return np.asarray(eng.state(c), dtype=np.complex128)
+        else:
+            eng = StatevectorEngine()
+            return np.asarray(eng.state(c), dtype=np.complex128)
 
     def _expect(self, psi: np.ndarray) -> float:
         val = 0.0

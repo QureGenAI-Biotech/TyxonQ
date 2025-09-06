@@ -20,7 +20,7 @@ OP_MAPPING: Dict[str, str] = {
 }
 
 
-DEFAULT_BASIS_GATES: List[str] = ["h", "rx", "rz", "cx"]
+DEFAULT_BASIS_GATES: List[str] = ["cx", "h", "rz", "rx", "cz"]
 DEFAULT_OPT_LEVEL: int = 2
 
 
@@ -33,7 +33,9 @@ def normalize_transpile_options(options: Dict[str, Any] | None) -> Dict[str, Any
             norm["optimization_level"] = int(norm.pop("opt_level"))
         except Exception:
             norm.pop("opt_level", None)
-    norm.setdefault("basis_gates", list(DEFAULT_BASIS_GATES))
+    # Fill default basis_gates when missing or empty
+    if not norm.get("basis_gates"):
+        norm["basis_gates"] = list(DEFAULT_BASIS_GATES)
     norm.setdefault("optimization_level", DEFAULT_OPT_LEVEL)
     return norm
 
