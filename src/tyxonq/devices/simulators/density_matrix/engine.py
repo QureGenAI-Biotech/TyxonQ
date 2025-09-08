@@ -16,6 +16,7 @@ from ....numerics.api import get_backend
 from ..noise import channels as noise_channels
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
+    gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
 )
 from ....libs.quantum_library.kernels.density_matrix import (
     init_density,
@@ -55,9 +56,27 @@ class DensityMatrixEngine:
             elif name == "rx":
                 q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rx(theta), q, n)
                 rho = self._apply_noise_if_any(rho, noise, [q], n)
+            elif name == "ry":
+                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_ry(theta), q, n)
+                rho = self._apply_noise_if_any(rho, noise, [q], n)
             elif name == "cx":
                 c = int(op[1]); t = int(op[2]); rho = apply_2q_density(self.backend, rho, gate_cx_4x4(), c, t, n)
                 rho = self._apply_noise_if_any(rho, noise, [c, t], n)
+            elif name == "cz":
+                c = int(op[1]); t = int(op[2]); rho = apply_2q_density(self.backend, rho, gate_cz_4x4(), c, t, n)
+                rho = self._apply_noise_if_any(rho, noise, [c, t], n)
+            elif name == "cry":
+                c = int(op[1]); t = int(op[2]); theta = float(op[3]); rho = apply_2q_density(self.backend, rho, gate_cry_4x4(theta), c, t, n)
+                rho = self._apply_noise_if_any(rho, noise, [c, t], n)
+            elif name == "x":
+                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_x(), q, n)
+                rho = self._apply_noise_if_any(rho, noise, [q], n)
+            elif name == "s":
+                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_s(), q, n)
+                rho = self._apply_noise_if_any(rho, noise, [q], n)
+            elif name == "sdg":
+                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_sd(), q, n)
+                rho = self._apply_noise_if_any(rho, noise, [q], n)
             elif name == "measure_z":
                 measures.append(int(op[1]))
             elif name == "barrier":
@@ -119,7 +138,30 @@ class DensityMatrixEngine:
         return {"expectations": expectations, "metadata": {"shots": shots, "backend": self.backend.name}}
 
     def expval(self, circuit: "Circuit", obs: Any, **kwargs: Any) -> float:
-        return 0.0
+        try:
+            from openfermion.linalg import get_sparse_operator  # type: ignore
+        except Exception:
+            raise ImportError("expval requires openfermion installed")
+        n = int(getattr(circuit, "num_qubits", 0))
+        # Build rho via run(shots=0)
+        _ = self.run(circuit, shots=0, **kwargs)
+        # Recompute rho explicitly for expectation (simple, consistent)
+        rho = init_density(n)
+        for op in circuit.ops:
+            if not isinstance(op, (list, tuple)) or not op:
+                continue
+            name = op[0]
+            if name == "h":
+                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_h(), q, n)
+            elif name == "rz":
+                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rz(theta), q, n)
+            elif name == "rx":
+                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rx(theta), q, n)
+            elif name == "cx":
+                c = int(op[1]); t = int(op[2]); rho = apply_2q_density(self.backend, rho, gate_cx_4x4(), c, t, n)
+        H = get_sparse_operator(obs, n_qubits=n).toarray()
+        e = np.trace(rho @ H)
+        return float(np.real(e))
 
     # helpers removed; using gates kernels
 

@@ -150,6 +150,26 @@ def zz_matrix() -> Any:
     return nb.kron(Z, Z)
 
 
+def gate_cry_4x4(theta: Any) -> Any:
+    """Controlled-RY on target with control as the first qubit.
+
+    Basis order is |00>, |01>, |10>, |11> with control as the most-significant qubit,
+    consistent with gate_cx_4x4.
+    """
+    th = nb.asarray(theta)
+    half = nb.array(0.5, dtype=nb.float64)
+    c = nb.cos(th * half)
+    s = nb.sin(th * half)
+    one = nb.array(1.0, dtype=nb.complex128)
+    zero = nb.array(0.0, dtype=nb.complex128)
+    return nb.array([
+        [one,  zero,  zero,  zero],
+        [zero, one,   zero,  zero],
+        [zero, zero,   c,   -s   ],
+        [zero, zero,   s,    c   ],
+    ], dtype=nb.complex128)
+
+
 def build_controlled_unitary(U: np.ndarray, num_controls: int, ctrl_state: list[int] | None = None) -> Any:
     """Build a dense multi-controlled unitary (backend-native array).
 

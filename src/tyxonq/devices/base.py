@@ -212,6 +212,16 @@ def run(
             return new
         return kwargs
 
+    # Normalize shots: allow shots==0 only for simulators/local; coerce to >=1 for hardware
+    if not isinstance(shots, (list, tuple)):
+        try:
+            _s = int(shots)
+        except Exception:
+            _s = 1024
+        if _s == 0 and prov not in ("simulator", "local"):
+            _s = 1
+        shots = _s
+
     # direct source path (already compiled or raw program)
     if source is not None:
         if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
@@ -245,6 +255,30 @@ def run(
         device_task_list.append(DeviceTask(provider=prov, device=dev, handle=t, async_result=async_result))
     
     return device_task_list
+
+
+def expval(
+    *,
+    provider: Optional[str] = None,
+    device: Optional[str] = None,
+    circuit: Optional["Circuit"] = None,
+    observable: Any = None,
+    **opts: Any,
+) -> float:
+    """Unified analytic expectation for simulator/local (shots==0 fast path).
+
+    Routes to specific simulator driver which calls engine.expval.
+    """
+    from .hardware import config as hwcfg
+
+    prov = provider or hwcfg.get_default_provider()
+    dev = device or hwcfg.get_default_device()
+    drv = resolve_driver(prov, dev)
+    if prov not in ("simulator", "local"):
+        raise ValueError("expval is supported only for simulator/local providers")
+    if circuit is None or observable is None:
+        raise ValueError("expval requires both circuit and observable")
+    return float(drv.expval(dev, hwcfg.get_token(provider=prov, device=dev), circuit=circuit, observable=observable, **opts))
 
 
 def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = None, **kws: Any) -> List[str]:

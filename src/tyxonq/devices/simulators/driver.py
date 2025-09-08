@@ -88,6 +88,7 @@ def run(
         expectations = out.get("expectations") or {}
         meta = dict(out.get("metadata", {}))
         prob = None
+        statevec = None
         if int(shots) == 0:
             try:
                 import numpy as _np
@@ -118,5 +119,23 @@ def get_task_details(task: SimTask, token: Optional[str] = None, prettify: bool 
 
 def remove_task(task: Any, token: Optional[str] = None) -> Any:
     return {"state": "cancelled"}
+
+
+# --- Analytic expectation (shots==0) unified entry ---
+def expval(
+    device: str,
+    token: Optional[str] = None,
+    *,
+    circuit: Any,
+    observable: Any,
+    **opts: Any,
+) -> float:
+    """Route to specific simulator engine and compute analytic expectation.
+
+    This API is intended for provider in {simulator, local} and shots==0.
+    """
+    Engine = _select_engine(device)
+    eng = Engine()
+    return float(eng.expval(circuit, observable, **opts))
 
 

@@ -41,6 +41,21 @@ class HEADeviceRuntime:
         if len(params) != self.n_params:
             raise ValueError(f"params length {len(params)} != {self.n_params}")
 
+        # Fast path: simulator/local + shots==0 → exact expectation without grouping
+        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径
+        if (provider in ("simulator", "local")) and int(shots) == 0:
+            from openfermion import QubitOperator
+            qop = QubitOperator()
+            for coeff, ops in self.hamiltonian:
+                if not ops:
+                    qop += coeff
+                    continue
+                term = tuple((int(q), str(P).upper()) for (P, q) in ops)
+                qop += QubitOperator(term, float(coeff))
+            c = self._build_circuit(params)
+            from tyxonq.devices import base as device_base
+            return float(device_base.expval(provider=provider, device=device, circuit=c, observable=qop))
+
         # simple grouping by basis pattern
         identity_const, groups = group_hamiltonian_pauli_terms(self.hamiltonian, self.n)
 
@@ -81,6 +96,20 @@ class HEADeviceRuntime:
         if params is None:
             params = self.init_guess
         base = np.asarray(params, dtype=np.float64)
+
+        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径 + 有限差分
+        if (provider in ("simulator", "local")) and int(shots) == 0:
+            e0 = self.energy(base, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+            g = np.zeros_like(base)
+            eps = 1e-7
+            for i in range(len(base)):
+                p_plus = base.copy(); p_plus[i] += eps
+                p_minus = base.copy(); p_minus[i] -= eps
+                e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                g[i] = (e_plus - e_minus) / (2.0 * eps)
+            return float(e0), g
+
         e0 = self.energy(base, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
         g = np.zeros_like(base)
         s = 0.5 * pi

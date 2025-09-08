@@ -60,13 +60,22 @@ class UCCDeviceRuntime:
         else:
             self.n_params = 0
 
+        # TODO (device-runtime backlog):
+        # 1) Add adjoint differentiation for simulator shots=0 to replace finite-difference (faster, exact on statevector)
+        # 2) Support SPSA/gradient-free optimizers for hardware shots>0 to reduce evaluations
+        # 3) Batch/parallel parameter shifts and group evaluations; reuse compiled prefixes/suffixes
+        # 4) Adaptive shots allocation per parameter/group based on variance/sensitivity
+        # 5) Optional low-rank/commuting-group Hamiltonian transforms to reduce measurement cost
+        # 6) Caching of expectation terms across close parameters during local line-search
+
     def _build_hf_circuit(self) -> Circuit:
         c = Circuit(self.n_qubits, ops=[])
         if self.mode in ["fermion", "qubit"]:
             na, nb = self.n_elec_s
-            for i in range(nb):
-                c.ops.append(("x", self.n_qubits - 1 - i))
+            # 与 circuits_library.ucc._hf_init_ops 保持一致：先置 alpha（高位半区），再置 beta（低位半区）
             for i in range(na):
+                c.ops.append(("x", self.n_qubits - 1 - i))
+            for i in range(nb):
                 c.ops.append(("x", self.n_qubits // 2 - 1 - i))
         else:
             na = sum(self.n_elec_s) // 2
@@ -140,6 +149,14 @@ class UCCDeviceRuntime:
         device: str = "statevector",
         postprocessing: dict | None = None,
     ) -> float:
+        # Fast path: simulator/local + shots==0 → exact statevector expectation without grouping
+        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径
+        if (provider in ("simulator", "local")) and int(shots) == 0:
+            p = np.asarray(params if params is not None else (np.zeros(self.n_params, dtype=np.float64) if self.n_params>0 else np.zeros(0, dtype=np.float64)), dtype=np.float64)
+            c = self._build_ucc_circuit(p) if self.n_params > 0 else self._build_hf_circuit()
+            from tyxonq.devices import base as device_base
+            return float(device_base.expval(provider=provider, device=device, circuit=c, observable=self.h_qubit_op))
+
         if self.n_params == 0:
             def _builder():
                 return self._build_hf_circuit()
@@ -160,6 +177,23 @@ class UCCDeviceRuntime:
         device: str = "statevector",
         postprocessing: dict | None = None,
     ) -> Tuple[float, np.ndarray]:
+        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径 + 有限差分
+        if (provider in ("simulator", "local")) and int(shots) == 0:
+            if self.n_params == 0:
+                e0 = self.energy(None, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                return float(e0), np.zeros(0, dtype=np.float64)
+            x = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
+            e0 = self.energy(x, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+            g = np.zeros_like(x)
+            eps = 1e-7
+            for i in range(len(x)):
+                xp = x.copy(); xp[i] += eps
+                xm = x.copy(); xm[i] -= eps
+                e_plus = self.energy(xp, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                e_minus = self.energy(xm, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                g[i] = (e_plus - e_minus) / (2.0 * eps)
+            return float(e0), g
+
         if self.n_params == 0:
             e0 = self.energy(None, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
             return e0, np.zeros(0, dtype=np.float64)

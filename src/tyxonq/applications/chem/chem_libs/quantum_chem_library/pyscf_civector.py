@@ -65,6 +65,7 @@ class CIvectorPySCF:
 
     def cre(self, i: int) -> "CIvectorPySCF":
         n_elec_a, n_elec_b = self.n_elec_a, self.n_elec_b
+        # Original convention used in TenCirChem
         if i >= self.n_orb:
             op = cre_a
             n_elec_a += 1
@@ -112,15 +113,18 @@ def apply_a2_pyscf(civector: CIvectorPySCF, ex_op: Tuple[int, ...]) -> Tensor:
 
 
 def apply_a_pyscf(civector: CIvectorPySCF, ex_op: Tuple[int, ...]) -> Tensor:
-    """Apply a (one-operator) on CIvector using PySCF addons and return numpy array."""
+    """Apply a (one-operator) on CIvector using PySCF addons and return numpy array.
+
+    Match TCC: use antisymmetrized difference between orders.
+    """
     if len(ex_op) == 2:
         apply_func = civector.pq
     else:
         assert len(ex_op) == 4
-        # a_rs a_pq on CI vector
         apply_func = civector.pqrs
-    civector_new = apply_func(*ex_op)
-    return civector_new.civector
+    civector1 = apply_func(*ex_op)
+    civector2 = apply_func(*reversed(ex_op))
+    return civector1.civector - civector2.civector
 
 
 # --- High-level helpers migrated from applications/chem/static/evolve_pyscf.py ---
@@ -130,6 +134,7 @@ def evolve_excitation_pyscf(civector: Tensor, ex_op: Tuple[int, ...], n_orb: int
     ket = CIvectorPySCF(np.asarray(civector), n_orb, na, nb)
     aket = apply_a_pyscf(ket, ex_op)
     a2ket = apply_a2_pyscf(ket, ex_op)
+    # Standard UCC single-parameter block evolution in CI space
     return civector + (1 - np.cos(theta)) * a2ket + np.sin(theta) * aket
 
 
@@ -147,8 +152,9 @@ def get_civector_pyscf(params, n_qubits: int, n_elec_s, ex_ops: Tuple[Tuple[int,
     civector = np.asarray(civector)
 
     for ex_op, param_id in zip(ex_ops, param_ids):
-        theta = params[param_id]
-        civector = evolve_excitation_pyscf(civector, ex_op, n_orb, n_elec_s, float(theta))
+        # Match TCC: use θ (not 2θ)
+        theta = float(params[param_id])
+        civector = evolve_excitation_pyscf(civector, ex_op, n_orb, n_elec_s, theta)
 
     return civector.reshape(-1)
 
