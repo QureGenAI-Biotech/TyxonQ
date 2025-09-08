@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Tuple
+import numpy as np
 
 __all__ = [
 	"group_qubit_operator_terms",
@@ -22,17 +23,24 @@ def group_qubit_operator_terms(qop: Any, n_qubits: int) -> Tuple[float, Dict[Tup
 	for term, coeff in terms.items():
 		if term == ():
 			try:
-				identity_const += float(getattr(coeff, "real", float(coeff)))
+				c = complex(np.asarray(coeff, dtype=np.complex128))
 			except Exception:
-				identity_const += float(coeff)
+				c = complex(getattr(coeff, "real", float(coeff)))
+			# 严谨性：若虚部超过阈值，判为非常规哈密顿量，抛出异常提示上层修正
+			if abs(c.imag) > 1e-10:
+				raise ValueError(f"Hamiltonian identity term has non-negligible imaginary part: {c}")
+			identity_const += float(c.real)
 			continue
 		bases = ["I"] * n_qubits
 		for (q, p) in term:
 			bases[int(q)] = str(p).upper()
 		try:
-			coeff_val = float(getattr(coeff, "real", float(coeff)))
+			c = complex(np.asarray(coeff, dtype=np.complex128))
 		except Exception:
-			coeff_val = float(coeff)
+			c = complex(getattr(coeff, "real", float(coeff)))
+		if abs(c.imag) > 1e-10:
+			raise ValueError(f"Hamiltonian term has non-negligible imaginary part: {c}")
+		coeff_val = float(c.real)
 		groups.setdefault(tuple(bases), []).append((tuple((int(q), str(p).upper()) for (q, p) in term), coeff_val))
 	return identity_const, groups
 

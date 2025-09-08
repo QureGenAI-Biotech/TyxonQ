@@ -16,6 +16,7 @@ import numpy as np
 from ....numerics.api import get_backend
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
+    gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
 )
 from ....libs.quantum_library.kernels.statevector import (
     init_statevector,
@@ -61,10 +62,34 @@ class StatevectorEngine:
                 q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rx(theta), q, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
+            elif name == "ry":
+                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_ry(theta), q, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
             elif name == "cx":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cx_4x4(), c, t, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [c, t])
+            elif name == "cry":
+                c = int(op[1]); t = int(op[2]); theta = float(op[3]); state = apply_2q_statevector(self.backend, state, gate_cry_4x4(theta), c, t, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [c, t])
+            elif name == "cz":
+                c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [c, t])
+            elif name == "x":
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(), q, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
+            elif name == "s":
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_s(), q, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
+            elif name == "sdg":
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_sd(), q, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
             elif name == "measure_z":
                 measures.append(int(op[1]))
             elif name == "barrier":
@@ -138,8 +163,15 @@ class StatevectorEngine:
         return {"expectations": expectations, "metadata": {"shots": shots, "backend": self.backend.name}}
 
     def expval(self, circuit: "Circuit", obs: Any, **kwargs: Any) -> float:
-        # Not implemented; placeholder for future
-        return 0.0
+        try:
+            from openfermion.linalg import get_sparse_operator  # type: ignore
+        except Exception:
+            raise ImportError("expval requires openfermion installed")
+        n = int(getattr(circuit, "num_qubits", 0))
+        psi = np.asarray(self.state(circuit), dtype=np.complex128).reshape(-1)
+        H = get_sparse_operator(obs, n_qubits=n)
+        e = np.vdot(psi, H.dot(psi))
+        return float(np.real(e))
 
     # helpers removed; using gates kernels
 
@@ -166,8 +198,18 @@ class StatevectorEngine:
                 q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rz(theta), q, n)
             elif name == "rx":
                 q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rx(theta), q, n)
+            elif name == "ry":
+                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_ry(theta), q, n)
             elif name == "cx":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cx_4x4(), c, t, n)
+            elif name == "cz":
+                c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, n)
+            elif name == "x":
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(), q, n)
+            elif name == "s":
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_s(), q, n)
+            elif name == "sdg":
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_sd(), q, n)
             elif name == "project_z":
                 q = int(op[1]); keep = int(op[2]); state = self._project_z(state, q, keep, n)
             elif name == "reset":

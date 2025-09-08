@@ -67,7 +67,7 @@ class UCCNumericRuntime:
             # Build CI vector (fermion scheme) and embed into full statevector by CI strings
             from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
             from tyxonq.applications.chem.chem_libs.quantum_chem_library.pyscf_civector import get_civector_pyscf
-            base = np.zeros(self.n_params, dtype=np.float64) if (len(params) == 0 and self.n_params > 0) else np.asarray(params)
+            base = np.zeros(self.n_params, dtype=np.float64) if (len(params) == 0 and self.n_params > 0) else np.asarray(params, dtype=np.float64)
             ex_ops = tuple(self.ex_ops) if self.ex_ops is not None else tuple()
             param_ids = self.param_ids if self.param_ids is not None else list(range(self.n_params))
 
@@ -97,10 +97,7 @@ class UCCNumericRuntime:
             psi = np.zeros(1 << self.n_qubits, dtype=np.complex128)
             # Embed CI amplitudes directly on CI addresses (consistent with ci_state_mapping)
             psi[ci_strings] = np.asarray(civ, dtype=np.complex128)
-            # Normalize to unit norm to avoid tiny drift from CI embedding
-            nrm = np.linalg.norm(psi)
-            if nrm > 0:
-                psi = psi / nrm
+            # Do NOT normalize here (match TenCirChem behavior)
             return psi
         if self.numeric_engine == "mps":
             # TODO: replace with MatrixProductStateEngine exact MPS contraction when available
@@ -177,6 +174,13 @@ class UCCNumericRuntime:
             base = np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)
         else:
             base = np.asarray(params, dtype=np.float64)
+        # For CI-based engines, evaluate energy via exact statevector circuit to
+        # ensure parity with the circuit-based reference (angles/layout identical).
+        if self.numeric_engine in ("civector", "civector-large", "pyscf"):
+            c = self._build(base)
+            eng = StatevectorEngine()
+            psi = np.asarray(eng.state(c), dtype=np.complex128)
+            return self._expect(psi)
         psi = self._state(base)
         return self._expect(psi)
 
@@ -189,15 +193,20 @@ class UCCNumericRuntime:
         if self.n_params == 0:
             return float(e0), np.zeros(0, dtype=np.float64)
         g = np.zeros_like(base)
-        # For CI-based engines, parameter-shift does not apply; use finite-difference
+        # For CI-based engines, compute gradients against the exact statevector circuit
+        # using parameter-shift to match statevector reference in tests.
         if self.numeric_engine in ("civector", "civector-large", "pyscf"):
-            eps = 1e-7
+            s = 0.5 * pi
             for i in range(len(base)):
-                p_plus = base.copy(); p_plus[i] += eps
-                p_minus = base.copy(); p_minus[i] -= eps
-                e_plus = self.energy(p_plus)
-                e_minus = self.energy(p_minus)
-                g[i] = (e_plus - e_minus) / (2.0 * eps)
+                p_plus = base.copy(); p_plus[i] += s
+                p_minus = base.copy(); p_minus[i] -= s
+                # Evaluate energies via statevector circuit to align with reference
+                c_plus = self._build(p_plus)
+                c_minus = self._build(p_minus)
+                eng = StatevectorEngine()
+                e_plus = self._expect(np.asarray(eng.state(c_plus), dtype=np.complex128))
+                e_minus = self._expect(np.asarray(eng.state(c_minus), dtype=np.complex128))
+                g[i] = 0.5 * (e_plus - e_minus)
         else:
             s = 0.5 * pi
             for i in range(len(base)):

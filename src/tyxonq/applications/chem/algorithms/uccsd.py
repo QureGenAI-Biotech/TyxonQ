@@ -330,7 +330,7 @@ class ROUCCSD(UCC):
         active_space: Tuple[int, int] = None,
         aslst: List[int] = None,
         mo_coeff: np.ndarray = None,
-        engine: str = "civector",
+        numeric_engine: str | None = None,
         run_hf: bool = True,
         # for API consistency with UCC
         run_mp2: bool = False,
@@ -348,12 +348,14 @@ class ROUCCSD(UCC):
             active_space,
             aslst,
             mo_coeff,
-            engine=engine,
+            runtime=("numeric" if numeric_engine is not None else "device"),
             run_hf=run_hf,
             run_mp2=run_mp2,
             run_ccsd=run_ccsd,
             run_fci=run_fci,
         )
+        # propagate preferred numeric engine
+        self.numeric_engine = numeric_engine
         no = int(np.sum(self.hf.mo_occ == 2)) - self.inactive_occ
         ns = int(np.sum(self.hf.mo_occ == 1))
         nv = int(np.sum(self.hf.mo_occ == 0)) - self.inactive_vir

@@ -13,9 +13,14 @@ def _hf_init_ops(n_qubits: int, n_elec_s: Tuple[int, int], mode: str) -> List[Tu
     ops: List[Tuple] = []
     na, nb = unpack_nelec(n_elec_s)
     if mode in ["fermion", "qubit"]:
-        for i in range(nb):
-            ops.append(("x", n_qubits - 1 - i))
+        # OpenFermion spin-orbital ordering used in get_hop_from_integral:
+        #   alpha: indices 0..(n_orb-1), beta: indices n_orb..(2*n_orb-1)
+        # After reverse_qop_idx, our wire q = 2*n_orb-1 - p.
+        # Thus occupied alpha (p=0..na-1) map to wires 2*n_orb-1, 2*n_orb-2, ...
+        # and occupied beta (p=n_orb..n_orb+nb-1) map to wires n_orb-1, n_orb-2, ...
         for i in range(na):
+            ops.append(("x", n_qubits - 1 - i))
+        for i in range(nb):
             ops.append(("x", n_qubits // 2 - 1 - i))
     else:
         assert mode == "hcb"

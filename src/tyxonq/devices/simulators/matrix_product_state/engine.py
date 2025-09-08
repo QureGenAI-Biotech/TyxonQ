@@ -18,6 +18,7 @@ import numpy as np
 from ....numerics.api import get_backend, ArrayBackend
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
+    gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
 )
 from ....libs.quantum_library.kernels.matrix_product_state import (
     init_product_state,
@@ -94,11 +95,42 @@ class MatrixProductStateEngine:
                 state = self._apply_1q(state, gate_rx(theta), q, n)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
+            elif name == "ry":
+                q = int(op[1]); theta = float(op[2])
+                state = self._apply_1q(state, gate_ry(theta), q, n)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
             elif name == "cx":
                 q1, q2 = int(op[1]), int(op[2])
                 state = self._apply_2q(state, gate_cx_4x4(), q1, q2, n)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q1, q2])
+            elif name == "cry":
+                q1, q2 = int(op[1]), int(op[2])
+                theta = float(op[3])
+                state = self._apply_2q(state, gate_cry_4x4(theta), q1, q2, n)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q1, q2])
+            elif name == "cz":
+                q1, q2 = int(op[1]), int(op[2])
+                state = self._apply_2q(state, gate_cz_4x4(), q1, q2, n)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q1, q2])
+            elif name == "x":
+                q = int(op[1])
+                state = self._apply_1q(state, gate_x(), q, n)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
+            elif name == "s":
+                q = int(op[1])
+                state = self._apply_1q(state, gate_s(), q, n)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
+            elif name == "sdg":
+                q = int(op[1])
+                state = self._apply_1q(state, gate_sd(), q, n)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [q])
             elif name == "measure_z":
                 measures.append(int(op[1]))
             elif name == "barrier":
