@@ -7,7 +7,7 @@ import numpy as np
 from openfermion import FermionOperator, QubitOperator
 from pyscf.scf.hf import RHF
 from pyscf.mcscf import CASCI
-from pyscf.fci import direct_nosym, cistring
+from pyscf.fci import direct_nosym, direct_spin1, cistring
 from pyscf import ao2mo
 
 from tyxonq.libs.hamiltonian_encoding.pauli_io import hcb_to_coo, fop_to_coo, reverse_qop_idx, canonical_mo_coeff
@@ -122,13 +122,28 @@ def get_h_sparse_from_integral(int1e, int2e, *, mode: str = "fermion", discard_e
 
 
 def get_h_fcifunc_from_integral(int1e, int2e, n_elec):
+    """Return CI-space Hamiltonian apply function using PySCF direct_spin1.
+
+    This matches the alpha/beta-separated CI basis order we construct via get_ci_strings.
+    """
     n_orb = len(int1e)
-    h2e = direct_nosym.absorb_h1e(int1e, int2e, n_orb, n_elec, 0.5)
+    # Ensure (na, nb) tuple
+    if isinstance(n_elec, int):
+        assert n_elec % 2 == 0, "total electron number must be even to split into (na, nb)"
+        nelec_ab = (n_elec // 2, n_elec // 2)
+    else:
+        nelec_ab = (int(n_elec[0]), int(n_elec[1]))
+
+    # Absorb one-electron integrals into two-electron tensor (PySCF handles symmetry internally)
+    h2e = direct_spin1.absorb_h1e(int1e, int2e, n_orb, nelec_ab, 0.5)
+    na, nb = nelec_ab
+    nA = cistring.num_strings(n_orb, na)
+    nB = cistring.num_strings(n_orb, nb)
 
     def fci_func(civector):
-        civector = np.asarray(civector, dtype=np.float64)
-        civector = direct_nosym.contract_2e(h2e, civector, norb=n_orb, nelec=n_elec)
-        return civector
+        civector = np.asarray(civector, dtype=np.float64).reshape((nA, nB))
+        out = direct_spin1.contract_2e(h2e, civector, norb=n_orb, nelec=nelec_ab)
+        return np.asarray(out, dtype=np.float64).reshape(-1)
 
     return fci_func
 

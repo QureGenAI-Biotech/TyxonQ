@@ -236,6 +236,9 @@ class UCCSD(UCC):
         self.init_guess = np.asarray(init_guess, dtype=np.float64) if len(init_guess) > 0 else np.zeros(0, dtype=np.float64)
         # remember preferred numeric engine if provided
         self.numeric_engine = numeric_engine
+        # Store integrals for later runtime construction
+        self._int1e = np.asarray(int1e)
+        self._int2e = np.asarray(int2e)
         # Back-compat attributes used by tests
         self.n_elec = int(n_elec)
         self.civector_size = int(self.n_qubits if hasattr(self, 'n_qubits') else (2 * n_cas))
@@ -321,6 +324,8 @@ class UCCSD(UCC):
         Returns UCCSD energy
         """
         return self.energy()
+
+    # Use base class numeric path; runtime construction now injects CI Hamiltonian centrally
 
 
 class ROUCCSD(UCC):

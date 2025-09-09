@@ -13,11 +13,7 @@ def _hf_init_ops(n_qubits: int, n_elec_s: Tuple[int, int], mode: str) -> List[Tu
     ops: List[Tuple] = []
     na, nb = unpack_nelec(n_elec_s)
     if mode in ["fermion", "qubit"]:
-        # OpenFermion spin-orbital ordering used in get_hop_from_integral:
-        #   alpha: indices 0..(n_orb-1), beta: indices n_orb..(2*n_orb-1)
-        # After reverse_qop_idx, our wire q = 2*n_orb-1 - p.
-        # Thus occupied alpha (p=0..na-1) map to wires 2*n_orb-1, 2*n_orb-2, ...
-        # and occupied beta (p=n_orb..n_orb+nb-1) map to wires n_orb-1, n_orb-2, ...
+        # Legacy engine wire convention: reverse OpenFermion indices to wires
         for i in range(na):
             ops.append(("x", n_qubits - 1 - i))
         for i in range(nb):
@@ -45,7 +41,7 @@ def _parity_chain_ops(n_qubits: int, z_indices: List[int], target: int, reverse:
 
 
 def _evolve_excitation_ops(n_qubits: int, f_idx: Tuple[int, ...], qop, theta: float, mode: str, decompose_multicontrol: bool) -> List[Tuple]:
-    # f_idx are spin-orbital indices from ex_op; map to wire indices (reverse order)
+    # f_idx map to engine wires via reverse ordering
     f_idx = [n_qubits - 1 - idx for idx in f_idx]
     z_indices: List[int] = []
     if mode == "fermion":
@@ -116,6 +112,7 @@ def build_ucc_circuit(
         else:
             fop = ex_op_to_fop(f_idx, with_conjugation=True)
             qop = reverse_qop_idx(jordan_wigner(fop), n_qubits)
+            # Gate-level follows TenCirChem: use 2*theta
             ops.extend(_evolve_excitation_ops(n_qubits, f_idx, qop, 2 * theta, mode, decompose_multicontrol))
 
     return Circuit(n_qubits, ops=ops)
