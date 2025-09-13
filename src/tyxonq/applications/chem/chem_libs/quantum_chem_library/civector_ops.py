@@ -94,7 +94,8 @@ def civector(params: np.ndarray, n_qubits: int, n_elec_s, ex_ops: List[Tuple[int
     ci_strings, fperm, fphase, f2phase = get_operator_tensors(n_qubits, n_elec_s, ex_ops, mode)
     fperm = np.asarray(fperm, dtype=np.int64)
     theta_sin, theta_1mcos = get_theta_tensors(params, param_ids)
-    civ = get_init_civector(len(ci_strings)) if init_state is None else np.asarray(init_state, dtype=np.float64)
+    # Ensure numpy array for civector to avoid mixing backend tensors (e.g., torch) with numpy indices
+    civ = np.asarray(get_init_civector(len(ci_strings)), dtype=np.float64) if init_state is None else np.asarray(init_state, dtype=np.float64)
     civ = evolve_civector_by_tensor(civ, fperm, fphase, f2phase, theta_sin, theta_1mcos)
     return np.asarray(civ, dtype=np.float64).reshape(-1)
 
@@ -114,7 +115,8 @@ def energy_and_grad_civector(
     ci_strings, fperm, fphase, f2phase = get_operator_tensors(n_qubits, n_elec_s, ex_ops, mode)
     fperm = np.asarray(fperm, dtype=np.int64)
     theta_sin, theta_1mcos = get_theta_tensors(params, param_ids)
-    civ = get_init_civector(len(ci_strings)) if init_state is None else np.asarray(init_state, dtype=np.float64)
+    # Ensure numpy array for civector to avoid mixing backend tensors with numpy ops
+    civ = np.asarray(get_init_civector(len(ci_strings)), dtype=np.float64) if init_state is None else np.asarray(init_state, dtype=np.float64)
     ket = evolve_civector_by_tensor(np.asarray(civ, dtype=np.float64), fperm, fphase, f2phase, theta_sin, theta_1mcos)
     if ci_apply is not None:
         bra = np.asarray(ci_apply(ket), dtype=np.float64)

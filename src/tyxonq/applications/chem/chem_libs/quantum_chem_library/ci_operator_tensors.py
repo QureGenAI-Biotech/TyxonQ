@@ -105,6 +105,7 @@ def get_operator_tensors(
     ci_strings, strs2addr = get_ci_strings(n_qubits, n_elec_s, mode, strs2addr=True)
     
     fket_permutation_tensor = np.zeros((len(ex_ops), len(ci_strings)), dtype=get_uint_type())
+    # Force numpy arrays to avoid backend tensor mixing (torch/cupy) in numpy ops
     fket_phase_tensor = np.zeros((len(ex_ops), len(ci_strings)), dtype=np.int8)
     f2ket_phase_tensor = np.zeros((len(ex_ops), len(ci_strings)), dtype=np.int8)
     

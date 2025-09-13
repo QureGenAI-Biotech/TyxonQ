@@ -17,6 +17,7 @@ def tensor_set_elem(tensor, idx, elem):
 
 
 def get_xp(_backend):
+    # Safe backend-to-arraylib selector with numpy fallback when backend is unset
     try:
         import cupy as cp  # type: ignore
         if getattr(_backend, "name", "") == "cupy":
@@ -36,7 +37,12 @@ from tyxonq.libs.circuits_library.utils import unpack_nelec
 
 
 def get_ci_strings(n_qubits, n_elec_s, mode, strs2addr=False):
-    xp = get_xp(tq.backend)
+    # Allow calling without global tq.backend set
+    try:
+        bk = getattr(tq, "backend")
+    except Exception:
+        bk = None
+    xp = get_xp(bk)
     uint_type = get_uint_type()
     if 2 ** n_qubits > np.iinfo(uint_type).max:
         raise ValueError(f"Too many qubits: {n_qubits}, try using complex128 datatype")
@@ -126,8 +132,10 @@ def statevector_to_civector(statevector, ci_strings):
 
 @partial(jit, static_argnums=[0])
 def get_init_civector(len_ci):
-    civector = tq.backend.zeros(len_ci, dtype=tq.rdtypestr)
-    civector = tensor_set_elem(civector, 0, 1)
+    # Robust to missing global backend: fall back to numpy
+    import numpy as _np
+    civector = _np.zeros(len_ci, dtype=_np.float64)
+    civector[0] = 1
     return civector
 
 

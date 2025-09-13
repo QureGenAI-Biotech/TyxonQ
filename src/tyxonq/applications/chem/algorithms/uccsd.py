@@ -243,6 +243,24 @@ class UCCSD(UCC):
         self.n_elec = int(n_elec)
         self.civector_size = int(self.n_qubits if hasattr(self, 'n_qubits') else (2 * n_cas))
 
+    # ---- Compatibility: expose FermionOperator Hamiltonian (electronic part, without e_core) ----
+    @property
+    def h_fermion_op(self):
+        """Return FermionOperator for total Hamiltonian (electronic + e_core).
+
+        Older tests expect using this with a mapping (e.g., parity) to produce
+        a qubit Hamiltonian including the constant energy shift.
+        """
+        from openfermion import FermionOperator as _FOP  # lazy import
+        hop = get_hop_from_integral(self._int1e, self._int2e)
+        try:
+            core = float(getattr(self, "e_core", 0.0))
+        except Exception:
+            core = 0.0
+        if abs(core) > 0:
+            hop += _FOP((), core)
+        return hop
+
     def get_ex_ops(self, t1: np.ndarray = None, t2: np.ndarray = None) -> Tuple[List[Tuple], List[int], List[float]]:
         """
         Get one-body and two-body excitation operators for UCCSD ansatz.
@@ -342,35 +360,62 @@ class ROUCCSD(UCC):
         run_ccsd: bool = False,
         run_fci: bool = True,
     ):
-        init_method: str = "zeros"
-        # ROHF does not support mp2 and ccsd
-        run_mp2: bool = False
-        run_ccsd: bool = False
+        # --- ROHF setup (open-shell) ---
+        if hasattr(mol, "mol") and hasattr(mol, "kernel"):
+            hf = mol  # already an SCF object (expecting ROHF)
+        else:
+            hf = ROHF(mol)
+        if mo_coeff is not None:
+            hf.mo_coeff = np.asarray(mo_coeff)
+        hf.chkfile = None
+        hf.verbose = 0
+        if run_hf:
+            hf.kernel()
 
-        super().__init__(
-            mol,
-            init_method,
-            active_space,
-            aslst,
-            mo_coeff,
-            runtime=("numeric" if numeric_engine is not None else "device"),
-            run_hf=run_hf,
-            run_mp2=run_mp2,
-            run_ccsd=run_ccsd,
-            run_fci=run_fci,
-        )
-        # propagate preferred numeric engine
-        self.numeric_engine = numeric_engine
-        no = int(np.sum(self.hf.mo_occ == 2)) - self.inactive_occ
-        ns = int(np.sum(self.hf.mo_occ == 1))
-        nv = int(np.sum(self.hf.mo_occ == 0)) - self.inactive_vir
-        assert no + ns + nv == self.active_space[1]
-        # assuming single electrons in alpha
-        noa = no + ns
-        nva = nv
-        nob = no
-        nvb = ns + nv
+        # --- Integrals and core energy ---
+        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
 
+        # Active space: electrons and spatial orbitals
+        if active_space is None:
+            n_elec = int(getattr(hf.mol, "nelectron"))
+            n_cas = int(getattr(hf.mol, "nao"))
+        else:
+            n_elec, n_cas = int(active_space[0]), int(active_space[1])
+        self.active_space = (n_elec, n_cas)
+
+        # Derive CAS occupations from (n_elec, spin) to avoid dependence on MO ordering
+        # spin = N_alpha - N_beta in PySCF Mole
+        spin = int(getattr(getattr(hf, "mol", None), "spin", 0))
+        n_alpha = (int(n_elec) + spin) // 2
+        n_beta = (int(n_elec) - spin) // 2
+        # Doubly occupied spatial orbitals in CAS equals n_beta; singly occupied equals spin
+        no = int(n_beta)
+        ns = int(spin)
+        nv = int(n_cas) - (no + ns)
+        if nv < 0:
+            # Fallback: clamp to zero and adjust no to keep counts valid in small CAS
+            nv = 0
+            no = max(0, int(n_cas) - ns)
+        assert no >= 0 and ns >= 0 and nv >= 0 and (no + ns + nv) == int(n_cas)
+
+        # alpha/beta occupied and virtual counts in CAS
+        noa = no + ns  # alpha occupied count (doubles + singles)
+        nob = no       # beta occupied count (doubles only)
+        nva = nv       # alpha virtual count
+        nvb = ns + nv  # beta virtual count (beta has fewer occupied)
+
+        # --- Reference energies (optional FCI) ---
+        try:
+            if run_fci:
+                from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
+                # CAS FCI on (int1e, int2e) with (na, nb) in CAS, then add core energy
+                self.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (noa, nob))[0] + e_core)
+            else:
+                self.e_fci = float("nan")
+        except Exception:
+            self.e_fci = float("nan")
+
+        # --- Ex-ops (open-shell mapping) ---
         def alpha_o(_i):
             return self.active_space[1] + _i
 
@@ -383,18 +428,14 @@ class ROUCCSD(UCC):
         def beta_v(_i):
             return nob + _i
 
+        ex_ops: list[tuple] = []
         # single excitations
-        self.ex_ops = []
         for i in range(noa):
             for a in range(nva):
-                # alpha to alpha
-                ex_op_a = (alpha_v(a), alpha_o(i))
-                self.ex_ops.append(ex_op_a)
+                ex_ops.append((alpha_v(a), alpha_o(i)))  # alpha→alpha
         for i in range(nob):
             for a in range(nvb):
-                # beta to beta
-                ex_op_b = (beta_v(a), beta_o(i))
-                self.ex_ops.append(ex_op_b)
+                ex_ops.append((beta_v(a), beta_o(i)))    # beta→beta
 
         # double excitations
         # 2 alphas
@@ -402,23 +443,47 @@ class ROUCCSD(UCC):
             for j in range(i):
                 for a in range(nva):
                     for b in range(a):
-                        ex_op_aa = (alpha_v(b), alpha_v(a), alpha_o(i), alpha_o(j))
-                        self.ex_ops.append(ex_op_aa)
+                        ex_ops.append((alpha_v(b), alpha_v(a), alpha_o(i), alpha_o(j)))
         # 2 betas
         for i in range(nob):
             for j in range(i):
                 for a in range(nvb):
                     for b in range(a):
-                        ex_op_bb = (beta_v(b), beta_v(a), beta_o(i), beta_o(j))
-                        self.ex_ops.append(ex_op_bb)
-
+                        ex_ops.append((beta_v(b), beta_v(a), beta_o(i), beta_o(j)))
         # 1 alpha + 1 beta
         for i in range(noa):
             for j in range(nob):
                 for a in range(nva):
                     for b in range(nvb):
-                        ex_op_ab = (beta_v(b), alpha_v(a), alpha_o(i), beta_o(j))
-                        self.ex_ops.append(ex_op_ab)
+                        ex_ops.append((beta_v(b), alpha_v(a), alpha_o(i), beta_o(j)))
 
-        self.param_ids = list(range(len(self.ex_ops)))
-        self.init_guess = np.zeros_like(self.param_ids)
+        param_ids = list(range(len(ex_ops)))
+        init_guess = np.zeros_like(param_ids)
+
+        # --- Build qubit Hamiltonian ---
+        n_qubits = 2 * n_cas
+        fop = get_hop_from_integral(int1e, int2e)
+        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
+
+        # --- Initialize base UCC with open-shell (na, nb) ---
+        super().__init__(
+            n_qubits=n_qubits,
+            n_elec_s=(noa, nob),
+            h_qubit_op=hq,
+            runtime=("numeric" if numeric_engine is not None else "device"),
+            mode="fermion",
+            ex_ops=ex_ops,
+            param_ids=param_ids,
+            init_state=None,
+            decompose_multicontrol=False,
+            trotter=False,
+        )
+
+        # record energies and preferences
+        self.e_core = float(e_core)
+        self.init_guess = np.asarray(init_guess, dtype=np.float64)
+        self.numeric_engine = numeric_engine
+        self._int1e = np.asarray(int1e)
+        self._int2e = np.asarray(int2e)
+        # For CI engines, provide ci_hamiltonian via algorithms.UCC.energy/energy_and_grad
+        self.n_elec = int(n_elec)

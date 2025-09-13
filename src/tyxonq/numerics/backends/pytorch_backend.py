@@ -200,19 +200,59 @@ class PyTorchBackend:
     def value_and_grad(self, fn, argnums: int | tuple[int, ...] = 0):
 
         def wrapped(*args: Any, **kwargs: Any):
-            # ensure selected args require grad
             arg_idx = (argnums,) if isinstance(argnums, int) else tuple(argnums)
-            args_list = list(args)
-            for i in arg_idx:
-                xi = args_list[i]
-                if hasattr(xi, 'requires_grad'):
-                    xi.requires_grad_(True)
-                    args_list[i] = xi
-            y = fn(*args_list, **kwargs)
-            if not isinstance(y, torch.Tensor):
-                y = torch.as_tensor(y, dtype=torch.float32)
-            grads = torch.autograd.grad(y, [args_list[i] for i in arg_idx], allow_unused=True, retain_graph=False, create_graph=False)
-            return y, grads[0] if len(grads) == 1 else tuple(grads)
+            # Keep a copy of original args for numeric fallback
+            orig_args = list(args)
+            try:
+                # Try autograd path: convert selected args to torch tensors requiring grad
+                args_list = list(args)
+                for i in arg_idx:
+                    xi = args_list[i]
+                    ti = torch.as_tensor(xi, dtype=torch.float64)
+                    ti.requires_grad_(True)
+                    args_list[i] = ti
+                y = fn(*args_list, **kwargs)
+                if not isinstance(y, torch.Tensor):
+                    y = torch.as_tensor(y, dtype=torch.float64)
+                # Attempt gradient
+                grad_tensors = [args_list[i] for i in arg_idx]
+                grads = torch.autograd.grad(y, grad_tensors, allow_unused=True, retain_graph=False, create_graph=False)
+                # If any grad is None, fallback to numeric below
+                if any(g is None for g in grads):
+                    raise RuntimeError("autograd returned None gradient; fallback to numeric")
+                # Convert outputs
+                y_out = y.detach().cpu().numpy().item() if y.numel() == 1 else y.detach().cpu().numpy()
+                grads_out = [g.detach().cpu().numpy() for g in grads]
+                return y_out, (grads_out[0] if len(grads_out) == 1 else tuple(grads_out))
+            except Exception:
+                # Numeric fallback: central finite difference on selected arg(s)
+                import numpy as _np
+                # Evaluate base value
+                y0 = fn(*orig_args, **kwargs)
+                # Ensure scalar python float for consistency
+                try:
+                    y0_scalar = float(y0)
+                except Exception:
+                    y0_scalar = _np.asarray(y0, dtype=_np.float64).item()
+                eps = 1e-7
+                grad_results = []
+                for i in arg_idx:
+                    xi = _np.asarray(orig_args[i], dtype=_np.float64)
+                    g = _np.zeros_like(xi, dtype=_np.float64)
+                    flat = g.reshape(-1)
+                    xi_base = xi.reshape(-1)
+                    for k in range(flat.size):
+                        x_plus = xi.copy().reshape(-1)
+                        x_minus = xi.copy().reshape(-1)
+                        x_plus[k] = xi_base[k] + eps
+                        x_minus[k] = xi_base[k] - eps
+                        a_plus = list(orig_args); a_plus[i] = x_plus.reshape(xi.shape)
+                        a_minus = list(orig_args); a_minus[i] = x_minus.reshape(xi.shape)
+                        y_plus = float(fn(*a_plus, **kwargs))
+                        y_minus = float(fn(*a_minus, **kwargs))
+                        flat[k] = (y_plus - y_minus) / (2.0 * eps)
+                    grad_results.append(g)
+                return y0_scalar, (grad_results[0] if len(grad_results) == 1 else tuple(grad_results))
 
         return wrapped
 

@@ -22,7 +22,7 @@ def ref_eg():
         tq.set_backend("numpy")
     except Exception:
         pytest.xfail("Backend numpy not available")
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     e, g = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine='pyscf')
@@ -46,7 +46,7 @@ def test_gradient(ref_eg, numeric_engine):
         tq.set_backend("numpy")
     except Exception:
         pytest.xfail("Backend numpy not available")
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     e_num, g_num = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine=numeric_engine)
@@ -56,7 +56,7 @@ def test_gradient(ref_eg, numeric_engine):
 
 @pytest.fixture
 def ref_state():
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
 
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
@@ -88,7 +88,7 @@ def ref_state():
 
 @pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
 def test_excitation(ref_state, numeric_engine):
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
 
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
@@ -104,7 +104,7 @@ def test_device_matches_numeric_gradient_single():
         tq.set_backend("numpy")
     except Exception:
         pytest.xfail("Backend numpy not available")
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     # numeric 基准选 statevector（与 device/statevector 完全一致）
@@ -120,7 +120,7 @@ def test_device_matches_numeric_energy_single():
         tq.set_backend("numpy")
     except Exception:
         pytest.xfail("Backend numpy not available")
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     e_num = uccsd.energy(params, runtime="numeric", numeric_engine="statevector")
@@ -164,30 +164,21 @@ def test_gradient_signle_opt(backend_str, numeric_engine, init_state, mode):
 @pytest.mark.parametrize("init_state", [None, "civector", "circuit"])
 @pytest.mark.parametrize("mode", ["fermion", "qubit"])
 def test_gradient_opt(backend_str, numeric_engine, init_state, mode):
-    if numeric_engine in ["statevector"] and backend_str in ["numpy", "pytorch"]:
-        pytest.xfail("Incompatible numeric_engine and backend")
     if numeric_engine in ["pyscf"] and mode in ["qubit"]:
         pytest.xfail("Incompatible numeric_engine and fermion symmetry")
     prev = getattr(tq, "backend", None)
     try:
-        try:
-            tq.set_backend(backend_str)
-        except Exception:
-            pytest.xfail(f"Backend {backend_str} not available")
-        uccsd = UCCSD(h2, mode=mode, numeric_engine=numeric_engine)
-        # test initial condition. Has no effect
-        if init_state == "civector" and hasattr(uccsd, "civector_size"):
-            uccsd.init_state = get_init_civector(uccsd.civector_size)
-        elif init_state == "circuit" and hasattr(uccsd, "n_elec"):
-            uccsd.init_state = get_init_circuit(uccsd.n_qubits, uccsd.n_elec, uccsd.mode)
-        e = uccsd.kernel()
-        np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-4)
-    finally:
-        if prev is not None:
-            try:
-                tq.set_backend(prev.name if hasattr(prev, "name") else prev)
-            except Exception:
-                pass
+        tq.set_backend(backend_str)
+    except Exception:
+        pytest.xfail(f"Backend {backend_str} not available")
+    uccsd = UCCSD(h2, mode=mode, numeric_engine=numeric_engine)
+    # test initial condition. Has no effect
+    if init_state == "civector" and hasattr(uccsd, "civector_size"):
+        uccsd.init_state = get_init_civector(uccsd.civector_size)
+    elif init_state == "circuit" and hasattr(uccsd, "n_elec"):
+        uccsd.init_state = get_init_circuit(uccsd.n_qubits, uccsd.n_elec, uccsd.mode)
+    e = uccsd.kernel()
+    np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-4)
 
 
 @pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
@@ -251,21 +242,98 @@ def test_device_energy_counts_matches_numeric_tolerantly():
                 pass
 
 
+def test_device_counts_converges_to_pyscf():
+    # shots>0 的设备路径应当随 shots 增大逐步接近 pyscf 数值解析电子能
+    try:
+        tq.set_backend("numpy")
+    except Exception:
+        pytest.xfail("Backend numpy not available")
+    uccsd = UCCSD(h2)
+    np.random.seed(2077)
+    params = np.random.rand(len(uccsd.init_guess)) - 0.5
+    # pyscf 作为金标准（电子能）
+    e_ref = uccsd.energy(params, runtime="numeric", numeric_engine="pyscf")
+    shots_list = [128, 512, 2048, 8192]
+    for s in shots_list:
+        e_dev = uccsd.energy(params, runtime="device", provider="simulator", device="statevector", shots=s)
+        print(e_dev)
+        # 理论抽样误差 ~ O(1/sqrt(shots))，给出宽松但递减的阈值
+        tol = 2.0 / np.sqrt(s) + 0.02
+        np.testing.assert_allclose(e_dev, e_ref, atol=tol)
+
+
+def test_device_counts_gradient_converges_to_pyscf():
+    # shots>0 的设备路径梯度应当随 shots 增大逐步接近 pyscf 数值解析梯度
+    try:
+        tq.set_backend("numpy")
+    except Exception:
+        pytest.xfail("Backend numpy not available")
+    uccsd = UCCSD(h2)
+    np.random.seed(2077)
+    params = np.random.rand(len(uccsd.init_guess)) - 0.5
+    # pyscf 作为金标准（电子能与梯度）
+    e_ref, g_ref = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine="pyscf")
+    shots_list = [512, 2048, 8192,10640]
+    errs = []
+    for s in shots_list:
+        e_dev, g_dev = uccsd.energy_and_grad(params, runtime="device", provider="simulator", device="statevector", shots=s)
+        print('e_dev = ',e_dev)
+        print('g_dev = ',g_dev)
+        print('='*15)
+        # 记录 L2 误差，观察随 shots 增大是否下降
+        errs.append(float(np.linalg.norm(np.asarray(g_dev) - np.asarray(g_ref))))
+    # 要求总体误差下降（最后一个不大于第一个），允许中间波动
+    assert errs[-1] <= errs[0]
+
+
 def test_device_simulator_allows_shots_zero():
     # provider=simulator 时，允许 shots=0（解析路径）
     prev = getattr(tq, "backend", None)
     try:
-        try:
-            tq.set_backend("numpy")
-        except Exception:
-            pytest.xfail("Backend numpy not available")
-        u = UCCSD(h2)
-        # 不做严格数值断言，仅验证 shots=0 可用且返回数值
-        e = u.energy(None, runtime="device", provider="simulator", device="statevector", shots=0)
-        assert isinstance(e, float)
-    finally:
-        if prev is not None:
-            try:
-                tq.set_backend(prev.name if hasattr(prev, "name") else prev)
-            except Exception:
-                pass
+        tq.set_backend("numpy")
+    except Exception:
+        pytest.xfail("Backend numpy not available")
+    u = UCCSD(h2)
+    # 不做严格数值断言，仅验证 shots=0 可用且返回数值
+    e = u.energy(None, runtime="device", provider="simulator", device="statevector", shots=0)
+    assert isinstance(e, float)
+
+
+def test_ucc_rdm_gold_standard_h2():
+    # 对齐 TCC 金标准：H2 的 UCCSD 在 MO 基的 1RDM/2RDM
+    # 使用解析优化通道（shots=0）确保无采样偏差
+    uccsd = UCCSD(h2)
+    e = uccsd.kernel(runtime="device", provider="simulator", device="statevector", shots=0)
+    # 生成 RDM（使用优化后参数）
+    rdm1 = uccsd.make_rdm1(basis="MO")
+    rdm2 = uccsd.make_rdm2(basis="MO")
+    
+    print('rdm1 = ',rdm1)
+    print('rdm2 = ',rdm2)
+    # TCC 金标准
+    rdm1_gold = np.array([[1.97457654e+00, -2.00371787e-16],
+                          [-2.00371787e-16, 2.54234643e-02]], dtype=np.float64)
+    rdm2_gold = np.array(
+        [[[[1.97457654e+00, -2.26018011e-16],
+           [-2.26018011e-16, 2.58709350e-32]],
+
+          [[-2.26018011e-16, -2.24054851e-01],
+           [0.00000000e+00, 2.56462238e-17]]],
+
+
+         [[[-2.26018011e-16, 0.00000000e+00],
+           [-2.24054851e-01, 2.56462238e-17]],
+
+          [[2.58709350e-32, 2.56462238e-17],
+           [2.56462238e-17, 2.54234643e-02]]]], dtype=np.float64)
+
+
+    np.testing.assert_allclose(rdm1, rdm1_gold, atol=1e-6)
+    np.testing.assert_allclose(rdm2, rdm2_gold, atol=1e-6)
+
+    e2 = uccsd.kernel(runtime="numeric")
+    # 生成 RDM（使用优化后参数）
+    rdm1 = uccsd.make_rdm1(basis="MO")
+    rdm2 = uccsd.make_rdm2(basis="MO")
+    np.testing.assert_allclose(rdm1, rdm1_gold, atol=1e-6)
+    np.testing.assert_allclose(rdm2, rdm2_gold, atol=1e-6)

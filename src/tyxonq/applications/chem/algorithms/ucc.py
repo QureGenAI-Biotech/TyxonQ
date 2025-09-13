@@ -16,6 +16,7 @@ from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
     get_integral_from_hf,
     get_hop_from_integral,
+    get_h_fcifunc_from_integral
 )
 from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings, get_addr as _get_addr_ci
@@ -88,9 +89,8 @@ class UCC:
             # Construct optional CI Hamiltonian for CI engines
             ci_hamiltonian = None
             try:
-                if numeric_engine in ("statevector", "civector", "civector-large", "pyscf") and hasattr(self, "_int1e") and hasattr(self, "_int2e") and hasattr(self, "n_elec"):
-                    from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_h_fcifunc_from_integral
-                    ci_hamiltonian = get_h_fcifunc_from_integral(self._int1e, self._int2e, int(self.n_elec))
+                # Pass (na, nb) explicitly to support open-shell
+                ci_hamiltonian = get_h_fcifunc_from_integral(self._int1e, self._int2e, self.n_elec_s)
             except Exception:
                 ci_hamiltonian = None
             rt = UCCNumericRuntime(
@@ -106,7 +106,7 @@ class UCC:
                 
             )
             base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
-            return float(rt.energy(base))
+            return float(rt.energy(base)+self.e_core)
         raise ValueError(f"unknown runtime: {runtime}")
 
     def energy_and_grad(self, params: np.ndarray | None = None, **opts):
@@ -116,14 +116,13 @@ class UCC:
         if runtime == "device":
             rt = self._runtime()
             e, g = rt.energy_and_grad(params, **opts)
-            return float(e), g
+            return float(e+self.e_core), g
         if runtime == "numeric":
             # Construct optional CI Hamiltonian for CI engines
             ci_hamiltonian = None
             try:
-                if numeric_engine in ("statevector", "civector", "civector-large", "pyscf") and hasattr(self, "_int1e") and hasattr(self, "_int2e") and hasattr(self, "n_elec"):
-                    from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_h_fcifunc_from_integral
-                    ci_hamiltonian = get_h_fcifunc_from_integral(self._int1e, self._int2e, int(self.n_elec))
+                # Pass (na, nb) explicitly to support open-shell
+                ci_hamiltonian = get_h_fcifunc_from_integral(self._int1e, self._int2e, self.n_elec_s)
             except Exception:
                 ci_hamiltonian = None
             rt = UCCNumericRuntime(
@@ -143,6 +142,14 @@ class UCC:
             return float(e0+self.e_core), g
         raise ValueError(f"unknown runtime: {runtime}")
 
+    @property
+    def e_ucc(self) -> float:
+        """Convenience: return current UCC energy (with core) using stored params.
+
+        Tests expect `e_ucc` to be available for both closed- and open-shell.
+        """
+        return float(self.energy(getattr(self, "_params", None)))
+
     def kernel(self, **opts) -> float:
         """Optimize parameters via L-BFGS-B.
 
@@ -154,7 +161,10 @@ class UCC:
         x0 = np.asarray(self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params), dtype=np.float64)
 
         # runtime options (shots/provider/device/numeric_engine/etc.) from caller
+        # 默认 shots 统一为 1024（避免 0 导致无法投递到真机）；调用方可覆盖
         runtime_opts = dict(opts)
+        if "shots" not in runtime_opts and str(runtime_opts.get("runtime", self.runtime)) == "device":
+            runtime_opts["shots"] = 2048
 
         def _obj(x: np.ndarray):
             e, g = self.energy_and_grad(x, **runtime_opts)
