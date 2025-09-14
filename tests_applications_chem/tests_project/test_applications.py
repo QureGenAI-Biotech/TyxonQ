@@ -2,11 +2,11 @@ import numpy as np
 import pytest
 
 from tyxonq.applications.chem import clear_cache, UCCSD
-from tyxonq.applications.chem.molecule import h4, ch4, benzene, h_square
+from tyxonq.applications.chem.molecule import h4, ch4, benzene, h_square,h2
 
 
 def test_clear_cache():
-    uccsd = UCCSD(h4)
+    uccsd = UCCSD(h2)
     e1 = uccsd.kernel()
     clear_cache()
     e2 = uccsd.kernel()

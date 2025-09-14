@@ -51,7 +51,7 @@ def test_build_from_integral_and_mapping():
 @pytest.mark.parametrize("runtime", ["device", "numeric"])
 @pytest.mark.parametrize("grad_method", ["free", "autodiff"])  # autodiff 通过 value_and_grad 等价路径
 @pytest.mark.parametrize("numeric_engine", ["statevector"])  # 后续可扩展 mps 等
-@pytest.mark.parametrize("shots", [0, 512])  # shots 仅对 device 有效
+@pytest.mark.parametrize("shots", [0, 2048])  # shots 仅对 device 有效
 def test_hea_convergence(runtime, grad_method, numeric_engine, shots):
     m = h2
     uccsd = UCCSD(m)

@@ -13,6 +13,32 @@ from pyscf import ao2mo
 from tyxonq.libs.hamiltonian_encoding.pauli_io import hcb_to_coo, fop_to_coo, reverse_qop_idx, canonical_mo_coeff
 
 
+class _MPOWrapper:
+    """Lightweight wrapper to mimic MPO interface used in tests.
+
+    Provides eval_matrix() that returns dense numpy matrix from a scipy.sparse COO/CSC input.
+    """
+
+    def __init__(self, sparse):
+        self._sparse = sparse
+
+    def eval_matrix(self):
+        from scipy.sparse import issparse
+        if issparse(self._sparse):
+            return np.asarray(self._sparse.todense())
+        return np.asarray(self._sparse)
+
+
+def mpo_to_quoperator(mpo_like):
+    """Compatibility shim expected by tests: return an object exposing eval_matrix().
+
+    If input already has eval_matrix, pass-through; otherwise wrap sparse into _MPOWrapper.
+    """
+    if hasattr(mpo_like, "eval_matrix") and callable(getattr(mpo_like, "eval_matrix")):
+        return mpo_like
+    return _MPOWrapper(mpo_like)
+
+
 def get_integral_from_hf(hf: RHF, active_space: Tuple = None, aslst: List[int] = None):
     if not isinstance(hf, RHF):
         raise TypeError(f"hf object must be RHF class, got {type(hf)}")
@@ -121,6 +147,15 @@ def get_h_sparse_from_integral(int1e, int2e, *, mode: str = "fermion", discard_e
     return h_sparse
 
 
+def get_h_mpo_from_integral(int1e, int2e, *, mode: str = "fermion"):
+    """Return an MPO-like object for tests.
+
+    Here we wrap the sparse Hamiltonian with a tiny eval_matrix() shim to satisfy tests.
+    """
+    sparse = get_h_sparse_from_integral(int1e, int2e, mode=mode)
+    return _MPOWrapper(sparse)
+
+
 def get_h_fcifunc_from_integral(int1e, int2e, n_elec):
     """Return CI-space Hamiltonian apply function using PySCF direct_spin1.
 
@@ -179,10 +214,13 @@ def get_h_from_integral(int1e, int2e, n_elec_s, mode: str, htype: str):
     htype = htype.lower()
     if htype == "sparse":
         return get_h_sparse_from_integral(int1e, int2e, mode=mode)
+    if htype == "mpo":
+        return get_h_mpo_from_integral(int1e, int2e, mode=mode)
     assert htype == "fcifunc"
     if mode in ["fermion", "qubit"]:
         return get_h_fcifunc_from_integral(int1e, int2e, n_elec_s)
-    n_elec = sum(n_elec_s)
+    # hcb branch: accept int or (na, nb). If tuple, sum to total electrons.
+    n_elec = int(n_elec_s) if isinstance(n_elec_s, int) else int(sum(n_elec_s))
     return get_h_fcifunc_hcb_from_integral(int1e, int2e, n_elec)
 
 

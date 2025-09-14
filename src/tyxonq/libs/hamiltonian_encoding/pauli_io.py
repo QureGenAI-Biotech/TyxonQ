@@ -20,6 +20,7 @@ import numpy as np
 from scipy.sparse import coo_matrix
 
 import tyxonq as tq
+from tyxonq.numerics import get_backend  # NEW: thin forward to current backend
 
 from openfermion import FermionOperator, QubitOperator
 from openfermion.utils import hermitian_conjugated
@@ -41,8 +42,21 @@ def csc_to_coo(csc):
     # discard tiny imaginary/real parts
     mask = 0.0 < np.abs(coo.data.real)
     indices = np.array([coo.row[mask], coo.col[mask]]).T
-    values = coo.data.real[mask].astype(tq.rdtypestr)
-    return tq.backend.coo_sparse_matrix(indices=indices, values=values, shape=coo.shape)
+    values = coo.data.real[mask].astype(getattr(tq, "rdtypestr", "float64"))
+    # Prefer backend sparse if available via Numeric backend API
+    try:
+        backend = get_backend(None)
+        coo_builder = getattr(backend, "coo_sparse_matrix", None)
+        if callable(coo_builder):
+            return coo_builder(indices=indices, values=values, shape=coo.shape)
+    except Exception:
+        pass
+    # Fallback to scipy coo
+    if len(indices) == 0:
+        return coo_matrix(coo.shape)
+    row = indices[:, 0]
+    col = indices[:, 1]
+    return coo_matrix((values, (row, col)), shape=coo.shape)
 
 
 def fop_to_coo(fop: FermionOperator, n_qubits: int, real: bool = True):

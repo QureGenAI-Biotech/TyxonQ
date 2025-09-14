@@ -4,18 +4,20 @@ import pytest
 from scipy.sparse import linalg
 from pyscf import fci
 from openfermion.linalg import eigenspectrum
-import tensorcircuit as tc
+from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import mpo_to_quoperator
+
 
 from tyxonq.applications.chem import UCCSD
 from tyxonq.applications.chem.molecule import h4, h6, _random
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_h_from_hf
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
 from tyxonq.applications.chem.algorithms.hea import binary, parity
-
+import tyxonq as tq 
+from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
 
 @pytest.mark.parametrize("m", [h4, _random(4, 4)])
 @pytest.mark.parametrize("mode", ["fermion", "qubit", "hcb"])
-@pytest.mark.parametrize("htype", ["sparse"])
+@pytest.mark.parametrize("htype", ["sparse",'mpo'])
 def test_hamiltonian(m, mode, htype):
     hf = m.HF()
     hf.chkfile = None
@@ -34,10 +36,11 @@ def test_hamiltonian(m, mode, htype):
         # not generally true but works for this example
         np.testing.assert_allclose(np.linalg.eigh(hamiltonian)[0][0] + e_nuc, fci_e, atol=1e-6)
     else:
-        circuit = tc.Circuit(4)
+        circuit = tq.Circuit(4)
         for i in range(4 // 2):
             circuit.X(3 - i)
-        state = circuit.state()
+        eng = StatevectorEngine()
+        state = np.asarray(eng.state(circuit), dtype=np.complex128)
         np.testing.assert_allclose(state @ (hamiltonian @ state).reshape(-1) + e_nuc, hf.e_tot)
 
 

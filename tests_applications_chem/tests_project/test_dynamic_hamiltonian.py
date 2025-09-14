@@ -3,6 +3,7 @@ import pytest
 from renormalizer import Model, Mpo, Mps, Op, BasisHalfSpin, BasisSineDVR
 
 from tyxonq import set_backend
+import tyxonq.applications.chem  # preload package path
 from tyxonq.libs.hamiltonian_encoding.operator_encoding import (
     get_dense_operator,
     qubit_encode_op,

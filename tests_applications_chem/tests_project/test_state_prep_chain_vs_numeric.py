@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from tyxonq.devices.simulators.statevector.numeric_engine import StatevectorEngine
+from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
 from tyxonq.libs.circuits_library.qubit_state_preparation import (
     get_device_init_circuit,
     get_numeric_init_circuit,

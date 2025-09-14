@@ -343,6 +343,94 @@ class UCCSD(UCC):
         """
         return self.energy()
 
+    # ---- Convenience builders from integrals ----
+    @classmethod
+    def from_integral(
+        cls,
+        int1e: np.ndarray,
+        int2e: np.ndarray,
+        n_elec: Union[int, Tuple[int, int]],
+        e_core: float | None = None,
+        ovlp: np.ndarray | None = None,
+        *,
+        mode: str = "fermion",
+        runtime: str = "device",
+        pick_ex2: bool = False,
+        sort_ex2: bool = False,
+        epsilon: float = DISCARD_EPS,
+        numeric_engine: str | None = None,
+    ) -> "UCCSD":
+        # Derive CAS sizes
+        n_cas = int(len(int1e))
+        if isinstance(n_elec, int):
+            assert n_elec % 2 == 0
+            n_elec_s = (n_elec // 2, n_elec // 2)
+        else:
+            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
+        na, nb = int(n_elec_s[0]), int(n_elec_s[1])
+        no = na
+        nv = n_cas - no
+
+        # Build qubit Hamiltonian
+        from openfermion.transforms import jordan_wigner as _jw
+        from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx as _rev
+        from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_hop_from_integral as _hop
+
+        fop = _hop(int1e, int2e)
+        n_qubits = 2 * n_cas
+        hq = _rev(_jw(fop), n_qubits)
+
+        # Create bare instance bypassing __init__ and initialize UCC base
+        inst = cls.__new__(cls)
+        UCC.__init__(
+            inst,
+            n_qubits=n_qubits,
+            n_elec_s=(na, nb),
+            h_qubit_op=hq,
+            runtime=("numeric" if numeric_engine is not None else runtime),
+            mode=mode,
+            ex_ops=None,
+            param_ids=None,
+            init_state=None,
+            decompose_multicontrol=False,
+            trotter=False,
+        )
+        # Record energies and preferences
+        inst.e_core = float(e_core) if e_core is not None else 0.0
+        inst.numeric_engine = numeric_engine
+        inst._int1e = np.asarray(int1e)
+        inst._int2e = np.asarray(int2e)
+        inst.n_elec = int(na + nb)
+        inst.civector_size = int(inst.n_qubits)
+
+        # Generate UCCSD excitations and init guess (T1/T2 zeros if no CC info)
+        inst.t2_discard_eps = epsilon
+        inst.pick_ex2 = bool(pick_ex2)
+        inst.sort_ex2 = bool(sort_ex2)
+        t1 = np.zeros((no, nv))
+        t2 = np.zeros((no, no, nv, nv))
+        ex1_ops, ex1_param_ids, ex1_init_guess = generate_uccsd_ex1_ops(no, nv, t1, mode=mode)
+        ex2_ops, ex2_param_ids, ex2_init_guess = generate_uccsd_ex2_ops(no, nv, t2, mode=mode)
+        ex2_ops, ex2_param_ids, ex2_init_guess = inst.pick_and_sort(ex2_ops, ex2_param_ids, ex2_init_guess, inst.pick_ex2, inst.sort_ex2)
+        ex_ops = ex1_ops + ex2_ops
+        param_ids = ex1_param_ids + [i + max(ex1_param_ids) + 1 for i in ex2_param_ids]
+        init_guess = ex1_init_guess + ex2_init_guess
+        # Normalize param ids to contiguous range and align init guess
+        unique_ids = np.unique(param_ids)
+        id_map = {int(old): idx for idx, old in enumerate(unique_ids)}
+        param_ids = [id_map[int(i)] for i in param_ids]
+        init_vec = np.array(init_guess)[unique_ids]
+        inst.ex_ops = ex_ops
+        inst.param_ids = param_ids
+        inst.init_guess = np.asarray(init_vec, dtype=np.float64)
+        # Reference FCI energy for assertions
+        try:
+            from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
+            inst.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (na, nb))[0] + (float(e_core) if e_core is not None else 0.0))
+        except Exception:
+            inst.e_fci = float('nan')
+        return inst
+
     # Use base class numeric path; runtime construction now injects CI Hamiltonian centrally
 
 

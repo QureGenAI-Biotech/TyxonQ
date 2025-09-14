@@ -176,13 +176,16 @@ def get_numeric_init_circuit(
 
 
 def get_gs_unitary(theta):
+    # Use numpy directly to avoid dependency on a global backend here.
+    s = float(np.sin(theta))
+    c = float(np.cos(theta))
     a = [
-        [1, 0, 0, 0],
-        [0, -tq.backend.sin(theta), tq.backend.cos(theta), 0],
-        [0, tq.backend.cos(theta), tq.backend.sin(theta), 0],
-        [0, 0, 0, 1],
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, -s,   c,   0.0],
+        [0.0,  c,   s,   0.0],
+        [0.0, 0.0, 0.0, 1.0],
     ]
-    return tq.backend.convert_to_tensor(a)
+    return np.asarray(a, dtype=float)
 
 
 def get_gs_indices(no: int, nv: int) -> List[Tuple[int, int]]:
@@ -212,14 +215,11 @@ def get_gs_indices(no: int, nv: int) -> List[Tuple[int, int]]:
 #                          └──────┘
 
 def get_circuit_givens_swap(params, n_qubits: int, n_elec: int, init_state=None) -> tq.Circuit:
-    circuit = get_init_circuit(n_qubits, n_elec, mode="hcb", init_state=init_state, givens_swap=True)
+    circuit = get_device_init_circuit(n_qubits, n_elec, mode="hcb", givens_swap=True, init_circuit=(init_state if isinstance(init_state, tq.Circuit) else None))
     gs_indices = get_gs_indices(n_elec // 2, n_qubits - n_elec // 2)
     for i, (j, k) in enumerate(gs_indices):
         theta = params[i]
         unitary = get_gs_unitary(theta)
-        try:
-            name = f"Givens-SWAP({theta:.4f})"
-        except TypeError:
-            name = "Givens-SWAP"
-        circuit.any(j, k, unitary=unitary, name=name)
+        # Append as a generic two-qubit unitary op understood by statevector engine
+        circuit.ops.append(("any", int(j), int(k), unitary))
     return circuit

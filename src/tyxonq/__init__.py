@@ -242,6 +242,36 @@ try:
 except Exception:
     pass
 
+# --- Thin forwarding for missing attributes: backend / rdtypestr ---
+def __getattr__(name: str):
+    """Lazy attribute bridge.
+
+    If `backend` or `rdtypestr` is not initialized via set_backend(),
+    fetch current backend via get_backend(None) and expose both symbols.
+    """
+    if name in ("backend", "rdtypestr"):
+        try:
+            # get current or default backend lazily
+            bk = get_backend(None)  # type: ignore[name-defined]
+        except Exception:
+            bk = None
+        if name == "backend":
+            globals()["backend"] = bk
+            # also try to expose rdtypestr along the way
+            try:
+                globals()["rdtypestr"] = getattr(bk, "rdtypestr", "float64")
+            except Exception:
+                globals()["rdtypestr"] = "float64"
+            return bk
+        # name == "rdtypestr"
+        try:
+            rd = getattr(bk, "rdtypestr", "float64")
+        except Exception:
+            rd = "float64"
+        globals()["rdtypestr"] = rd
+        return rd
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 # --- Top-level noise controls (simulator) ---
 try:
     from .devices import base as _devbase  # type: ignore

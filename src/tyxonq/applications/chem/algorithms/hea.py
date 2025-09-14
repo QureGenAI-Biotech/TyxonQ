@@ -63,7 +63,7 @@ class HEA:
         self.spin: int | None = None
         self.e_core: float | None = None
         # Optimization artifacts
-        self._grad: str = "param-shift"
+        self.grad: str = "param-shift"
         self.scipy_minimize_options: dict | None = None
         self._params: np.ndarray | None = None
         self.opt_res: dict | None = None
@@ -152,13 +152,25 @@ class HEA:
     def kernel(self, **opts) -> float:
         """运行变分优化，返回最优能量并保存 `opt_res` 与 `params`。"""
         # 持久化运行选项（shots/provider/device 等）到优化闭包中
-        if not opts and self.runtime == "device":
-            # 默认使用解析路径，避免采样噪声影响优化与 RDM
-            opts = {"shots": 2048, "provider": "simulator", "device": "statevector"}
-        self._opt_runtime_opts = dict(opts)
+        runtime_opts = dict(opts)
+        if "shots" not in runtime_opts:
+            if str(runtime_opts.get("runtime", self.runtime)) == "device":
+                if  str(runtime_opts.get("provider", 'simulator')) in ["simulator",'local']:
+                    # 默认使用解析路径，避免采样噪声影响优化与 RDM
+                    shots = 0
+                else:
+                    # 真机默认使用2048shots
+                    shots = 2048
+            else:
+                shots = 0
+            runtime_opts["shots"] = shots
+        else:
+            shots = runtime_opts["shots"]
+        self._opt_runtime_opts = dict(runtime_opts)
         func = self.get_opt_function()
-        # 限制默认迭代次数，避免长时间阻塞（可被调用者覆盖 self.scipy_minimize_options）
-        default_opts = {"maxiter": 100}
+
+        default_maxiter = 200 if (shots == 0 or str(opts.get("runtime", self.runtime)) == "numeric") else 100
+        default_opts = {"maxiter": default_maxiter}
         if isinstance(self.scipy_minimize_options, dict):
             run_opts = {**default_opts, **self.scipy_minimize_options}
         else:
@@ -173,6 +185,7 @@ class HEA:
             "fun": float(getattr(res, "fun", self.energy(self.init_guess))),
             "message": str(getattr(res, "message", "")),
             "nit": int(getattr(res, "nit", 0)),
+            'init_guess': np.asarray(getattr(res, "x", self.init_guess), dtype=np.float64),
         }
         self.params = np.asarray(self.opt_res["x"], dtype=np.float64).copy()
         return float(self.opt_res["fun"])  # type: ignore[index]
@@ -477,15 +490,15 @@ class HEA:
             print(self.opt_res)
 
     # ---------- properties ----------
-    @property
-    def grad(self) -> str:
-        return self._grad
+    # @property
+    # def grad(self) -> str:
+    #     return self._grad
 
-    @grad.setter
-    def grad(self, v: str) -> None:
-        if v not in ("param-shift", "free"):
-            raise ValueError(f"Invalid gradient method {v}")
-        self._grad = v
+    # @grad.setter
+    # def grad(self, v: str) -> None:
+    #     if v not in ("param-shift", "free"):
+    #         raise ValueError(f"Invalid gradient method {v}")
+    #     self._grad = v
 
     @property
     def params(self) -> np.ndarray | None:

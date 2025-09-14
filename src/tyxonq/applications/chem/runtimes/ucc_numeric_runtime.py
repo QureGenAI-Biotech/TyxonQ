@@ -50,6 +50,9 @@ class UCCNumericRuntime:
         self.h_qubit_op = h_qubit_op
         self.ex_ops = list(ex_ops) if ex_ops is not None else None
         self.param_ids = list(param_ids) if param_ids is not None else None
+        # Normalize default param_ids to 0..len(ex_ops)-1 when not provided
+        if self.ex_ops is not None and (self.param_ids is None or len(self.param_ids) == 0):
+            self.param_ids = list(range(len(self.ex_ops)))
         self.init_state = init_state
         self.mode = str(mode)
         self.trotter = bool(trotter)

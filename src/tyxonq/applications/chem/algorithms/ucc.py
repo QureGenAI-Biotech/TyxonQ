@@ -58,6 +58,7 @@ class UCC:
         self.decompose_multicontrol = bool(decompose_multicontrol)
         self.trotter = bool(trotter)
         self.scipy_minimize_options: dict | None = None
+        self.grad: str = "param-shift"
         # init guess (zeros by default if ex_ops present)
         if self.ex_ops is not None:
             self.init_guess = np.zeros(self.n_params, dtype=np.float64)
@@ -163,17 +164,67 @@ class UCC:
         # runtime options (shots/provider/device/numeric_engine/etc.) from caller
         # 默认 shots 统一为 1024（避免 0 导致无法投递到真机）；调用方可覆盖
         runtime_opts = dict(opts)
-        if "shots" not in runtime_opts and str(runtime_opts.get("runtime", self.runtime)) == "device":
-            runtime_opts["shots"] = 2048
+        if "shots" not in runtime_opts:
+            if str(runtime_opts.get("runtime", self.runtime)) == "device":
+                if  str(runtime_opts.get("provider", 'simulator')) in ["simulator",'local']:
+                    # 默认使用解析路径，避免采样噪声影响优化与 RDM
+                    shots = 0
+                else:
+                    # 真机默认使用2048shots
+                    shots = 2048
+            else:
+                shots = 0
+            runtime_opts["shots"] = shots
+        else:
+            shots = runtime_opts['shots']
+        self._opt_runtime_opts = dict(runtime_opts)
 
-        def _obj(x: np.ndarray):
-            e, g = self.energy_and_grad(x, **runtime_opts)
-            return e, np.asarray(g, dtype=np.float64)
+        func = self.get_opt_function()
 
-        minimize_options = self.scipy_minimize_options or {"ftol": 1e-9, "gtol": 1e-6}
-        res = minimize(lambda v: _obj(v), x0=x0, jac=True, method="L-BFGS-B", options=minimize_options)
+        # def _obj(x: np.ndarray):
+        #     e, g = self.energy_and_grad(x, **runtime_opts)
+        #     return e, np.asarray(g, dtype=np.float64)
+
+        # Merge caller options with a sensible default and allow tests to pass n_tries (ignored here but tolerated)
+        # Increase maxiter for analytic/numeric paths to hit tighter tolerances
+        default_maxiter = 200 if (shots == 0 or str(opts.get("runtime", self.runtime)) == "numeric") else 100
+        default_opts = {"ftol": 1e-9, "gtol": 1e-6, "maxiter": default_maxiter}
+        minimize_options = dict(default_opts)
+        if isinstance(self.scipy_minimize_options, dict):
+            minimize_options.update(self.scipy_minimize_options)
+            
+        # res = minimize(lambda v: _obj(v), x0=x0, jac=True, method="L-BFGS-B", options=minimize_options)
+        if self.grad == "free":
+            res = minimize(lambda x: func(x), x0=self.init_guess, jac=False, method="COBYLA", options=minimize_options)
+        else:
+            res = minimize(lambda x: func(x)[0], x0=self.init_guess, jac=lambda x: func(x)[1], method="L-BFGS-B", options=minimize_options)
+        # Store optimizer result for downstream algorithms (KUPCCGSD expects .opt_res)
+        res['init_guess'] = x0
+        self.opt_res = res
         self._params = np.asarray(getattr(res, "x", x0), dtype=np.float64)
         return float(getattr(res, "fun", self.energy(self._params)))
+
+    # ---------- Optimization helper (parity with HEA) ----------
+    def get_opt_function(self, *, with_time: bool = False):
+        import time as _time
+
+        runtime_opts = getattr(self, "_opt_runtime_opts", {})
+
+        def f_only(x: np.ndarray) -> float:
+            return float(self.energy(x, **runtime_opts))
+
+        def f_with_grad(x: np.ndarray) -> Tuple[float, np.ndarray]:
+            e, g = self.energy_and_grad(x, **runtime_opts)
+            return float(e), np.asarray(g, dtype=np.float64)
+
+        t1 = _time.time()
+        func = f_only if self.grad == "free" else f_with_grad
+        # 轻量“预热”，便于可能的 lazy 初始化
+        _ = func(self.init_guess.copy())
+        t2 = _time.time()
+        if with_time:
+            return func, (t2 - t1)
+        return func
 
     # ---- Convenience builders from integrals / molecule (fermion/qubit modes) ----
     @classmethod

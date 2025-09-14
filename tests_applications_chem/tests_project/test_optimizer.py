@@ -12,5 +12,6 @@ def test_optimizer():
     ucc = UCCSD(h4)
     ucc.kernel()
 
-    opt_res = minimize(ucc.energy, ucc.init_guess, method=soap)
+    # 统一为解析路径（模拟器 shots=0），避免与 ucc.kernel() 的能量定义不一致
+    opt_res = minimize(lambda v: ucc.energy(v, shots=0, provider="simulator", device="statevector"), ucc.init_guess, method=soap)
     assert np.allclose(opt_res.fun, ucc.e_ucc)

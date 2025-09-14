@@ -1,3 +1,30 @@
+"""Dynamics numeric runtime
+
+说明
+----
+本运行时负责在数值后端上进行基于参数化态的时间演化（VQD/pVQD/Trotter 近似等）。
+
+性能/内存优化（2025-09）
+-----------------------
+1) 稠密哈密顿量项矩阵懒加载与缓存
+   - 早期版本在每次构造态时都会为每个哈密顿量项动态构造 Mpo 并转稠密矩阵，
+     导致在参数迭代中重复构造、内存与时间开销巨大，同时产生大量 DEBUG 日志。
+   - 现改为首次使用时统一构造并缓存 `term_mats`（稠密矩阵列表），后续直接复用，
+     显著降低重复构造与日志量，避免被系统 OOM/Killed。
+
+2) 兼容预编码/未编码输入
+   - 支持测试直接传入已编码到自旋基的 `ham_terms` 与 `basis`，减少重复编码成本；
+     未编码输入则内部按需编码并叠加常数项。
+
+3) 初态构造路径鲁棒性
+   - 优先通过 `get_init_statevector` 获取初态向量；若失败则回退为获取初始电路并
+     通过 `StatevectorEngine` 求态，保证不同环境下的稳健性。
+
+以上优化主要面向 `tests_applications_chem/tests_project/test_dynamic_hamiltonian.py`
+与 `test_dynamics.py` 的大规模参数/层数场景，实测在相同参数下耗时显著下降且不再
+出现进程被系统终止的问题。
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -41,20 +68,47 @@ class DynamicsNumericRuntime:
             init_condition = {}
 
         # encode to spin basis and build Hamiltonian matrix
-        ham_terms_spin, constant = _encode_op(ham_terms, basis, boson_encoding)
-        basis_spin = _encode_basis(basis, boson_encoding)
+        # Support both raw (not yet encoded) and pre-encoded inputs from tests
+        already_encoded = False
+        try:
+            from renormalizer import BasisHalfSpin  # type: ignore
+            # basis can be a list/tuple of basis objects
+            if isinstance(basis, (list, tuple)) and len(basis) > 0:
+                already_encoded = all(getattr(b, "__class__", type(b)).__name__ == "BasisHalfSpin" for b in basis)
+        except Exception:
+            already_encoded = False
+
+        if already_encoded:
+            ham_terms_spin = ham_terms
+            basis_spin = basis
+            constant = 0.0
+        else:
+            ham_terms_spin, constant = _encode_op(ham_terms, basis, boson_encoding)
+            basis_spin = _encode_basis(basis, boson_encoding)
 
         # construct dense Hamiltonian with tq Mpo if available, else numeric fallback
         # Here we use tq (same as legacy path) to keep equivalence for tests
         from renormalizer import Model, Mpo
 
         # reference model in original basis is required by get_init_circuit
-        model_ref = Model(basis, ham_terms)
+        # If already encoded, mapping is identity and model_ref can reuse spin basis
+        model_ref = Model(basis if not already_encoded else basis_spin, ham_terms if not already_encoded else ham_terms_spin)
 
         self.model = Model(basis_spin, ham_terms_spin)
         self.h_mpo = Mpo(self.model)
         _h_dense = self.h_mpo.todense()
         self.h = _h_dense + constant * np.eye(_h_dense.shape[0])
+
+        # Lazily build dense matrices for each Hamiltonian term on first use
+        self.term_mats: Optional[List[np.ndarray]] = None
+
+        def _ensure_term_mats() -> List[np.ndarray]:
+            if self.term_mats is None:
+                mats: List[np.ndarray] = []
+                for term in self.model.ham_terms:
+                    mats.append(Mpo(self.model, term).todense())
+                self.term_mats = mats
+            return self.term_mats
 
         # initial circuit/state from init_condition mapped from original basis labels
         # prefer statevector path to avoid Circuit(inputs=...) dependency
@@ -89,9 +143,9 @@ class DynamicsNumericRuntime:
             # ensure numpy array for linear algebra
             state = np.asarray(state).astype(np.complex128)
             params = theta.reshape(self.n_layers, n_params_per_layer)
+            mats = _ensure_term_mats()
             for i in range(self.n_layers):
-                for j, term in enumerate(self.model.ham_terms):
-                    mat = Mpo(self.model, term).todense()
+                for j, mat in enumerate(mats):
                     u = _la.expm(-1j * params[i, j] * mat)
                     state = u @ state
             return state
