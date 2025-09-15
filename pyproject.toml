@@ -64,6 +64,6 @@ where = ["src"]
 tyxonq = ["*.txt", "*.md", "*.rst"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests_refactor","tests_examples","tests_applications_chem"]
+testpaths = ["tests_core_module","tests_examples","tests_applications_chem","tests_mol_valid"]
 python_files = ["test_*.py"]
 addopts = "-v -ra"
