@@ -3,7 +3,6 @@ from __future__ import annotations
 import numpy as np
 import tyxonq as tq
 
-import tyxonq.applications.chem
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library import sbm
 from tyxonq.applications.chem.runtimes.dynamics_numeric import DynamicsNumericRuntime
 from renormalizer import Op

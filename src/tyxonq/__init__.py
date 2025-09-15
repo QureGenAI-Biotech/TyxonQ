@@ -118,19 +118,9 @@ else:
 
 
 # --- Compatibility alias: expose `tyxonq.chem` to point to applications.chem ---
-try:  # best-effort; keep import robust if chem is not present
-    from .applications import chem as _chem_app  # type: ignore
-    # Package-level alias
-    _sys.modules[__name__ + ".chem"] = _chem_app
-    # Common submodules to maintain dotted imports like `tyxonq.chem.static.uccsd`
-    for _sub in ("constants", "molecule", "dynamic", "dynamic.model", "static", "utils"):
-        try:
-            _m = _importlib.import_module(f"tyxonq.applications.chem.{_sub}")
-            _sys.modules[f"tyxonq.chem.{_sub}"] = _m
-        except Exception:
-            pass
-except Exception:
-    pass
+# from .applications import chem as _chem_app  # type: ignore
+# # Package-level alias
+# _sys.modules[__name__ + ".chem"] = _chem_app
 
 # --- Top-level core IR exports ---
 try:
