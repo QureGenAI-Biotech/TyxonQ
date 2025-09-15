@@ -1,5 +1,5 @@
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.pipeline import build_pipeline
+from tyxonq.compiler.compile_engine.native.compile_plan import build_plan
 
 
 def test_decompose_rotations_lowers_to_native_gates():
@@ -13,8 +13,8 @@ def test_decompose_rotations_lowers_to_native_gates():
             ("rzz", 0, 1, 1.1),
         ],
     )
-    pl = build_pipeline(["decompose/rotations"])
-    out = pl.run(circ, caps={})
+    pl = build_plan(["decompose/rotations"])
+    out = pl.execute_plan(circ, device_rule={})
     # all ops lowered to native set {h, rz, cx}
     native = {"h", "rz", "cx"}
     assert len(out.ops) > len(circ.ops)

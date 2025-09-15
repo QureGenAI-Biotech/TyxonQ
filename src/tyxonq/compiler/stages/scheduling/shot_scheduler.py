@@ -25,7 +25,7 @@ Why this is better than ad‑hoc scheduling
 """
 
 # TODO(hardware-optimization): Device-aware scheduling
-# - Adapt shot distribution using `DeviceCapabilities` and calibration metadata:
+# - Adapt shot distribution using `DeviceRule` and calibration metadata:
 #   * supports_batch / max_shots_per_job / queue policy
 #   * basis-change overhead and readout-reset time per device
 #   * parallel execution lanes / multiplexing constraints
@@ -38,10 +38,10 @@ from typing import Any, Dict, List, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 
-def schedule(circuit: "Circuit", shot_plan: List[int] | None = None, *, total_shots: int | None = None, device_capabilitys: "DeviceCapabilities" | None = None) -> Dict[str, Any]:
+def schedule(circuit: "Circuit", shot_plan: List[int] | None = None, *, total_shots: int | None = None, device_rule: "DeviceRule" | None = None) -> Dict[str, Any]:
     """Create an execution plan (segments) for measurement execution.
 
     Modes
@@ -87,7 +87,7 @@ def schedule(circuit: "Circuit", shot_plan: List[int] | None = None, *, total_sh
     # Respect device constraints (basic): split segments by max_shots_per_job
     max_per_job = 0
     try:
-        max_per_job = int((device_capabilitys or {}).get("max_shots_per_job", 0))  # type: ignore[call-arg]
+        max_per_job = int((device_rule or {}).get("max_shots_per_job", 0))  # type: ignore[call-arg]
     except Exception:
         max_per_job = 0
     if max_per_job and max_per_job > 0:
@@ -107,8 +107,8 @@ def schedule(circuit: "Circuit", shot_plan: List[int] | None = None, *, total_sh
 
     # Optional: assign batch ids if device supports batching
     try:
-        supports_batch = bool((device_capabilitys or {}).get("supports_batch", False))  # type: ignore[call-arg]
-        max_segments_per_batch = int((device_capabilitys or {}).get("max_segments_per_batch", 0))  # type: ignore[call-arg]
+        supports_batch = bool((device_rule or {}).get("supports_batch", False))  # type: ignore[call-arg]
+        max_segments_per_batch = int((device_rule or {}).get("max_segments_per_batch", 0))  # type: ignore[call-arg]
     except Exception:
         supports_batch = False
         max_segments_per_batch = 0
@@ -126,7 +126,7 @@ class ShotSchedulerPass:
     `shot_plan` option.
     """
 
-    def run(self, circuit: "Circuit", device_capabilitys: "DeviceCapabilities", **opts) -> "Circuit":
+    def execute_plan(self, circuit: "Circuit", device_rule: "DeviceRule", **opts) -> "Circuit":
         plan = opts.get("shot_plan")
         if plan is not None:
             if not isinstance(plan, list) or not all(isinstance(x, int) and x > 0 for x in plan):

@@ -1,4 +1,4 @@
-from tyxonq.postprocessing.qem import apply_zne, apply_dd, apply_rc
+from tyxonq.postprocessing.error_mitigation import apply_zne, apply_dd, apply_rc
 
 
 def test_apply_zne_minimal_average():

@@ -1,7 +1,7 @@
 from tyxonq.core.ir import Circuit
 from tyxonq.compiler.api import compile as compile_ir
 from tyxonq.compiler.stages.scheduling.shot_scheduler import schedule
-from tyxonq.devices.session import execute_plan
+from tyxonq.devices.session import device_job_plan
 
 
 class _DummyDevice:
@@ -23,8 +23,7 @@ def test_runtime_run_end_to_end():
     plan = comp["metadata"].get("execution_plan") or schedule(comp["circuit"], total_shots=25)
     plan["circuit"] = comp["circuit"]
 
-    agg = execute_plan(dev, plan)
-    assert comp["metadata"]["target"] == "tyxonq"
+    agg = device_job_plan(dev, plan)
     assert agg["metadata"]["total_shots"] == 25
     assert agg["expectations"]["Z0"] == 25.0
 

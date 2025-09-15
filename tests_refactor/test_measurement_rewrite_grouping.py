@@ -1,4 +1,4 @@
-from tyxonq.compiler.pipeline import build_pipeline
+from tyxonq.compiler.compile_engine.native.compile_plan import build_plan
 from tyxonq.core.ir import Circuit
 from tyxonq.core.measurements import Expectation
 
@@ -10,8 +10,8 @@ def test_measurement_rewrite_groups_non_overlapping_expectations():
         Expectation(obs="X", wires=(1,)),
         Expectation(obs="ZZ", wires=(0, 1)),
     ]
-    pl = build_pipeline(["rewrite/measurement"])
-    out = pl.run(circ, caps={}, measurements=ms)
+    pl = build_plan(["rewrite/measurement"])
+    out = pl.execute_plan(circ, device_rule={}, measurements=ms)
     assert out is circ
     groups = circ.metadata.get("measurement_groups")
     assert isinstance(groups, list)

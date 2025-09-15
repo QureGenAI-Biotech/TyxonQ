@@ -1,6 +1,6 @@
 from tyxonq.core.ir import Circuit
 from tyxonq.devices import Device
-from tyxonq.devices.session import execute_plan
+from tyxonq.devices.session import device_job_plan
 
 
 class DummyDevice:
@@ -19,7 +19,7 @@ def test_execute_plan_aggregates_shots_and_metadata():
     dev: Device = DummyDevice()  # type: ignore[assignment]
     circ = Circuit(num_qubits=1, ops=[])
     plan = {"circuit": circ, "segments": [{"shots": 10}, {"shots": 20}]}
-    agg = execute_plan(dev, plan)
+    agg = device_job_plan(dev, plan)
     assert agg["expectations"]["Z0"] == 30.0
     assert agg["metadata"]["per_segment"][0]["shots"] == 10
     assert agg["metadata"]["total_shots"] == 30

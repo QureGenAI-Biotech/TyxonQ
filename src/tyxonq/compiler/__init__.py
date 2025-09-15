@@ -1,7 +1,7 @@
 """Compiler interfaces and stages."""
 
-from .api import CompileRequest, CompileResult, Pass, Compiler
+from .api import CompileResult, Pass
 
-__all__ = ["CompileRequest", "CompileResult", "Pass", "Compiler"]
+__all__ = ["CompileResult", "Pass"]
 
 # Legacy imports disabled in refactor to avoid side effects

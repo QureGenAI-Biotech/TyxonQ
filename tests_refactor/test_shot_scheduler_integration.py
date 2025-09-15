@@ -1,4 +1,4 @@
-from tyxonq.compiler.pipeline import build_pipeline
+from tyxonq.compiler.compile_engine.native.compile_plan import build_plan
 from tyxonq.compiler.stages.scheduling.shot_scheduler import schedule
 from tyxonq.core.ir import Circuit
 from tyxonq.core.measurements import Expectation
@@ -8,8 +8,8 @@ def test_group_based_shot_scheduling_distribution():
     circ = Circuit(num_qubits=2, ops=[])
     ms = [Expectation(obs="Z", wires=(0,)), Expectation(obs="X", wires=(1,)), Expectation(obs="ZZ", wires=(0, 1))]
 
-    pl = build_pipeline(["rewrite/measurement"])
-    circ = pl.run(circ, caps={}, measurements=ms)
+    pl = build_plan(["rewrite/measurement"])
+    circ = pl.execute_plan(circ, device_rule={}, measurements=ms)
 
     plan = schedule(circ, total_shots=1000)
     assert "segments" in plan and len(plan["segments"]) >= 2

@@ -76,27 +76,25 @@ flowchart LR
     RT_DEV[device runtime]
     RT_NUM[numeric runtime]
   end
-  CH_ALG --> RT_DEV
-  CH_ALG --> RT_NUM
+  CH_ALG --> RUNTIMES
   RT_DEV --> D
-  D --> E
   RT_NUM --> L2
   RT_NUM --> N1
+  RT_NUM --> CL_QCHEM
 
   %% chem_libs as a dedicated domain layer
   subgraph CHEM_LIBS [chem_libs]
-    CL_CIRCUIT[circuit_chem_library (ansatz)]
-    CL_QCHEM[quantum_chem_library (CI/state ops)]
+    CL_CIRCUIT["circuit_chem_library (ansatz)"]
+    CL_QCHEM["quantum_chem_library (CI/state ops)"]
     CL_HAM[hamiltonians_chem_library]
   end
 
   %% Wiring between chem libs and the rest
-  CL_CIRCUIT --> CH_ALG
+  CH_ALG --> CL_CIRCUIT 
   CH_MOL --> CL_HAM
   CL_HAM --> L3
-  L3 --> OF[OpenFermion]
   CH_MOL --> PYSCF[PySCF]
-  CL_QCHEM --> RT_NUM
+  
 ```
 
 
@@ -119,12 +117,13 @@ src/tyxonq/
     api.py
   compiler/                               # pass pipeline & provider engines
     api.py
-    native_compiler.py
-    pipeline.py
     compile_engine/
       qiskit/
         dialect.py
         qiskit_compiler.py
+      native/
+          native_compiler.py
+          compile_plan.py
     stages/
       decompose/rotations.py
       gradients/parameter_shift_pass.py, qng.py

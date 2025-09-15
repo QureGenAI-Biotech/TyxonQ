@@ -39,7 +39,7 @@ class DeviceTask:
         return remove_task(self)
 
 
-class DeviceCapabilities(TypedDict, total=False):
+class DeviceRule(TypedDict, total=False):
     """Declarative device capabilities description.
 
     Keys are optional to keep forward compatibility. Concrete devices may
@@ -73,7 +73,7 @@ class Device(Protocol):
     """
 
     name: str
-    capabilities: DeviceCapabilities
+    device_rule: DeviceRule
 
     def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> RunResult: ...
     def expval(self, circuit: "Circuit", obs: "Observable", **kwargs: Any) -> float: ...

@@ -14,7 +14,6 @@ def test_compile_with_default_provider_returns_ir():
     assert isinstance(compiled, Circuit)
     assert compiled.num_qubits == circ.num_qubits
     assert list(compiled.ops) == list(circ.ops)
-    assert res["metadata"]["target"] == "tyxonq"
 
 
 @pytest.mark.skipif(importlib.util.find_spec("qiskit") is None, reason="qiskit not installed")

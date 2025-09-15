@@ -1,5 +1,5 @@
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.pipeline import build_pipeline
+from tyxonq.compiler.compile_engine.native.compile_plan import build_plan
 
 
 def test_lightcone_multiple_measures_propagation():
@@ -12,8 +12,8 @@ def test_lightcone_multiple_measures_propagation():
         ("rz", 3, 0.123),
         ("measure_z", 2),
     ])
-    p = build_pipeline(["simplify/lightcone"])
-    c2 = p.run(c, caps={})
+    p = build_plan(["simplify/lightcone"])
+    c2 = p.execute_plan(c, device_rule={})
     kept = set(c2.ops)
     assert ("h", 0) in kept
     assert ("cx", 0, 1) in kept
@@ -33,8 +33,8 @@ def test_lightcone_respects_reset_and_project():
         ("measure_z", 0),
         ("measure_z", 1),
     ])
-    p = build_pipeline(["simplify/lightcone"])
-    c2 = p.run(c, caps={})
+    p = build_plan(["simplify/lightcone"])
+    c2 = p.execute_plan(c, device_rule={})
     ops = set(c2.ops)
     assert ("reset", 0) in ops
     assert ("project_z", 1, 1) in ops

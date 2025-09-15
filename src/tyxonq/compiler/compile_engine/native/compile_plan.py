@@ -5,7 +5,7 @@ from typing import List, Sequence, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.compiler import Pass
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 
 def _resolve_stage(name: str) -> "Pass":
@@ -31,6 +31,14 @@ def _resolve_stage(name: str) -> "Pass":
         from ...stages.rewrite.measurement import MeasurementRewritePass
 
         return MeasurementRewritePass()
+    if name == "rewrite/auto_measure":
+        from ...stages.rewrite.auto_measure import AutoMeasurePass
+
+        return AutoMeasurePass()
+    if name == "rewrite/gates_transform":
+        from ...stages.rewrite.gates_transform import GatesTransformPass
+
+        return GatesTransformPass()
     if name == "rewrite/merge_prune":
         from ...stages.rewrite.merge_prune import MergePrunePass
 
@@ -59,7 +67,7 @@ def _resolve_stage(name: str) -> "Pass":
     raise ValueError(f"Unknown stage: {name}")
 
 
-class Pipeline:
+class CompilePlan:
     """Composable pipeline of compilation passes.
 
     The pipeline applies a sequence of `Pass` instances to a circuit given
@@ -74,16 +82,16 @@ class Pipeline:
     def passes(self) -> Sequence["Pass"]:
         return tuple(self._passes)
 
-    def run(self, circuit: "Circuit", **opts) -> "Circuit":
+    def execute_plan(self, circuit: "Circuit", **opts) -> "Circuit":
         current = circuit
         for p in self._passes:
-            current = p.run(current, **opts)
+            current = p.execute_plan(current, **opts)
         return current
 
 
-def build_pipeline(names: Sequence[str]) -> Pipeline:
+def build_plan(names: Sequence[str]) -> CompilePlan:
     """Build a pipeline from a list of stage names."""
 
-    return Pipeline([_resolve_stage(n) for n in names])
+    return CompilePlan([_resolve_stage(n) for n in names])
 
 

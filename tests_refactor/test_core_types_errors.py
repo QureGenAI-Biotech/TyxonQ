@@ -19,7 +19,7 @@ def test_core_types_problem_and_aliases():
 
 def test_core_errors_hierarchy():
     try:
-        raise CompilationError("failed to build pipeline")
+        raise CompilationError("failed to build comiple_plan")
     except TyxonQError as e:
         assert "failed" in str(e)
     try:

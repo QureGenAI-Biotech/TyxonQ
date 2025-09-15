@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...api import CompileRequest, CompileResult
-    from ...api import Compiler  # Protocol
+    from ...api import CompileResult
     from ....core.ir import Circuit
-    from ....devices import DeviceCapabilities
+    from ....devices import DeviceRule
 
 from .dialect import (
     normalize_transpile_options,
@@ -21,9 +20,7 @@ from .dialect import (
 class QiskitCompiler:
     name = "qiskit"
 
-    def compile(self, request: "CompileRequest") -> "CompileResult":  # type: ignore[override]
-        circuit: "Circuit" = request["circuit"]
-        options: Dict[str, Any] = request.get("options", {})
+    def compile(self, circuit: "Circuit", options:Dict[str, Any] = {},**kwargs) -> "CompileResult":  # type: ignore[override]
         output = str(options.get("output", "qiskit")).lower()
         add_measures = bool(options.get("add_measures", True))
         do_transpile = bool(options.get("transpile", True))
@@ -66,7 +63,7 @@ class QiskitCompiler:
         metadata: Dict[str, Any] = {
             "output": "output",
             "options": dict(norm_opts),
-            "device_capabilitys": {},
+            "device_rule": {},
             "logical_physical_mapping": lpm,
             "positional_logical_mapping": plm,
         }
