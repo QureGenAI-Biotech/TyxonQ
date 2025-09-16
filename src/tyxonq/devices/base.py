@@ -39,7 +39,7 @@ class DeviceTask:
         return remove_task(self)
 
 
-class DeviceCapabilities(TypedDict, total=False):
+class DeviceRule(TypedDict, total=False):
     """Declarative device capabilities description.
 
     Keys are optional to keep forward compatibility. Concrete devices may
@@ -73,7 +73,7 @@ class Device(Protocol):
     """
 
     name: str
-    capabilities: DeviceCapabilities
+    device_rule: DeviceRule
 
     def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> RunResult: ...
     def expval(self, circuit: "Circuit", obs: "Observable", **kwargs: Any) -> float: ...
@@ -239,7 +239,31 @@ def run(
         if prov not in ("simulator", "local"):
             # hardware path requires source (compilation should have been done by caller)
             raise ValueError("hardware run without source is not supported at device layer; compile in circuit layer")
-        if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
+        # shots==0 + observable → use analytic expval path for testing convenience
+        try:
+            _shots_int = int(shots)  # type: ignore[arg-type]
+        except Exception:
+            _shots_int = 0
+        if _shots_int == 0 and ("observable" in opts):
+            # Compute exact expectation value via simulator engine
+            obs = opts.get("observable")
+            # Use simulator driver's expval API
+            e = expval(provider=prov, device=dev, circuit=circuit, observable=obs, **_inject_noise(opts))
+            # Wrap in a simulator task object to align with get_task_details
+            try:
+                from .simulators.driver import SimTask  # type: ignore
+                task_like = SimTask(id="expval", device=dev, result={
+                    'result': {},
+                    'expectations': {'expval': float(e)},
+                    'probabilities': None,
+                    'statevector': None,
+                    'metadata': {'shots': 0, 'backend': 'analytic', 'provider': prov, 'device': dev},
+                })
+                raw = _normalize(task_like)
+            except Exception:
+                # Fallback: call through regular simulator run to keep shape
+                raw = _normalize(resolve_driver(prov, dev).run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
+        elif prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
             raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
         else:
             raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **opts))
@@ -279,6 +303,9 @@ def expval(
     if circuit is None or observable is None:
         raise ValueError("expval requires both circuit and observable")
     return float(drv.expval(dev, hwcfg.get_token(provider=prov, device=dev), circuit=circuit, observable=observable, **opts))
+
+
+ 
 
 
 def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = None, **kws: Any) -> List[str]:

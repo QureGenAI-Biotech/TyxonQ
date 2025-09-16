@@ -5,209 +5,190 @@ from typing import Tuple, List, Union
 
 import numpy as np
 from pyscf.gto.mole import Mole
-from pyscf.scf import RHF
-from pyscf.cc.addons import spatial2spin
-from pyscf.fci import cistring
-from tyxonq import Circuit
+from pyscf.scf import RHF as _RHF
+from openfermion.transforms import jordan_wigner
 
+from tyxonq.core.ir.circuit import Circuit
 from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_puccd import generate_puccd_ex_ops
-from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
+from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx, rdm_mo2ao
+from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
+    get_integral_from_hf,
+    get_hop_from_integral,
+)
 from .ucc import UCC
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
 from tyxonq.libs.circuits_library.qubit_state_preparation import get_circuit_givens_swap
+from pyscf import fci as _fci
 
 
 class PUCCD(UCC):
     """
     Run paired UCC calculation.
     The interfaces are similar to :class:`UCCSD <tencirchem.UCCSD>`.
-    """
+
 
     # todo: more documentation here and make the references right.
     # separate docstring examples for a variety of methods, such as energy()
     # also need to add a few comment on make_rdm1/2
     # https://arxiv.org/pdf/2002.00035.pdf
     # https://arxiv.org/pdf/1503.04878.pdf
+    Paired UCC (pUCCD) aligned to new UCC base (device by default)."""
 
     def __init__(
         self,
-        mol: Union[Mole, RHF],
+        mol: Union[Mole, _RHF],
         init_method: str = "mp2",
-        active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
-        mo_coeff: np.ndarray = None,
-        runtime: str = None,
+        *,
+        active_space: Tuple[int, int] | None = None,
+        aslst: List[int] | None = None,
+        mo_coeff: np.ndarray | None = None,
+        runtime: str | None = None,
+        numeric_engine: str | None = None,
         run_hf: bool = True,
         run_mp2: bool = True,
         run_ccsd: bool = True,
-        run_fci: bool = True,
-    ):
-        r"""
-        Initialize the class with molecular input.
-
-        Parameters
-        ----------
-        mol: Mole or RHF
-            The molecule as PySCF ``Mole`` object or the PySCF ``RHF`` object
-        init_method: str, optional
-            How to determine the initial amplitude guess. Accepts ``"mp2"`` (default), ``"ccsd"``,``"fe"``
-            and ``"zeros"``.
-        active_space: Tuple[int, int], optional
-            Active space approximation. The first integer is the number of electrons and the second integer is
-            the number or spatial-orbitals. Defaults to None.
-        aslst: List[int], optional
-            Pick orbitals for the active space. Defaults to None which means the orbitals are sorted by energy.
-            The orbital index is 0-based.
-
-            .. note::
-                See `PySCF document <https://pyscf.org/user/mcscf.html#picking-an-active-space>`_
-                for choosing the active space orbitals. Here orbital index is 0-based, whereas in PySCF by default it
-                is 1-based.
-
-        mo_coeff: np.ndarray, optional
-            Molecule coefficients. If provided then RHF is skipped.
-            Can be used in combination with the ``init_state`` attribute.
-            Defaults to None which means RHF orbitals are used.
-        runtime: str, optional
-            The runtime to run the calculation (e.g., 'device').
-        run_hf: bool, optional
-            Whether run HF for molecule orbitals. Defaults to ``True``.
-        run_mp2: bool, optional
-            Whether run MP2 for initial guess and energy reference. Defaults to ``True``.
-        run_ccsd: bool, optional
-            Whether run CCSD for initial guess and energy reference. Defaults to ``True``.
-        run_fci: bool, optional
-            Whether run FCI  for energy reference. Defaults to ``True``.
-
-        See Also
-        --------
-        tencirchem.UCCSD
-        tencirchem.KUPCCGSD
-        tencirchem.UCC
-        """
+        run_fci: bool = False,
+    ) -> None:
+        # RHF setup (robustly detect SCF object by attributes)
+        if hasattr(mol, "kernel") and hasattr(mol, "mo_coeff"):
+            hf = mol  # already an SCF object
+        else:
+            hf = _RHF(mol)
+        if mo_coeff is not None:
+            hf.mo_coeff = np.asarray(mo_coeff)
+        hf.chkfile = None
+        hf.verbose = 0
+        if run_hf:
+            hf.kernel()
+        # integrals and core energy
+        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        if active_space is None:
+            n_elec = int(getattr(hf.mol, "nelectron"))
+            n_cas = int(getattr(hf.mol, "nao"))
+        else:
+            n_elec, n_cas = int(active_space[0]), int(active_space[1])
+        no = n_elec // 2
+        nv = n_cas - no
+        # qubit Hamiltonian
+        fop = get_hop_from_integral(int1e, int2e)
+        n_qubits = 2 * n_cas
+        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
+        na = no
+        nb = n_elec - na
+        # pUCCD excitations and init guess (pair excitations only)
+        ex_ops, param_ids, init_guess = generate_puccd_ex_ops(no, nv, None)
+        # Ensure contiguous param_ids for numeric engines
+        unique_ids = np.unique(param_ids)
+        id_map = {int(old): idx for idx, old in enumerate(unique_ids)}
+        param_ids = [id_map[int(i)] for i in param_ids]
+        init_guess = list(np.asarray(init_guess)[unique_ids])
+        # map to base UCC
         super().__init__(
-            mol,
-            init_method,
-            active_space,
-            aslst,
-            mo_coeff,
-            runtime=runtime,
-            mode="hcb",
-            run_hf=run_hf,
-            run_mp2=run_mp2,
-            run_ccsd=run_ccsd,
-            run_fci=run_fci,
+            n_qubits=n_qubits,
+            n_elec_s=(na, nb),
+            h_qubit_op=hq,
+            runtime=str(runtime or ("numeric" if numeric_engine is not None else "device")),
+            mode="fermion",
+            ex_ops=ex_ops,
+            param_ids=param_ids,
+            init_state=None,
+            decompose_multicontrol=False,
+            trotter=False,
         )
-        self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
+        self.e_core = float(e_core)
+        self.init_guess = np.asarray(init_guess, dtype=np.float64) if len(init_guess) > 0 else np.zeros(0, dtype=np.float64)
+        self.numeric_engine = numeric_engine
+        self._int1e = np.asarray(int1e)
+        self._int2e = np.asarray(int2e)
+        self.n_elec = int(n_elec)
+        self.hf = hf
 
+    # Convenience from_integral constructor
+    @classmethod
+    def from_integral(
+        cls,
+        int1e: np.ndarray,
+        int2e: np.ndarray,
+        n_elec: Union[int, Tuple[int, int]],
+        *,
+        runtime: str = "device",
+        numeric_engine: str | None = None,
+    ) -> "PUCCD":
+        if isinstance(n_elec, int):
+            assert n_elec % 2 == 0
+            n_elec_s = (n_elec // 2, n_elec // 2)
+        else:
+            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
+        n_cas = int(len(int1e))
+        no = int(n_elec_s[0])
+        nv = n_cas - no
+        ex_ops, param_ids, init_guess = generate_puccd_ex_ops(no, nv, None)
+        unique_ids = np.unique(param_ids)
+        id_map = {int(old): idx for idx, old in enumerate(unique_ids)}
+        param_ids = [id_map[int(i)] for i in param_ids]
+        init_guess = list(np.asarray(init_guess)[unique_ids])
+        from openfermion.transforms import jordan_wigner as _jw
+        fop = get_hop_from_integral(int1e, int2e)
+        n_qubits = 2 * n_cas
+        hq = reverse_qop_idx(_jw(fop), n_qubits)
+        inst = cls.__new__(cls)
+        UCC.__init__(
+            inst,
+            n_qubits=n_qubits,
+            n_elec_s=(int(n_elec_s[0]), int(n_elec_s[1])),
+            h_qubit_op=hq,
+            runtime=("numeric" if numeric_engine is not None else runtime),
+            mode="fermion",
+            ex_ops=ex_ops,
+            param_ids=param_ids,
+            init_state=None,
+            decompose_multicontrol=False,
+            trotter=False,
+        )
+        inst.e_core = 0.0
+        inst.init_guess = np.asarray(init_guess, dtype=np.float64) if len(init_guess) > 0 else np.zeros(0, dtype=np.float64)
+        inst.numeric_engine = numeric_engine
+        inst._int1e = np.asarray(int1e)
+        inst._int2e = np.asarray(int2e)
+        inst.n_elec = int(sum(n_elec_s))
+        return inst
+
+    # Legacy helpers not needed; excitations built in constructors
     def get_ex1_ops(self, t1: np.ndarray = None):
-        """Not applicable. Use :func:`get_ex_ops`."""
         raise NotImplementedError
 
     def get_ex2_ops(self, t2: np.ndarray = None):
-        """Not applicable. Use :func:`get_ex_ops`."""
         raise NotImplementedError
 
     def get_ex_ops(self, t1: np.ndarray = None, t2: np.ndarray = None) -> Tuple[List[Tuple], List[int], List[float]]:
-        """
-        Get paired excitation operators for pUCCD ansatz.
-
-        Parameters
-        ----------
-        t1: np.ndarray, optional
-            Not used. Kept for consistency with the parent method.
-        t2: np.ndarray, optional
-            Not used. Kept for consistency with the parent method.
-
-        Returns
-        -------
-        ex_op: List[Tuple]
-            The excitation operators. Each operator is represented by a tuple of ints.
-        param_ids: List[int]
-            The mapping from excitations to parameters.
-        init_guess: List[float]
-            The initial guess for the parameters.
-
-        Examples
-        --------
-        >>> from tencirchem import PUCCD
-        >>> from tencirchem.molecule import h2
-        >>> puccd = PUCCD(h2)
-        >>> ex_op, param_ids, init_guess = puccd.get_ex_ops()
-        >>> ex_op
-        [(1, 0)]
-        >>> param_ids
-        [0]
-        >>> init_guess  # doctest:+ELLIPSIS
-        [...]
-        """
         no, nv = self.no, self.nv
         if t2 is None:
             t2 = np.zeros((no, no, nv, nv))
         else:
             if t2.shape == (2 * no, 2 * no, 2 * nv, 2 * nv):
-                # compress to spatial block for init guess
                 t2 = t2[0::2, 0::2, 0::2, 0::2]
             else:
                 assert t2.shape == (no, no, nv, nv)
         return generate_puccd_ex_ops(no, nv, t2)
 
-    def make_rdm1(self, statevector=None, basis="AO"):
-        __doc__ = super().make_rdm1.__doc__
+    # ---- RDM in MO basis (spin-traced) specialized for pUCCD ----
+    def make_rdm1(self, params=None, *, basis: str = "MO") -> np.ndarray:
+        # Build CI vector under current ansatz (numeric statevector path)
+        civ = np.asarray(self.civector(params), dtype=np.float64)
+        n_orb = int(self.n_qubits // 2)
+        rdm1_cas = _fci.direct_spin1.make_rdm1(civ, n_orb, self.n_elec_s)
+        rdm1_mo = np.asarray(rdm1_cas, dtype=np.float64)
+        if str(basis).upper() == "AO":
+            return rdm_mo2ao(rdm1_mo, self.hf.mo_coeff)
+        return rdm1_mo
 
-        civector = self._statevector_to_civector(statevector)
-        ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
-
-        n_active = self.n_qubits
-        rdm1_cas = np.zeros([n_active] * 2)
-        for i in range(n_active):
-            bitmask = 1 << i
-            arraymask = (ci_strings & bitmask) == bitmask
-            value = float(civector @ (arraymask * civector))
-            rdm1_cas[i, i] = 2 * value
-        rdm1 = self.embed_rdm_cas(rdm1_cas)
-        if basis == "MO":
-            return rdm1
-        else:
-            return rdm_mo2ao(rdm1, self.hf.mo_coeff)
-
-    def make_rdm2(self, statevector=None, basis="AO"):
-        __doc__ = super().make_rdm2.__doc__
-
-        civector = self._statevector_to_civector(statevector)
-        ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
-
-        n_active = self.n_qubits
-        rdm2_cas = np.zeros([n_active] * 4)
-        for p in range(n_active):
-            for q in range(p + 1):
-                maskq = 1 << q
-                maskp = 1 << p
-                maskpq = maskp + maskq
-                arraymask = (ci_strings & maskq) == maskq
-                if p == q:
-                    value = float(civector @ (arraymask * civector))
-                else:
-                    arraymask &= ((~ci_strings) & maskp) == maskp
-                    excitation = ci_strings ^ maskpq
-                    addr = cistring.strs2addr(n_active, self.n_elec // 2, excitation)
-                    value = float(civector @ (arraymask * civector[addr]))
-
-                rdm2_cas[p, q, p, q] = rdm2_cas[q, p, q, p] = value
-                if p == q:
-                    continue
-                arraymask = (ci_strings & maskpq) == maskpq
-                value = float(civector @ (arraymask * civector))
-
-                rdm2_cas[p, p, q, q] = rdm2_cas[q, q, p, p] = 2 * value
-                rdm2_cas[p, q, q, p] = rdm2_cas[q, p, p, q] = -value
-        rdm2_cas *= 2
-        rdm2 = self.embed_rdm_cas(rdm2_cas)
-        # no need to transpose
-        if basis == "MO":
-            return rdm2
-        else:
-            return rdm_mo2ao(rdm2, self.hf.mo_coeff)
+    def make_rdm2(self, params=None, *, basis: str = "MO") -> np.ndarray:
+        civ = np.asarray(self.civector(params), dtype=np.float64)
+        n_orb = int(self.n_qubits // 2)
+        rdm2_cas = _fci.direct_spin1.make_rdm12(civ, n_orb, self.n_elec_s)[1]
+        rdm2_mo = np.asarray(rdm2_cas, dtype=np.float64)
+        if str(basis).upper() == "AO":
+            return rdm_mo2ao(rdm2_mo, self.hf.mo_coeff)
+        return rdm2_mo
 
     def get_circuit(self, params=None, trotter=False, givens_swap=False) -> Circuit:
         """
@@ -231,9 +212,9 @@ class PUCCD(UCC):
         """
         if not givens_swap:
             return super().get_circuit(params, trotter=trotter)
-        else:
-            params = self._check_params_argument(params, strict=False)
-            return get_circuit_givens_swap(params, self.n_qubits, self.n_elec, self.init_state)
+        params = self._check_params_argument(params, strict=False)
+        # givens-swap preparation (legacy helper)
+        return get_circuit_givens_swap(params, self.n_qubits, self.n_elec, self.init_state)
 
     @property
     def e_puccd(self):

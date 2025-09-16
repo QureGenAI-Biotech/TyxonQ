@@ -4,21 +4,8 @@ from typing import Any, Dict, Protocol, TypedDict, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
-
-class CompileRequest(TypedDict):
-    """Structured compile request.
-
-    Fields:
-        circuit: IR circuit to compile.
-        target: Device capability description for capability negotiation.
-        options: Additional compile options (optimization level, layout hints).
-    """
-
-    circuit: "Circuit"
-    target: Any
-    options: Dict[str, Any]
 
 
 class CompileResult(TypedDict):
@@ -31,13 +18,7 @@ class CompileResult(TypedDict):
 class Pass(Protocol):
     """Compilation pass that transforms a circuit for a given target."""
 
-    def run(self, circuit: "Circuit", **opts: Any) -> "Circuit": ...
-
-
-class Compiler(Protocol):
-    """Compiler interface that transforms IR for a target device/backend."""
-
-    def compile(self, request: CompileRequest) -> CompileResult: ...
+    def execute_plan(self, circuit: "Circuit", **opts: Any) -> "Circuit": ...
 
 
 def compile(
@@ -45,6 +26,8 @@ def compile(
     *,
     compile_engine: str = "default",
     output: str = "ir",
+    compile_plan: list[str,Any] | None = None,
+    device_rule: Dict[str, Any] | None = None,
     options: Dict[str, Any] | None = None,
 ) -> CompileResult:
     """Unified compile entry.
@@ -66,17 +49,17 @@ def compile(
     if output:
         opts["output"] = output
 
-    prov = (compile_engine or "default").lower()
-    if prov in ("default", "tyxonq", "native"):
+    compile_engine = (compile_engine or "default").lower()
+    if compile_engine in ("default", "tyxonq", "native"):
         from .compile_engine.native.native_compiler import NativeCompiler
 
-        return NativeCompiler().compile({"circuit": circuit,  "options": opts})  # type: ignore[arg-type]
-    if prov == "qiskit":
+        return NativeCompiler().compile(circuit = circuit,compile_plan= compile_plan, device_rule=device_rule, options = opts)  # type: ignore[arg-type]
+    if compile_engine == "qiskit":
         from .compile_engine.qiskit import QiskitCompiler
 
-        return QiskitCompiler().compile({"circuit": circuit, "options": opts})  # type: ignore[arg-type]
+        return QiskitCompiler().compile(circuit= circuit, options = opts)  # type: ignore[arg-type]
     # Fallback to native
     from .compile_engine.native.native_compiler import NativeCompiler
-    return NativeCompiler().compile({"circuit": circuit,"options": opts})  # type: ignore[arg-type]
+    return NativeCompiler().compile(circuit = circuit,compile_plan=compile_plan, device_rule=device_rule,options = opts)  # type: ignore[arg-type]
 
 

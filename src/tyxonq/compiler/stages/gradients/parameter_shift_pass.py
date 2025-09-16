@@ -4,7 +4,7 @@ from typing import Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 from ...gradients.parameter_shift import generate_shifted_circuits
 
@@ -16,7 +16,7 @@ class ParameterShiftPass:
       - grad_op: operation name to match (e.g., "rz")
     """
 
-    def run(self, circuit: "Circuit", caps: "DeviceCapabilities", **opts: Any) -> "Circuit":
+    def execute_plan(self, circuit: "Circuit", device_rule: "DeviceRule" = None, **opts: Any) -> "Circuit":
         op_name = opts.get("grad_op")
         if not op_name:
             return circuit

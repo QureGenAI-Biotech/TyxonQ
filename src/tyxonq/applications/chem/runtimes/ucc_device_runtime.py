@@ -11,6 +11,7 @@ from tyxonq.compiler.api import compile as compile_api
 from tyxonq.compiler.utils.hamiltonian_grouping import (
     group_qubit_operator_terms,
 )
+ 
 
 
 try:
@@ -111,6 +112,8 @@ class UCCDeviceRuntime:
         provider: str,
         device: str,
         postprocessing: dict | None,
+        noise: dict | None = None,
+        **device_kwargs,
     ) -> float:
         # Prefer compiler-provided grouping when available
         # Fallback to internal grouping during transition
@@ -125,7 +128,7 @@ class UCCDeviceRuntime:
                     c.ops.append(("rz", q, -pi/2)); c.ops.append(("h", q))
             for q in range(self.n_qubits):
                 c.ops.append(("measure_z", q))
-            dev = c.device(provider=provider, device=device, shots=shots)
+            dev = c.device(provider=provider, device=device, shots=shots, noise=noise, **device_kwargs)
             # Chainable postprocessing: aggregate energy for this group's items
             pp_opts = dict(postprocessing or {})
             pp_opts.update({
@@ -144,18 +147,36 @@ class UCCDeviceRuntime:
         self,
         params: Sequence[float] | None = None,
         *,
-        shots: int = 8192,
+        shots: int = 1024,
         provider: str = "simulator",
         device: str = "statevector",
         postprocessing: dict | None = None,
+        noise: dict | None = None,
+        **device_kwargs,
     ) -> float:
-        # Fast path: simulator/local + shots==0 → exact statevector expectation without grouping
-        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径
+        # Fast path: simulator/local + shots==0 → 使用解析期望；返回电子能（去掉常数项）
         if (provider in ("simulator", "local")) and int(shots) == 0:
-            p = np.asarray(params if params is not None else (np.zeros(self.n_params, dtype=np.float64) if self.n_params>0 else np.zeros(0, dtype=np.float64)), dtype=np.float64)
-            c = self._build_ucc_circuit(p) if self.n_params > 0 else self._build_hf_circuit()
-            from tyxonq.devices import base as device_base
-            return float(device_base.expval(provider=provider, device=device, circuit=c, observable=self.h_qubit_op))
+            p = np.asarray(
+                params
+                if params is not None
+                else (np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)),
+                dtype=np.float64,
+            )
+            # 数值库直算电子能（与 numeric/statevector 完全一致）
+            from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
+                energy_statevector as _energy_statevector,
+            )
+            e_elec = _energy_statevector(
+                p,
+                self.h_qubit_op,
+                self.n_qubits,
+                self.n_elec_s,
+                self.ex_ops,
+                self.param_ids,
+                mode=self.mode,
+                init_state=None,
+            )
+            return float(e_elec)
 
         if self.n_params == 0:
             def _builder():
@@ -166,33 +187,42 @@ class UCCDeviceRuntime:
             p = np.asarray(params, dtype=np.float64)
             def _builder():
                 return self._build_ucc_circuit(p)
-        return self._energy_core(_builder, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
+        return self._energy_core(_builder, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
 
     def energy_and_grad(
         self,
         params: Sequence[float] | None = None,
         *,
-        shots: int = 8192,
+        shots: int = 1024,
         provider: str = "simulator",
         device: str = "statevector",
         postprocessing: dict | None = None,
+        noise: dict | None = None,
+        **device_kwargs,
     ) -> Tuple[float, np.ndarray]:
-        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径 + 有限差分
+        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device 层解析通道计算梯度
         if (provider in ("simulator", "local")) and int(shots) == 0:
             if self.n_params == 0:
                 e0 = self.energy(None, shots=0, provider=provider, device=device, postprocessing=postprocessing)
                 return float(e0), np.zeros(0, dtype=np.float64)
-            x = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
-            e0 = self.energy(x, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-            g = np.zeros_like(x)
-            eps = 1e-7
-            for i in range(len(x)):
-                xp = x.copy(); xp[i] += eps
-                xm = x.copy(); xm[i] -= eps
-                e_plus = self.energy(xp, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-                e_minus = self.energy(xm, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-                g[i] = (e_plus - e_minus) / (2.0 * eps)
-            return float(e0), g
+            x = np.asarray(
+                params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64
+            )
+            # 数值库直算（value_and_grad 等价路径），返回电子能与梯度
+            from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
+                energy_and_grad_statevector as _energy_and_grad_statevector,
+            )
+            e_elec, g = _energy_and_grad_statevector(
+                x,
+                self.h_qubit_op,
+                self.n_qubits,
+                self.n_elec_s,
+                self.ex_ops,
+                self.param_ids,
+                mode=self.mode,
+                init_state=None,
+            )
+            return float(e_elec), np.asarray(g, dtype=np.float64)
 
         if self.n_params == 0:
             e0 = self.energy(None, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
@@ -204,14 +234,36 @@ class UCCDeviceRuntime:
                 return self._build_ucc_circuit(pv)
             return _b
 
-        e0 = self._energy_core(_builder_with(base), shots=shots, provider=provider, device=device, postprocessing=postprocessing)
+        e0 = self._energy_core(_builder_with(base), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
         g = np.zeros_like(base)
-        s = 0.5 * pi
+        # 对于 shots>0 的硬件/采样路径，使用对称有限差分以避免参数移位缩放不一致问题
+        # ~2°，数值稳定且差分信号明显
+        # Gradient strategy for counts (shots > 0): finite-difference vs parameter-shift
+        #
+        # - Finite-difference (FD):
+        #   Estimates dE/dθ ≈ [E(θ+δ) − E(θ−δ)] / (2δ). It works for any circuit and observable,
+        #   requires no gate-level derivative rules, but introduces truncation bias O(δ^2) and is
+        #   sensitive to sampling noise (variance roughly scales like 1/(δ^2·shots)).
+        #
+        # - Parameter-shift (PS):
+        #   Provides an exact analytic gradient for gates with suitable generators (e.g., ±1 spectra),
+        #   using two evaluations with ±s shifts (commonly s = π/2). PS has no truncation bias but still
+        #   carries sampling variance and requires compiling/executing the shifted circuits on hardware.
+        #
+        # - Why FD here for the counts path:
+        #   Our counts path measures grouped, basis-rotated Pauli sums. A naive PS over circuit parameters
+        #   can lead to scaling/mismatch with grouping unless a full compiler-level gradient transform is applied
+        #   (to batch and share shifts safely across measurement groups). Until that pass exists, FD is consistent
+        #   with the exact energy functional we are sampling. The chosen step (~2 degrees) balances truncation bias
+        #   against shot noise; increasing shots reduces variance, while decreasing step reduces bias.
+        #
+        # - Simulators (shots == 0): handled elsewhere via an analytic numeric path (value_and_grad), not this branch.
+        step = float(np.pi / 90.0)  # ~2 degrees: numerically stable for counts
         for i in range(len(base)):
-            p_plus = base.copy(); p_plus[i] += s
-            p_minus = base.copy(); p_minus[i] -= s
-            e_plus = self._energy_core(_builder_with(p_plus), shots=shots, provider=provider, device=device, postprocessing=postprocessing)
-            e_minus = self._energy_core(_builder_with(p_minus), shots=shots, provider=provider, device=device, postprocessing=postprocessing)
-            g[i] = 0.5 * (e_plus - e_minus)
+            p_plus = base.copy(); p_plus[i] += step
+            p_minus = base.copy(); p_minus[i] -= step
+            e_plus = self._energy_core(_builder_with(p_plus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+            e_minus = self._energy_core(_builder_with(p_minus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+            g[i] = (e_plus - e_minus) / (2.0 * step)
         return float(e0), g
 

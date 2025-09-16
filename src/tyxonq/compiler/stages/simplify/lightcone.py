@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any, List, Set, Tuple
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 
 class LightconeSimplifyPass:
     name = "simplify/lightcone"
 
-    def run(self, circuit: "Circuit", caps: "DeviceCapabilities", **opts: Any) -> "Circuit":
+    def execute_plan(self, circuit: "Circuit", device_rule: "DeviceRule" = None, **opts: Any) -> "Circuit":
         # Options:
         # - assume_measure_all: if no explicit measure ops, treat all qubits as measured
         assume_measure_all: bool = bool(opts.get("assume_measure_all", False))

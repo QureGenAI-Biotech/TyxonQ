@@ -7,7 +7,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
 
 
-def execute_plan(device: "Device", plan: Dict[str, Any]) -> Dict[str, Any]:
+def device_job_plan(device: "Device", plan: Dict[str, Any]) -> Dict[str, Any]:
     """Execute a segmented shot plan and aggregate results.
 
     Parameters:

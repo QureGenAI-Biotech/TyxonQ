@@ -5,7 +5,7 @@ from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 
 class RotationsDecomposePass:
@@ -19,7 +19,7 @@ class RotationsDecomposePass:
       - RYY(θ) => (S†H)⊗(S†H) · CX · RZ(θ on target) · CX · (HS)⊗(HS)
     """
 
-    def run(self, circuit: "Circuit", caps: "DeviceCapabilities", **opts: Any) -> "Circuit":
+    def execute_plan(self, circuit: "Circuit", device_rule: "DeviceRule" = None, **opts: Any) -> "Circuit":
         new_ops: list[Any] = []
         pi_over_2 = math.pi / 2.0
 

@@ -6,14 +6,19 @@ import numpy as np
 from scipy.optimize import minimize
 
 from ..runtimes.hea_device_runtime import HEADeviceRuntime
+from ..runtimes.hea_numeric_runtime import HEANumericRuntime
 from tyxonq.libs.circuits_library.blocks import build_hwe_ry_ops
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
     get_hop_from_integral,
     get_integral_from_hf,
 )
 from tyxonq.libs.hamiltonian_encoding.fermion_to_qubit import fop_to_qop, parity, binary
+from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
 from openfermion import QubitOperator, FermionOperator, hermitian_conjugated
 from pyscf.scf import RHF  # type: ignore
+from tyxonq.libs.circuits_library.qiskit_real_amplitudes import (
+    real_amplitudes_circuit_template_converter,
+)
 
 
 Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
@@ -42,9 +47,14 @@ class HEA:
         self.hamiltonian = list(hamiltonian)
         self.runtime = runtime
         self.numeric_engine = numeric_engine
+        # 可选：外部参数化电路模板（例如来自 Qiskit RealAmplitudes 的转换）
+        # 形如 [("ry", q, ("p", idx)), ("cx", c, t), ...]
+        self.circuit_template = None
         # RY ansatz: (layers + 1) * n parameters
         self.n_params = (self.layers + 1) * self.n
-        self.init_guess = np.zeros(self.n_params, dtype=np.float64)
+        # Use a deterministic non-trivial initial guess to avoid zero-gradient plateaus
+        rng = np.random.default_rng(7)
+        self.init_guess = rng.random(self.n_params, dtype=np.float64)
         # Optional chemistry metadata (used by RDM与求解器适配)
         self.mapping: str | None = None
         self.int1e: np.ndarray | None = None
@@ -53,7 +63,7 @@ class HEA:
         self.spin: int | None = None
         self.e_core: float | None = None
         # Optimization artifacts
-        self._grad: str = "param-shift"
+        self.grad: str = "param-shift"
         self.scipy_minimize_options: dict | None = None
         self._params: np.ndarray | None = None
         self.opt_res: dict | None = None
@@ -73,6 +83,11 @@ class HEA:
         """
         if params is None:
             params = self.init_guess
+        # 优先：若存在外部模板（如 RealAmplitudes 转换得到），实例化为我们的 IR Circuit
+        if self.circuit_template is not None:
+            from tyxonq.libs.circuits_library.qiskit_real_amplitudes import build_circuit_from_template
+            return build_circuit_from_template(self.circuit_template, np.asarray(params, dtype=np.float64), n_qubits=self.n)
+        # 默认：RY-only ansatz
         return build_hwe_ry_ops(self.n, self.layers, params)
 
     def energy(self, params: Sequence[float] | None = None, **device_opts) -> float:
@@ -82,10 +97,14 @@ class HEA:
         然后做 Z 基测量并从计数中估计 <H>。
         """
         if self.runtime == "device":
-            rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian)
+            rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template)
             p = self.init_guess if params is None else params
             return rt.energy(p, **device_opts)
-        raise NotImplementedError("numeric engines to be added")
+        if self.runtime == "numeric":
+            rt = HEANumericRuntime(self.n, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
+            p = self.init_guess if params is None else params
+            return rt.energy(p, self.get_circuit)
+        raise NotImplementedError(f"unsupported runtime: {self.runtime}")
 
     def energy_and_grad(self, params: Sequence[float] | None = None, **device_opts):
         """参数移位法梯度（设备路径）。
@@ -95,10 +114,14 @@ class HEA:
         与 energy 一样采用计数估计。
         """
         if self.runtime == "device":
-            rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian)
+            rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian, circuit_template=self.circuit_template)
             p = self.init_guess if params is None else params
             return rt.energy_and_grad(p, **device_opts)
-        raise NotImplementedError("numeric engines to be added")
+        if self.runtime == "numeric":
+            rt = HEANumericRuntime(self.n, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
+            p = self.init_guess if params is None else params
+            return rt.energy_and_grad(p, self.get_circuit)
+        raise NotImplementedError(f"unsupported runtime: {self.runtime}")
 
     # ---------- Optimization (SciPy) ----------
     def get_opt_function(self, *, with_time: bool = False) -> Union[Callable, Tuple[Callable, float]]:
@@ -108,11 +131,13 @@ class HEA:
         """
         import time as _time
 
+        runtime_opts = getattr(self, "_opt_runtime_opts", {})
+
         def f_only(x: np.ndarray) -> float:
-            return float(self.energy(x))
+            return float(self.energy(x, **runtime_opts))
 
         def f_with_grad(x: np.ndarray) -> Tuple[float, np.ndarray]:
-            e, g = self.energy_and_grad(x)
+            e, g = self.energy_and_grad(x, **runtime_opts)
             return float(e), np.asarray(g, dtype=np.float64)
 
         t1 = _time.time()
@@ -124,19 +149,43 @@ class HEA:
             return func, (t2 - t1)
         return func
 
-    def kernel(self) -> float:
+    def kernel(self, **opts) -> float:
         """运行变分优化，返回最优能量并保存 `opt_res` 与 `params`。"""
-        func = self.get_opt_function()
-        if self.grad == "free":
-            res = minimize(lambda x: func(x), x0=self.init_guess, jac=False, method="COBYLA", options=self.scipy_minimize_options)
+        # 持久化运行选项（shots/provider/device 等）到优化闭包中
+        runtime_opts = dict(opts)
+        if "shots" not in runtime_opts:
+            if str(runtime_opts.get("runtime", self.runtime)) == "device":
+                if  str(runtime_opts.get("provider", 'simulator')) in ["simulator",'local']:
+                    # 默认使用解析路径，避免采样噪声影响优化与 RDM
+                    shots = 0
+                else:
+                    # 真机默认使用2048shots
+                    shots = 2048
+            else:
+                shots = 0
+            runtime_opts["shots"] = shots
         else:
-            res = minimize(lambda x: func(x)[0], x0=self.init_guess, jac=lambda x: func(x)[1], method="L-BFGS-B", options=self.scipy_minimize_options)
+            shots = runtime_opts["shots"]
+        self._opt_runtime_opts = dict(runtime_opts)
+        func = self.get_opt_function()
+
+        default_maxiter = 200 if (shots == 0 or str(opts.get("runtime", self.runtime)) == "numeric") else 100
+        default_opts = {"maxiter": default_maxiter}
+        if isinstance(self.scipy_minimize_options, dict):
+            run_opts = {**default_opts, **self.scipy_minimize_options}
+        else:
+            run_opts = default_opts
+        if self.grad == "free":
+            res = minimize(lambda x: func(x), x0=self.init_guess, jac=False, method="COBYLA", options=run_opts)
+        else:
+            res = minimize(lambda x: func(x)[0], x0=self.init_guess, jac=lambda x: func(x)[1], method="L-BFGS-B", options=run_opts)
         self.opt_res = {
             "success": bool(getattr(res, "success", True)),
             "x": np.asarray(getattr(res, "x", self.init_guess), dtype=np.float64),
             "fun": float(getattr(res, "fun", self.energy(self.init_guess))),
             "message": str(getattr(res, "message", "")),
             "nit": int(getattr(res, "nit", 0)),
+            'init_guess': np.asarray(getattr(res, "x", self.init_guess), dtype=np.float64),
         }
         self.params = np.asarray(self.opt_res["x"], dtype=np.float64).copy()
         return float(self.opt_res["fun"])  # type: ignore[index]
@@ -147,16 +196,23 @@ class HEA:
         terms: Hamiltonian = []
         # identity term
         const = qop.terms.get((), 0.0)
-        if const != 0.0:
-            coeff_val = float(getattr(const, "real", float(const)))
-            terms.append((coeff_val, []))
+        try:
+            cval = float(np.real(const)) if hasattr(const, "real") else float(const)
+        except Exception:
+            cval = float(np.real_if_close(const))
+        if cval != 0.0:
+            terms.append((cval, []))
         for term, coeff in qop.terms.items():
             if term == ():
                 continue
             ops: List[Tuple[str, int]] = []
             for (idx, sym) in term:
                 ops.append((sym.upper(), int(idx)))
-            terms.append((float(getattr(coeff, "real", float(coeff))), ops))
+            try:
+                cval = float(np.real(coeff)) if hasattr(coeff, "real") else float(coeff)
+            except Exception:
+                cval = float(np.real_if_close(coeff))
+            terms.append((cval, ops))
         return terms
 
     @classmethod
@@ -186,11 +242,17 @@ class HEA:
             n_elec_s = (n_elec // 2, n_elec // 2)
         else:
             n_elec_s = n_elec
-        fop = get_hop_from_integral(int1e, int2e)
-        qop = fop_to_qop(fop, mapping, n_sorb, n_elec_s)
+        # TCC: hop 已经包含 e_core 常数项（见 tencirchem/static/hea.py::from_integral）
+        fop = get_hop_from_integral(int1e, int2e) + float(e_core)
+        if mapping == "jordan-wigner":
+            from openfermion.transforms import jordan_wigner as _jw
+            qop = reverse_qop_idx(_jw(fop), n_sorb)
+        elif mapping == "bravyi-kitaev":
+            from openfermion.transforms import bravyi_kitaev as _bk
+            qop = reverse_qop_idx(_bk(fop), n_sorb)
+        else:
+            qop = fop_to_qop(fop, mapping, n_sorb, n_elec_s)
         terms = cls._qop_to_term_list(qop, n_qubits=(n_sorb - 2 if mapping == "parity" else n_sorb))
-        if e_core and abs(e_core) > 0:
-            terms = [(float(e_core), [])] + terms
         n_qubits = (n_sorb - 2) if mapping == "parity" else n_sorb
         inst = cls(n=n_qubits, layers=int(n_layers), hamiltonian=terms, runtime=runtime)
         # record chemistry metadata for downstream features (RDM等)
@@ -198,7 +260,7 @@ class HEA:
         inst.int1e = np.array(int1e)
         inst.int2e = np.array(int2e)
         inst.n_elec = int(sum(n_elec_s))
-        inst.spin = int(abs(n_elec_s[0] - n_elec_s[1]))
+        inst.spin = int(n_elec_s[0] - n_elec_s[1])
         inst.e_core = float(e_core)
         return inst
 
@@ -253,6 +315,49 @@ class HEA:
         """兼容旧接口的 RY 构造器（等价于 from_integral(..., n_layers, mapping, engine)）。"""
         return cls.from_integral(int1e, int2e, n_elec, e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
 
+    @classmethod
+    def from_qiskit_circuit(
+        cls,
+        h_qubit_op: QubitOperator,
+        circuit: object,
+        init_guess: Sequence[float],
+        *,
+        runtime: str = "device",
+    ) -> "HEA":
+        """从 QubitOperator 与外部参数化电路构建 HEA（一次性薄封装）。
+
+        约定：针对 Qiskit RealAmplitudes（或兼容的 QuantumCircuit）进行转换，
+        将其一次性变为本框架可消费的 `circuit_template`，后续完全走本地逻辑。
+        """
+        # 1) 归一化 QubitOperator（取实部系数）
+        qop_real = QubitOperator()
+        for k, v in h_qubit_op.terms.items():
+            vv = v.real if hasattr(v, "real") else float(v)
+            qop_real.terms[k] = vv
+
+        # 2) 推断比特数
+        n_qubits = None
+        if hasattr(circuit, "num_qubits"):
+            try:
+                n_qubits = int(getattr(circuit, "num_qubits"))
+            except Exception:
+                n_qubits = None
+        if n_qubits is None:
+            raise TypeError("circuit must be a parameterized QuantumCircuit with 'num_qubits'")
+
+        # 3) 生成哈密顿量项列表并实例化 HEA
+        # 若电路与我们的 RY ansatz 等价（如 RealAmplitudes），优先直接映射 reps→layers，避免额外模板路径
+        layers = int(getattr(circuit, "reps", 1)) if hasattr(circuit, "reps") else 0
+        terms = cls._qop_to_term_list(qop_real, n_qubits=n_qubits)
+        inst = cls(n=n_qubits, layers=layers, hamiltonian=terms, runtime=runtime)
+        inst.init_guess = np.asarray(init_guess, dtype=np.float64)
+        # 如果无法直接映射（layers==0 或者后续需要更复杂门集），可退回模板方案
+        if layers == 0:
+            template = real_amplitudes_circuit_template_converter(circuit)
+            inst.circuit_template = template
+        # 参数个数由模板/外部电路决定，不强制覆盖 n_params；init_guess 已按外部长度设置
+        return inst
+
     # ---------- PySCF solver 适配（可选） ----------
     @classmethod
     def as_pyscf_solver(cls, *, n_layers: int = 1, mapping: str = "parity", runtime: str = "device", config_function: Callable | None = None):
@@ -299,12 +404,12 @@ class HEA:
     def _expect_qubit_operator(self, qop: QubitOperator, params: Sequence[float]) -> float:
         terms = self._qop_to_term_list(qop, n_qubits=self.n)
         rt = HEADeviceRuntime(self.n, self.layers, terms)
-        return float(rt.energy(params))
+        # Use analytic expectation on simulator to avoid sampling noise in RDM
+        return float(rt.energy(params, shots=0, provider="simulator", device="statevector"))
 
     def make_rdm1(self, params: Sequence[float] | None = None) -> np.ndarray:
         """计算自旋约化的一体 RDM（spin-traced 1RDM）。需要在 from_integral/from_molecule 构建后使用。"""
-        if params is None:
-            params = self.init_guess
+        params = self._resolve_params(params)
         if self.mapping is None or self.n_elec_s is None:
             raise ValueError("RDM 需要在 from_integral/from_molecule 构建并携带 mapping 与电子数信息")
         mapping = str(self.mapping)
@@ -328,8 +433,7 @@ class HEA:
 
     def make_rdm2(self, params: Sequence[float] | None = None) -> np.ndarray:
         """计算自旋约化的二体 RDM（spin-traced 2RDM）。需要在 from_integral/from_molecule 构建后使用。"""
-        if params is None:
-            params = self.init_guess
+        params = self._resolve_params(params)
         if self.mapping is None or self.n_elec_s is None:
             raise ValueError("RDM 需要在 from_integral/from_molecule 构建并携带 mapping 与电子数信息")
         mapping = str(self.mapping)
@@ -386,15 +490,15 @@ class HEA:
             print(self.opt_res)
 
     # ---------- properties ----------
-    @property
-    def grad(self) -> str:
-        return self._grad
+    # @property
+    # def grad(self) -> str:
+    #     return self._grad
 
-    @grad.setter
-    def grad(self, v: str) -> None:
-        if v not in ("param-shift", "free"):
-            raise ValueError(f"Invalid gradient method {v}")
-        self._grad = v
+    # @grad.setter
+    # def grad(self, v: str) -> None:
+    #     if v not in ("param-shift", "free"):
+    #         raise ValueError(f"Invalid gradient method {v}")
+    #     self._grad = v
 
     @property
     def params(self) -> np.ndarray | None:
@@ -403,6 +507,14 @@ class HEA:
     @params.setter
     def params(self, p: Sequence[float]) -> None:
         self._params = np.asarray(p, dtype=np.float64)
+
+    # small helper to choose params for evaluation (optimized if available)
+    def _resolve_params(self, params: Sequence[float] | None) -> np.ndarray:
+        if params is not None:
+            return np.asarray(params, dtype=np.float64)
+        if self.params is not None:
+            return np.asarray(self.params, dtype=np.float64)
+        return np.asarray(self.init_guess, dtype=np.float64)
 
 
 # Re-exports for legacy imports convenience

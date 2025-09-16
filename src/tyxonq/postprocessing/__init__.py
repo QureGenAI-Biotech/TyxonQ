@@ -98,6 +98,29 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
                 meta = (result.get("result_meta", {}) or {})
                 items = options.get("items") or options.get("group_items") or meta.get("group_items") or []
                 identity_const = float(options.get("identity_const", meta.get("identity_const", 0.0)))
+                # Optional readout mitigation inside aggregator when calibrations provided
+                # Accept both 'readout_cals' and 'cals' as option keys; default method='inverse'
+                try:
+                    _cals = options.get("readout_cals") or options.get("cals")
+                    if counts and _cals:
+                        from .readout import ReadoutMit  # lazy import
+                        mit = ReadoutMit()
+                        mit.set_single_qubit_cals(dict(_cals))
+                        # shots inferred from counts sum; fall back to metadata if available
+                        try:
+                            _shots_meta = int((result.get("metadata", {}) or {}).get("shots", 0))
+                        except Exception:
+                            _shots_meta = 0
+                        if _shots_meta <= 0:
+                            try:
+                                _shots_meta = int(sum(int(v) for v in counts.values()))
+                            except Exception:
+                                _shots_meta = 0
+                        _mit_method = str(options.get("mitigation", "inverse"))
+                        counts = mit.apply_readout_mitigation(counts, method=_mit_method, shots=_shots_meta)
+                except Exception:
+                    # mitigation is best-effort; fall back silently on failure
+                    pass
                 # If expectations exist (shots==0, statevector), prefer analytic aggregation
                 payload = _m.expval_pauli_sum(counts, items, identity_const=identity_const, expectations=expectations if expectations else None, probabilities=probabilities, num_qubits=num_qubits)
             post["result"] = payload

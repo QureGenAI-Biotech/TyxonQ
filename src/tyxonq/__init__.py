@@ -118,19 +118,9 @@ else:
 
 
 # --- Compatibility alias: expose `tyxonq.chem` to point to applications.chem ---
-try:  # best-effort; keep import robust if chem is not present
-    from .applications import chem as _chem_app  # type: ignore
-    # Package-level alias
-    _sys.modules[__name__ + ".chem"] = _chem_app
-    # Common submodules to maintain dotted imports like `tyxonq.chem.static.uccsd`
-    for _sub in ("constants", "molecule", "dynamic", "dynamic.model", "static", "utils"):
-        try:
-            _m = _importlib.import_module(f"tyxonq.applications.chem.{_sub}")
-            _sys.modules[f"tyxonq.chem.{_sub}"] = _m
-        except Exception:
-            pass
-except Exception:
-    pass
+# from .applications import chem as _chem_app  # type: ignore
+# # Package-level alias
+# _sys.modules[__name__ + ".chem"] = _chem_app
 
 # --- Top-level core IR exports ---
 try:
@@ -241,6 +231,36 @@ try:
     __all__.extend(["set_backend", "get_backend"])
 except Exception:
     pass
+
+# --- Thin forwarding for missing attributes: backend / rdtypestr ---
+def __getattr__(name: str):
+    """Lazy attribute bridge.
+
+    If `backend` or `rdtypestr` is not initialized via set_backend(),
+    fetch current backend via get_backend(None) and expose both symbols.
+    """
+    if name in ("backend", "rdtypestr"):
+        try:
+            # get current or default backend lazily
+            bk = get_backend(None)  # type: ignore[name-defined]
+        except Exception:
+            bk = None
+        if name == "backend":
+            globals()["backend"] = bk
+            # also try to expose rdtypestr along the way
+            try:
+                globals()["rdtypestr"] = getattr(bk, "rdtypestr", "float64")
+            except Exception:
+                globals()["rdtypestr"] = "float64"
+            return bk
+        # name == "rdtypestr"
+        try:
+            rd = getattr(bk, "rdtypestr", "float64")
+        except Exception:
+            rd = "float64"
+        globals()["rdtypestr"] = rd
+        return rd
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 # --- Top-level noise controls (simulator) ---
 try:

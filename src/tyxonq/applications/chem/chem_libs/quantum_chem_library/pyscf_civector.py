@@ -151,8 +151,8 @@ def get_civector_pyscf(params, n_qubits: int, n_elec_s, ex_ops: Tuple[Tuple[int,
 
     civector = np.asarray(civector)
 
+    # Apply in the given order (align to TCC evolve_pyscf forward application)
     for ex_op, param_id in zip(ex_ops, param_ids):
-        # Match TCC: use θ (not 2θ)
         theta = float(params[param_id])
         civector = evolve_excitation_pyscf(civector, ex_op, n_orb, n_elec_s, theta)
 
@@ -178,16 +178,28 @@ def _get_gradients_pyscf(bra, ket, params, n_qubits: int, n_elec_s, ex_ops, para
 
 
 def get_energy_and_grad_pyscf(params, hamiltonian, n_qubits: int, n_elec_s, ex_ops, param_ids, mode: str = "fermion", init_state=None):
+    """Normalized CI energy and gradient in CI space: E=(c^T H c)/(c^T c)."""
     params = np.asarray(params)
     ket = get_civector_pyscf(params, n_qubits, n_elec_s, ex_ops, param_ids, mode, init_state)
-    # apply_op: expect function or (sparse/dense) matrix
-    bra = np.asarray(hamiltonian(ket) if callable(hamiltonian) else (hamiltonian @ ket))
-    energy = float(bra @ ket)
-    gradients_beforesum = _get_gradients_pyscf(bra, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
-    gradients = np.zeros(params.shape)
-    for grad, param_id in zip(gradients_beforesum, param_ids):
-        gradients[param_id] += grad
-    return energy, 2 * gradients
+    ket = np.asarray(ket, dtype=np.float64)
+    bra = np.asarray(hamiltonian(ket) if callable(hamiltonian) else (hamiltonian @ ket), dtype=np.float64)
+    N = float(bra @ ket)
+    D = float(ket @ ket)
+    energy = N / D if D != 0.0 else float("nan")
+
+    gN_pre = _get_gradients_pyscf(bra, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
+    gD_pre = _get_gradients_pyscf(ket, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
+    gN = np.zeros(params.shape)
+    gD = np.zeros(params.shape)
+    for v, pid in zip(gN_pre, param_ids):
+        gN[pid] += v
+    for v, pid in zip(gD_pre, param_ids):
+        gD[pid] += v
+    if D == 0.0:
+        gradients = np.zeros_like(params)
+    else:
+        gradients = (2.0 / D) * (gN - (N / D) * gD)
+    return float(energy), gradients
 
 
 def apply_excitation_pyscf(civector, n_qubits: int, n_elec_s, f_idx: Tuple[int, ...], mode: str):

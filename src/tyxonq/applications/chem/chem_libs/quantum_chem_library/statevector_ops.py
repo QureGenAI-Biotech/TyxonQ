@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from openfermion import jordan_wigner
+from openfermion.linalg import get_sparse_operator
 import tyxonq as tq
 
 from tyxonq.applications.chem.constants import (
@@ -11,50 +12,93 @@ from tyxonq.applications.chem.constants import (
     adad_aa_hc,
 )
 from tyxonq.libs.hamiltonian_encoding.pauli_io import ex_op_to_fop
-
-
-def _apply_excitation_numeric(statevector, f_idx, mode):
-    n_qubits = int(round(np.log2(statevector.shape[0])))
-    qubit_idx = [n_qubits - 1 - idx for idx in f_idx]
-
-    circuit = tq.Circuit(n_qubits, inputs=statevector)
-    # fermion operator index, not sorted
-    if len(qubit_idx) == 2:
-        circuit.any(*qubit_idx, unitary=ad_a_hc)
-    else:
-        assert len(qubit_idx) == 4
-        circuit.any(*qubit_idx, unitary=adad_aa_hc)
-
-    if mode != "fermion":
-        return circuit.state()
-
-    # apply all Z operators (Jordan–Wigner phase)
-    # pauli string index, already sorted
-    fop = ex_op_to_fop(f_idx)
-    qop = jordan_wigner(fop)
-    z_indices = []
-    for idx, term in next(iter(qop.terms.keys())):
-        if term != "Z":
-            assert idx in f_idx
-            continue
-        z_indices.append(n_qubits - 1 - idx)
-    sign = 1 if sorted(qop.terms.items())[0][1].real > 0 else -1
-    phase_vector = [sign]
-    for i in range(n_qubits):
-        if i in z_indices:
-            phase_vector = np.kron(phase_vector, [1, -1])
-        else:
-            phase_vector = np.kron(phase_vector, [1, 1])
-    return phase_vector * circuit.state()
+from .civector_ops import civector as _civector_build
+from .ci_state_mapping import get_ci_strings
+from .ci_operator_tensors import get_operator_tensors
+from math import comb
 
 
 def apply_excitation_statevector(statevector, n_qubits, n_elec, f_idx, mode):
-    """Apply one excitation on a statevector (numeric path only).
+    # Apply in CI space; if provided n_qubits/n_elec mismatch the civector size, infer active CAS
+    def _infer_active_from_len(k: int) -> tuple[int, int]:
+        # return (m, na) such that C(m,na)^2 == k with na<=m and closed-shell
+        for m in range(1, 16):
+            for na in range(0, m + 1):
+                if comb(m, na) ** 2 == k:
+                    return m, na
+        return -1, -1
 
-    This is a direct numeric helper used by UCC numeric runtime. It relies on
-    Circuit(inputs=state) to express small unitaries (ad_a_hc/adad_aa_hc) and
-    then correct the Jordan–Wigner phase if needed.
-    """
-    return _apply_excitation_numeric(statevector, f_idx, mode).real
+    civ = np.asarray(statevector, dtype=np.float64)
+    # try given
+    if isinstance(n_elec, (tuple, list)):
+        na, nb = int(n_elec[0]), int(n_elec[1])
+    else:
+        na = nb = int(n_elec) // 2
+    desired = comb(n_qubits // 2, na) * comb(n_qubits // 2, nb)
+    if civ.shape[0] != desired:
+        m, na_inf = _infer_active_from_len(int(civ.shape[0]))
+        if m > 0:
+            n_qubits = 2 * m
+            na = nb = na_inf
+    _, fperm, fphase, _ = get_operator_tensors(n_qubits, (na, nb), [tuple(f_idx)], mode)
+    out = civ[fperm[0]] * fphase[0]
+    return np.asarray(out, dtype=civ.dtype)
 
 
+
+
+def get_statevector_from_params(
+    params: np.ndarray,
+    n_qubits: int,
+    n_elec_s,
+    ex_ops,
+    param_ids,
+    *,
+    mode: str = "fermion",
+    init_state=None,
+) -> np.ndarray:
+    # Build CI vector using the same excitation semantics and embed into full statevector
+    civ = _civector_build(np.asarray(params, dtype=np.float64), n_qubits, n_elec_s, list(ex_ops or []), list(param_ids or []), mode=mode, init_state=None)
+    ci_strings = np.asarray(get_ci_strings(n_qubits, n_elec_s, mode), dtype=np.uint64)
+    psi = np.zeros(1 << n_qubits, dtype=np.complex128)
+    psi[ci_strings] = np.asarray(civ, dtype=np.complex128)
+    return psi
+
+
+def energy_statevector(
+    params: np.ndarray,
+    h_qubit_op,
+    n_qubits: int,
+    n_elec_s,
+    ex_ops,
+    param_ids,
+    *,
+    mode: str = "fermion",
+    init_state=None,
+) -> float:
+    psi = get_statevector_from_params(params, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
+    H = get_sparse_operator(h_qubit_op, n_qubits=n_qubits)
+    e = np.vdot(psi, H.dot(psi))
+    return float(np.real(e))
+
+
+def energy_and_grad_statevector(
+    params: np.ndarray,
+    h_qubit_op,
+    n_qubits: int,
+    n_elec_s,
+    ex_ops,
+    param_ids,
+    *,
+    mode: str = "fermion",
+    init_state=None,
+) -> tuple[float, np.ndarray]:
+    # Use backend value_and_grad wrapper to match TCC style (torchlib.func.grad_and_value)
+    from tyxonq.numerics import NumericBackend as nb
+
+    def _f(p):
+        return energy_statevector(p, h_qubit_op, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
+
+    vag = nb.value_and_grad(_f, argnums=0)
+    e0, g = vag(np.asarray(params, dtype=np.float64))
+    return float(e0), np.asarray(g, dtype=np.float64)

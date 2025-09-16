@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Set
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 
 class MeasurementRewritePass:
@@ -27,9 +27,24 @@ class MeasurementRewritePass:
     #   - Propagate `basis_map`, `estimated_settings`, and `estimated_shots_per_group`
     #     to the scheduling stage to minimize total measurement settings.
 
-    def run(self, circuit: "Circuit", **opts) -> "Circuit":
-        # 1) Group arbitrary measurement items if provided
+    def execute_plan(self, circuit: "Circuit", **opts) -> "Circuit":
+        # 1) Group arbitrary measurement items if provided (or derive from IR)
         measurements = opts.get("measurements") or []
+        if not measurements:
+            try:
+                from tyxonq.core.measurements import Expectation  # type: ignore
+            except Exception:  # pragma: no cover
+                Expectation = None  # type: ignore
+            derived = []
+            for op in getattr(circuit, "ops", []) or []:
+                if isinstance(op, (list, tuple)) and op:
+                    if str(op[0]).lower() == "measure_z" and len(op) >= 2:
+                        if Expectation is not None:
+                            derived.append(Expectation(obs="Z", wires=(int(op[1]),)))
+                        else:
+                            derived.append({"obs": "Z", "wires": (int(op[1]),)})
+            if derived:
+                measurements = derived
         groups = _group_measurements(measurements)
 
         # 2) Optionally, group Hamiltonian-like inputs for Pauli-sum energies

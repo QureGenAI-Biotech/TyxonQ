@@ -4,7 +4,7 @@ from typing import Any, Dict, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
-    from tyxonq.devices import DeviceCapabilities
+    from tyxonq.devices import DeviceRule
 
 
 DEFAULT_MERGE_RULES: Dict[Tuple[str, str], str] = {
@@ -33,7 +33,7 @@ class MergePrunePass:
         if rules:
             self.rules.update(rules)
 
-    def run(self, circuit: "Circuit", caps: "DeviceCapabilities", **opts: Any) -> "Circuit":
+    def execute_plan(self, circuit: "Circuit", device_rule: "DeviceRule" = None, **opts: Any) -> "Circuit":
         ops = list(circuit.ops)
         changed = True
         while changed:

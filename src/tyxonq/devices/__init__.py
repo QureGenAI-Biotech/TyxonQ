@@ -1,7 +1,7 @@
 """Execution devices: simulators and hardware adapters."""
 
-from .base import Device, DeviceCapabilities, RunResult
+from .base import Device, DeviceRule, RunResult
 
-__all__ = ["Device", "DeviceCapabilities", "RunResult"]
+__all__ = ["Device", "DeviceRule", "RunResult"]
 
 
