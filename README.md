@@ -1,5 +1,5 @@
 <h2><p align="center">TyxonQ</p></h2>
-<h3><p align="center">A modular full-stack Quantum Software Framework on Real Machine</p></h3>
+<h3><p align="center">A Modular Full-stack Quantum Software Framework on Real Machine</p></h3>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
