@@ -13,9 +13,9 @@ TyxonQ 太玄量子 is a next‑generation quantum programming framework with a 
 ### Core goals
 - **System‑architect‑friendly, hardware‑realistic programming model**: stable IR + chain pipeline mirroring real device execution; clear contracts for compiler, devices, and postprocessing; closest‑to‑hardware code path.
 
-- **QC<sup>2</sup>(Quantum Computing for Quantum Chemistry)**: PySCF‑like UX,hardware‑realistic execution: familiar molecule/ansatz APIs that route to device or numerics without changing user code.
+- **Quantum AIDD (Quantum Computational Chemistry for advanced AI Drug Design)**: PySCF‑like UX, hardware‑realistic execution; familiar molecule/ansatz APIs route to device or numerics without code changes. Mission: prioritize drug design—provide missing microscopic Quantum Chemistry data and robust computational tools for AI drug discovery; roadmap includes drug design–oriented Hamiltonians, method optimization, and AI‑for‑QC.
 
-- **Dual paths**:  Hamiltonians, measurement grouping, shot planning, device execution (shots/noise) and exact numerics (statevector/MPS) with shared semantics.
+- **Dual paths**: Hamiltonians, measurement grouping, shot planning, device execution (shots/noise) and exact numerics (statevector/MPS) with shared semantics.
 
 - **Extensible domain layer**: algorithms and chem libs are modular for specialized extensions.
 
@@ -134,7 +134,7 @@ tq.set_token(API_KEY) # Get from https://www.tyxonq.com
 
 
 
-### QC<sup>2</sup> Key features
+### Quantum AIDD Key features
 - **Algorithms**: HEA and UCC family (UCC/UCCSD/k‑UpCCGSD/pUCCD) with consistent energy/gradient/kernel APIs.
 - **Runtimes**: device runtime forwards grouped measurements to postprocessing; numeric runtime provides exact statevector/civector (supports PyTorch autograd).
 - **Hamiltonians**: unified sparse/MPO/FCI‑function outputs; convenient molecule factories (`applications/chem/molecule.py`).
@@ -142,6 +142,12 @@ tq.set_token(API_KEY) # Get from https://www.tyxonq.com
 - **Properties**: RDM1/2 and basic property operators; dynamics numeric path caches MPO/term matrices to avoid rebuilds.
 - **Bridges**: OpenFermion I/O via `libs/hamiltonian_encoding`; tight interop with PySCF for references and integrals.
 - **Chem libs**: `applications/chem/chem_libs/` including `circuit_chem_library` (UCC family ansatz), `quantum_chem_library` (CI/civector ops), `hamiltonians_chem_library` (HF/integrals → Hamiltonians).
+
+- **AIDD (AI Drug Design) field Feature**
+  - Drug‑design‑oriented Hamiltonians and workflows (ligand–receptor fragments, solvent/embedding, coarse‑grained models) prioritized for AI Drug Design.
+  - Method optimization for AIDD tasks: tailored ansatz/measurement grouping, batched parameter‑shift/QNG, adaptive shot allocation.
+  - AI‑for‑QC bridges: standardized data schemas and export of Quantum Chemistry field data (energies, RDMs, expectations,ansatz,active space,etc) for QC algorithms development.
+  - Expanded properties and excited states (VQD/pVQD) aligned with spectroscopy and binding‑relevant observables.
 
 
 ## Dependencies
