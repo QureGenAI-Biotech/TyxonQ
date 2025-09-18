@@ -103,9 +103,9 @@ class RSTGenerator:
 if __name__ == "__main__":
     # All path must be relative path to the folder of moduels.rst
     RSTGenerator(
-        "tensorcircuit",
+        "tyxonq",
         "./api",
-        "../../tensorcircuit",
+        "../../tyxonq",
         [
             "__init__",
             "abstract_backend",

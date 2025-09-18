@@ -1,6 +1,6 @@
-tensorcircuit.templates.conversions
+tyxonq.templates.conversions
 ================================================================================
-.. automodule:: tensorcircuit.templates.conversions
+.. automodule:: tyxonq.templates.conversions
     :members:
     :undoc-members:
     :show-inheritance:

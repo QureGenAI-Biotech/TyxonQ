@@ -1,6 +1,6 @@
-tensorcircuit.cloud.abstraction
+tyxonq.cloud.abstraction
 ================================================================================
-.. automodule:: tensorcircuit.cloud.abstraction
+.. automodule:: tyxonq.cloud.abstraction
     :members:
     :undoc-members:
     :show-inheritance:

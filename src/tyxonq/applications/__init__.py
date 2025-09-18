@@ -1,5 +1,15 @@
+"""Top-level applications package for TyxonQ.
+
+Ensures that subpackages like `tyxonq.applications.chem` are importable
+as regular packages (not relying on namespace package semantics), which
+stabilizes test collection across environments.
 """
-The application codebase is related to research and previous version of tensorcircuit,
-the code inside is subject to change, be caution to use.
-Most of the useful code is and will be refactored and copied to other parts of tensorcircuit.
-"""
+
+
+from . import chem
+
+__all__ = [
+    "chem",
+]
+
+

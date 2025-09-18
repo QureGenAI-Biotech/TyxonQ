@@ -195,3 +195,11 @@ cython_debug/
 .cursorindexingignore
 uv.lock
 local_docs/
+
+.DS_Store
+
+#pytorch minst dataset
+examples/data
+
+examples/circuit.json
+examples/qml_param_v2.npy

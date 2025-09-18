@@ -1,6 +1,6 @@
-tensorcircuit.gates
+tyxonq.gates
 ================================================================================
-.. automodule:: tensorcircuit.gates
+.. automodule:: tyxonq.gates
     :members:
     :undoc-members:
     :show-inheritance:

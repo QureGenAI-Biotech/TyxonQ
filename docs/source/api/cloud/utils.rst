@@ -1,6 +1,6 @@
-tensorcircuit.cloud.utils
+tyxonq.cloud.utils
 ================================================================================
-.. automodule:: tensorcircuit.cloud.utils
+.. automodule:: tyxonq.cloud.utils
     :members:
     :undoc-members:
     :show-inheritance:

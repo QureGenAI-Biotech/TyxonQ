@@ -1,12 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  tensorcircuit\n"
+"Project-Id-Version:  tyxonq\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-13 11:04+0800\n"
 "PO-Revision-Date: 2022-04-11 07:50+0800\n"
@@ -91,12 +91,12 @@ msgstr ""
 #: ../../source/advance.rst:56
 msgid ""
 "We wrap the tf-backend `SavedModel` as very easy-to-use function "
-":py:meth:`tensorcircuit.keras.save_func` and "
-":py:meth:`tensorcircuit.keras.load_func`."
+":py:meth:`tyxonq.keras.save_func` and "
+":py:meth:`tyxonq.keras.load_func`."
 msgstr ""
 "我们将 tf-backend `SavedModel` 包装为非常易于使用的函数 "
-":py:meth:`tensorcircuit.keras.save_func` 和 "
-":py:meth:`tensorcircuit.keras.load_func`。"
+":py:meth:`tyxonq.keras.save_func` 和 "
+":py:meth:`tyxonq.keras.load_func`。"
 
 #: ../../source/advance.rst:59
 msgid "Parameterized Measurements"
@@ -118,10 +118,10 @@ msgid ""
 "In some cases, we may want to tell the software what to measure but in a "
 "tensor fashion. For example, if we want to get the above expectation, we "
 "can use the following API: "
-":py:meth:`tensorcircuit.templates.measurements.parameterized_measurements`."
+":py:meth:`tyxonq.templates.measurements.parameterized_measurements`."
 msgstr ""
 "在某些情况下，我们可能希望以张量形式告诉软件要测量什么。例如，如果我们想获得上述期望，我们可以使用以下 API ： "
-":py:meth:`tensorcircuit.templates.measurements.parameterized_measurements`。"
+":py:meth:`tyxonq.templates.measurements.parameterized_measurements`。"
 
 #: ../../source/advance.rst:70
 msgid ""
@@ -145,17 +145,17 @@ msgid ""
 "The sparse matrix is specifically useful to evaluate Hamiltonian "
 "expectation on the circuit, where sparse matrix representation has a good"
 " tradeoff between space and time. Please refer to "
-":py:meth:`tensorcircuit.templates.measurements.sparse_expectation` for "
+":py:meth:`tyxonq.templates.measurements.sparse_expectation` for "
 "more detail."
 msgstr ""
 "稀疏矩阵对于评估电路上的哈密顿期望特别有用，其中稀疏矩阵表示在空间和时间之间具有良好的效率。请参阅 "
-":py:meth:`tensorcircuit.templates.measurements.sparse_expectation` "
+":py:meth:`tyxonq.templates.measurements.sparse_expectation` "
 "了解更多详细信息。"
 
 #: ../../source/advance.rst:93
 msgid ""
 "For different representations to evaluate Hamiltonian expectation in "
-"tensorcircuit, please refer to :doc:`tutorials/tfim_vqe_diffreph`."
+"tyxonq, please refer to :doc:`tutorials/tfim_vqe_diffreph`."
 msgstr "对于在张量电路中评估哈密顿期望的不同表示，请参阅 :doc:`tutorials/tfim_vqe_diffreph` 。"
 
 #: ../../source/advance.rst:96

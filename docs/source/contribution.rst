@@ -1,7 +1,7 @@
 Guide for Contributors
 ============================
 
-We welcome everyone’s contributions! The development of TensorCircuit is open-sourced and centered on `GitHub <https://github.com/tencent-quantum-lab/tensorcircuit>`_.
+We welcome everyone’s contributions! The development of TyxonQ is open-sourced and centered on `GitHub <https://github.com/QureGenAI-Biotech/TyxonQ>`_.
 
 There are various ways to contribute:
 
@@ -29,14 +29,14 @@ The following git workflow is recommended for contribution by PR:
     git config user.name <GitHub name>
     git config user.email <GitHub email>
 
-* Fork the TensorCircuit repository by clicking the Fork button on GitHub. This will create an independent version of the codebase in your own GitHub account.
+* Fork the TyxonQ repository by clicking the Fork button on GitHub. This will create an independent version of the codebase in your own GitHub account.
 
-* Clone your forked repository and set up an ``upstream`` reference to the official TensorCircuit repository.
+* Clone your forked repository and set up an ``upstream`` reference to the official TyxonQ repository.
 
 .. code-block:: bash
 
     git clone <your-forked-repo-git-link>
-    cd tensorcircuit
+    cd tyxonq
     git remote add upstream <official-repo-git-link>
 
 * Configure the python environment locally for development. The following commands are recommended:
@@ -84,7 +84,7 @@ Extra packages may be required for specific development tasks.
 
   git push --set-upstream origin <name-of-change>
 
-* Create a PR from the official TensorCircuit repository and send it for review. Some comments and remarks attached with the PR are recommended. If the PR is not finally finished, please add [WIP] at the beginning of the title of your PR.
+* Create a PR from the official TyxonQ repository and send it for review. Some comments and remarks attached with the PR are recommended. If the PR is not finally finished, please add [WIP] at the beginning of the title of your PR.
 
 * The PR will be reviewed by the developers and may get approved or change requested. In the latter case, you can further revise the PR according to suggestions and feedback from the code reviewers.
 
@@ -126,16 +126,16 @@ We also have included some micro-benchmark tests, which work with ``pip install 
 **Fixtures:**
 
 There are some pytest fixtures defined in the conftest file, which are for customization on backends and dtype in function level.
-``highp`` is a fixture for complex128 simulation. While ``npb``, ``tfb``, ``jaxb`` and ``torchb`` are fixtures for global numpy, tensorflow, jax and pytorch backends, respectively.
+``highp`` is a fixture for complex128 simulation. While ``npb`` and ``torchb`` are fixtures for global numpy and pytorch backends, respectively.
 To test different backends in one function, we need to use the parameterized fixture, which is enabled by ``pip install pytest-lazy-fixture``. Namely, we have the following approach to test different backends in one function.
 
 .. code-block:: python
 
     from pytest_lazyfixture import lazy_fixture as lf
 
-    @pytest.mark.parametrize("backend", [lf("npb"), lf("tfb"), lf("jaxb"), lf("torchb")])
+    @pytest.mark.parametrize("backend", [lf("npb"), lf("torchb")])
     def test_parameterized_backend(backend):
-        print(tc.backend.name)
+        print(tq.backend.name)
 
 
 
@@ -202,7 +202,7 @@ in latex, which is an illegal latex code.
 
 **Auto Generation of API Docs:**
 
-We utilize a python script to generate/refresh all API docs rst files under /docs/source/api based on the codebase /tensorcircuit.
+We utilize a python script to generate/refresh all API docs rst files under /docs/source/api based on the codebase /tyxonq.
 
 .. code-block:: bash
 
@@ -248,7 +248,7 @@ And from GitHub page choose draft a release from tag.
 
     python setup.py sdist bdist_wheel
     export VERSION=0.x.y
-    twine upload dist/tensorcircuit-${VERSION}-py3-none-any.whl dist/tensorcircuit-${VERSION}.tar.gz
+    twine upload dist/tyxonq-${VERSION}-py3-none-any.whl dist/tyxonq-${VERSION}.tar.gz
 
 
 **DockerHub Release**
@@ -257,13 +257,13 @@ Make sure the DockerHub account is logged in via ``docker login``.
 
 .. code-block:: bash
 
-    sudo docker build . -f docker/Dockerfile -t tensorcircuit
-    sudo docker tag tensorcircuit:latest tensorcircuit/tensorcircuit:0.x.y
-    sudo docker push tensorcircuit/tensorcircuit:0.x.y
-    sudo docker tag tensorcircuit:latest tensorcircuit/tensorcircuit:latest
-    sudo docker push tensorcircuit/tensorcircuit:latest
+    sudo docker build . -f docker/Dockerfile -t tyxonq
+    sudo docker tag tyxonq:latest tyxonq/tyxonq:0.x.y
+    sudo docker push tyxonq/tyxonq:0.x.y
+    sudo docker tag tyxonq:latest tyxonq/tyxonq:latest
+    sudo docker push tyxonq/tyxonq:latest
 
 **Binder Release**
 
-One may need to update the tensorcirucit version for binder environment by pushing new commit in refraction-ray/tc-env repo with new version update in its ``requriements.txt``.
+One may need to update the tyxonq version for binder environment by pushing new commit in refraction-ray/tq-env repo with new version update in its ``requriements.txt``.
 See `mybind setup <https://discourse.jupyter.org/t/tip-speed-up-binder-launches-by-pulling-github-content-in-a-binder-link-with-nbgitpuller/922>`_ for speed up via nbgitpuller. 

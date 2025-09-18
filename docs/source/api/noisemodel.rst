@@ -1,6 +1,6 @@
-tensorcircuit.noisemodel
+tyxonq.noisemodel
 ================================================================================
-.. automodule:: tensorcircuit.noisemodel
+.. automodule:: tyxonq.noisemodel
     :members:
     :undoc-members:
     :show-inheritance:

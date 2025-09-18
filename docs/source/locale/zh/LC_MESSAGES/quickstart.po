@@ -1,12 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  tensorcircuit\n"
+"Project-Id-Version:  tyxonq\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-14 15:43+0800\n"
 "PO-Revision-Date: 2023-05-07 11:01+0800\n"
@@ -31,8 +31,8 @@ msgid "For x86 Linux,"
 msgstr "x64 Linux"
 
 #: ../../source/quickstart.rst:10
-msgid "``pip install tensorcircuit``"
-msgstr "``pip install tensorcircuit``"
+msgid "``pip install tyxonq``"
+msgstr "``pip install tyxonq``"
 
 #: ../../source/quickstart.rst:12
 msgid ""
@@ -66,14 +66,14 @@ msgstr ""
 #: ../../source/quickstart.rst:26
 msgid ""
 "``sudo docker run -it --network host --gpus all "
-"tensorcircuit/tensorcircuit``."
+"tyxonq/tyxonq``."
 msgstr ""
 
 #: ../../source/quickstart.rst:28
 msgid ""
 "For more details on docker setup, please refer to `docker readme "
 "<https://github.com/tencent-quantum-"
-"lab/tensorcircuit/tree/master/docker>`_."
+"lab/tyxonq/tree/master/docker>`_."
 msgstr ""
 
 #: ../../source/quickstart.rst:30
@@ -90,10 +90,10 @@ msgstr "For MacOS, please refer to `在Mac上安装TC <contribs/development_Mac_
 
 #: ../../source/quickstart.rst:34
 msgid ""
-"Overall, the installation of TensorCircuit is simple, since it is purely "
+"Overall, the installation of TyxonQ is simple, since it is purely "
 "in Python and hence very portable. As long as the users can take care of "
 "the installation of ML frameworks on the corresponding system, "
-"TensorCircuit will work as expected."
+"TyxonQ will work as expected."
 msgstr ""
 
 #: ../../source/quickstart.rst:37
@@ -104,9 +104,9 @@ msgstr ""
 
 #: ../../source/quickstart.rst:40
 msgid ""
-"We also provide a nightly build of tensorcircuit via PyPI which can be "
-"accessed by ``pip uninstall tensorcircuit``, then ``pip install "
-"tensorcircuit-nightly``"
+"We also provide a nightly build of tyxonq via PyPI which can be "
+"accessed by ``pip uninstall tyxonq``, then ``pip install "
+"tyxonq-nightly``"
 msgstr ""
 
 #: ../../source/quickstart.rst:46
@@ -114,7 +114,7 @@ msgid "Circuit Object"
 msgstr "电路对象"
 
 #: ../../source/quickstart.rst:48
-msgid "The basic object for TensorCircuit is ``tc.Circuit``."
+msgid "The basic object for TyxonQ is ``tc.Circuit``."
 msgstr "TensorCircuit的基本对象是 ``tc.Circuit``。"
 
 #: ../../source/quickstart.rst:50
@@ -313,10 +313,10 @@ msgstr "**电路中间表示:**"
 
 #: ../../source/quickstart.rst:139
 msgid ""
-"TensorCircuit provides its own circuit IR as a python list of dicts. This"
+"TyxonQ provides its own circuit IR as a python list of dicts. This"
 " IR can be further utilized to run compiling, generate serialization "
 "qasm, or render circuit figures."
-msgstr "TensorCircuit 提供自己的中间表示是元素是字典的列表。此中间表示可进一步用于运行编译、生成序列化 qasm 或渲染电路图。"
+msgstr "TyxonQ 提供自己的中间表示是元素是字典的列表。此中间表示可进一步用于运行编译、生成序列化 qasm 或渲染电路图。"
 
 #: ../../source/quickstart.rst:141
 msgid ""
@@ -334,9 +334,9 @@ msgstr "编程范式"
 #: ../../source/quickstart.rst:155
 msgid ""
 "The most common case and the most typical programming paradigm for "
-"TensorCircuit are to evaluate the circuit output and the corresponding "
+"TyxonQ are to evaluate the circuit output and the corresponding "
 "quantum gradients, which is common in variational quantum algorithms."
-msgstr "TensorCircuit 最常见的情况和最典型的编程范式是评估电路的输出以及相应的量子梯度，这在变分量子算法中很常见。"
+msgstr "TyxonQ 最常见的情况和最典型的编程范式是评估电路的输出以及相应的量子梯度，这在变分量子算法中很常见。"
 
 #: ../../source/quickstart.rst:182
 #, fuzzy
@@ -345,23 +345,23 @@ msgid ""
 "backend agnostic feature, variables with pytree support, AD/jit/vmap "
 "usage, and variational optimization loops. Please refer to the example "
 "script: `linear regression example <https://github.com/tencent-quantum-"
-"lab/tensorcircuit/blob/master/examples/universal_lr.py>`_. This example "
+"lab/tyxonq/blob/master/examples/universal_lr.py>`_. This example "
 "might be more friendly to the machine learning community since it is "
 "purely classical while also showcasing the main features and paradigms of"
-" tensorcircuit."
+" tyxonq."
 msgstr ""
 "同样对于演示后端不可知特性的非量子示例（线性回归），pytree 支持变量、自动微分/即时编译/矢量并行化 用法和变分优化循环。请参考示例脚本: "
-"`线性回归示例 <https://github.com/quclub/tensorcircuit-"
+"`线性回归示例 <https://github.com/quclub/tyxonq-"
 "dev/blob/master/examples/universal_lr.py>`_ 。 "
-"这个例子可能对机器学习的用户更友好，因为它纯粹是经典的，同时也展示了 TensorCircuit 的主要特征和范式。"
+"这个例子可能对机器学习的用户更友好，因为它纯粹是经典的，同时也展示了 TyxonQ 的主要特征和范式。"
 
 #: ../../source/quickstart.rst:185
 msgid ""
 "If the user has no intention to maintain the application code in a "
 "backend agnostic fashion, the API for ML frameworks can be more handily "
-"used and interleaved with the TensorCircuit API."
+"used and interleaved with the TyxonQ API."
 msgstr ""
-"如果用户无意以与后端无关的方式维护应用程序代码，则可以更方便地使用用于机器学习框架的 API 并将其与 TensorCircuit API "
+"如果用户无意以与后端无关的方式维护应用程序代码，则可以更方便地使用用于机器学习框架的 API 并将其与 TyxonQ API "
 "交替使用。"
 
 #: ../../source/quickstart.rst:220
@@ -378,12 +378,12 @@ msgstr ""
 
 #: ../../source/quickstart.rst:224
 msgid ""
-"The related API design in TensorCircuit closely follows the functional "
+"The related API design in TyxonQ closely follows the functional "
 "programming design pattern in Jax with some slight differences. So we "
 "strongly recommend users learn some basics about Jax no matter which ML "
 "backend they intend to use."
 msgstr ""
-"TensorCircuit 中的相关 API 设计与 Jax 中的函数式编程的设计模式密切相关，但是略有不同。因此，我们强烈建议用户学习一些有关 "
+"TyxonQ 中的相关 API 设计与 Jax 中的函数式编程的设计模式密切相关，但是略有不同。因此，我们强烈建议用户学习一些有关 "
 "Jax 的基础知识，无论他们打算使用哪种机器学习后端。"
 
 #: ../../source/quickstart.rst:226
@@ -435,11 +435,11 @@ msgstr "后端无关特性"
 
 #: ../../source/quickstart.rst:247
 msgid ""
-"TensorCircuit supports TensorFlow, Jax, and PyTorch backends. We "
+"TyxonQ supports TensorFlow, Jax, and PyTorch backends. We "
 "recommend using TensorFlow or Jax backend since PyTorch lacks advanced "
 "jit and vmap features."
 msgstr ""
-"TensorCircuit 支持 TensorFlow、Jax 和 PyTorch 后端。 我们建议使用 TensorFlow 或 Jax "
+"TyxonQ 支持 TensorFlow、Jax 和 PyTorch 后端。 我们建议使用 TensorFlow 或 Jax "
 "后端，因为 PyTorch 缺乏高级 jit 和 vmap 功能。"
 
 #: ../../source/quickstart.rst:249
@@ -457,14 +457,14 @@ msgid ""
 "The supported APIs in the backend come from two sources, one part is "
 "implemented in `TensorNetwork package "
 "<https://github.com/google/TensorNetwork/blob/master/tensornetwork/backends/abstract_backend.py>`__"
-" and the other part is implemented in `TensorCircuit package "
-"<modules.html#module-tensorcircuit.backends>`__. To see all the backend "
+" and the other part is implemented in `TyxonQ package "
+"<modules.html#module-tyxonq.backends>`__. To see all the backend "
 "agnostic APIs, try:"
 msgstr ""
 "在后端支持的 APIs 有两个来源 , 一个来自 `TensorNetwork "
 "<https://github.com/google/TensorNetwork/blob/master/tensornetwork/backends/abstract_backend.py>`__"
-" 另一个来自 `TensorCircuit package <modules.html#module-"
-"tensorcircuit.backends>`__。"
+" 另一个来自 `TyxonQ package <modules.html#module-"
+"tyxonq.backends>`__。"
 
 #: ../../source/quickstart.rst:427
 msgid "​"
@@ -476,11 +476,11 @@ msgstr "转换 dtype"
 
 #: ../../source/quickstart.rst:432
 msgid ""
-"TensorCircuit supports simulation using 32/64 bit precession. The default"
+"TyxonQ supports simulation using 32/64 bit precession. The default"
 " dtype is 32-bit as \"complex64\". Change this by "
 "``tc.set_dtype(\"complex128\")``."
 msgstr ""
-"TensorCircuit 支持使用 32/64 bit 精确度的模拟。默认的 dtype 是 32-bit 的 "
+"TyxonQ 支持使用 32/64 bit 精确度的模拟。默认的 dtype 是 32-bit 的 "
 "\"complex64\"。可以通过  ``tc.set_dtype(\"complex128\")`` 把 dtype 改为 \"complex"
 " 128\" 。"
 
@@ -496,10 +496,10 @@ msgstr "设置 contractor"
 
 #: ../../source/quickstart.rst:441
 msgid ""
-"TensorCircuit is a tensornetwork contraction-based quantum circuit "
+"TyxonQ is a tensornetwork contraction-based quantum circuit "
 "simulator. A contractor is for searching for the optimal contraction path"
 " of the circuit tensornetwork."
-msgstr "TensorCircuit 是一个基于张量网络收缩的量子电路模拟器。 contractor 用于搜索电路张量网络的最佳收缩路径。"
+msgstr "TyxonQ 是一个基于张量网络收缩的量子电路模拟器。 contractor 用于搜索电路张量网络的最佳收缩路径。"
 
 #: ../../source/quickstart.rst:443
 msgid ""
@@ -531,12 +531,12 @@ msgid ""
 "cotengra `doc "
 "<https://cotengra.readthedocs.io/en/latest/advanced.html>`__ and more "
 "fancy examples can be found at `contractor tutorial <https://github.com"
-"/tencent-quantum-lab/tensorcircuit-"
+"/tencent-quantum-lab/tyxonq-"
 "tutorials/blob/master/tutorials/contractors.ipynb>`__."
 msgstr ""
 "有关 cotengra contractor 的高级配置，请参阅 cotengra `doc "
 "<https://cotengra.readthedocs.io/en/latest/advanced.html>`__ 更多精彩示例在  "
-"`contractor 教程 <https:// github.com/quclub/tensorcircuit-"
+"`contractor 教程 <https:// github.com/quclub/tyxonq-"
 "tutorials/blob/master/tutorials/contractors.ipynb>`__."
 
 #: ../../source/quickstart.rst:475
@@ -560,10 +560,10 @@ msgstr "**蒙特卡洛态模拟器**"
 #: ../../source/quickstart.rst:499
 msgid ""
 "For the Monte Carlo trajectory noise simulator, the unitary Kraus channel"
-" can be handled easily. TensorCircuit also supports fully jittable and "
+" can be handled easily. TyxonQ also supports fully jittable and "
 "differentiable general Kraus channel Monte Carlo simulation, though."
 msgstr ""
-"对于蒙特卡洛轨迹噪声模拟器，可以轻松处理幺正的 Kraus 通道。 不过，TensorCircuit 还支持完全可即时编译和可微分的通用 "
+"对于蒙特卡洛轨迹噪声模拟器，可以轻松处理幺正的 Kraus 通道。 不过，TyxonQ 还支持完全可即时编译和可微分的通用 "
 "Kraus 通道蒙特卡罗模拟。"
 
 #: ../../source/quickstart.rst:526
@@ -601,10 +601,10 @@ msgstr "矩阵乘积状态和矩阵乘积算子"
 
 #: ../../source/quickstart.rst:595
 msgid ""
-"TensorCircuit has its class for MPS and MPO originally defined in "
+"TyxonQ has its class for MPS and MPO originally defined in "
 "TensorNetwork as ``tc.QuVector``, ``tc.QuOperator``."
 msgstr ""
-"TensorCircuit 有自己的 MPS 和 MPO 类，起初在 TensorNetwork 中定义为“tc.QuVector” 和 "
+"TyxonQ 有自己的 MPS 和 MPO 类，起初在 TensorNetwork 中定义为“tc.QuVector” 和 "
 "“tc.QuOperator”。"
 
 #: ../../source/quickstart.rst:597
@@ -691,9 +691,9 @@ msgstr ""
 #: ../../source/quickstart.rst:694
 msgid ""
 "For a GPU/CPU, torch/tensorflow, quantum/classical hybrid machine "
-"learning pipeline enabled by tensorcircuit, see `example script "
+"learning pipeline enabled by tyxonq, see `example script "
 "<https://github.com/tencent-quantum-"
-"lab/tensorcircuit/blob/master/examples/hybrid_gpu_pipeline.py>`__."
+"lab/tyxonq/blob/master/examples/hybrid_gpu_pipeline.py>`__."
 msgstr ""
 
 #: ../../source/quickstart.rst:696
@@ -705,14 +705,14 @@ msgstr ""
 #: ../../source/quickstart.rst:710
 msgid ""
 "We also provider wrapper of quantum function for torch module as "
-":py:meth:`tensorcircuit.TorchLayer` alias to "
-":py:meth:`tensorcircuit.torchnn.QuantumNet`."
+":py:meth:`tyxonq.TorchLayer` alias to "
+":py:meth:`tyxonq.torchnn.QuantumNet`."
 msgstr ""
 
 #: ../../source/quickstart.rst:712
 msgid ""
 "For ``TorchLayer``, ``use_interface=True`` is by default, which natively "
-"allow the quantum function defined on other tensorcircuit backends, such "
+"allow the quantum function defined on other tyxonq backends, such "
 "as jax or tf for speed consideration."
 msgstr ""
 
@@ -730,7 +730,7 @@ msgstr ""
 msgid ""
 "Similar rules apply similar as torch interface. The interface can even be"
 " used within jit environment outside. See "
-":py:meth:`tensorcircuit.interfaces.tensorflow.tensorflow_interface`."
+":py:meth:`tyxonq.interfaces.tensorflow.tensorflow_interface`."
 msgstr ""
 
 #: ../../source/quickstart.rst:747
@@ -743,8 +743,8 @@ msgstr ""
 #: ../../source/quickstart.rst:750
 msgid ""
 "We also provider wrapper of quantum function for keras layer as "
-":py:meth:`tensorcircuit.KerasLayer` alias to "
-":py:meth:`tensorcircuit.keras.KerasLayer`."
+":py:meth:`tyxonq.KerasLayer` alias to "
+":py:meth:`tyxonq.keras.KerasLayer`."
 msgstr ""
 
 #: ../../source/quickstart.rst:752
@@ -778,8 +778,8 @@ msgstr "在一般图上定义的伊辛型哈密顿量"
 #: ../../source/quickstart.rst:808
 msgid ""
 "See "
-":py:meth:`tensorcircuit.templates.measurements.spin_glass_measurements`"
-msgstr "参考 :py:meth:`tensorcircuit.templates.measurements.spin_glass_measurements`"
+":py:meth:`tyxonq.templates.measurements.spin_glass_measurements`"
+msgstr "参考 :py:meth:`tyxonq.templates.measurements.spin_glass_measurements`"
 
 #: ../../source/quickstart.rst:810
 msgid "Heisenberg Hamiltonian on a general graph with possible external fields"
@@ -788,8 +788,8 @@ msgstr "具有可能存在的外场的一般图上的海森堡哈密顿量"
 #: ../../source/quickstart.rst:812
 msgid ""
 "See "
-":py:meth:`tensorcircuit.templates.measurements.heisenberg_measurements`"
-msgstr "参考 :py:meth:`tensorcircuit.templates.measurements.heisenberg_measurements`"
+":py:meth:`tyxonq.templates.measurements.heisenberg_measurements`"
+msgstr "参考 :py:meth:`tyxonq.templates.measurements.heisenberg_measurements`"
 
 #: ../../source/quickstart.rst:814
 msgid "**Circuit Blocks:**"
@@ -806,34 +806,34 @@ msgstr "**电路块**"
 
 #~ msgid ""
 #~ "For beta version usage, one needs "
-#~ "to install tensorcircuit package from "
+#~ "to install tyxonq package from "
 #~ "GitHub. For development and PR workflow,"
 #~ " please refer to `contribution "
 #~ "<contribution.html>`__ instead."
 #~ msgstr ""
-#~ "如需使用测试版本，则需要从 GitHub 安装 tensorcircuit。对于开发和 PR"
+#~ "如需使用测试版本，则需要从 GitHub 安装 tyxonq。对于开发和 PR"
 #~ " 工作流程，请另外参考 `贡献 <contribution.html>`__ 。"
 
 #~ msgid ""
-#~ "For private tensorcircuit-dev repo, one"
+#~ "For private tyxonq-dev repo, one"
 #~ " needs to first configure the SSH "
 #~ "key on GitHub and locally, please "
 #~ "refer to `GitHub doc "
 #~ "<https://docs.github.com/en/authentication/connecting-to-"
 #~ "github-with-ssh>`__"
 #~ msgstr ""
-#~ "对于私有 tensorcircuit 开发库，首先需要在 GitHub 和本地配置 "
+#~ "对于私有 tyxonq 开发库，首先需要在 GitHub 和本地配置 "
 #~ "SSH 密钥, 请参考 `GitHub 文档 "
 #~ "<https://docs.github.com/en/authentication/connecting-to-"
 #~ "github-with-ssh>`__"
 
 #~ msgid ""
 #~ "Then try ``pip3 install --force-"
-#~ "reinstall git+ssh://git@github.com/quclub/tensorcircuit-"
+#~ "reinstall git+ssh://git@github.com/quclub/tyxonq-"
 #~ "dev.git`` in shell."
 #~ msgstr ""
 #~ "然后尝试在命令行窗口中输入 ``pip3 install --force-reinstall"
-#~ " git+ssh://git@github.com/quclub/tensorcircuit-dev.git`` "
+#~ " git+ssh://git@github.com/quclub/tyxonq-dev.git`` "
 #~ "。"
 
 #~ msgid ""

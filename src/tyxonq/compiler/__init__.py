@@ -1,8 +1,7 @@
-"""
-Experimental module, no software agnostic unified interface for now,
-only reserve for internal use
-"""
+"""Compiler interfaces and stages."""
 
-from .composed_compiler import Compiler, DefaultCompiler, default_compile
-from . import simple_compiler
-from . import qiskit_compiler
+from .api import CompileResult, Pass
+
+__all__ = ["CompileResult", "Pass"]
+
+# Legacy imports disabled in refactor to avoid side effects

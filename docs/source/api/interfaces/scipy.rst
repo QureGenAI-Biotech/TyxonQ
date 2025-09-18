@@ -1,6 +1,6 @@
-tensorcircuit.interfaces.scipy
+tyxonq.interfaces.scipy
 ================================================================================
-.. automodule:: tensorcircuit.interfaces.scipy
+.. automodule:: tyxonq.interfaces.scipy
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,6 +1,6 @@
-tensorcircuit.cloud.tencent
+tyxonq.cloud.tencent
 ================================================================================
-.. automodule:: tensorcircuit.cloud.tencent
+.. automodule:: tyxonq.cloud.tencent
     :members:
     :undoc-members:
     :show-inheritance:

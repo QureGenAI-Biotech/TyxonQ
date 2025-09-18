@@ -1,12 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: tensorcircuit\n"
+"Project-Id-Version: tyxonq\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-08 21:05+0800\n"
 "PO-Revision-Date: 2022-04-16 22:35+0800\n"
@@ -20,8 +20,8 @@ msgstr ""
 "X-Generator: Poedit 1.6.11\n"
 
 #: ../../source/index_cn.rst:2
-msgid "Guide to TensorCircuit"
-msgstr "TensoCircuit 指南"
+msgid "Guide to TyxonQ"
+msgstr "TyxonQ 指南"
 
 #: ../../source/index_cn.rst:16
 msgid "API References"

@@ -1,6 +1,6 @@
-tensorcircuit.backends.numpy_backend
+tyxonq.backends.numpy_backend
 ================================================================================
-.. automodule:: tensorcircuit.backends.numpy_backend
+.. automodule:: tyxonq.backends.numpy_backend
     :members:
     :undoc-members:
     :show-inheritance:

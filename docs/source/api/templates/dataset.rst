@@ -1,6 +1,6 @@
-tensorcircuit.templates.dataset
+tyxonq.templates.dataset
 ================================================================================
-.. automodule:: tensorcircuit.templates.dataset
+.. automodule:: tyxonq.templates.dataset
     :members:
     :undoc-members:
     :show-inheritance:

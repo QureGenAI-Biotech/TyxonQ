@@ -1,12 +1,12 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2020, The TensorCircuit Authors
-# This file is distributed under the same license as the tensorcircuit
+# Copyright (C) 2020, The TyxonQ Authors
+# This file is distributed under the same license as the tyxonq
 # package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  TensorCircuit\n"
+"Project-Id-Version:  TyxonQ\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-27 20:10+0800\n"
 "PO-Revision-Date: 2022-04-12 09:18+0800\n"
@@ -26,12 +26,12 @@ msgstr "开发者指南"
 #: ../../source/contribution.rst:4
 #, fuzzy
 msgid ""
-"We welcome everyone’s contributions! The development of TensorCircuit is "
+"We welcome everyone’s contributions! The development of TyxonQ is "
 "open-sourced and centered on `GitHub <https://github.com/tencent-quantum-"
-"lab/tensorcircuit>`_."
+"lab/tyxonq>`_."
 msgstr ""
 "我们欢迎每一位贡献者！TensorCircuit 的开发是开源的，并以 `GitHub <https://github.com/quclub"
-"/tensorcircuit-dev>`_ 为中心。"
+"/tyxonq-dev>`_ 为中心。"
 
 #: ../../source/contribution.rst:6
 msgid "There are various ways to contribute:"
@@ -76,16 +76,16 @@ msgstr "配置您的 git 用户名和电子邮件，以使它们与您的 GitHub
 
 #: ../../source/contribution.rst:32
 msgid ""
-"Fork the TensorCircuit repository by clicking the Fork button on GitHub. "
+"Fork the TyxonQ repository by clicking the Fork button on GitHub. "
 "This will create an independent version of the codebase in your own "
 "GitHub account."
-msgstr "通过点击 GitHub 上的 Fork 按钮来分叉 TensorCircuit 库。 这将在您自己的 GitHub 帐户中创建一个独立版本的代码库。"
+msgstr "通过点击 GitHub 上的 Fork 按钮来分叉 TyxonQ 库。 这将在您自己的 GitHub 帐户中创建一个独立版本的代码库。"
 
 #: ../../source/contribution.rst:34
 msgid ""
 "Clone your forked repository and set up an ``upstream`` reference to the "
-"official TensorCircuit repository."
-msgstr "克隆您的分叉存储库并设置对官方 TensorCircuit 存储库的 ``upstream`` 引用。"
+"official TyxonQ repository."
+msgstr "克隆您的分叉存储库并设置对官方 TyxonQ 存储库的 ``upstream`` 引用。"
 
 #: ../../source/contribution.rst:42
 msgid ""
@@ -142,12 +142,12 @@ msgstr "从您的功能分支上传您的提交。这将在您在 GitHub 上的�
 
 #: ../../source/contribution.rst:87
 msgid ""
-"Create a PR from the official TensorCircuit repository and send it for "
+"Create a PR from the official TyxonQ repository and send it for "
 "review. Some comments and remarks attached with the PR are recommended. "
 "If the PR is not finally finished, please add [WIP] at the beginning of "
 "the title of your PR."
 msgstr ""
-"从官方 TensorCircuit "
+"从官方 TyxonQ "
 "存储库创建拉取请求并将其发送以供审核。建议在拉取请求中附上一些评论和备注。如果拉取请求没有最终完成，请在您的拉取请求的标题前加上 [WIP]。"
 
 #: ../../source/contribution.rst:89
@@ -292,9 +292,9 @@ msgstr "**自动生成 API 文档：**"
 #: ../../source/contribution.rst:153
 msgid ""
 "We utilize a python script to generate/refresh all API docs rst files "
-"under /docs/source/api based on the codebase /tensorcircuit."
+"under /docs/source/api based on the codebase /tyxonq."
 msgstr ""
-"我们利用 python 脚本根据代码库 /tensorcircuit 生成/刷新 /docs/source/api 下的所有 API rst "
+"我们利用 python 脚本根据代码库 /tyxonq 生成/刷新 /docs/source/api 下的所有 API rst "
 "文档文件。"
 
 #: ../../source/contribution.rst:160

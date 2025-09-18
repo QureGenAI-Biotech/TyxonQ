@@ -1,0 +1,26 @@
+import importlib
+
+import pytest
+
+from tyxonq.compiler.api import compile as compile_ir
+from tyxonq.core.ir import Circuit
+
+
+def test_compile_with_default_provider_returns_ir():
+    circ = Circuit(num_qubits=1, ops=[("h", 0), ("measure_z", 0)])
+    res = compile_ir(circ, compile_engine="default", output="ir")
+    compiled = res["circuit"]
+    # Accept either identity or structurally equivalent IR
+    assert isinstance(compiled, Circuit)
+    assert compiled.num_qubits == circ.num_qubits
+    assert list(compiled.ops) == list(circ.ops)
+
+
+@pytest.mark.skipif(importlib.util.find_spec("qiskit") is None, reason="qiskit not installed")
+def test_compile_with_qiskit_provider_returns_qc():
+    from qiskit import QuantumCircuit
+
+    circ = Circuit(num_qubits=1, ops=[("h", 0), ("measure_z", 0)])
+    res = compile_ir(circ, compile_engine="qiskit", output="qiskit", options={"opt_level": 1})
+    assert isinstance(res["circuit"], QuantumCircuit)
+

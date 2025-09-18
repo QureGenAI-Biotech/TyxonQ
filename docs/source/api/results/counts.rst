@@ -1,6 +1,6 @@
-tensorcircuit.results.counts
+tyxonq.results.counts
 ================================================================================
-.. automodule:: tensorcircuit.results.counts
+.. automodule:: tyxonq.results.counts
     :members:
     :undoc-members:
     :show-inheritance:

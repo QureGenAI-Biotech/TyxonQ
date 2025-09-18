@@ -1,6 +1,6 @@
-tensorcircuit.shadows
+tyxonq.shadows
 ================================================================================
-.. automodule:: tensorcircuit.shadows
+.. automodule:: tyxonq.shadows
     :members:
     :undoc-members:
     :show-inheritance:

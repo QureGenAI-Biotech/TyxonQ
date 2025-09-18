@@ -1,6 +1,6 @@
-tensorcircuit.applications.optimization
+tyxonq.applications.optimization
 ================================================================================
-.. automodule:: tensorcircuit.applications.optimization
+.. automodule:: tyxonq.applications.optimization
     :members:
     :undoc-members:
     :show-inheritance:

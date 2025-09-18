@@ -1,6 +1,6 @@
-tensorcircuit.utils
+tyxonq.utils
 ================================================================================
-.. automodule:: tensorcircuit.utils
+.. automodule:: tyxonq.utils
     :members:
     :undoc-members:
     :show-inheritance:

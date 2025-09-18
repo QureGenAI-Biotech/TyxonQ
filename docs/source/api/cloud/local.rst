@@ -1,6 +1,6 @@
-tensorcircuit.cloud.local
+tyxonq.cloud.local
 ================================================================================
-.. automodule:: tensorcircuit.cloud.local
+.. automodule:: tyxonq.cloud.local
     :members:
     :undoc-members:
     :show-inheritance:

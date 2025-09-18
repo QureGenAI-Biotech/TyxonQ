@@ -1,4 +1,4 @@
-tensorcircuit.applications
+tyxonq.applications
 ================================================================================
 .. toctree::
     applications/ai.rst
