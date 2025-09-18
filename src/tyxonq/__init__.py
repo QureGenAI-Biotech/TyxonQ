@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 import sys as _sys
 import importlib as _importlib
 
-__version__ = "0.5.0"
+__version__ = "0.9.9"
 __author__ = "TyxonQ Development Team"
 
 # --- Cloud API re-exports and module aliases ---
