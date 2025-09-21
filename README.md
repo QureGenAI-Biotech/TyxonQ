@@ -112,6 +112,20 @@ tq.set_token(API_KEY) # Get from https://www.tyxonq.com
 # apis.set_token(API_KEY) # Get from https://www.tyxonq.com
 ```
 
+## 📖 Technical Documentation
+
+### TyxonQ Technical Whitepaper
+For developers, researchers, and engineers interested in the deep technical architecture and innovations of TyxonQ, we strongly recommend reading our comprehensive technical whitepaper:
+
+**📋 [TYXONQ_TECHNICAL_WHITEPAPER.md](TYXONQ_TECHNICAL_WHITEPAPER.md)**
+
+This document provides:
+- **Novel architectural innovations**: Dual-path execution model, compiler-driven measurement optimization, and stable IR design
+- **Quantum AIDD technical details**: AI-driven drug discovery applications with hardware-realistic quantum chemistry stack
+- **System design principles**: Cross-vendor portability, counts-first semantics, and single numeric backend abstraction
+- **Academic-quality analysis**: Comprehensive comparison with existing frameworks and research directions
+- **Implementation details**: Core components, execution flows, and integration patterns
+
 ## Architecture
 <p align="center">
   <img src="./docs/images/architect.png" alt="TyxonQ Architecture" width="100%">
