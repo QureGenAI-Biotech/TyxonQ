@@ -273,6 +273,8 @@ class HEA:
         n_layers: int = 1,
         mapping: str = "parity",
         runtime: str = "device",
+        classical_provider: str = "local",
+        classical_device: str = "auto",
     ) -> "HEA":
         """从 PySCF 分子对象构建 HEA。
 
@@ -280,21 +282,45 @@ class HEA:
         - 根据分子总电子数与自旋计算 (n_alpha, n_beta)；
         - 复用 from_integral 流程完成映射与实例化。
         """
-        hf = RHF(m)
-        # avoid serialization warnings in some envs
-        hf.chkfile = None
-        hf.verbose = 0
-        hf.kernel()
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space)
-        # derive (na, nb) from m
-        if hasattr(m, "nelectron"):
-            tot = int(getattr(m, "nelectron"))
+        if str(classical_provider) != "local":
+            # 云端路径：通过 cloud client 获取 HF 收敛后的积分和 e_core
+            from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
+            client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
+            mdat = {
+                "atom": getattr(m, "atom", None),
+                "basis": getattr(m, "basis", "sto-3g"),
+                "charge": int(getattr(m, "charge", 0)),
+                "spin": int(getattr(m, "spin", 0)),
+            }
+            task = {
+                "method": "hf_integrals",
+                "molecule_data": mdat,
+                "active_space": active_space,
+                "aslst": None,
+            }
+            res = client.submit_classical_calculation(task)
+            import numpy as _np
+            int1e = _np.asarray(res["int1e"])  # type: ignore[index]
+            int2e = _np.asarray(res["int2e"])  # type: ignore[index]
+            e_core = float(res["e_core"])  # type: ignore[index]
+            tot = int(res.get("nelectron", int(getattr(m, "nelectron", 0))))
+            spin = int(res.get("spin", int(getattr(m, "spin", 0))))
         else:
-            tot = int(getattr(m, "n_elec", 0))
-        if hasattr(m, "spin"):
-            spin = int(getattr(m, "spin"))
-        else:
-            spin = 0
+            hf = RHF(m)
+            # avoid serialization warnings in some envs
+            hf.chkfile = None
+            hf.verbose = 0
+            hf.kernel()
+            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space)
+            # derive (na, nb) from m
+            if hasattr(m, "nelectron"):
+                tot = int(getattr(m, "nelectron"))
+            else:
+                tot = int(getattr(m, "n_elec", 0))
+            if hasattr(m, "spin"):
+                spin = int(getattr(m, "spin"))
+            else:
+                spin = 0
         na = (tot + spin) // 2
         nb = (tot - spin) // 2
         inst = cls.from_integral(int1e, int2e, (na, nb), e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)

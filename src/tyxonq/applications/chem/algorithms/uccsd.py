@@ -30,8 +30,8 @@ class UCCSD(UCC):
     Examples
     --------
     >>> import numpy as np
-    >>> from tencirchem import UCCSD
-    >>> from tencirchem.molecule import h2
+    >>> from tyxonq.chem import UCCSD
+    >>> from tyxonq.chem.molecule import h2
     >>> uccsd = UCCSD(h2)
     >>> e_ucc = uccsd.kernel()
     >>> np.testing.assert_allclose(e_ucc, uccsd.e_fci, atol=1e-10)
@@ -56,6 +56,9 @@ class UCCSD(UCC):
         run_mp2: bool = True,
         run_ccsd: bool = True,
         run_fci: bool = True,
+        *,
+        classical_provider: str = "local",
+        classical_device: str = "auto",
     ):
         r"""
         Initialize the class with molecular input.
@@ -110,26 +113,58 @@ class UCCSD(UCC):
 
         See Also
         --------
-        tencirchem.KUPCCGSD
-        tencirchem.PUCCD
-        tencirchem.UCC
+        tyxonq.chem.KUPCCGSD
+        tyxonq.chem.PUCCD
+        tyxonq.chem.UCC
         """
-        # --- RHF setup ---
-        # Avoid fragile isinstance on PySCF factories; detect by attributes
-        if hasattr(mol, "mol") and hasattr(mol, "kernel"):
-            hf = mol
-        else:
-            hf = RHF(mol)
+        # --- RHF setup (with optional cloud offload for HF/integrals) ---
+        # Normalize PySCF molecule object
+        _py_mol = getattr(mol, "mol", mol)
+        # Create a local HF container regardless, to keep compatibility with tests accessing self.hf
+        hf = RHF(_py_mol)
         if mo_coeff is not None:
             hf.mo_coeff = np.asarray(mo_coeff)
         hf.chkfile = None
         hf.verbose = 0
-        if run_hf:
-            hf.kernel()
-        self.hf = hf
 
-        # --- Integrals and core energy ---
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        if str(classical_provider) != "local":
+            # Offload HF convergence and MO-basis integrals to cloud
+            from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
+            client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
+            mdat = {
+                "atom": getattr(_py_mol, "atom", None),
+                "basis": getattr(_py_mol, "basis", "sto-3g"),
+                "charge": int(getattr(_py_mol, "charge", 0)),
+                "spin": int(getattr(_py_mol, "spin", 0)),
+            }
+            task = {
+                "method": "hf_integrals",
+                "molecule_data": mdat,
+                "active_space": active_space,
+                "aslst": aslst,
+            }
+            _res = client.submit_classical_calculation(task)
+            # Load results
+            int1e = np.asarray(_res["int1e"])  # type: ignore[index]
+            int2e = np.asarray(_res["int2e"])  # type: ignore[index]
+            e_core = float(_res["e_core"])  # type: ignore[index]
+            try:
+                hf.mo_coeff = np.asarray(_res.get("mo_coeff")) if _res.get("mo_coeff") is not None else getattr(hf, "mo_coeff", None)  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            try:
+                hf.e_tot = float(_res.get("e_hf", 0.0))  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            # In cloud mode, skip local HF run
+            self.hf = hf
+        else:
+            # Local HF
+            if run_hf:
+                hf.kernel()
+            self.hf = hf
+            # MO-basis integrals from local HF
+            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
         # Active space electron/orbital counts
         if active_space is None:
             n_elec = int(getattr(hf.mol, "nelectron"))
@@ -142,25 +177,51 @@ class UCCSD(UCC):
         self.no = n_elec // 2
         self.nv = n_cas - self.no
 
-        # --- Reference energies ---
+        # --- Reference energies (HF/FCI) ---
+        # e_hf
         try:
             self.e_hf = float(getattr(hf, "e_tot", 0.0))
         except Exception:
             self.e_hf = float("nan")
-        try:
-            if run_fci:
-                from pyscf import fci as _fci  # type: ignore
-
-                self.e_fci = float(_fci.FCI(hf).kernel()[0])
+        # e_fci (optionally cloud)
+        if run_fci:
+            if str(classical_provider) != "local":
+                try:
+                    from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
+                    client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
+                    mdat = {
+                        "atom": getattr(_py_mol, "atom", None),
+                        "basis": getattr(_py_mol, "basis", "sto-3g"),
+                        "charge": int(getattr(_py_mol, "charge", 0)),
+                        "spin": int(getattr(_py_mol, "spin", 0)),
+                    }
+                    res_fci = client.submit_classical_calculation({
+                        "method": "fci",
+                        "molecule_data": mdat,
+                        "active_space": active_space,
+                    })
+                    self.e_fci = float(res_fci.get("energy", float("nan")))
+                except Exception:
+                    self.e_fci = float("nan")
             else:
-                self.e_fci = float("nan")
-        except Exception:
+                try:
+                    from pyscf import fci as _fci  # type: ignore
+                    self.e_fci = float(_fci.FCI(hf).kernel()[0])
+                except Exception:
+                    self.e_fci = float("nan")
+        else:
             self.e_fci = float("nan")
 
         # --- Initial amplitudes t1/t2 according to init_method ---
         t1 = np.zeros((self.no, self.nv))
         t2 = np.zeros((self.no, self.no, self.nv, self.nv))
         method = (init_method or "mp2").lower()
+        # In cloud HF mode, we avoid local MP2/CCSD amplitude calculations and fall back to zeros
+        if str(classical_provider) != "local":
+            run_mp2 = False
+            run_ccsd = False
+            if method in ("mp2", "ccsd"):
+                method = "zeros"
         mp2_amp = None
         if method in ("mp2", "ccsd", "fe") and (run_mp2 or method == "mp2"):
             try:
@@ -289,8 +350,8 @@ class UCCSD(UCC):
 
         Examples
         --------
-        >>> from tencirchem import UCCSD
-        >>> from tencirchem.molecule import h2
+        >>> from tyxonq.chem import UCCSD
+        >>> from tyxonq.chem.molecule import h2
         >>> uccsd = UCCSD(h2)
         >>> ex_op, param_ids, init_guess = uccsd.get_ex_ops()
         >>> ex_op
@@ -447,21 +508,51 @@ class ROUCCSD(UCC):
         run_mp2: bool = False,
         run_ccsd: bool = False,
         run_fci: bool = True,
+        *,
+        classical_provider: str = "local",
+        classical_device: str = "auto",
     ):
         # --- ROHF setup (open-shell) ---
-        if hasattr(mol, "mol") and hasattr(mol, "kernel"):
-            hf = mol  # already an SCF object (expecting ROHF)
-        else:
-            hf = ROHF(mol)
+        _py_mol = getattr(mol, "mol", mol)
+        hf = ROHF(_py_mol)
         if mo_coeff is not None:
             hf.mo_coeff = np.asarray(mo_coeff)
         hf.chkfile = None
         hf.verbose = 0
-        if run_hf:
-            hf.kernel()
+
+        if str(classical_provider) != "local":
+            from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
+            client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
+            mdat = {
+                "atom": getattr(_py_mol, "atom", None),
+                "basis": getattr(_py_mol, "basis", "sto-3g"),
+                "charge": int(getattr(_py_mol, "charge", 0)),
+                "spin": int(getattr(_py_mol, "spin", 0)),
+            }
+            _res = client.submit_classical_calculation({
+                "method": "hf_integrals",
+                "molecule_data": mdat,
+                "active_space": active_space,
+                "aslst": aslst,
+            })
+            int1e = np.asarray(_res["int1e"])  # type: ignore[index]
+            int2e = np.asarray(_res["int2e"])  # type: ignore[index]
+            e_core = float(_res["e_core"])  # type: ignore[index]
+            try:
+                hf.mo_coeff = np.asarray(_res.get("mo_coeff")) if _res.get("mo_coeff") is not None else getattr(hf, "mo_coeff", None)  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            try:
+                hf.e_tot = float(_res.get("e_hf", 0.0))  # type: ignore[attr-defined]
+            except Exception:
+                pass
+        else:
+            if run_hf:
+                hf.kernel()
 
         # --- Integrals and core energy ---
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        if str(classical_provider) == "local":
+            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
 
         # Active space: electrons and spatial orbitals
         if active_space is None:
@@ -493,14 +584,33 @@ class ROUCCSD(UCC):
         nvb = ns + nv  # beta virtual count (beta has fewer occupied)
 
         # --- Reference energies (optional FCI) ---
-        try:
-            if run_fci:
-                from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-                # CAS FCI on (int1e, int2e) with (na, nb) in CAS, then add core energy
-                self.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (noa, nob))[0] + e_core)
+        if run_fci:
+            if str(classical_provider) != "local":
+                try:
+                    from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
+                    client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
+                    mdat = {
+                        "atom": getattr(_py_mol, "atom", None),
+                        "basis": getattr(_py_mol, "basis", "sto-3g"),
+                        "charge": int(getattr(_py_mol, "charge", 0)),
+                        "spin": int(getattr(_py_mol, "spin", 0)),
+                    }
+                    res_fci = client.submit_classical_calculation({
+                        "method": "fci",
+                        "molecule_data": mdat,
+                        "active_space": active_space,
+                    })
+                    self.e_fci = float(res_fci.get("energy", float("nan")))
+                except Exception:
+                    self.e_fci = float("nan")
             else:
-                self.e_fci = float("nan")
-        except Exception:
+                try:
+                    from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
+                    # CAS FCI on (int1e, int2e) with (na, nb) in CAS, then add core energy
+                    self.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (noa, nob))[0] + e_core)
+                except Exception:
+                    self.e_fci = float("nan")
+        else:
             self.e_fci = float("nan")
 
         # --- Ex-ops (open-shell mapping) ---

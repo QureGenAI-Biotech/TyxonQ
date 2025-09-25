@@ -81,9 +81,9 @@ class KUPCCGSD(_UCCBase):
 
         See Also
         --------
-        tencirchem.UCCSD
-        tencirchem.PUCCD
-        tencirchem.UCC
+        tyxonq.UCCSD
+        tyxonq.PUCCD
+        tyxonq.UCC
         """
         # ---- RHF setup ----
         if hasattr(mol, "mol") and hasattr(mol, "kernel"):
@@ -217,8 +217,8 @@ class KUPCCGSD(_UCCBase):
 
         Examples
         --------
-        >>> from tencirchem import KUPCCGSD
-        >>> from tencirchem.molecule import h2
+        >>> from tyxonq.chem import KUPCCGSD
+        >>> from tyxonq.chem.molecule import h2
         >>> kupccgsd = KUPCCGSD(h2)
         >>> ex_op, param_ids, init_guess = kupccgsd.get_ex_ops()
         >>> ex_op
