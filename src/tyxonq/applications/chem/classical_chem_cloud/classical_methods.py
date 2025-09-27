@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, Union
 import numpy as np
 from pyscf.gto import Mole
 
-from .config import CloudClassicalConfig, create_classical_client
+from tyxonq.applications.chem.classical_chem_cloud.config import CloudClassicalConfig, create_classical_client
 
 
 class CloudClassicalMethodsWrapper:
@@ -29,20 +29,10 @@ class CloudClassicalMethodsWrapper:
         
         # Always initialize cloud client (this wrapper is for cloud execution)
         config = CloudClassicalConfig()
-        device = classical_device if classical_device != "auto" else self._auto_select_device()
+        device = classical_device
         provider = classical_provider if classical_provider == "tyxonq" else "tyxonq"
         self.cloud_client = create_classical_client(provider, device, config)
     
-    def _auto_select_device(self) -> str:
-        """Auto-select device based on molecule size and complexity."""
-        n_atoms = self.molecule.natm
-        n_electrons = self.molecule.nelectron
-        
-        # Simple heuristic for device selection
-        if n_atoms > 10 or n_electrons > 20:
-            return "gpu"  # Large systems benefit from GPU
-        else:
-            return "cpu"  # Small systems can use CPU efficiently
     
     def _prepare_molecule_data(self) -> Dict[str, Any]:
         """Prepare molecule data for cloud transmission."""

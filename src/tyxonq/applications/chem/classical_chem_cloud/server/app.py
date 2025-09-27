@@ -4,8 +4,8 @@ from typing import Any, Dict, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from . import cpu_backend
-from . import gpu_backend
+from tyxonq.applications.chem.classical_chem_cloud.server import cpu_backend
+from tyxonq.applications.chem.classical_chem_cloud.server  import gpu_backend
 
 
 class MoleculeData(BaseModel):
@@ -31,7 +31,7 @@ app = FastAPI()
 
 def _route_backend(payload: Dict[str, Any]) -> Dict[str, Any]:
     dev = str(payload.get("classical_device", "auto")).lower()
-    if dev == "gpu" or (dev == "auto" and gpu_backend.is_available()):
+    if dev == "gpu" or (dev == "auto" and gpu_backend.gpu_available):
         try:
             return gpu_backend.compute(payload)
         except Exception:
@@ -42,7 +42,7 @@ def _route_backend(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 @app.post("/classical/compute")
 def classical_compute(req: ClassicalRequest):
-    payload: Dict[str, Any] = req
+    payload: Dict[str, Any] = req.model_dump()
     return _route_backend(payload)
 
 if __name__ == "__main__":
