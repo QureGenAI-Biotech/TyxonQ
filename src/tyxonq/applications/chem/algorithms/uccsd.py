@@ -20,6 +20,7 @@ from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_uccsd import
     generate_uccsd_ex1_ops,
     generate_uccsd_ex2_ops,
 )
+from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
 from ..constants import DISCARD_EPS
 
 
@@ -59,6 +60,12 @@ class UCCSD(UCC):
         *,
         classical_provider: str = "local",
         classical_device: str = "auto",
+        # Optional PySCF-style direct molecule construction
+        atom: object | None = None,
+        basis: str = "sto-3g",
+        unit: str = "Angstrom",
+        charge: int = 0,
+        spin: int = 0,
     ):
         r"""
         Initialize the class with molecular input.
@@ -117,6 +124,21 @@ class UCCSD(UCC):
         tyxonq.chem.PUCCD
         tyxonq.chem.UCC
         """
+        # --- Optional: build Mole from PySCF-style inputs if `atom` provided ---
+        if atom is not None:
+            try:
+                from pyscf import gto as _gto  # type: ignore
+                mm = _gto.Mole()
+                mm.atom = atom  # accepts string or list spec per PySCF
+                mm.unit = str(unit)
+                mm.basis = str(basis)
+                mm.charge = int(charge)
+                mm.spin = int(spin)
+                mm.build()
+                mol = mm  # override input
+            except Exception:
+                pass
+
         # --- RHF setup (with optional cloud offload for HF/integrals) ---
         # Normalize PySCF molecule object
         _py_mol = getattr(mol, "mol", mol)
@@ -129,7 +151,6 @@ class UCCSD(UCC):
 
         if str(classical_provider) != "local":
             # Offload HF convergence and MO-basis integrals to cloud
-            from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
             client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
             mdat = {
                 "atom": getattr(_py_mol, "atom", None),
@@ -141,7 +162,7 @@ class UCCSD(UCC):
                 "method": "hf_integrals",
                 "molecule_data": mdat,
                 "active_space": active_space,
-                "aslst": aslst,
+                "active_orbital_indices": aslst,
             }
             _res = client.submit_classical_calculation(task)
             # Load results
@@ -187,7 +208,6 @@ class UCCSD(UCC):
         if run_fci:
             if str(classical_provider) != "local":
                 try:
-                    from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
                     client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
                     mdat = {
                         "atom": getattr(_py_mol, "atom", None),
@@ -521,7 +541,6 @@ class ROUCCSD(UCC):
         hf.verbose = 0
 
         if str(classical_provider) != "local":
-            from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
             client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
             mdat = {
                 "atom": getattr(_py_mol, "atom", None),
@@ -587,7 +606,6 @@ class ROUCCSD(UCC):
         if run_fci:
             if str(classical_provider) != "local":
                 try:
-                    from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
                     client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
                     mdat = {
                         "atom": getattr(_py_mol, "atom", None),

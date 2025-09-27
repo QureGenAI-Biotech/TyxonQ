@@ -5,15 +5,14 @@ quantum chemistry applications, with support for TyxonQ classical GPU/CPU
 acceleration for both hybrid quantum-classical algorithms and pure classical methods.
 """
 
-from .core import CloudClassicalConfig, create_classical_client
-from .clients import TyxonQClassicalGPUClient, TyxonQClassicalCPUClient
+from .config import CloudClassicalConfig, create_classical_client
+from .clients import TyxonQClassicalClient
 from .classical_methods import CloudClassicalMethodsWrapper, cloud_classical_methods
 
 __all__ = [
     "CloudClassicalConfig",
     "create_classical_client", 
-    "TyxonQClassicalGPUClient",
-    "TyxonQClassicalCPUClient",
+    "TyxonQClassicalClient",
     "CloudClassicalMethodsWrapper",
     "cloud_classical_methods"
 ]

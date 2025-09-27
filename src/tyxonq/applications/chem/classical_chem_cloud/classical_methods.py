@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, Union
 import numpy as np
 from pyscf.gto import Mole
 
-from .core import CloudClassicalConfig, create_classical_client
+from .config import CloudClassicalConfig, create_classical_client
 
 
 class CloudClassicalMethodsWrapper:
@@ -20,20 +20,18 @@ class CloudClassicalMethodsWrapper:
     def __init__(
         self,
         molecule: Mole,
-        classical_provider: str = "local",
+        classical_provider: str = "tyxonq",
         classical_device: str = "auto"
     ):
         self.molecule = molecule
         self.classical_provider = classical_provider
         self.classical_device = classical_device
         
-        # Initialize cloud client if needed
-        if classical_provider != "local":
-            config = CloudClassicalConfig()
-            device = classical_device if classical_device != "auto" else self._auto_select_device()
-            self.cloud_client = create_classical_client(classical_provider, device, config)
-        else:
-            self.cloud_client = None
+        # Always initialize cloud client (this wrapper is for cloud execution)
+        config = CloudClassicalConfig()
+        device = classical_device if classical_device != "auto" else self._auto_select_device()
+        provider = classical_provider if classical_provider == "tyxonq" else "tyxonq"
+        self.cloud_client = create_classical_client(provider, device, config)
     
     def _auto_select_device(self) -> str:
         """Auto-select device based on molecule size and complexity."""
@@ -58,123 +56,86 @@ class CloudClassicalMethodsWrapper:
             "nao": self.molecule.nao
         }
     
-    def fci(self, **kwargs) -> float:
-        """Cloud-accelerated Full Configuration Interaction."""
-        if self.classical_provider == "local":
-            # Fallback to local PySCF FCI
-            from pyscf import fci
-            myfci = fci.FCI(self.molecule)
-            return myfci.kernel(**kwargs)[0]
-        
-        # Cloud-accelerated FCI
+    def fci(self, verbose: bool = False, **kwargs) -> float:
+        """Cloud-accelerated Full Configuration Interaction (always server-side)."""
         task_spec = {
             "method": "fci",
             "molecule_data": self._prepare_molecule_data(),
             "method_options": kwargs,
-            "n_atoms": self.molecule.natm
+            "n_atoms": self.molecule.natm,
+            "classical_device": self.classical_device,
+            "verbose": bool(verbose),
         }
         
         result = self.cloud_client.submit_classical_calculation(task_spec)
         return result["energy"]
     
-    def ccsd(self, **kwargs) -> float:
-        """Cloud-accelerated Coupled Cluster Singles Doubles."""
-        if self.classical_provider == "local":
-            # Fallback to local PySCF CCSD
-            from pyscf import cc, scf
-            myhf = scf.RHF(self.molecule).run()
-            mycc = cc.CCSD(myhf)
-            return mycc.kernel(**kwargs)[0]
-        
-        # Cloud-accelerated CCSD
+    def ccsd(self, verbose: bool = False, **kwargs) -> float:
+        """Cloud-accelerated Coupled Cluster Singles Doubles (always server-side)."""
         task_spec = {
             "method": "ccsd",
             "molecule_data": self._prepare_molecule_data(),
             "method_options": kwargs,
-            "n_atoms": self.molecule.natm
+            "n_atoms": self.molecule.natm,
+            "classical_device": self.classical_device,
+            "verbose": bool(verbose),
         }
         
         result = self.cloud_client.submit_classical_calculation(task_spec)
         return result["energy"]
     
-    def ccsd_t(self, **kwargs) -> float:
-        """Cloud-accelerated CCSD(T) with triples correction."""
-        if self.classical_provider == "local":
-            # Fallback to local PySCF CCSD(T)
-            from pyscf import cc, scf
-            myhf = scf.RHF(self.molecule).run()
-            mycc = cc.CCSD(myhf)
-            mycc.kernel()
-            et = mycc.ccsd_t()
-            return mycc.e_tot + et
-        
-        # Cloud-accelerated CCSD(T)
+    def ccsd_t(self, verbose: bool = False, **kwargs) -> float:
+        """Cloud-accelerated CCSD(T) (mapped to CCSD with triples hint)."""
         task_spec = {
             "method": "ccsd(t)",
             "molecule_data": self._prepare_molecule_data(),
-            "method_options": kwargs,
-            "n_atoms": self.molecule.natm
+            "method_options": {"triples": True, **kwargs},
+            "n_atoms": self.molecule.natm,
+            "classical_device": self.classical_device,
+            "verbose": bool(verbose),
         }
         
         result = self.cloud_client.submit_classical_calculation(task_spec)
         return result["energy"]
     
-    def dft(self, functional: str = "b3lyp", **kwargs) -> float:
-        """Cloud-accelerated Density Functional Theory."""
-        if self.classical_provider == "local":
-            # Fallback to local PySCF DFT
-            from pyscf import dft
-            mydft = dft.RKS(self.molecule)
-            mydft.xc = functional
-            return mydft.kernel(**kwargs)
-        
-        # Cloud-accelerated DFT
+    def dft(self, functional: str = "b3lyp", verbose: bool = False, **kwargs) -> float:
+        """Cloud-accelerated Density Functional Theory (always server-side)."""
         task_spec = {
             "method": "dft",
             "molecule_data": self._prepare_molecule_data(),
             "method_options": {"functional": functional, **kwargs},
-            "n_atoms": self.molecule.natm
+            "n_atoms": self.molecule.natm,
+            "classical_device": self.classical_device,
+            "verbose": bool(verbose),
         }
         
         result = self.cloud_client.submit_classical_calculation(task_spec)
         return result["energy"]
     
-    def mp2(self, **kwargs) -> float:
-        """Cloud-accelerated Møller-Plesset perturbation theory (second order)."""
-        if self.classical_provider == "local":
-            # Fallback to local PySCF MP2
-            from pyscf import mp, scf
-            myhf = scf.RHF(self.molecule).run()
-            mymp = mp.MP2(myhf)
-            return mymp.kernel(**kwargs)[0]
-        
-        # Cloud-accelerated MP2
+    def mp2(self, verbose: bool = False, **kwargs) -> float:
+        """Cloud-accelerated Møller-Plesset perturbation theory (server-side)."""
         task_spec = {
             "method": "mp2",
             "molecule_data": self._prepare_molecule_data(),
             "method_options": kwargs,
-            "n_atoms": self.molecule.natm
+            "n_atoms": self.molecule.natm,
+            "classical_device": self.classical_device,
+            "verbose": bool(verbose),
         }
         
         result = self.cloud_client.submit_classical_calculation(task_spec)
         return result["energy"]
     
-    def casscf(self, ncas: int, nelecas: int, **kwargs) -> float:
-        """Cloud-accelerated Complete Active Space Self-Consistent Field."""
-        if self.classical_provider == "local":
-            # Fallback to local PySCF CASSCF
-            from pyscf import mcscf, scf
-            myhf = scf.RHF(self.molecule).run()
-            mycas = mcscf.CASSCF(myhf, ncas, nelecas)
-            return mycas.kernel(**kwargs)[0]
-        
-        # Cloud-accelerated CASSCF
+    def casscf(self, ncas: int, nelecas: int, verbose: bool = False, **kwargs) -> float:
+        """Cloud-accelerated Complete Active Space SCF (always server-side)."""
         task_spec = {
             "method": "casscf",
             "molecule_data": self._prepare_molecule_data(),
             "method_options": {"ncas": ncas, "nelecas": nelecas, **kwargs},
             "n_atoms": self.molecule.natm,
-            "active_space": (nelecas, ncas)
+            "active_space": (nelecas, ncas),
+            "classical_device": self.classical_device,
+            "verbose": bool(verbose),
         }
         
         result = self.cloud_client.submit_classical_calculation(task_spec)

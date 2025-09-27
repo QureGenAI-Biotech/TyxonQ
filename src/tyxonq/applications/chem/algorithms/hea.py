@@ -20,6 +20,8 @@ from tyxonq.libs.circuits_library.qiskit_real_amplitudes import (
     real_amplitudes_circuit_template_converter,
 )
 
+from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
+
 
 Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
 
@@ -41,21 +43,14 @@ class HEA:
     - 从分子积分/活性空间（PySCF）与费米子算符映射（parity/JW/BK）构建 HEA；
     - 与旧版 static/hea.py 的功能对应，但实现已迁移到 algorithms/runtimes/libs，移除张量网络依赖。
     """
-    def __init__(self, n: int, layers: int, hamiltonian: Hamiltonian, runtime: str = "device", numeric_engine: str | None = None):
-        self.n = int(n)
-        self.layers = int(layers)
-        self.hamiltonian = list(hamiltonian)
+    def __init__(self, molecule: object | None = None, n: int | None = None, layers: int | None = None, hamiltonian: Hamiltonian | None = None, runtime: str = "device", numeric_engine: str | None = None, *, active_space=None, mapping: str = "parity", classical_provider: str = "local", classical_device: str = "auto", atom: object | None = None, basis: str = "sto-3g", unit: str = "Angstrom", charge: int = 0, spin: int = 0):
+        # Runtime selection
         self.runtime = runtime
         self.numeric_engine = numeric_engine
         # 可选：外部参数化电路模板（例如来自 Qiskit RealAmplitudes 的转换）
         # 形如 [("ry", q, ("p", idx)), ("cx", c, t), ...]
         self.circuit_template = None
-        # RY ansatz: (layers + 1) * n parameters
-        self.n_params = (self.layers + 1) * self.n
-        # Use a deterministic non-trivial initial guess to avoid zero-gradient plateaus
-        rng = np.random.default_rng(7)
-        self.init_guess = rng.random(self.n_params, dtype=np.float64)
-        # Optional chemistry metadata (used by RDM与求解器适配)
+        # Chemistry metadata placeholders
         self.mapping: str | None = None
         self.int1e: np.ndarray | None = None
         self.int2e: np.ndarray | None = None
@@ -67,6 +62,52 @@ class HEA:
         self.scipy_minimize_options: dict | None = None
         self._params: np.ndarray | None = None
         self.opt_res: dict | None = None
+
+        # If atom is provided, construct PySCF Mole directly (PySCF style)
+        if atom is not None:
+            from pyscf import gto as _gto  # type: ignore
+            mm = _gto.Mole()
+            mm.atom = atom  # accepts string or list spec per PySCF
+            mm.unit = str(unit)
+            mm.basis = str(basis)
+            mm.charge = int(charge)
+            mm.spin = int(spin)
+            mm.build()
+            molecule = mm
+
+        # Initialize from molecule if available (cloud/local HF handled inside)
+        if molecule is not None:
+            inst = HEA.from_molecule(
+                molecule,
+                active_space=active_space,
+                n_layers=(int(layers) if layers is not None else 1),
+                mapping=mapping,
+                runtime=runtime,
+                classical_provider=classical_provider,
+                classical_device=classical_device,
+            )
+            self.n = int(inst.n)
+            self.layers = int(inst.layers)
+            self.hamiltonian = list(inst.hamiltonian)
+            self.mapping = inst.mapping
+            self.int1e = inst.int1e
+            self.int2e = inst.int2e
+            self.n_elec = inst.n_elec
+            self.spin = inst.spin
+            self.e_core = inst.e_core
+        else:
+            # Otherwise require explicit (n, layers, hamiltonian)
+            if n is None or layers is None or hamiltonian is None:
+                raise TypeError("HEA requires either 'molecule'/'atom' or explicit 'n', 'layers', and 'hamiltonian'")
+            self.n = int(n)
+            self.layers = int(layers)
+            self.hamiltonian = list(hamiltonian)
+
+        # RY ansatz: (layers + 1) * n parameters
+        self.n_params = (self.layers + 1) * self.n
+        # Use a deterministic non-trivial initial guess to avoid zero-gradient plateaus
+        rng = np.random.default_rng(7)
+        self.init_guess = rng.random(self.n_params, dtype=np.float64)
 
     def get_circuit(self, params: Sequence[float] | None = None):
         """构建 HEA 的门级电路（IR Circuit）。
@@ -282,9 +323,10 @@ class HEA:
         - 根据分子总电子数与自旋计算 (n_alpha, n_beta)；
         - 复用 from_integral 流程完成映射与实例化。
         """
+        # Expect a PySCF Mole. If you want to pass XYZ coordinates, use HEA(..., atom=..., basis=..., unit=..., charge=..., spin=...)
+
         if str(classical_provider) != "local":
             # 云端路径：通过 cloud client 获取 HF 收敛后的积分和 e_core
-            from tyxonq.applications.chem.classical_chem_cloud.core import create_classical_client, CloudClassicalConfig
             client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
             mdat = {
                 "atom": getattr(m, "atom", None),
@@ -296,7 +338,7 @@ class HEA:
                 "method": "hf_integrals",
                 "molecule_data": mdat,
                 "active_space": active_space,
-                "aslst": None,
+                "active_orbital_indices": None,
             }
             res = client.submit_classical_calculation(task)
             import numpy as _np
