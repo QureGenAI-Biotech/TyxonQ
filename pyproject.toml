@@ -23,6 +23,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "openfermion>=1.7",
+    "renormalizer>=0.0.11",
+    "pyscf>2.5",
     "numpy>=2.0.2",
     "opt-einsum>=3.4.0",
     "python-dotenv>=1.1.1",
