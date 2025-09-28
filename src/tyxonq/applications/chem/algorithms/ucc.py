@@ -76,6 +76,7 @@ class UCC:
             init_state=self.init_state,
             decompose_multicontrol=self.decompose_multicontrol,
             trotter=self.trotter,
+            qop=getattr(self, "_qop_cached", None),
         )
 
     def energy(self, params: np.ndarray | None = None, **opts) -> float:
@@ -104,6 +105,7 @@ class UCC:
                 mode=self.mode,
                 numeric_engine=numeric_engine,
                 ci_hamiltonian=ci_hamiltonian,
+                qop=getattr(self, "_qop_cached", None),
                 
             )
             base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
@@ -135,7 +137,8 @@ class UCC:
                 init_state=self.init_state,
                 mode=self.mode,
                 numeric_engine=numeric_engine,
-                ci_hamiltonian=ci_hamiltonian
+                ci_hamiltonian=ci_hamiltonian,
+                qop=getattr(self, "_qop_cached", None)
                 
             )
             base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
@@ -149,7 +152,8 @@ class UCC:
 
         Tests expect `e_ucc` to be available for both closed- and open-shell.
         """
-        return float(self.energy(getattr(self, "_params", None)))
+        # Use analytic simulator path by default for reproducibility
+        return float(self.energy(getattr(self, "_params", None), shots=0, provider="simulator", device="statevector"))
 
     def kernel(self, **opts) -> float:
         """Optimize parameters via L-BFGS-B.
@@ -270,6 +274,8 @@ class UCC:
             decompose_multicontrol=decompose_multicontrol,
             trotter=trotter,
         )
+        # cache QubitOperator for runtime direct use
+        inst._qop_cached = hq
         return inst
 
     @classmethod

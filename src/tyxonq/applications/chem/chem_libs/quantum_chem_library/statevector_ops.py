@@ -142,3 +142,26 @@ def energy_and_grad_statevector(
     vag = nb.value_and_grad(_f, argnums=0)
     e0, g = vag(np.asarray(params, dtype=np.float64))
     return float(e0), np.asarray(g, dtype=np.float64)
+
+
+def energy_from_statevector(
+    psi: np.ndarray,
+    qop: QubitOperator,
+    n_qubits: int,
+) -> float:
+    """Compute <psi|H|psi> using cached sparse operator for the full Hamiltonian.
+
+    Args:
+        psi: statevector (complex128) of length 2**n_qubits
+        qop: OpenFermion QubitOperator representing full Hamiltonian
+        n_qubits: number of qubits
+    Returns:
+        Real energy value
+    """
+    try:
+        key = _qop_to_key(qop, int(n_qubits))
+        H = _cached_sparse_from_key(key)
+    except Exception:
+        H = get_sparse_operator(qop, n_qubits=n_qubits)
+    e = np.vdot(psi, H.dot(psi))
+    return float(np.real(e))

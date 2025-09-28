@@ -11,13 +11,15 @@ from tyxonq.libs.circuits_library.qiskit_real_amplitudes import build_circuit_fr
 from tyxonq.compiler.utils.hamiltonian_grouping import (
     group_hamiltonian_pauli_terms,
 )
+from openfermion import QubitOperator
+from openfermion.linalg import get_sparse_operator
 
 
 Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
 
 
 class HEADeviceRuntime:
-    def __init__(self, n: int, layers: int, hamiltonian: Hamiltonian, *, n_elec_s: Tuple[int, int] | None = None, mapping: str | None = None, circuit_template: list | None = None):
+    def __init__(self, n: int, layers: int, hamiltonian: Hamiltonian, *, n_elec_s: Tuple[int, int] | None = None, mapping: str | None = None, circuit_template: list | None = None, qop: QubitOperator | None = None):
         self.n = int(n)
         self.layers = int(layers)
         self.hamiltonian = list(hamiltonian)
@@ -28,6 +30,15 @@ class HEADeviceRuntime:
         self.n_params = (self.layers + 1) * self.n
         rng = np.random.default_rng(7)
         self.init_guess = rng.random(self.n_params, dtype=np.float64)
+
+        # Pre-group Hamiltonian and cache measurement prefixes
+        identity_const, groups = group_hamiltonian_pauli_terms(self.hamiltonian, self.n)
+        self._identity_const: float = float(identity_const)
+        self._groups = groups
+        self._prefix_cache: Dict[Tuple[str, ...], List[Tuple]] = {}
+        
+        # 可选：直接消费上游映射缓存的 QubitOperator（shots==0 快径）
+        self._qop_cached = qop
 
     def _build_circuit(self, params: Sequence[float]) -> Circuit:
         # If external template exists, instantiate from it
@@ -53,46 +64,25 @@ class HEADeviceRuntime:
         if self.circuit_template is None and len(params) != self.n_params:
             raise ValueError(f"params length {len(params)} != {self.n_params}")
 
-        # Fast path: simulator/local + shots==0 → exact expectation without grouping
-        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径
+        # Fast analytic path: shots==0 → single statevector + full-H expectation (no grouping)
         if (provider in ("simulator", "local")) and int(shots) == 0:
-            from openfermion import QubitOperator
-            qop = QubitOperator()
-            for coeff, ops in self.hamiltonian:
-                if not ops:
-                    qop += coeff
-                    continue
-                term = tuple((int(q), str(P).upper()) for (P, q) in ops)
-                qop += QubitOperator(term, float(coeff))
+            from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
+            from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import pauli_sum_to_qubit_operator
+            from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import energy_from_statevector
             c = self._build_circuit(params)
-            from tyxonq.devices import base as device_base
-            return float(device_base.expval(provider=provider, device=device, circuit=c, observable=qop, noise=noise, **device_kwargs))
+            eng = StatevectorEngine()
+            psi = eng.state(c)
+            qop = self._qop_cached if self._qop_cached is not None else pauli_sum_to_qubit_operator(self.hamiltonian, self.n)
+            return float(energy_from_statevector(psi, qop, self.n))
 
-        # simple grouping by basis pattern
-        identity_const, groups = group_hamiltonian_pauli_terms(self.hamiltonian, self.n)
-
-        energy_val = identity_const
-        for bases, items in groups.items():
+        # Use cached grouping and prefixes for shots>0
+        energy_val = self._identity_const
+        for bases, items in self._groups.items():
             c = self._build_circuit(params)
-            # apply basis rotations
-            # bases order originates from grouping which assumes OpenFermion little-endian (q=0 is LSB)
-            # Our IR uses big-endian indices in ops. Map index accordingly: be_idx = n-1-lsb_idx
-            for lsb_q, p in enumerate(bases):
-                q = self.n - 1 - int(lsb_q)
-                if p == "X":
-                    c.ops.append(("h", q))
-                elif p == "Y":
-                    c.ops.append(("sdg", q)); c.ops.append(("h", q))
-            for q in range(self.n):
-                c.ops.append(("measure_z", q))
+            c.ops.extend(self._prefix_ops_for_bases(bases))
             dev = c.device(provider=provider, device=device, shots=shots, noise=noise, **device_kwargs)
-            # Chainable postprocessing per group
             pp_opts = dict(postprocessing or {})
-            pp_opts.update({
-                "method": "expval_pauli_sum",
-                "identity_const": 0.0,
-                "items": items,
-            })
+            pp_opts.update({"method": "expval_pauli_sum", "identity_const": 0.0, "items": items})
             dev = dev.postprocessing(**pp_opts)
             res = dev.run()
             payload = res[0]["postprocessing"]["result"] if isinstance(res, list) else (res.get("postprocessing", {}) or {}).get("result", {})
@@ -114,17 +104,19 @@ class HEADeviceRuntime:
             params = self.init_guess
         base = np.asarray(params, dtype=np.float64)
 
-        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device.base.expval 调用解析快径 + 有限差分
+        # shots==0: use parameter-shift (s=pi/2) over analytic energy path
         if (provider in ("simulator", "local")) and int(shots) == 0:
             e0 = self.energy(base, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+            if len(base) == 0:
+                return float(e0), np.zeros(0, dtype=np.float64)
             g = np.zeros_like(base)
-            eps = 1e-7
+            s = 0.5 * pi
             for i in range(len(base)):
-                p_plus = base.copy(); p_plus[i] += eps
-                p_minus = base.copy(); p_minus[i] -= eps
+                p_plus = base.copy(); p_plus[i] += s
+                p_minus = base.copy(); p_minus[i] -= s
                 e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
                 e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-                g[i] = (e_plus - e_minus) / (2.0 * eps)
+                g[i] = 0.5 * (e_plus - e_minus)
             return float(e0), g
 
         e0 = self.energy(base, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
@@ -137,4 +129,19 @@ class HEADeviceRuntime:
             e_minus = self.energy(p_minus, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
             g[i] = 0.5 * (e_plus - e_minus)
         return e0, g
+
+    def _prefix_ops_for_bases(self, bases: Tuple[str, ...]) -> List[Tuple]:
+        if bases in self._prefix_cache:
+            return self._prefix_cache[bases]
+        ops: List[Tuple] = []
+        for lsb_q, p in enumerate(bases):
+            q = self.n - 1 - int(lsb_q)
+            if p == "X":
+                ops.append(("h", q))
+            elif p == "Y":
+                ops.append(("sdg", q)); ops.append(("h", q))
+        for q in range(self.n):
+            ops.append(("measure_z", q))
+        self._prefix_cache[bases] = ops
+        return ops
 

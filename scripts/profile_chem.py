@@ -54,6 +54,15 @@ def run_hea_device_shots():
     _ = hea.energy(hea.init_guess, runtime="device", shots=int(os.environ.get("CHEM_PROFILE_SHOTS", 2048)), provider="simulator", device="statevector")
 
 
+def run_hea_open_shell_shots0():
+    # Mirror tests_mol_valid/test_hea.py::test_open_shell core workload
+    from tyxonq.applications.chem.molecule import h_chain
+    from tyxonq.applications.chem.algorithms.hea import HEA
+    m = h_chain(3, charge=0, spin=1)
+    hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="device")
+    _ = hea.kernel(shots=0, provider="simulator", device="statevector")
+
+
 if __name__ == "__main__":
     # 可选：限制 BLAS 线程，避免干扰
     os.environ.setdefault("OMP_NUM_THREADS", "4")
@@ -61,8 +70,10 @@ if __name__ == "__main__":
 
     profile_callable("UCCSD.device.H4", run_uccsd_device)
     profile_callable("HEA.device.H4", run_hea_device)
-    # shots>0 counts path (H2 to keep fast)
+    # shots>0 counts path (H4 here per user request)
     profile_callable("UCCSD.device.shots.H4", run_uccsd_device_shots)
     profile_callable("HEA.device.shots.H4", run_hea_device_shots)
+    # open-shell slow case
+    profile_callable("HEA.device.open_shell.shots0", run_hea_open_shell_shots0)
 
 

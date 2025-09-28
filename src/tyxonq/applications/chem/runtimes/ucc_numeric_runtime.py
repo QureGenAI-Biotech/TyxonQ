@@ -42,6 +42,7 @@ class UCCNumericRuntime:
         decompose_multicontrol: bool = False,
         numeric_engine: str | None = None,
         ci_hamiltonian: Any | None = None,
+        qop: QubitOperator | None = None,
         
         
     ):
@@ -60,6 +61,8 @@ class UCCNumericRuntime:
         self.numeric_engine = (numeric_engine or "statevector").lower()
         # Optional CI-space Hamiltonian apply (callable) or matrix for CI engines
         self.ci_hamiltonian = ci_hamiltonian
+        # Optional: pre-mapped QubitOperator for statevector path reuse
+        self._qop_cached = qop
         
 
         if self.ex_ops is not None:
@@ -68,6 +71,7 @@ class UCCNumericRuntime:
             self.n_params = 0
         # Internal caches for civector ops (per TCC style)
         self._ci_cache = {}
+        # Cache keys removed; use centralized cache in statevector_ops
 
     def _build(self, params: Sequence[float]) -> Circuit:
         if self.ex_ops is None or self.n_params == 0:
@@ -148,9 +152,10 @@ class UCCNumericRuntime:
     # (diagnostic helper removed; engine ordering matches ci_strings directly)
 
     def _expect(self, psi: np.ndarray) -> float:
-        # Use OpenFermion sparse operator only; remove manual gate fallbacks
-        from openfermion.linalg import get_sparse_operator  # type: ignore
-        H = get_sparse_operator(self.h_qubit_op, n_qubits=self.n_qubits)
+        # Use cached sparse operator via statevector_ops cache util
+        from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import _cached_sparse_from_key, _qop_to_key
+        key = _qop_to_key(self.h_qubit_op, int(self.n_qubits))
+        H = _cached_sparse_from_key(key)
         vec = psi.reshape(-1)
         e = np.vdot(vec, H.dot(vec))
         return float(np.real(e))
@@ -197,7 +202,8 @@ class UCCNumericRuntime:
                 return float("nan")
             return float(float(np.dot(bra, civector)) / denom)
         if self.numeric_engine == "statevector":
-            return float(_energy_statevector(base, self.h_qubit_op, self.n_qubits, self.n_elec_s, self.ex_ops, self.param_ids, mode=self.mode, init_state=self.init_state))
+            qop = self._qop_cached if self._qop_cached is not None else self.h_qubit_op
+            return float(_energy_statevector(base, qop, self.n_qubits, self.n_elec_s, self.ex_ops, self.param_ids, mode=self.mode, init_state=self.init_state))
         # Default: evaluate in full statevector space
         psi = self._state(base)
         return float(self._expect(psi))
@@ -213,7 +219,8 @@ class UCCNumericRuntime:
             return self._get_energy_and_grad_pyscf(base)
         # Statevector: dedicated energy and parameter-shift gradient
         if self.numeric_engine == "statevector":
-            e, g = _energy_and_grad_statevector(base, self.h_qubit_op, self.n_qubits, self.n_elec_s, self.ex_ops, self.param_ids, mode=self.mode, init_state=self.init_state)
+            qop = self._qop_cached if self._qop_cached is not None else self.h_qubit_op
+            e, g = _energy_and_grad_statevector(base, qop, self.n_qubits, self.n_elec_s, self.ex_ops, self.param_ids, mode=self.mode, init_state=self.init_state)
             return float(e), np.asarray(g, dtype=np.float64)
         # civector / civector-large: implement native analytic gradient following TCC
         if self.numeric_engine in ("civector", "civector-large"):

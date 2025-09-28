@@ -11,6 +11,7 @@ from pyscf.fci import direct_nosym, direct_spin1, cistring
 from pyscf import ao2mo
 
 from tyxonq.libs.hamiltonian_encoding.pauli_io import hcb_to_coo, fop_to_coo, reverse_qop_idx, canonical_mo_coeff
+from openfermion.transforms import jordan_wigner as _jw_transform
 
 
 class _MPOWrapper:
@@ -224,6 +225,21 @@ def get_h_from_integral(int1e, int2e, n_elec_s, mode: str, htype: str):
     return get_h_fcifunc_hcb_from_integral(int1e, int2e, n_elec)
 
 
+def pauli_sum_to_qubit_operator(pauli_items: list[tuple[float, list[tuple[str, int]]]], n_qubits: int) -> QubitOperator:
+    """Build OpenFermion QubitOperator from internal pauli sum representation.
+
+    Each item is (coeff, [(P, q), ...]) where P in {'X','Y','Z'} and q is int (big-endian handled upstream).
+    """
+    qop = QubitOperator()
+    for coeff, ops in pauli_items:
+        if not ops:
+            qop += float(coeff)
+            continue
+        term = tuple((int(q), str(P).upper()) for (P, q) in ops)
+        qop += QubitOperator(term, float(coeff))
+    return qop
+
+
 def get_h_from_hf(hf: RHF, *, mode: str = "fermion", htype: str = "sparse", active_space: Tuple[int, int] | None = None, active_orbital_indices: List[int] | None = None):
     """Thin wrapper to preserve legacy import path used in tests.
 
@@ -246,6 +262,7 @@ __all__ = [
     "get_h_fcifunc_from_integral",
     "get_h_fcifunc_hcb_from_integral",
     "get_h_from_integral",
+    "pauli_sum_to_qubit_operator",
 ]
 
 

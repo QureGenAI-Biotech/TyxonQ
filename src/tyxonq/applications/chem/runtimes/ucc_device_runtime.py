@@ -40,6 +40,7 @@ class UCCDeviceRuntime:
         init_state: Sequence[float] | None = None,
         decompose_multicontrol: bool = False,
         trotter: bool = False,
+        qop: QubitOperator | None = None,
     ):
         self.n_qubits = int(n_qubits)
         self.n_elec_s = (int(n_elec_s[0]), int(n_elec_s[1]))
@@ -51,6 +52,8 @@ class UCCDeviceRuntime:
         self.init_state = init_state
         self.decompose_multicontrol = bool(decompose_multicontrol)
         self.trotter = bool(trotter)
+        # Optional: pre-mapped QubitOperator cache for shots==0 fast path
+        self._qop_cached = qop
 
         # 推断参数个数
         if self.ex_ops is not None:
@@ -60,6 +63,29 @@ class UCCDeviceRuntime:
                 self.n_params = max(self.param_ids) + 1 if len(self.param_ids) > 0 else 0
         else:
             self.n_params = 0
+
+        # ---- Precompute grouping and cache measurement prefixes ----
+        # Group once per runtime instance; reuse across energy/grad evaluations
+        identity_const, groups = group_qubit_operator_terms(self.h_qubit_op, self.n_qubits)
+        self._identity_const: float = float(identity_const)
+        self._groups = groups  # Dict[Tuple[str,...], List[(items)]]
+        self._prefix_cache: Dict[Tuple[str, ...], List[Tuple]] = {}
+
+    def _prefix_ops_for_bases(self, bases: Tuple[str, ...]) -> List[Tuple]:
+        if bases in self._prefix_cache:
+            return self._prefix_cache[bases]
+        ops: List[Tuple] = []
+        # bases order originates from grouping assuming OpenFermion little-endian (q=0 LSB)
+        # Our IR uses big-endian; keep direct indexing consistent with UCC conventions
+        for q, p in enumerate(bases):
+            if p == "X":
+                ops.append(("h", q))
+            elif p == "Y":
+                ops.append(("rz", q, -pi/2)); ops.append(("h", q))
+        for q in range(self.n_qubits):
+            ops.append(("measure_z", q))
+        self._prefix_cache[bases] = ops
+        return ops
 
         # TODO (device-runtime backlog):
         # 1) Add adjoint differentiation for simulator shots=0 to replace finite-difference (faster, exact on statevector)
@@ -115,19 +141,11 @@ class UCCDeviceRuntime:
         noise: dict | None = None,
         **device_kwargs,
     ) -> float:
-        # Prefer compiler-provided grouping when available
-        # Fallback to internal grouping during transition
-        identity_const, groups = group_qubit_operator_terms(self.h_qubit_op, self.n_qubits)
-        energy_val = float(identity_const)
-        for bases, items in groups.items():
+        # Use cached grouping and measurement prefixes
+        energy_val = float(self._identity_const)
+        for bases, items in self._groups.items():
             c = c_builder()
-            for q, p in enumerate(bases):
-                if p == "X":
-                    c.ops.append(("h", q))
-                elif p == "Y":
-                    c.ops.append(("rz", q, -pi/2)); c.ops.append(("h", q))
-            for q in range(self.n_qubits):
-                c.ops.append(("measure_z", q))
+            c.ops.extend(self._prefix_ops_for_bases(bases))
             dev = c.device(provider=provider, device=device, shots=shots, noise=noise, **device_kwargs)
             # Chainable postprocessing: aggregate energy for this group's items
             pp_opts = dict(postprocessing or {})
@@ -154,21 +172,14 @@ class UCCDeviceRuntime:
         noise: dict | None = None,
         **device_kwargs,
     ) -> float:
-        # Fast path: simulator/local + shots==0 → 使用解析期望；返回电子能（去掉常数项）
+        # Fast path: simulator/local + shots==0 → 使用 numeric 的 CI-embedding 生成 ψ，确保与数值基准完全一致
         if (provider in ("simulator", "local")) and int(shots) == 0:
-            p = np.asarray(
-                params
-                if params is not None
-                else (np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)),
-                dtype=np.float64,
-            )
-            # 数值库直算电子能（与 numeric/statevector 完全一致）
             from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
-                energy_statevector as _energy_statevector,
+                get_statevector_from_params, energy_from_statevector,
             )
-            e_elec = _energy_statevector(
-                p,
-                self.h_qubit_op,
+            x = np.asarray(params if params is not None else (np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)), dtype=np.float64)
+            psi = get_statevector_from_params(
+                x,
                 self.n_qubits,
                 self.n_elec_s,
                 self.ex_ops,
@@ -176,7 +187,7 @@ class UCCDeviceRuntime:
                 mode=self.mode,
                 init_state=None,
             )
-            return float(e_elec)
+            return float(energy_from_statevector(psi, self.h_qubit_op, self.n_qubits))
 
         if self.n_params == 0:
             def _builder():
@@ -200,29 +211,22 @@ class UCCDeviceRuntime:
         noise: dict | None = None,
         **device_kwargs,
     ) -> Tuple[float, np.ndarray]:
-        # shots 路径统一由 driver+engine 归一；shots=0 时通过 device 层解析通道计算梯度
+        # shots==0: use finite-difference over the analytic CI-embedded energy path (PS not applicable to CI embedding)
         if (provider in ("simulator", "local")) and int(shots) == 0:
             if self.n_params == 0:
                 e0 = self.energy(None, shots=0, provider=provider, device=device, postprocessing=postprocessing)
                 return float(e0), np.zeros(0, dtype=np.float64)
-            x = np.asarray(
-                params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64
-            )
-            # 数值库直算（value_and_grad 等价路径），返回电子能与梯度
-            from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
-                energy_and_grad_statevector as _energy_and_grad_statevector,
-            )
-            e_elec, g = _energy_and_grad_statevector(
-                x,
-                self.h_qubit_op,
-                self.n_qubits,
-                self.n_elec_s,
-                self.ex_ops,
-                self.param_ids,
-                mode=self.mode,
-                init_state=None,
-            )
-            return float(e_elec), np.asarray(g, dtype=np.float64)
+            x = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
+            e0 = self.energy(x, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+            g = np.zeros_like(x)
+            eps = 1e-7
+            for i in range(len(x)):
+                p_plus = x.copy(); p_plus[i] += eps
+                p_minus = x.copy(); p_minus[i] -= eps
+                e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+                g[i] = (e_plus - e_minus) / (2.0 * eps)
+            return float(e0), g
 
         if self.n_params == 0:
             e0 = self.energy(None, shots=shots, provider=provider, device=device, postprocessing=postprocessing)

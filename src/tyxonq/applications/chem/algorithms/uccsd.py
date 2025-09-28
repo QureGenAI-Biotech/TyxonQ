@@ -488,6 +488,8 @@ class UCCSD(UCC):
         # Record energies and preferences
         inst.e_core = float(e_core) if e_core is not None else 0.0
         inst.numeric_engine = numeric_engine
+        # cache QubitOperator for runtime shots==0 fast path
+        inst._qop_cached = hq
         inst._int1e = np.asarray(int1e)
         inst._int2e = np.asarray(int2e)
         inst.n_elec = int(na + nb)

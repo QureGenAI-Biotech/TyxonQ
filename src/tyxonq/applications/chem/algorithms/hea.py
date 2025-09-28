@@ -99,9 +99,9 @@ class HEA:
             # Otherwise require explicit (n, layers, hamiltonian)
             if n is None or layers is None or hamiltonian is None:
                 raise TypeError("HEA requires either 'molecule'/'atom' or explicit 'n', 'layers', and 'hamiltonian'")
-            self.n = int(n)
-            self.layers = int(layers)
-            self.hamiltonian = list(hamiltonian)
+        self.n = int(n)
+        self.layers = int(layers)
+        self.hamiltonian = list(hamiltonian)
 
         # RY ansatz: (layers + 1) * n parameters
         self.n_params = (self.layers + 1) * self.n
@@ -140,7 +140,8 @@ class HEA:
         if self.runtime == "device":
             rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template)
             p = self.init_guess if params is None else params
-            return rt.energy(p, **device_opts)
+            qop = getattr(self, "_qop_cached", None)
+            return HEADeviceRuntime(self.n, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template, qop=qop).energy(p, **device_opts)
         if self.runtime == "numeric":
             rt = HEANumericRuntime(self.n, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
             p = self.init_guess if params is None else params
@@ -157,7 +158,8 @@ class HEA:
         if self.runtime == "device":
             rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian, circuit_template=self.circuit_template)
             p = self.init_guess if params is None else params
-            return rt.energy_and_grad(p, **device_opts)
+            qop = getattr(self, "_qop_cached", None)
+            return HEADeviceRuntime(self.n, self.layers, self.hamiltonian, circuit_template=self.circuit_template, qop=qop).energy_and_grad(p, **device_opts)
         if self.runtime == "numeric":
             rt = HEANumericRuntime(self.n, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
             p = self.init_guess if params is None else params
@@ -295,7 +297,9 @@ class HEA:
             qop = fop_to_qop(fop, mapping, n_sorb, n_elec_s)
         terms = cls._qop_to_term_list(qop, n_qubits=(n_sorb - 2 if mapping == "parity" else n_sorb))
         n_qubits = (n_sorb - 2) if mapping == "parity" else n_sorb
+        # 预映射缓存：记录 QubitOperator，供 runtime shots==0 快径直接消费
         inst = cls(n=n_qubits, layers=int(n_layers), hamiltonian=terms, runtime=runtime)
+        inst._qop_cached = qop
         # record chemistry metadata for downstream features (RDM等)
         inst.mapping = str(mapping)
         inst.int1e = np.array(int1e)
