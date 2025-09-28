@@ -40,7 +40,7 @@ def main() -> None:
     e_dft_cloud = cloud.dft("b3lyp", verbose=True)
     e_casscf_cloud = cloud.casscf(ncas=2, nelecas=2, verbose=True)
 
-    print("\nCloud results (mocked):")
+    print("\nCloud results:")
     print(json.dumps({
         "fci": e_fci_cloud,
         "ccsd": e_ccsd_cloud,

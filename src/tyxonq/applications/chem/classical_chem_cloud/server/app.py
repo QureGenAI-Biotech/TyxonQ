@@ -4,8 +4,8 @@ from typing import Any, Dict, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from tyxonq.applications.chem.classical_chem_cloud.server import cpu_backend
-from tyxonq.applications.chem.classical_chem_cloud.server  import gpu_backend
+from tyxonq.applications.chem.classical_chem_cloud.server import cpu_chem
+from tyxonq.applications.chem.classical_chem_cloud.server  import gpu_chem
 
 
 class MoleculeData(BaseModel):
@@ -31,13 +31,13 @@ app = FastAPI()
 
 def _route_backend(payload: Dict[str, Any]) -> Dict[str, Any]:
     dev = str(payload.get("classical_device", "auto")).lower()
-    if dev == "gpu" or (dev == "auto" and gpu_backend.gpu_available):
+    if dev == "gpu" or (dev == "auto" and gpu_chem.gpu_available):
         try:
-            return gpu_backend.compute(payload)
+            return gpu_chem.compute(payload)
         except Exception:
             # fallback to CPU
             pass
-    return cpu_backend.compute(payload)
+    return gpu_chem.compute(payload)
 
 
 @app.post("/classical/compute")
@@ -49,3 +49,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8009)
 
+    #pip install fastapi uvicorn pydantic
+    #pip install pyscf
+    #pip install gpu4pyscf-cuda12x 
+    #pip install cutensor-cu12

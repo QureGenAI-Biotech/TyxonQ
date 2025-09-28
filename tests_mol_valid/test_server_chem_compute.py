@@ -1,0 +1,140 @@
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from tyxonq.applications.chem.classical_chem_cloud.server import cpu_chem, gpu_chem
+from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+from tyxonq.applications.chem.algorithms.hea import HEA
+
+
+def _mol_data(atom: str = "H 0 0 0; H 0 0 0.74", basis: str = "cc-pvdz", charge: int = 0, spin: int = 0) -> dict:
+    return {
+        "atom": atom,
+        "basis": basis,
+        "charge": int(charge),
+        "spin": int(spin),
+        "unit": "Angstrom",
+    }
+
+
+{
+  "fci": -1.1633744903192416,
+  "ccsd": -1.1633744964048178,
+  "ccsd(t)": -1.1633744964048178,
+  "mp2": -1.155071651191337,
+  "dft(b3lyp)": -1.1732811209085696,
+  "casscf(ncas=2, nelecas=2)": -1.1468743339673009
+}
+
+def test_cpu_classical_methods_smoke():
+    payload_base = {"molecule_data": _mol_data(), "classical_device": "cpu", "verbose": False}
+
+    # FCI
+    fci_res = cpu_chem.compute({**payload_base, "method": "fci", "method_options": {}})
+    assert isinstance(fci_res["energy"], float)
+    assert np.equal(fci_res["energy"], -1.1633744903192416)
+
+    # CCSD
+    ccsd_res = cpu_chem.compute({**payload_base, "method": "ccsd", "method_options": {}})
+    assert isinstance(ccsd_res["energy"], float)
+    assert np.equal(ccsd_res["energy"], -1.1633744964048178)
+
+    # CCSD(T)
+    ccst_res = cpu_chem.compute({**payload_base, "method": "ccsd(t)", "method_options": {}})
+    assert isinstance(ccst_res["energy"], float)
+    assert np.equal(ccst_res["energy"], -1.1633744964048178)
+    # MP2
+    mp2_res = cpu_chem.compute({**payload_base, "method": "mp2", "method_options": {}})
+    assert isinstance(mp2_res["energy"], float)
+    assert np.equal(mp2_res["energy"], -1.155071651191337)
+    # DFT
+    dft_res = cpu_chem.compute({**payload_base, "method": "dft", "method_options": {"functional": "b3lyp"}})
+    assert isinstance(dft_res["energy"], float)
+    assert np.equal(dft_res["energy"], -1.1732811209085696)     
+    # CASSCF
+    casscf_res = cpu_chem.compute({**payload_base, "method": "casscf", "method_options": {"ncas": 2, "nelecas": 2}})
+    assert isinstance(casscf_res["energy"], float)  
+    assert np.equal(casscf_res["energy"], -1.1468743339673009)
+
+def _mol_data_for_hea(atom: str = "H 0 0 0; H 0 0 0.74", basis: str = "sto-3g", charge: int = 0, spin: int = 0) -> dict:
+    return {
+        "atom": atom,
+        "basis": basis,
+        "charge": int(charge),
+        "spin": int(spin),
+        "unit": "Angstrom",
+    }
+
+def test_cpu_hf_integrals_to_uccsd_and_hea():
+    payload_hf = {"molecule_data": _mol_data_for_hea(), "classical_device": "cpu", "method": "hf_integrals", "verbose": False}
+    res = cpu_chem.compute(payload_hf)
+    int1e = np.asarray(res["int1e"])  # type: ignore[index]
+    int2e = np.asarray(res["int2e"])  # type: ignore[index]
+    e_core = float(res["e_core"])  # type: ignore[index]
+    nelec = int(res.get("nelectron", 2))
+
+    # UCCSD from integrals
+    u = UCCSD.from_integral(int1e, int2e, nelec, e_core, runtime="device")
+    e_ucc = u.kernel(runtime="device", provider="simulator", device="statevector", shots=0)
+    assert isinstance(e_ucc, float)
+
+    # HEA from integrals (mapping parity), shallow layers
+    hea = HEA.from_integral(int1e, int2e, nelec, e_core, n_layers=2, mapping="parity", runtime="device")
+    e_hea = hea.kernel(shots=0, provider="simulator", device="statevector")
+    assert isinstance(e_hea, float)
+
+    # FCI reference via cpu_chem
+    e_fci = cpu_chem.compute({"molecule_data": _mol_data_for_hea(), "classical_device": "cpu", "method": "fci", "method_options": {}})["energy"]
+
+    # Loose tolerance to accommodate small numeric drift
+    assert np.isfinite(e_fci)
+    assert abs(e_ucc - e_fci) < 1e-4
+    assert abs(e_hea - e_fci) < 1e-3
+
+
+@pytest.mark.xfail(condition=not getattr(gpu_chem, "gpu_available", False), reason="gpu4pyscf not available")
+def test_gpu_chem_smoke_delegation():
+    payload = {"molecule_data": _mol_data(), "classical_device": "gpu", "verbose": False}
+
+    # DFT on GPU (or fallback)
+    dft_res = gpu_chem.compute({**payload, "method": "dft", "method_options": {"functional": "b3lyp"}})
+    assert isinstance(dft_res["energy"], float)
+    assert np.equal(dft_res["energy"], -1.1732811209085696)
+
+    # MP2 on GPU (or fallback)
+    mp2_res = gpu_chem.compute({**payload, "method": "mp2", "method_options": {}})
+    assert isinstance(mp2_res["energy"], float)
+    assert np.equal(mp2_res["energy"], -1.155071651191337)
+
+    # FCI via delegation to CPU
+    fci_res = gpu_chem.compute({**payload, "method": "fci", "method_options": {}})
+    assert isinstance(fci_res["energy"], float)
+    assert np.equal(fci_res["energy"], -1.1633744903192416)
+
+    # CCSD on GPU (or fallback logic inside)
+    ccsd_res = gpu_chem.compute({**payload, "method": "ccsd", "method_options": {}})
+    assert isinstance(ccsd_res["energy"], float)
+    assert np.equal(ccsd_res["energy"], -1.1633744964048178)
+    # CCSD(T) -> GPU RHF then CPU CCSD(T)
+    ccst_res = gpu_chem.compute({**payload, "method": "ccsd(t)", "method_options": {}})
+    assert isinstance(ccst_res["energy"], float)
+    assert np.equal(ccst_res["energy"], -1.1633744964048178)
+    # CASSCF -> GPU RHF then CPU CASSCF
+    casscf_res = gpu_chem.compute({**payload, "method": "casscf", "method_options": {"ncas": 2, "nelecas": 2}})
+    assert isinstance(casscf_res["energy"], float)
+    assert np.equal(casscf_res["energy"], -1.1468743339673009)
+
+
+@pytest.mark.xfail(condition=not getattr(gpu_chem, "gpu_available", False), reason="gpu4pyscf not available")
+def test_gpu_hf_integrals_ccsd_casstf_paths():
+    payload = {"molecule_data": _mol_data(), "classical_device": "gpu", "verbose": False}
+
+    # hf_integrals path (GPU RHF then to CPU integrals)
+    hf_res = gpu_chem.compute({**payload, "method": "hf_integrals", "method_options": {}})
+    assert isinstance(hf_res.get("e_hf", 0.0), float)
+    assert "int1e" in hf_res and "int2e" in hf_res
+
+
+if __name__ == "__main__":
+    test_cpu_classical_methods_smoke()

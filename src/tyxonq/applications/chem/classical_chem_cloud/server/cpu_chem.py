@@ -33,16 +33,13 @@ def _sys_limits() -> tuple[int, int]:
     return cores, mem_mb
 
 
-def setup_cpu_resources(mf: scf.hf.RHF | scf.uhf.UHF | scf.rohf.ROHF) -> None:
+def setup_cpu_resources() -> None:
     cores, mem_mb = _sys_limits()
     lib.num_threads(cores)
     os.environ["OMP_NUM_THREADS"] = str(cores)
     os.environ["OPENBLAS_NUM_THREADS"] = str(cores)
     os.environ["MKL_NUM_THREADS"] = str(cores)
-    try:
-        mf.max_memory = int(mem_mb)
-    except Exception:
-        pass
+    os.environ["PYSCF_MAX_MEMORY"] = str(mem_mb)
 
 
 def _build_mol(mdat: Dict[str, Any]) -> gto.Mole:
@@ -56,20 +53,23 @@ def _build_mol(mdat: Dict[str, Any]) -> gto.Mole:
     m.build()
     return m
 
+setup_cpu_resources()
 
-def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
+def compute(payload: Dict[str, Any],pre_build_mol= None,pre_compute_hf = None) -> Dict[str, Any]:
     method = str(payload.get("method", "fci")).lower()
     verbose = bool(payload.get("verbose", False))
     mdat = dict(payload.get("molecule_data", {}))
-    m = _build_mol(mdat)
+    use_density_fit = bool(payload.get("use_density_fit", True))
+    if pre_build_mol:
+        m = pre_build_mol
+    else:
+        m = _build_mol(mdat)
 
-    mf = scf.RHF(m)
-    mf.chkfile = None
-    mf.verbose = 0
-    setup_cpu_resources(mf)
-    mf.kernel()
 
+    
     if method == "hf_integrals":
+        mf = scf.RHF(m)
+        mf.kernel()
         int1e, int2e, e_core = get_integral_from_hf(
             mf,
             active_space=payload.get("active_space"),
@@ -92,30 +92,39 @@ def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
     opts = dict(payload.get("method_options", {}))
 
     if method == "fci":
+        if pre_compute_hf:
+            mf = pre_compute_hf     
+        else:
+            mf = scf.RHF(m)
+            mf.kernel()
+        #fci doesn't support density fit
         e = float(fci.FCI(mf).kernel(**opts)[0])
     elif method == "ccsd":
-        mycc = cc.CCSD(mf)
-        ret = mycc.kernel(**opts)
-        e_corr = float(ret[0]) if isinstance(ret, (tuple, list)) else float(ret)
-        e_tot_attr = getattr(mycc, "e_tot", None)
-        e = float(e_tot_attr) if e_tot_attr is not None else float(getattr(mf, "e_tot", 0.0) + e_corr)
+        mf = scf.RHF(m).run()
+        mycc = cc.CCSD(mf).run(**opts)
+        e = mycc.e_tot
     elif method in ("ccsd(t)", "ccsd_t"):
-        mycc = cc.CCSD(mf)
-        mycc.kernel()
+        if pre_compute_hf:
+            mf = pre_compute_hf     
+        else:
+            mf = scf.RHF(m).run()
+        mycc = cc.CCSD(mf).run(**opts)
+        e = mycc.e_tot
         et = mycc.ccsd_t()
-        e = float(getattr(mycc, "e_tot", 0.0) + et)
+        e = float(e + et)
     elif method == "mp2":
-        mymp = mp.MP2(mf)
-        ret = mymp.kernel(**opts)
-        e_corr = float(ret[0]) if isinstance(ret, (tuple, list)) else float(ret)
-        e = float(getattr(mf, "e_tot", 0.0) + e_corr)
+        mf = scf.RHF(m).run()
+        ret = mp.MP2(mf).run(**opts)
+        e = float(ret.e_tot)
     elif method == "dft":
         xc = str(opts.get("functional", "b3lyp"))
         rks = dft.RKS(m)
         rks.xc = xc
         rks.verbose = 0
+        rks.max_memory
         e = float(rks.kernel())
     elif method == "casscf":
+        mf = scf.RHF(m).run()
         ncas = int(opts.get("ncas"))
         nelecas = opts.get("nelecas")
         if isinstance(nelecas, (list, tuple)):
@@ -131,12 +140,6 @@ def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
         "energy": float(e),
         "classical_device": payload.get("classical_device", "cpu"),
     }
-    if verbose:
-        resp["verbose"] = {
-            "e_hf": float(getattr(mf, "e_tot", 0.0)),
-            "mo_coeff": np.asarray(getattr(mf, "mo_coeff", None)).tolist() if getattr(mf, "mo_coeff", None) is not None else None,
-            "mo_energy": np.asarray(getattr(mf, "mo_energy", None)).tolist() if getattr(mf, "mo_energy", None) is not None else None,
-        }
     return resp
 
 
