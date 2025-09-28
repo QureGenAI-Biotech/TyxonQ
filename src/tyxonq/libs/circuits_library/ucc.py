@@ -4,6 +4,7 @@ from typing import List, Tuple, Sequence
 
 from ...core.ir.circuit import Circuit
 from openfermion.transforms import jordan_wigner
+from functools import lru_cache
 
 from tyxonq.libs.hamiltonian_encoding.pauli_io import ex_op_to_fop, reverse_qop_idx
 from .utils import unpack_nelec, evolve_pauli_ops, build_multicontrol_ry_ops
@@ -71,6 +72,12 @@ def _evolve_excitation_ops(n_qubits: int, f_idx: Tuple[int, ...], qop, theta: fl
         ops.append(("cx", j, i))
         ops.append(("cx", l, k))
     return ops
+@lru_cache(maxsize=4096)
+def _cached_exop_qop(n_qubits: int, f_idx: Tuple[int, ...]):
+    # Cache JW mapping and index reversal for given excitation and qubit count
+    fop = ex_op_to_fop(f_idx, with_conjugation=True)
+    return reverse_qop_idx(jordan_wigner(fop), n_qubits)
+
 
 
 def build_ucc_circuit(
@@ -103,15 +110,13 @@ def build_ucc_circuit(
         theta = float(params[pid])
         if trotter:
             # trotter: Pauli-evolution per string
-            fop = ex_op_to_fop(f_idx, with_conjugation=True)
-            qop = reverse_qop_idx(jordan_wigner(fop), n_qubits)
+            qop = _cached_exop_qop(n_qubits, tuple(f_idx))
             for pauli_string, v in qop.terms.items():
                 if mode in ["qubit", "hcb"]:
                     pauli_string = [(idx, symbol) for idx, symbol in pauli_string if symbol != "Z"]
                 ops.extend(evolve_pauli_ops(tuple(pauli_string), -2 * v.imag * theta))
         else:
-            fop = ex_op_to_fop(f_idx, with_conjugation=True)
-            qop = reverse_qop_idx(jordan_wigner(fop), n_qubits)
+            qop = _cached_exop_qop(n_qubits, tuple(f_idx))
             # Gate-level follows TenCirChem: use 2*theta
             ops.extend(_evolve_excitation_ops(n_qubits, f_idx, qop, 2 * theta, mode, decompose_multicontrol))
 

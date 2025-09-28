@@ -3,6 +3,8 @@ from __future__ import annotations
 import numpy as np
 from openfermion import jordan_wigner
 from openfermion.linalg import get_sparse_operator
+from openfermion import QubitOperator  # type: ignore
+from functools import lru_cache
 import tyxonq as tq
 
 from tyxonq.applications.chem.constants import (
@@ -63,6 +65,31 @@ def get_statevector_from_params(
     psi = np.zeros(1 << n_qubits, dtype=np.complex128)
     psi[ci_strings] = np.asarray(civ, dtype=np.complex128)
     return psi
+def _qop_to_key(qop: QubitOperator, n_qubits: int):
+    items = []
+    for term, coeff in qop.terms.items():
+        items.append((tuple((int(i), str(p)) for (i, p) in term), float(getattr(coeff, "real", coeff))))
+    items.sort()
+    return (int(n_qubits), tuple(items))
+
+
+def _key_to_qop(key) -> QubitOperator:
+    n_qubits, items = key
+    qop = QubitOperator()
+    for term, coeff in items:
+        if len(term) == 0:
+            qop += float(coeff)
+        else:
+            qop += QubitOperator(tuple((int(i), str(p)) for (i, p) in term), float(coeff))
+    return qop
+
+
+@lru_cache(maxsize=64)
+def _cached_sparse_from_key(key):
+    n_qubits, _ = key
+    qop = _key_to_qop(key)
+    return get_sparse_operator(qop, n_qubits=int(n_qubits))
+
 
 
 def energy_statevector(
@@ -77,7 +104,11 @@ def energy_statevector(
     init_state=None,
 ) -> float:
     psi = get_statevector_from_params(params, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
-    H = get_sparse_operator(h_qubit_op, n_qubits=n_qubits)
+    try:
+        key = _qop_to_key(h_qubit_op, int(n_qubits))
+        H = _cached_sparse_from_key(key)
+    except Exception:
+        H = get_sparse_operator(h_qubit_op, n_qubits=n_qubits)
     e = np.vdot(psi, H.dot(psi))
     return float(np.real(e))
 
@@ -96,8 +127,17 @@ def energy_and_grad_statevector(
     # Use backend value_and_grad wrapper to match TCC style (torchlib.func.grad_and_value)
     from tyxonq.numerics import NumericBackend as nb
 
+    # Precompute sparse operator once for grad loop (important for numpy backend fallback)
+    try:
+        key = _qop_to_key(h_qubit_op, int(n_qubits))
+        H = _cached_sparse_from_key(key)
+    except Exception:
+        H = get_sparse_operator(h_qubit_op, n_qubits=n_qubits)
+
     def _f(p):
-        return energy_statevector(p, h_qubit_op, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
+        psi = get_statevector_from_params(p, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
+        e = np.vdot(psi, H.dot(psi))
+        return float(np.real(e))
 
     vag = nb.value_and_grad(_f, argnums=0)
     e0, g = vag(np.asarray(params, dtype=np.float64))
