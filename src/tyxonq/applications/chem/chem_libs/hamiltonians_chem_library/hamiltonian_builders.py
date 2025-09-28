@@ -39,7 +39,7 @@ def mpo_to_quoperator(mpo_like):
     return _MPOWrapper(mpo_like)
 
 
-def get_integral_from_hf(hf: RHF, active_space: Tuple = None, aslst: List[int] = None):
+def get_integral_from_hf(hf: RHF, active_space: Tuple = None, active_orbital_indices: List[int] = None):
     if not isinstance(hf, RHF):
         raise TypeError(f"hf object must be RHF class, got {type(hf)}")
     m = hf.mol
@@ -53,11 +53,11 @@ def get_integral_from_hf(hf: RHF, active_space: Tuple = None, aslst: List[int] =
         nelecas, ncas = active_space
 
     casci = CASCI(hf, ncas, nelecas)
-    if aslst is None:
+    if active_orbital_indices is None:
         int1e, e_core = casci.get_h1eff()
         int2e = ao2mo.restore("s1", casci.get_h2eff(), ncas)
     else:
-        mo = casci.sort_mo(aslst, base=0)
+        mo = casci.sort_mo(active_orbital_indices, base=0)
         int1e, e_core = casci.get_h1eff(mo)
         int2e = ao2mo.restore("s1", casci.get_h2eff(mo), ncas)
 
@@ -224,12 +224,12 @@ def get_h_from_integral(int1e, int2e, n_elec_s, mode: str, htype: str):
     return get_h_fcifunc_hcb_from_integral(int1e, int2e, n_elec)
 
 
-def get_h_from_hf(hf: RHF, *, mode: str = "fermion", htype: str = "sparse", active_space: Tuple[int, int] | None = None, aslst: List[int] | None = None):
+def get_h_from_hf(hf: RHF, *, mode: str = "fermion", htype: str = "sparse", active_space: Tuple[int, int] | None = None, active_orbital_indices: List[int] | None = None):
     """Thin wrapper to preserve legacy import path used in tests.
 
     Delegates to get_integral_from_hf + get_h_from_integral.
     """
-    int1e, int2e, _ = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+    int1e, int2e, _ = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
     if active_space is None:
         n_elec = int(getattr(hf.mol, "nelectron"))
     else:

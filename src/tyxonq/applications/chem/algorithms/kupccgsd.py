@@ -31,7 +31,7 @@ class KUPCCGSD(_UCCBase):
         self,
         mol: Union[Mole, RHF],
         active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
+        active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
         k: int = 3,
         n_tries: int = 1,
@@ -49,7 +49,7 @@ class KUPCCGSD(_UCCBase):
         active_space: Tuple[int, int], optional
             Active space approximation. The first integer is the number of electrons and the second integer is
             the number or spatial-orbitals. Defaults to None.
-        aslst: List[int], optional
+        active_orbital_indices: List[int], optional
             Pick orbitals for the active space. Defaults to None which means the orbitals are sorted by energy.
             The orbital index is 0-based.
 
@@ -101,7 +101,7 @@ class KUPCCGSD(_UCCBase):
         from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
             get_integral_from_hf,
         )
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
 
         # Active space size and electrons
         if active_space is None:

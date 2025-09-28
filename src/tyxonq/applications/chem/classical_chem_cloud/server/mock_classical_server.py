@@ -65,7 +65,7 @@ def classical_compute(req: ClassicalRequest):
     mf.kernel()
 
     if meth == "hf_integrals":
-        int1e, int2e, e_core = get_integral_from_hf(mf, active_space=req.active_space, aslst=req.active_orbital_indices)
+        int1e, int2e, e_core = get_integral_from_hf(mf, active_space=req.active_space, active_orbital_indices=req.active_orbital_indices)
         return {
             "int1e": np.asarray(int1e).tolist(),
             "int2e": np.asarray(int2e).tolist(),

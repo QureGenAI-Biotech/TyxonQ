@@ -4,7 +4,8 @@ from pyscf.scf import RHF
 from pyscf.mcscf import CASCI
 import pytest
 
-from tyxonq.applications.chem import UCCSD, KUPCCGSD, ROUCCSD
+from tyxonq.applications.chem.molecule import h2
+from tyxonq.applications.chem import UCCSD, KUPCCGSD, ROUCCSD,HEA
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_integral_from_hf, random_integral
 from tyxonq.applications.chem.molecule import _random, h4, h8, h_chain, c4h4,h2
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import canonical_mo_coeff
@@ -101,15 +102,15 @@ def test_active_space():
     uccsd.print_summary(include_circuit=True)
 
 
-def test_active_space_aslst():
+def test_active_space_active_orbital_indices():
     m = h_chain(12)
     m.verbose = 0
     ncas = 4
     nelecas = 4
-    aslst = [0, 1, 8, 10]
-    uccsd = UCCSD(m, active_space=(nelecas, ncas), aslst=aslst)
+    active_orbital_indices = [0, 1, 8, 10]
+    uccsd = UCCSD(m, active_space=(nelecas, ncas), active_orbital_indices=active_orbital_indices)
     casci = CASCI(uccsd.hf, ncas, nelecas)
-    mo = casci.sort_mo(aslst, base=0)
+    mo = casci.sort_mo(active_orbital_indices, base=0)
     e1 = casci.kernel(mo)[0]
     e2 = uccsd.kernel()
     uccsd.print_summary()
@@ -166,6 +167,45 @@ def test_mf_input():
     np.testing.assert_allclose(e, ucc.e_fci, atol=2e-2)
 
 
+def test_hea_active_space_numeric():
+    from tyxonq.applications.chem import HEA
+    m = h2
+    hf = RHF(m)
+    hf.chkfile = None
+    hf.verbose = 0
+    hf.kernel()
+
+    hea = HEA.from_molecule(m, active_space=(2, 2), n_layers=1, mapping="parity", runtime="device")
+    e = hea.kernel(runtime="device")
+    assert np.isfinite(e)
+    # Loose bound: optimized ansatz should not be above HF by more than 1e-2 Ha for H2
+    assert e <= hf.e_tot + 1e-2
+
+
+def test_hea_active_orbital_indices():
+    from tyxonq.applications.chem import HEA
+    from pyscf import ao2mo  # type: ignore
+
+    m = h2
+    hf = RHF(m)
+    hf.chkfile = None
+    hf.verbose = 0
+    hf.kernel()
+
+    # Build integrals using explicit orbital selection (active_orbital_indices)
+    ncas = 2
+    nelecas = (1, 1)
+    casci = CASCI(hf, ncas, sum(nelecas))
+    mo = casci.sort_mo([0, 1], base=0)
+    int1e, e_core = casci.get_h1eff(mo)
+    int2e = ao2mo.restore("s1", casci.get_h2eff(mo), ncas)
+
+    hea = HEA.from_integral(int1e, int2e, nelecas, e_core, n_layers=1, mapping="jordan-wigner", runtime="device")
+    e = hea.kernel(runtime="device")
+    assert np.isfinite(e)
+    # Loose bound vs HF
+    assert e <= hf.e_tot + 1e-2
+
 @pytest.mark.parametrize("method", [UCCSD, ROUCCSD])
 def test_pyscf_solver(method):
     if method == UCCSD:
@@ -185,3 +225,32 @@ def test_pyscf_solver(method):
     mc.fcisolver = method.as_pyscf_solver()
     mc.kernel()
     np.testing.assert_allclose(mc.e_tot, e_ref, atol=1e-4)
+
+@pytest.mark.parametrize("method", [HEA, UCCSD, ROUCCSD])
+def test_pyscf_solver_small_h2(method):
+    m = h2
+    hf = RHF(m)
+    hf.chkfile = None
+    hf.verbose = 0
+    hf.kernel()
+
+    # Reference energy from the native algorithm with numeric runtime (deterministic)
+    if method is HEA:
+        ref = HEA.from_molecule(m, active_space=(2, 2), n_layers=1, runtime="device").kernel(runtime="device")
+    elif method is UCCSD:
+        ref = UCCSD(m, runtime="device").kernel(runtime="device")
+    else:  # ROUCCSD
+        ref = ROUCCSD(hf, active_space=(2, 2)).kernel()
+
+    # CASCI with our PySCF-compatible solver adapter
+    mc = CASCI(hf, 2, 2)
+    # Prefer numeric runtime inside the adapter to avoid sampling noise and speed up
+    if method is HEA:
+        mc.fcisolver = HEA.as_pyscf_solver(runtime="device")
+    elif method is UCCSD:
+        mc.fcisolver = UCCSD.as_pyscf_solver(runtime="device")
+    else:
+        mc.fcisolver = ROUCCSD.as_pyscf_solver(runtime="device")
+    mc.kernel()
+
+    np.testing.assert_allclose(mc.e_tot, ref, atol=1e-4)

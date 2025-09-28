@@ -73,7 +73,7 @@ def compute(payload: Dict[str, Any],pre_build_mol= None,pre_compute_hf = None) -
         int1e, int2e, e_core = get_integral_from_hf(
             mf,
             active_space=payload.get("active_space"),
-            aslst=payload.get("active_orbital_indices"),
+            active_orbital_indices=payload.get("active_orbital_indices"),
         )
         return {
             "int1e": np.asarray(int1e).tolist(),

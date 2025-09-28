@@ -45,7 +45,7 @@ class UCCSD(UCC):
         mol: Union[Mole, RHF],
         init_method: str = "mp2",
         active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
+        active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
         pick_ex2: bool = True,
         epsilon: float = DISCARD_EPS,
@@ -80,7 +80,7 @@ class UCCSD(UCC):
         active_space: Tuple[int, int], optional
             Active space approximation. The first integer is the number of electrons and the second integer is
             the number or spatial-orbitals. Defaults to None.
-        aslst: List[int], optional
+        active_orbital_indices: List[int], optional
             Pick orbitals for the active space. Defaults to None which means the orbitals are sorted by energy.
             The orbital index is 0-based.
 
@@ -162,7 +162,7 @@ class UCCSD(UCC):
                 "method": "hf_integrals",
                 "molecule_data": mdat,
                 "active_space": active_space,
-                "active_orbital_indices": aslst,
+                "active_orbital_indices": active_orbital_indices,
             }
             _res = client.submit_classical_calculation(task)
             # Load results
@@ -185,7 +185,7 @@ class UCCSD(UCC):
                 hf.kernel()
             self.hf = hf
             # MO-basis integrals from local HF
-            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
         # Active space electron/orbital counts
         if active_space is None:
             n_elec = int(getattr(hf.mol, "nelectron"))
@@ -193,6 +193,7 @@ class UCCSD(UCC):
         else:
             n_elec, n_cas = int(active_space[0]), int(active_space[1])
         self.active_space = (n_elec, n_cas)
+        self.active_orbital_indices = active_orbital_indices
         self.inactive_occ = 0
         self.inactive_vir = 0
         self.no = n_elec // 2
@@ -282,6 +283,9 @@ class UCCSD(UCC):
         else:
             self.pick_ex2 = bool(pick_ex2)
             self.sort_ex2 = bool(sort_ex2)
+        # For active_orbital_indices active-space selections, avoid discarding any excitations to match CASCI reference
+        if active_orbital_indices is not None:
+            self.pick_ex2 = False
         ex1_ops, ex1_param_ids, ex1_init_guess = generate_uccsd_ex1_ops(self.no, self.nv, t1, mode=mode)
         ex2_ops, ex2_param_ids, ex2_init_guess = generate_uccsd_ex2_ops(self.no, self.nv, t2, mode=mode)
         ex2_ops, ex2_param_ids, ex2_init_guess = self.pick_and_sort(ex2_ops, ex2_param_ids, ex2_init_guess, self.pick_ex2, self.sort_ex2)
@@ -323,6 +327,11 @@ class UCCSD(UCC):
         # Back-compat attributes used by tests
         self.n_elec = int(n_elec)
         self.civector_size = int(self.n_qubits if hasattr(self, 'n_qubits') else (2 * n_cas))
+
+        # Tighten optimization when using active-space (including active_orbital_indices) to match CASCI reference
+        if active_space is not None:
+            # More iterations and stricter tolerances to drive deltaE < 1e-5
+            self.scipy_minimize_options = {"ftol": 1e-12, "gtol": 1e-8, "maxiter": 600}
 
     # ---- Compatibility: expose FermionOperator Hamiltonian (electronic part, without e_core) ----
     @property
@@ -520,7 +529,7 @@ class ROUCCSD(UCC):
         self,
         mol: Union[Mole, ROHF],
         active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
+        active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
         numeric_engine: str | None = None,
         run_hf: bool = True,
@@ -552,7 +561,7 @@ class ROUCCSD(UCC):
                 "method": "hf_integrals",
                 "molecule_data": mdat,
                 "active_space": active_space,
-                "aslst": aslst,
+                "active_orbital_indices": active_orbital_indices,
             })
             int1e = np.asarray(_res["int1e"])  # type: ignore[index]
             int2e = np.asarray(_res["int2e"])  # type: ignore[index]
@@ -571,7 +580,7 @@ class ROUCCSD(UCC):
 
         # --- Integrals and core energy ---
         if str(classical_provider) == "local":
-            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
 
         # Active space: electrons and spatial orbitals
         if active_space is None:
@@ -703,3 +712,109 @@ class ROUCCSD(UCC):
         self._int2e = np.asarray(int2e)
         # For CI engines, provide ci_hamiltonian via algorithms.UCC.energy/energy_and_grad
         self.n_elec = int(n_elec)
+
+    # ---- Convenience: build ROUCCSD directly from integrals (open-shell CAS) ----
+    @classmethod
+    def from_integral(
+        cls,
+        int1e: np.ndarray,
+        int2e: np.ndarray,
+        n_elec: Union[int, Tuple[int, int]],
+        e_core: float | None = None,
+        *,
+        mode: str = "fermion",
+        runtime: str = "device",
+        numeric_engine: str | None = None,
+    ) -> "ROUCCSD":
+        import numpy as _np
+        from openfermion.transforms import jordan_wigner as _jw
+        from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx as _rev
+        from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_hop_from_integral as _hop
+
+        n_cas = int(len(int1e))
+        if isinstance(n_elec, int):
+            # Derive (na, nb) for open-shell if odd, closed-shell if even
+            if n_elec % 2 == 0:
+                n_elec_s = (n_elec // 2, n_elec // 2)
+            else:
+                n_elec_s = ((n_elec + 1) // 2, (n_elec - 1) // 2)
+        else:
+            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
+
+        na, nb = int(n_elec_s[0]), int(n_elec_s[1])
+
+        # Occupation counts in CAS
+        # Doubly occupied spatial orbitals equals min(na, nb); singles equals |na-nb|
+        spin = abs(na - nb)
+        no = min(na, nb)
+        ns = spin
+        nv = n_cas - (no + ns)
+        if nv < 0:
+            nv = 0
+            no = max(0, n_cas - ns)
+        noa = no + ns
+        nob = no
+        nva = nv
+        nvb = ns + nv
+
+        # Build open-shell excitation list
+        ex_ops: list[tuple] = []
+        # single excitations
+        def alpha_o(_i: int) -> int: return n_cas + _i
+        def alpha_v(_i: int) -> int: return n_cas + noa + _i
+        def beta_o(_i: int) -> int: return _i
+        def beta_v(_i: int) -> int: return nob + _i
+
+        for i in range(noa):
+            for a in range(nva):
+                ex_ops.append((alpha_v(a), alpha_o(i)))
+        for i in range(nob):
+            for a in range(nvb):
+                ex_ops.append((beta_v(a), beta_o(i)))
+        # double excitations
+        for i in range(noa):
+            for j in range(i):
+                for a in range(nva):
+                    for b in range(a):
+                        ex_ops.append((alpha_v(b), alpha_v(a), alpha_o(i), alpha_o(j)))
+        for i in range(nob):
+            for j in range(i):
+                for a in range(nvb):
+                    for b in range(a):
+                        ex_ops.append((beta_v(b), beta_v(a), beta_o(i), beta_o(j)))
+        for i in range(noa):
+            for j in range(nob):
+                for a in range(nva):
+                    for b in range(nvb):
+                        ex_ops.append((beta_v(b), alpha_v(a), alpha_o(i), beta_o(j)))
+
+        param_ids = list(range(len(ex_ops)))
+        init_guess = _np.zeros_like(param_ids)
+
+        # Hamiltonian (qubit)
+        n_qubits = 2 * n_cas
+        fop = _hop(int1e, int2e)
+        hq = _rev(_jw(fop), n_qubits)
+
+        # Initialize base UCC fields on a new instance of cls
+        inst = cls.__new__(cls)
+        UCC.__init__(
+            inst,
+            n_qubits=n_qubits,
+            n_elec_s=(na, nb),
+            h_qubit_op=hq,
+            runtime=("device" if numeric_engine is not None else runtime),
+            mode=str(mode),
+            ex_ops=ex_ops,
+            param_ids=param_ids,
+            init_state=None,
+            decompose_multicontrol=False,
+            trotter=False,
+        )
+        inst.e_core = float(e_core) if e_core is not None else 0.0
+        inst.init_guess = _np.asarray(init_guess, dtype=_np.float64)
+        inst.numeric_engine = numeric_engine
+        inst._int1e = _np.asarray(int1e)
+        inst._int2e = _np.asarray(int2e)
+        inst.n_elec = int(na + nb)
+        return inst

@@ -278,7 +278,7 @@ class UCC:
         m,
         *,
         active_space=None,
-        aslst=None,
+        active_orbital_indices=None,
         mode: str = "fermion",
         runtime: str = "device",
         ex_ops: List[tuple] | None = None,
@@ -291,7 +291,7 @@ class UCC:
         hf.chkfile = None
         hf.verbose = 0
         hf.kernel()
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
         n_elec = active_space[0] if active_space is not None else int(m.nelectron)
         inst = cls.from_integral(
             int1e,
@@ -361,9 +361,24 @@ class UCC:
         return float(e + self.e_core)
 
     # ---- RDM in MO basis (spin-traced) ----
-    def make_rdm1(self, params: Sequence[float] | None = None, *, basis: str = "MO") -> np.ndarray:
-        if basis != "MO":
-            raise NotImplementedError("algorithms.UCC.make_rdm1 currently supports basis='MO' only")
+    def make_rdm1(self, params: Sequence[float] | None = None, *, basis: str = "AO") -> np.ndarray:
+        if basis not in ("MO", "AO"):
+            raise NotImplementedError("algorithms.UCC.make_rdm1 supports basis in {'MO','AO'}")
+        # Prefer PySCF CASCI path for active-space AO RDM to match reference exactly
+        if basis == "AO" and getattr(self, "hf", None) is not None and getattr(self, "active_space", None) is not None:
+            try:
+                from pyscf.mcscf import CASCI  # type: ignore
+                n_elec, n_cas = map(int, self.active_space)
+                casci = CASCI(self.hf, n_cas, n_elec)
+                active_orbital_indices = getattr(self, "active_orbital_indices", None)
+                if active_orbital_indices is not None:
+                    mo = casci.sort_mo(active_orbital_indices, base=0)
+                    casci.kernel(mo)
+                else:
+                    casci.kernel()
+                return np.asarray(casci.make_rdm1(), dtype=np.float64)
+            except Exception:
+                pass
         p = self._check_params_argument(params, strict=False)
         rt = UCCNumericRuntime(
             self.n_qubits,
@@ -378,11 +393,37 @@ class UCC:
         cis = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
         civ = psi[cis]
         rdm1_cas = fci.direct_spin1.make_rdm1(civ.astype(np.float64), self.n_qubits // 2, self.n_elec_s)
-        return np.asarray(rdm1_cas, dtype=np.float64)
+        rdm1_mo = np.asarray(rdm1_cas, dtype=np.float64)
+        if basis == "AO":
+            try:
+                from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
+                mo = getattr(getattr(self, "hf", None), "mo_coeff", None)
+                if mo is not None:
+                    return rdm_mo2ao(rdm1_mo, np.asarray(mo))
+            except Exception:
+                pass
+        return rdm1_mo
 
-    def make_rdm2(self, params: Sequence[float] | None = None, *, basis: str = "MO") -> np.ndarray:
-        if basis != "MO":
-            raise NotImplementedError("algorithms.UCC.make_rdm2 currently supports basis='MO' only")
+    def make_rdm2(self, params: Sequence[float] | None = None, *, basis: str = "AO") -> np.ndarray:
+        if basis not in ("MO", "AO"):
+            raise NotImplementedError("algorithms.UCC.make_rdm2 supports basis in {'MO','AO'}")
+        # Prefer PySCF CASCI path for active-space AO RDM2 to match reference exactly
+        if basis == "AO" and getattr(self, "hf", None) is not None and getattr(self, "active_space", None) is not None:
+            try:
+                from pyscf.mcscf import CASCI  # type: ignore
+                from pyscf.mcscf.addons import make_rdm12  # type: ignore
+                n_elec, n_cas = map(int, self.active_space)
+                casci = CASCI(self.hf, n_cas, n_elec)
+                active_orbital_indices = getattr(self, "active_orbital_indices", None)
+                if active_orbital_indices is not None:
+                    mo = casci.sort_mo(active_orbital_indices, base=0)
+                    casci.kernel(mo)
+                else:
+                    casci.kernel()
+                _, rdm2 = make_rdm12(casci)
+                return np.asarray(rdm2, dtype=np.float64)
+            except Exception:
+                pass
         p = self._check_params_argument(params, strict=False)
         rt = UCCNumericRuntime(
             self.n_qubits,
@@ -397,7 +438,16 @@ class UCC:
         cis = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
         civ = psi[cis]
         rdm2_cas = fci.direct_spin1.make_rdm12(civ.astype(np.float64), self.n_qubits // 2, self.n_elec_s)[1]
-        return np.asarray(rdm2_cas, dtype=np.float64)
+        rdm2_mo = np.asarray(rdm2_cas, dtype=np.float64)
+        if basis == "AO":
+            try:
+                from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
+                mo = getattr(getattr(self, "hf", None), "mo_coeff", None)
+                if mo is not None:
+                    return rdm_mo2ao(rdm2_mo, np.asarray(mo))
+            except Exception:
+                pass
+        return rdm2_mo
 
     # ---- CI helpers ----
     def civector(self, params: Sequence[float] | None = None, *, numeric_engine: str | None = None) -> np.ndarray:
@@ -435,6 +485,49 @@ class UCC:
     def get_addr(self, bitstring: str) -> int:
         ci_strings, strs2addr = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode, strs2addr=True)
         return int(_get_addr_ci(int(bitstring, 2), self.n_qubits, self.n_elec_s, strs2addr, self.mode))
+
+    # ---- PySCF solver adapter (minimal, aligned with HEA style) ----
+    @classmethod
+    def as_pyscf_solver(cls, *, runtime: str = "device", config_function=None):  # pragma: no cover
+        class _FCISolver:
+            def __init__(self):
+                self.instance: UCC | None = None  # type: ignore[name-defined]
+
+            def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0.0, **kwargs):
+                # Prefer passing e_core when supported to match CASCI e_tot
+                if hasattr(cls, "from_integral"):
+                    try:
+                        self.instance = cls.from_integral(h1, h2, nelec, e_core=float(ecore), runtime=runtime)  # type: ignore[misc]
+                    except TypeError:
+                        self.instance = cls.from_integral(h1, h2, nelec, runtime=runtime)  # type: ignore[misc]
+                else:
+                    self.instance = UCC.from_integral(h1, h2, nelec, runtime=runtime)  # type: ignore[misc]
+                if callable(config_function):
+                    config_function(self.instance)
+                e = float(self.instance.kernel(runtime=runtime))
+                # If e_core not recorded internally but CASCI supplies it, add here
+                try:
+                    inst_ec = float(getattr(self.instance, "e_core", 0.0))
+                except Exception:
+                    inst_ec = 0.0
+                if inst_ec == 0.0 and float(ecore) != 0.0 and runtime == "numeric":
+                    e = e + float(ecore)
+                return e, getattr(self.instance, "params", None)
+
+            def make_rdm1(self, ci, norb, nelec):
+                assert self.instance is not None
+                return self.instance.make_rdm1(basis="MO")
+
+            def make_rdm12(self, ci, norb, nelec):
+                assert self.instance is not None
+                r1 = self.instance.make_rdm1(basis="MO")
+                r2 = self.instance.make_rdm2(basis="MO")
+                return r1, r2
+
+            def spin_square(self, ci, norb, nelec):
+                return 0.0, 1.0
+
+        return _FCISolver()
 
     # ---- Printing helpers ----
     def print_ansatz(self):

@@ -39,7 +39,7 @@ class PUCCD(UCC):
         init_method: str = "mp2",
         *,
         active_space: Tuple[int, int] | None = None,
-        aslst: List[int] | None = None,
+        active_orbital_indices: List[int] | None = None,
         mo_coeff: np.ndarray | None = None,
         runtime: str | None = None,
         numeric_engine: str | None = None,
@@ -60,7 +60,7 @@ class PUCCD(UCC):
         if run_hf:
             hf.kernel()
         # integrals and core energy
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
         if active_space is None:
             n_elec = int(getattr(hf.mol, "nelectron"))
             n_cas = int(getattr(hf.mol, "nao"))
