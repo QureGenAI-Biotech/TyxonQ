@@ -37,7 +37,7 @@ def _route_backend(payload: Dict[str, Any]) -> Dict[str, Any]:
         except Exception:
             # fallback to CPU
             pass
-    return gpu_chem.compute(payload)
+    return cpu_chem.compute(payload)
 
 
 @app.post("/classical/compute")

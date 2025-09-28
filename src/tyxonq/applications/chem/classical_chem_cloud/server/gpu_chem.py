@@ -4,7 +4,7 @@ from importlib.machinery import BuiltinImporter
 from typing import Any, Dict
 import numpy as np
 from pyscf import gto  # type: ignore
-from . import cpu_chem
+from tyxonq.applications.chem.classical_chem_cloud.server import cpu_chem
 
 # Optional GPU backends resolved once at module load
 
@@ -46,10 +46,7 @@ def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
         cpu_payload = dict(payload)
         cpu_payload["classical_device"] = "cpu"
         mf = scf.RHF(m).to_gpu().run()
-        try:
-            mf = mf.to_cpu()
-        except:
-            pass
+        mf = mf.to_cpu()
         return cpu_chem.compute(cpu_payload,pre_build_mol=m,pre_compute_hf=mf)
 
     if method == "fci":
@@ -57,30 +54,18 @@ def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
         cpu_payload = dict(payload)
         cpu_payload["classical_device"] = "cpu"
         mf = scf.RHF(m).to_gpu().run()
-        try:
-           mf = mf.to_cpu()
-        except:
-            pass
+        mf = mf.to_cpu()
         return cpu_chem.compute(cpu_payload,pre_build_mol=m,pre_compute_hf=mf)
     if method == "casscf":
         # Delegate CASSCF to CPU backend due to limited GPU support
         cpu_payload = dict(payload)
         cpu_payload["classical_device"] = "cpu"
         mf = scf.RHF(m).to_gpu().run()
-        try:
-            mf = mf.to_cpu()
-        except:
-            pass
+        mf = mf.to_cpu()
         return cpu_chem.compute(cpu_payload,pre_build_mol=m,pre_compute_hf=mf)
     
 
-    mf = scf.RHF(m).to_gpu()
-    mf.chkfile = None
-    mf.verbose = 0
-    if use_density_fit:
-        mf.density_fit().kernel()
-    else:
-        mf.to_gpu().kernel()
+    
 
     opts = dict(payload.get("method_options", {}))
 
@@ -91,14 +76,12 @@ def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
         e = float(getattr(mf, "e_tot", 0.0) + e_corr)
     elif method in ("ccsd(t)", "ccsd_t"):
         mf = scf.RHF(m).to_gpu().run()
-        try:
-            mf = mf.to_cpu()
-        except Exception:
-            pass
+        mf = mf.to_cpu()
         cpu_payload = dict(payload)
         cpu_payload["classical_device"] = "cpu"
         return cpu_chem.compute(cpu_payload, pre_build_mol=m, pre_compute_hf=mf)
     elif method == "mp2":
+        mf = scf.RHF(m).to_gpu().run()
         mymp = mp.MP2(mf)  # type: ignore
         ret = mymp.kernel(**opts)
         e_corr = float(ret[0]) if isinstance(ret, (tuple, list)) else float(ret)
@@ -107,7 +90,6 @@ def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
         xc = str(opts.get("functional", "b3lyp"))
         rks = dft.rks.RKS(m)  # type: ignore
         rks.xc = xc
-        rks.verbose = 0
         e = float(rks.kernel())
     else:
         # Unknown method on GPU path; delegate to CPU

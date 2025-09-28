@@ -120,8 +120,6 @@ def compute(payload: Dict[str, Any],pre_build_mol= None,pre_compute_hf = None) -
         xc = str(opts.get("functional", "b3lyp"))
         rks = dft.RKS(m)
         rks.xc = xc
-        rks.verbose = 0
-        rks.max_memory
         e = float(rks.kernel())
     elif method == "casscf":
         mf = scf.RHF(m).run()

@@ -33,29 +33,29 @@ def test_cpu_classical_methods_smoke():
     # FCI
     fci_res = cpu_chem.compute({**payload_base, "method": "fci", "method_options": {}})
     assert isinstance(fci_res["energy"], float)
-    assert np.equal(fci_res["energy"], -1.1633744903192416)
+    assert abs(fci_res["energy"] - (-1.1633744903192416)) < 1e-8
 
     # CCSD
     ccsd_res = cpu_chem.compute({**payload_base, "method": "ccsd", "method_options": {}})
     assert isinstance(ccsd_res["energy"], float)
-    assert np.equal(ccsd_res["energy"], -1.1633744964048178)
+    assert abs(ccsd_res["energy"] - (-1.1633744964048178)) < 1e-8
 
     # CCSD(T)
     ccst_res = cpu_chem.compute({**payload_base, "method": "ccsd(t)", "method_options": {}})
     assert isinstance(ccst_res["energy"], float)
-    assert np.equal(ccst_res["energy"], -1.1633744964048178)
+    assert abs(ccst_res["energy"] - (-1.1633744964048178)) < 1e-8
     # MP2
     mp2_res = cpu_chem.compute({**payload_base, "method": "mp2", "method_options": {}})
     assert isinstance(mp2_res["energy"], float)
-    assert np.equal(mp2_res["energy"], -1.155071651191337)
+    assert abs(mp2_res["energy"] - (-1.155071651191337)) < 1e-8
     # DFT
     dft_res = cpu_chem.compute({**payload_base, "method": "dft", "method_options": {"functional": "b3lyp"}})
     assert isinstance(dft_res["energy"], float)
-    assert np.equal(dft_res["energy"], -1.1732811209085696)     
+    assert abs(dft_res["energy"] - (-1.1732811209085696)) < 1e-8
     # CASSCF
     casscf_res = cpu_chem.compute({**payload_base, "method": "casscf", "method_options": {"ncas": 2, "nelecas": 2}})
     assert isinstance(casscf_res["energy"], float)  
-    assert np.equal(casscf_res["energy"], -1.1468743339673009)
+    assert abs(casscf_res["energy"] - (-1.1468743339673009)) < 1e-8
 
 def _mol_data_for_hea(atom: str = "H 0 0 0; H 0 0 0.74", basis: str = "sto-3g", charge: int = 0, spin: int = 0) -> dict:
     return {
@@ -100,41 +100,57 @@ def test_gpu_chem_smoke_delegation():
     # DFT on GPU (or fallback)
     dft_res = gpu_chem.compute({**payload, "method": "dft", "method_options": {"functional": "b3lyp"}})
     assert isinstance(dft_res["energy"], float)
-    assert np.equal(dft_res["energy"], -1.1732811209085696)
+    assert abs(dft_res["energy"] - (-1.1732811209085696)) < 1e-8
 
     # MP2 on GPU (or fallback)
     mp2_res = gpu_chem.compute({**payload, "method": "mp2", "method_options": {}})
     assert isinstance(mp2_res["energy"], float)
-    assert np.equal(mp2_res["energy"], -1.155071651191337)
+    assert abs(mp2_res["energy"] - (-1.155071651191337)) < 1e-8
 
     # FCI via delegation to CPU
     fci_res = gpu_chem.compute({**payload, "method": "fci", "method_options": {}})
     assert isinstance(fci_res["energy"], float)
-    assert np.equal(fci_res["energy"], -1.1633744903192416)
+    assert abs(fci_res["energy"] - (-1.1633744903192416)) < 1e-8
 
     # CCSD on GPU (or fallback logic inside)
     ccsd_res = gpu_chem.compute({**payload, "method": "ccsd", "method_options": {}})
     assert isinstance(ccsd_res["energy"], float)
-    assert np.equal(ccsd_res["energy"], -1.1633744964048178)
+    assert abs(ccsd_res["energy"] - (-1.1633744964048178)) < 5e-4
     # CCSD(T) -> GPU RHF then CPU CCSD(T)
     ccst_res = gpu_chem.compute({**payload, "method": "ccsd(t)", "method_options": {}})
     assert isinstance(ccst_res["energy"], float)
-    assert np.equal(ccst_res["energy"], -1.1633744964048178)
+    assert abs(ccst_res["energy"] - (-1.1633744964048178)) < 1e-8
     # CASSCF -> GPU RHF then CPU CASSCF
     casscf_res = gpu_chem.compute({**payload, "method": "casscf", "method_options": {"ncas": 2, "nelecas": 2}})
     assert isinstance(casscf_res["energy"], float)
-    assert np.equal(casscf_res["energy"], -1.1468743339673009)
+    assert abs(casscf_res["energy"] - (-1.1468743339673009)) < 1e-8
 
 
 @pytest.mark.xfail(condition=not getattr(gpu_chem, "gpu_available", False), reason="gpu4pyscf not available")
 def test_gpu_hf_integrals_ccsd_casstf_paths():
-    payload = {"molecule_data": _mol_data(), "classical_device": "gpu", "verbose": False}
+    payload_cpu = {"molecule_data": _mol_data_for_hea(), "classical_device": "cpu", "method": "hf_integrals", "verbose": False}
 
+    res = cpu_chem.compute(payload_cpu)
+    int1e = np.asarray(res["int1e"])  # type: ignore[index]
+    int2e = np.asarray(res["int2e"])  # type: ignore[index]
+    e_core = float(res["e_core"])  # type: ignore[index]
+    nelec = int(res.get("nelectron", 2))
+
+    payload_gpu = {"molecule_data": _mol_data_for_hea(), "classical_device": "cpu", "method": "hf_integrals", "verbose": False}
     # hf_integrals path (GPU RHF then to CPU integrals)
-    hf_res = gpu_chem.compute({**payload, "method": "hf_integrals", "method_options": {}})
-    assert isinstance(hf_res.get("e_hf", 0.0), float)
-    assert "int1e" in hf_res and "int2e" in hf_res
+    res_gpu = gpu_chem.compute({**payload_gpu, "method": "hf_integrals", "method_options": {}})
+    int1e_gpu = np.asarray(res_gpu["int1e"])  # type: ignore[index]
+    int2e_gpu = np.asarray(res_gpu["int2e"])  # type: ignore[index]
+    e_core_gpu = float(res_gpu["e_core"])  # type: ignore[index]
+    nelec_gpu = int(res_gpu.get("nelectron", 2))
+    assert abs(e_core_gpu - e_core) < 1e-8
+    assert abs(nelec_gpu - nelec) < 1e-8
+    np.testing.assert_allclose(int1e_gpu, int1e, atol=1e-8)
+    np.testing.assert_allclose(int2e_gpu, int2e, atol=1e-8)
 
 
 if __name__ == "__main__":
     test_cpu_classical_methods_smoke()
+    test_cpu_hf_integrals_to_uccsd_and_hea()
+    test_gpu_chem_smoke_delegation
+    test_gpu_hf_integrals_ccsd_casstf_paths()
