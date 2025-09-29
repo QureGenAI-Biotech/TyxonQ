@@ -7,6 +7,7 @@ import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 from pyscf.scf import ROHF
+from pyscf.fci import direct_spin1 
 
 import warnings as _warnings
 from .ucc import UCC
@@ -54,9 +55,9 @@ class UCCSD(UCC):
         runtime: str = None,
         numeric_engine: str | None = None,
         run_hf: bool = True,
-        run_mp2: bool = True,
-        run_ccsd: bool = True,
-        run_fci: bool = True,
+        run_mp2: bool = False,
+        run_ccsd: bool = False,
+        run_fci: bool = False,
         *,
         classical_provider: str = "local",
         classical_device: str = "auto",
@@ -449,6 +450,7 @@ class UCCSD(UCC):
         sort_ex2: bool = False,
         epsilon: float = DISCARD_EPS,
         numeric_engine: str | None = None,
+        run_fci: bool = False,
     ) -> "UCCSD":
         # Derive CAS sizes
         n_cas = int(len(int1e))
@@ -516,10 +518,9 @@ class UCCSD(UCC):
         inst.param_ids = param_ids
         inst.init_guess = np.asarray(init_vec, dtype=np.float64)
         # Reference FCI energy for assertions
-        try:
-            from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-            inst.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (na, nb))[0] + (float(e_core) if e_core is not None else 0.0))
-        except Exception:
+        if run_fci:
+            inst.e_fci = float(direct_spin1.FCI().kernel(int1e, int2e, n_cas, (na, nb))[0] + (float(e_core) if e_core is not None else 0.0))
+        else:
             inst.e_fci = float('nan')
         return inst
 
@@ -538,7 +539,7 @@ class ROUCCSD(UCC):
         # for API consistency with UCC
         run_mp2: bool = False,
         run_ccsd: bool = False,
-        run_fci: bool = True,
+        run_fci: bool = False,
         *,
         classical_provider: str = "local",
         classical_device: str = "auto",
@@ -724,6 +725,7 @@ class ROUCCSD(UCC):
         n_elec: Union[int, Tuple[int, int]],
         e_core: float | None = None,
         *,
+        run_fci: bool = False,
         mode: str = "fermion",
         runtime: str = "device",
         numeric_engine: str | None = None,
@@ -819,4 +821,9 @@ class ROUCCSD(UCC):
         inst._int1e = _np.asarray(int1e)
         inst._int2e = _np.asarray(int2e)
         inst.n_elec = int(na + nb)
+        if run_fci:
+            # CAS FCI on (int1e, int2e) with (na, nb) in CAS, then add core energy
+            inst.e_fci = float(direct_spin1.FCI().kernel(int1e, int2e, n_cas, (noa, nob))[0] + e_core)
+        else:
+            inst.e_fci = float("nan")
         return inst

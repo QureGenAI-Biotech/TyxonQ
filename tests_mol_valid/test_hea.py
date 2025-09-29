@@ -19,7 +19,7 @@ def test_hea(shots):
       and simple postprocessing (repeat-average) should not be worse than single run.
     """
     m = h2
-    uccsd = UCCSD(m)
+    uccsd = UCCSD(m,run_fci=True)
     hea = HEA.ry(uccsd._int1e, uccsd._int2e, uccsd.n_elec, uccsd.e_core, 3, runtime="device")
 
     if shots == 0:
@@ -42,7 +42,7 @@ def test_hea(shots):
 
 def test_build_from_integral_and_mapping():
     m = h2
-    uccsd = UCCSD(m)
+    uccsd = UCCSD(m,run_fci=True)
     hea = HEA.from_integral(uccsd._int1e, uccsd._int2e, uccsd.n_elec, uccsd.e_core, n_layers=2, mapping="parity", runtime="device")
     e = hea.kernel(shots=0)
     np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
@@ -54,7 +54,7 @@ def test_build_from_integral_and_mapping():
 @pytest.mark.parametrize("shots", [0, 2048])  # shots 仅对 device 有效
 def test_hea_convergence(runtime, grad_method, numeric_engine, shots):
     m = h2
-    uccsd = UCCSD(m)
+    uccsd = UCCSD(m,run_fci=True)
     hea = HEA.ry(uccsd._int1e, uccsd._int2e, uccsd.n_elec, uccsd.e_core, 3, runtime=runtime)
 
     if runtime == "numeric":
@@ -105,7 +105,7 @@ def test_hea_convergence(runtime, grad_method, numeric_engine, shots):
 
 def test_qiskit_circuit():
     m = h2
-    uccsd = UCCSD(m)
+    uccsd = UCCSD(m,run_fci=True)
     qc = real_amplitudes(2)
     hea = HEA.from_qiskit_circuit(parity(uccsd.h_fermion_op, 4, 2), qc, np.random.rand(qc.num_parameters), runtime="device")
     e = hea.kernel(shots=0, provider="simulator", device="statevector")
@@ -122,7 +122,7 @@ def test_mapping(mapping, runtime):
     #     "jordan-wigner": -1.1372744049357164,
     #     "bravyi-kitaev": -1.1372744025043178,
     # }
-    uccsd = UCCSD(h2)
+    uccsd = UCCSD(h2,run_fci=True)
     if runtime == "numeric":
         hea = HEA.ry(uccsd._int1e, uccsd._int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping, runtime="numeric")
         hea.numeric_engine = "statevector"
@@ -191,7 +191,7 @@ def test_open_shell():
     e1 = min(es)
 
     from tyxonq.applications.chem.algorithms.uccsd import ROUCCSD
-    ucc = ROUCCSD(m)
+    ucc = ROUCCSD(m,run_fci=True)
     e2 = ucc.kernel(shots=0)
 
     # for debugging

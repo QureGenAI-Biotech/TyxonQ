@@ -142,7 +142,7 @@ def test_gradient_signle_opt(backend_str, numeric_engine, init_state, mode):
             tq.set_backend(backend_str)
         except Exception:
             pytest.xfail(f"Backend {backend_str} not available")
-        uccsd = UCCSD(h2, mode=mode, numeric_engine=numeric_engine)
+        uccsd = UCCSD(h2, mode=mode, numeric_engine=numeric_engine,run_fci=True)
         # test initial condition. Has no effect
         if init_state == "civector" and hasattr(uccsd, "civector_size"):
             uccsd.init_state = get_init_civector(uccsd.civector_size)
@@ -171,7 +171,7 @@ def test_gradient_opt(backend_str, numeric_engine, init_state, mode):
         tq.set_backend(backend_str)
     except Exception:
         pytest.xfail(f"Backend {backend_str} not available")
-    uccsd = UCCSD(h2, mode=mode, numeric_engine=numeric_engine)
+    uccsd = UCCSD(h2, mode=mode, numeric_engine=numeric_engine,run_fci=True)
     # test initial condition. Has no effect
     if init_state == "civector" and hasattr(uccsd, "civector_size"):
         uccsd.init_state = get_init_civector(uccsd.civector_size)
@@ -187,13 +187,13 @@ def test_open_shell(numeric_engine):
     m = M(atom=[["O", 0, 0, 0], ["O", 0, 0, 1]], spin=2)
     active_space = (6, 4)
 
-    uccsd = ROUCCSD(m, active_space=active_space, numeric_engine=numeric_engine)
+    uccsd = ROUCCSD(m, active_space=active_space, numeric_engine=numeric_engine,run_fci=True)
     uccsd.kernel()
     np.testing.assert_allclose(uccsd.e_ucc, uccsd.e_fci, atol=1e-4)
 
 
 def test_device_kernel_matches_fci():
-    u = UCCSD(h2)
+    u = UCCSD(h2,run_fci=True)
     # 正统调用：直接 kernel（设备路径，statevector 精确模拟，shots=0）
     e = u.kernel(runtime="device", provider="simulator", device="statevector", shots=0)
     np.testing.assert_allclose(e, u.e_fci, atol=1e-5)

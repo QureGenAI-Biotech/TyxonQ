@@ -18,6 +18,8 @@ from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_kupccgsd imp
     generate_kupccgsd_ex_ops,
 )
 
+from pyscf.fci import direct_spin1
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,7 @@ class KUPCCGSD(_UCCBase):
         n_tries: int = 1,
         runtime: str = None,
         run_hf: bool = True,
-        run_fci: bool = True,
+        run_fci: bool = False,
     ):
         r"""
         Initialize the class with molecular input.
@@ -150,11 +152,9 @@ class KUPCCGSD(_UCCBase):
         self.staging_time = self.opt_time = None
         self.e_core = float(e_core)
         if run_fci:
-            try:
-                from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-                self.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (no, n_elec - no))[0] + self.e_core)
-            except Exception:
-                self.e_fci = float("nan")
+            self.e_fci = float(direct_spin1.FCI().kernel(int1e, int2e, n_cas, (no, n_elec - no))[0] + self.e_core)
+        else:
+            self.e_fci = float("nan")
 
     def kernel(self, **opts):
         _, stating_time = self.get_opt_function(with_time=True)
@@ -300,6 +300,7 @@ class KUPCCGSD(_UCCBase):
         e_core: float | None = None,
         ovlp: np.ndarray | None = None,
         *,
+        run_fci: bool = False,
         mode: str = "fermion",
         runtime: str = "device",
         k: int = 3,
@@ -369,10 +370,8 @@ class KUPCCGSD(_UCCBase):
         inst.staging_time = None
         inst.opt_time = None
         # Reference FCI energy for assertions (optional)
-        try:
-            from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-            na, nb = n_elec_s
-            inst.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (na, nb))[0] + (float(e_core) if e_core is not None else 0.0))
-        except Exception:
-            inst.e_fci = float('nan')
+        if run_fci:
+            inst.e_fci = float(direct_spin1.FCI().kernel(int1e, int2e, n_cas, (no, n_elec - no))[0] + inst.e_core)
+        else:
+            inst.e_fci = float("nan")
         return inst

@@ -63,17 +63,38 @@ def run_hea_open_shell_shots0():
     _ = hea.kernel(shots=0, provider="simulator", device="statevector")
 
 
+from tyxonq.applications.chem.molecule import _random, h4, h8, h_chain, c4h4,h2,h2o
+from tyxonq.applications.chem import UCCSD
+
+def run_mf_input():
+    from pyscf.scf import RHF
+    m = c4h4(1.46, 1.46, basis="ccpvdz", symmetry=False)
+    hf = RHF(m)
+    hf.kernel()
+    dm, _, stable, _ = hf.stability(return_status=True)
+    while not stable:
+        print("Instability detected in RHF")
+        hf.kernel(dm)
+        dm, _, stable, _ = hf.stability(return_status=True)
+        if stable:
+            break
+    ucc = UCCSD(hf, active_space=(4, 4))
+    _ = ucc.kernel(runtime='device', shots=2048)
+
+
 if __name__ == "__main__":
     # 可选：限制 BLAS 线程，避免干扰
     os.environ.setdefault("OMP_NUM_THREADS", "4")
     os.environ.setdefault("OPENBLAS_NUM_THREADS", "4")
 
-    profile_callable("UCCSD.device.H4", run_uccsd_device)
-    profile_callable("HEA.device.H4", run_hea_device)
-    # shots>0 counts path (H4 here per user request)
-    profile_callable("UCCSD.device.shots.H4", run_uccsd_device_shots)
-    profile_callable("HEA.device.shots.H4", run_hea_device_shots)
-    # open-shell slow case
-    profile_callable("HEA.device.open_shell.shots0", run_hea_open_shell_shots0)
+    # profile_callable("UCCSD.device.H4", run_uccsd_device)
+    # profile_callable("HEA.device.H4", run_hea_device)
+    # # shots>0 counts path (H4 here per user request)
+    # profile_callable("UCCSD.device.shots.H4", run_uccsd_device_shots)
+    # profile_callable("HEA.device.shots.H4", run_hea_device_shots)
+    # # open-shell slow case
+    # profile_callable("HEA.device.open_shell.shots0", run_hea_open_shell_shots0)
+
+    profile_callable('UCCSD.c4h4.sto3g.device.shots0', run_mf_input)
 
 

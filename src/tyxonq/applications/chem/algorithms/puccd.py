@@ -44,8 +44,8 @@ class PUCCD(UCC):
         runtime: str | None = None,
         numeric_engine: str | None = None,
         run_hf: bool = True,
-        run_mp2: bool = True,
-        run_ccsd: bool = True,
+        run_mp2: bool = False,
+        run_ccsd: bool = False,
         run_fci: bool = False,
     ) -> None:
         # RHF setup (robustly detect SCF object by attributes)
