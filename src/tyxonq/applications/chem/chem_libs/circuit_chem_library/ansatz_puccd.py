@@ -39,15 +39,12 @@ def generate_puccd_ex_ops(no: int, nv: int, t2_spatial: np.ndarray | None = None
       update civector/statevector evolution order and tests together to avoid
       regressions.
     """
-    if t2_spatial is None:
-        t2_spatial = np.zeros((no, no, nv, nv), dtype=float)
-
     ex_ops: List[Tuple[int, ...]] = []
     init_guess: List[float] = []
     for i in range(no):
         for a in range(nv - 1, -1, -1):
             ex_ops.append((no + a, i))
-            init_guess.append(float(t2_spatial[i, i, a, a]))
+            init_guess.append(t2_spatial[2 * i, 2 * i + 1, 2 * a, 2 * a + 1])
     param_ids = list(range(len(ex_ops)))
     return ex_ops, param_ids, init_guess
 

@@ -30,7 +30,7 @@ def test_puccd(hamiltonian, numeric_engine):
     if hamiltonian == "H4":
         puccd = PUCCD(h4, numeric_engine=numeric_engine)
         # UCC 新接口不再接受 Mole 直接构造，改用 from_molecule，并统一走数值路径避免采样误差
-        ucc = UCC.from_molecule(h4, runtime="numeric")
+        ucc = UCC(h4, runtime="numeric")
     else:
         nao = 4
         n_elec = 4

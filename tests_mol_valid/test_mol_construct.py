@@ -145,7 +145,7 @@ def test_init_guess(init_method):
     pick_ex2 = sort_ex2 = True
     if init_method == "zeros":
         pick_ex2 = sort_ex2 = False
-    ucc = UCCSD(h4, init_method, pick_ex2=pick_ex2, sort_ex2=sort_ex2, run_fci=True,run_ccsd=True,run_mp2=True)
+    ucc = UCCSD(h4, init_method, pick_ex2=pick_ex2, sort_ex2=sort_ex2, run_fci=True)
     e = ucc.kernel()
     np.testing.assert_allclose(e, ucc.e_fci, atol=1e-4)
 

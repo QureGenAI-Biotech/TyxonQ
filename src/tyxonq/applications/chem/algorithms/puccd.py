@@ -18,6 +18,9 @@ from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_bu
 from .ucc import UCC
 from tyxonq.libs.circuits_library.qubit_state_preparation import get_circuit_givens_swap
 from pyscf import fci as _fci
+from pyscf.cc.addons import spatial2spin
+from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
+from pyscf.fci import cistring
 
 
 class PUCCD(UCC):
@@ -43,114 +46,38 @@ class PUCCD(UCC):
         mo_coeff: np.ndarray | None = None,
         runtime: str | None = None,
         numeric_engine: str | None = None,
-        run_hf: bool = True,
-        run_mp2: bool = False,
-        run_ccsd: bool = False,
         run_fci: bool = False,
+        classical_provider: str = 'local',
+        classical_device: str = 'auto',
+        # Optional PySCF-style direct molecule construction
+        atom: object | None = None,
+        basis: str = "sto-3g",
+        unit: str = "Angstrom",
+        charge: int = 0,
+        spin: int = 0,
+        **kwargs
     ) -> None:
-        # RHF setup (robustly detect SCF object by attributes)
-        if hasattr(mol, "kernel") and hasattr(mol, "mo_coeff"):
-            hf = mol  # already an SCF object
-        else:
-            hf = _RHF(mol)
-        if mo_coeff is not None:
-            hf.mo_coeff = np.asarray(mo_coeff)
-        hf.chkfile = None
-        hf.verbose = 0
-        if run_hf:
-            hf.kernel()
-        # integrals and core energy
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
-        if active_space is None:
-            n_elec = int(getattr(hf.mol, "nelectron"))
-            n_cas = int(getattr(hf.mol, "nao"))
-        else:
-            n_elec, n_cas = int(active_space[0]), int(active_space[1])
-        no = n_elec // 2
-        nv = n_cas - no
-        # qubit Hamiltonian
-        fop = get_hop_from_integral(int1e, int2e)
-        n_qubits = 2 * n_cas
-        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
-        na = no
-        nb = n_elec - na
-        # pUCCD excitations and init guess (pair excitations only)
-        ex_ops, param_ids, init_guess = generate_puccd_ex_ops(no, nv, None)
-        # Ensure contiguous param_ids for numeric engines
-        unique_ids = np.unique(param_ids)
-        id_map = {int(old): idx for idx, old in enumerate(unique_ids)}
-        param_ids = [id_map[int(i)] for i in param_ids]
-        init_guess = list(np.asarray(init_guess)[unique_ids])
-        # map to base UCC
-        super().__init__(
-            n_qubits=n_qubits,
-            n_elec_s=(na, nb),
-            h_qubit_op=hq,
-            runtime=str(runtime or ("numeric" if numeric_engine is not None else "device")),
-            mode="fermion",
-            ex_ops=ex_ops,
-            param_ids=param_ids,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
-        )
-        self.e_core = float(e_core)
-        self.init_guess = np.asarray(init_guess, dtype=np.float64) if len(init_guess) > 0 else np.zeros(0, dtype=np.float64)
-        self.numeric_engine = numeric_engine
-        self._int1e = np.asarray(int1e)
-        self._int2e = np.asarray(int2e)
-        self.n_elec = int(n_elec)
-        self.hf = hf
 
-    # Convenience from_integral constructor
-    @classmethod
-    def from_integral(
-        cls,
-        int1e: np.ndarray,
-        int2e: np.ndarray,
-        n_elec: Union[int, Tuple[int, int]],
-        *,
-        runtime: str = "device",
-        numeric_engine: str | None = None,
-    ) -> "PUCCD":
-        if isinstance(n_elec, int):
-            assert n_elec % 2 == 0
-            n_elec_s = (n_elec // 2, n_elec // 2)
-        else:
-            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
-        n_cas = int(len(int1e))
-        no = int(n_elec_s[0])
-        nv = n_cas - no
-        ex_ops, param_ids, init_guess = generate_puccd_ex_ops(no, nv, None)
-        unique_ids = np.unique(param_ids)
-        id_map = {int(old): idx for idx, old in enumerate(unique_ids)}
-        param_ids = [id_map[int(i)] for i in param_ids]
-        init_guess = list(np.asarray(init_guess)[unique_ids])
-        from openfermion.transforms import jordan_wigner as _jw
-        fop = get_hop_from_integral(int1e, int2e)
-        n_qubits = 2 * n_cas
-        hq = reverse_qop_idx(_jw(fop), n_qubits)
-        inst = cls.__new__(cls)
-        UCC.__init__(
-            inst,
-            n_qubits=n_qubits,
-            n_elec_s=(int(n_elec_s[0]), int(n_elec_s[1])),
-            h_qubit_op=hq,
-            runtime=("numeric" if numeric_engine is not None else runtime),
-            mode="fermion",
-            ex_ops=ex_ops,
-            param_ids=param_ids,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
+        super().__init__(
+            mol=mol,
+            init_method=init_method,
+            active_space=active_space,
+            active_orbital_indices=active_orbital_indices,
+            mo_coeff=mo_coeff,
+            mode="hcb",
+            runtime=runtime,
+            numeric_engine=numeric_engine,
+            run_fci=run_fci,
+            atom=atom,
+            basis=basis,
+            unit=unit,
+            charge=charge,
+            spin=spin,
+            classical_provider=classical_provider,
+            classical_device=classical_device,
+            **kwargs
         )
-        inst.e_core = 0.0
-        inst.init_guess = np.asarray(init_guess, dtype=np.float64) if len(init_guess) > 0 else np.zeros(0, dtype=np.float64)
-        inst.numeric_engine = numeric_engine
-        inst._int1e = np.asarray(int1e)
-        inst._int2e = np.asarray(int2e)
-        inst.n_elec = int(sum(n_elec_s))
-        return inst
+        self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
 
     # Legacy helpers not needed; excitations built in constructors
     def get_ex1_ops(self, t1: np.ndarray = None):
@@ -163,32 +90,65 @@ class PUCCD(UCC):
         no, nv = self.no, self.nv
         if t2 is None:
             t2 = np.zeros((no, no, nv, nv))
-        else:
-            if t2.shape == (2 * no, 2 * no, 2 * nv, 2 * nv):
-                t2 = t2[0::2, 0::2, 0::2, 0::2]
-            else:
-                assert t2.shape == (no, no, nv, nv)
+
+        t2 = spatial2spin(t2)
         return generate_puccd_ex_ops(no, nv, t2)
 
     # ---- RDM in MO basis (spin-traced) specialized for pUCCD ----
-    def make_rdm1(self, params=None, *, basis: str = "MO") -> np.ndarray:
+    def make_rdm1(self, statevector=None, basis: str = "AO",**kwargs) -> np.ndarray:
         # Build CI vector under current ansatz (numeric statevector path)
-        civ = np.asarray(self.civector(params), dtype=np.float64)
-        n_orb = int(self.n_qubits // 2)
-        rdm1_cas = _fci.direct_spin1.make_rdm1(civ, n_orb, self.n_elec_s)
-        rdm1_mo = np.asarray(rdm1_cas, dtype=np.float64)
-        if str(basis).upper() == "AO":
-            return rdm_mo2ao(rdm1_mo, self.hf.mo_coeff)
-        return rdm1_mo
 
-    def make_rdm2(self, params=None, *, basis: str = "MO") -> np.ndarray:
-        civ = np.asarray(self.civector(params), dtype=np.float64)
-        n_orb = int(self.n_qubits // 2)
-        rdm2_cas = _fci.direct_spin1.make_rdm12(civ, n_orb, self.n_elec_s)[1]
-        rdm2_mo = np.asarray(rdm2_cas, dtype=np.float64)
-        if str(basis).upper() == "AO":
-            return rdm_mo2ao(rdm2_mo, self.hf.mo_coeff)
-        return rdm2_mo
+        civector = self._statevector_to_civector(statevector)
+        ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
+
+        n_active = self.n_qubits
+        rdm1_cas = np.zeros([n_active] * 2)
+        for i in range(n_active):
+            bitmask = 1 << i
+            arraymask = (ci_strings & bitmask) == bitmask
+            value = float(civector @ (arraymask * civector))
+            rdm1_cas[i, i] = 2 * value
+        rdm1 = self.embed_rdm_cas(rdm1_cas)
+        if basis == "MO":
+            return rdm1
+        else:
+            return rdm_mo2ao(rdm1, self.hf.mo_coeff)
+
+    def make_rdm2(self,  statevector=None, basis: str = "AO",**kwargs) -> np.ndarray:
+        civector = self._statevector_to_civector(statevector)
+        ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
+
+        n_active = self.n_qubits
+        rdm2_cas = np.zeros([n_active] * 4)
+        for p in range(n_active):
+            for q in range(p + 1):
+                maskq = 1 << q
+                maskp = 1 << p
+                maskpq = maskp + maskq
+                arraymask = (ci_strings & maskq) == maskq
+                if p == q:
+                    value = float(civector @ (arraymask * civector))
+                else:
+                    arraymask &= ((~ci_strings) & maskp) == maskp
+                    excitation = ci_strings ^ maskpq
+                    addr = cistring.strs2addr(n_active, self.n_elec // 2, excitation)
+                    value = float(civector @ (arraymask * civector[addr]))
+
+                rdm2_cas[p, q, p, q] = rdm2_cas[q, p, q, p] = value
+                if p == q:
+                    continue
+                arraymask = (ci_strings & maskpq) == maskpq
+                value = float(civector @ (arraymask * civector))
+
+                rdm2_cas[p, p, q, q] = rdm2_cas[q, q, p, p] = 2 * value
+                rdm2_cas[p, q, q, p] = rdm2_cas[q, p, p, q] = -value
+        rdm2_cas *= 2
+        rdm2 = self.embed_rdm_cas(rdm2_cas)
+        # no need to transpose
+        if basis == "MO":
+            return rdm2
+        else:
+            return rdm_mo2ao(rdm2, self.hf.mo_coeff)
 
     def get_circuit(self, params=None, trotter=False, givens_swap=False) -> Circuit:
         """

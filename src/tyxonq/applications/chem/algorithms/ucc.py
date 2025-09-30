@@ -3,23 +3,49 @@ from __future__ import annotations
 from typing import Tuple, List, Sequence, Union
 
 import numpy as np
-from openfermion import QubitOperator
+from openfermion import FermionOperator, QubitOperator
 from openfermion.transforms import jordan_wigner
-from pyscf.scf.hf import RHF  # type: ignore
+from pyscf.scf import RHF
+from pyscf.scf import ROHF  # type: ignore
+
+from pyscf.scf.hf import RHF as RHF_TYPE
+from pyscf.scf.rohf import ROHF as ROHF_TYPE
 from pyscf import fci  # type: ignore
 from scipy.optimize import minimize
 
 from ..runtimes.ucc_device_runtime import UCCDeviceRuntime
-from ..runtimes.ucc_numeric_runtime import UCCNumericRuntime
+from ..runtimes.ucc_numeric_runtime import UCCNumericRuntime, apply_excitation as _apply_excitation_numeric
 from tyxonq.libs.circuits_library.analysis import get_circuit_summary
 from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
+from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_uccsd import (
+    generate_uccsd_ex1_ops,
+    generate_uccsd_ex2_ops,
+)
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
     get_integral_from_hf,
     get_hop_from_integral,
-    get_h_fcifunc_from_integral
+    get_h_fcifunc_from_integral,
+    get_h_from_integral,
+    get_hop_hcb_from_integral
 )
-from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
+from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx,canonical_mo_coeff
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings, get_addr as _get_addr_ci
+from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
+
+from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import statevector_to_civector,civector_to_statevector
+
+from pyscf import gto,scf
+from pyscf.mp import MP2 as _mp2
+from pyscf.cc import ccsd as _ccsd
+from pyscf.mcscf import CASCI
+from tyxonq.applications.chem.molecule import _Molecule
+
+from itertools import product
+from tyxonq.numerics import NumericBackend as nb
+
+
+
+
 
 
 class UCC:
@@ -32,69 +58,330 @@ class UCC:
 
     def __init__(
         self,
-        n_qubits: int,
-        n_elec_s: Tuple[int, int],
-        h_qubit_op: QubitOperator,
-        runtime: str = "device",
-        mode: str = "fermion",
+        mol,
         *,
+        init_method="mp2",
+        active_space=None,
+        active_orbital_indices=None,
+        mo_coeff=None,
+        mode="fermion",
+        runtime='device',
+        numeric_engine=None,
+        run_fci=False,
+        atom = None,
+        basis = "sto-3g",
+        unit = "Angstrom",
+        charge = 0,
+        spin = 0,
+        decompose_multicontrol: bool = False,
+        trotter: bool = False,
+        classical_provider = 'local',
+        classical_device = 'auto',
         ex_ops: List[tuple] | None = None,
         param_ids: List[int] | None = None,
         init_state: np.ndarray | None = None,
-        decompose_multicontrol: bool = False,
-        trotter: bool = False,
+        **kwargs
     ):
-        self.n_qubits = int(n_qubits)
-        self.n_elec_s = (int(n_elec_s[0]), int(n_elec_s[1]))
-        self.h_qubit_op = h_qubit_op
-        self.runtime = runtime
-        self.mode = mode
-        self.e_core: float = 0.0
-        self._params: np.ndarray | None = None
+        if atom is not None:
+            mm = gto.Mole()
+            mm.atom = atom  # accepts string or list spec per PySCF
+            mm.unit = str(unit)
+            mm.basis = str(basis)
+            mm.charge = int(charge)
+            mm.spin = int(spin)
+            mm.build()
+            mol = mm
+        
 
+        self.hf = None
+        # process mol
+        if isinstance(mol, _Molecule):
+            self.mol = mol
+            self.mol.verbose = 0
+            # self.hf =  RHF(mol)
+        if isinstance(mol, gto.Mole):
+            # Create a local HF container regardless, to keep compatibility with tests accessing self.hf
+            self.mol = mol
+            self.mol.verbose = 0
+            # self.hf = RHF(mol)
+        elif isinstance(mol, RHF_TYPE):
+            self.hf = mol.copy()
+            self.mol = self.hf.mol
+        else:
+            raise TypeError(
+                f"Unknown input type {type(mol)}. If you're performing open shell calculations, "
+                "please use ROHF instead."
+            )
+
+        if active_space is None:
+            active_space = (mol.nelectron, int(mol.nao))
+
+        self.mode = mode
+        self.spin = self.mol.spin
+        if mode == "hcb":
+            assert self.spin == 0
+        self.n_qubits = 2 * active_space[1]
+        if mode == "hcb":
+            self.n_qubits //= 2
+
+        if not self.hf:
+            if self.spin == 0:
+                self.hf = RHF(self.mol)
+            else:
+                self.hf = ROHF(self.mol)
+
+
+
+
+        # process activate space
+        self.active_space = active_space
+        self.n_elec = active_space[0]
+        self.active = active_space[1]
+        self.inactive_occ = (mol.nelectron - active_space[0]) // 2
+        assert (mol.nelectron - active_space[0]) % 2 == 0
+        self.inactive_vir = mol.nao - active_space[1] - self.inactive_occ
+        if active_orbital_indices is None:
+            active_orbital_indices = list(range(self.inactive_occ, mol.nao - self.inactive_vir))
+        if len(active_orbital_indices) != active_space[1]:
+            raise ValueError("sort_mo should have the same length as the number of active orbitals.")
+        frozen_idx = [i for i in range(mol.nao) if i not in active_orbital_indices]
+        self.active_orbital_indices = active_orbital_indices
+
+
+
+        # process backend
+        self._check_numeric_engine(numeric_engine)
+
+        if numeric_engine is None:
+            # no need to be too precise
+            if self.n_qubits <= 16:
+                numeric_engine = "civector"
+            else:
+                numeric_engine = "civector-large"
+        self.numeric_engine = numeric_engine
+
+
+        # classical quantum chemistry
+        # hf
+        #hf 的积分 和kernel没有计算
+        if not self.hf.e_tot:
+            if str(classical_provider) != "local":
+                # Offload HF convergence and MO-basis integrals to cloud
+                client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
+                mdat = {
+                    "atom": getattr(self.mol, "atom", None),
+                    "basis": getattr(self.mol, "basis", "sto-3g"),
+                    "charge": int(getattr(self.mol, "charge", 0)),
+                    "spin": int(getattr(self.mol, "spin", 0)),
+                }
+                task = {
+                    "method": "hf_integrals",
+                    "molecule_data": mdat,
+                    "active_space": active_space,
+                    "active_orbital_indices": active_orbital_indices,
+                }
+                _res = client.submit_classical_calculation(task)
+                # Load results
+                int1e = np.asarray(_res["int1e"])  # type: ignore[index]
+                int2e = np.asarray(_res["int2e"])  # type: ignore[index]
+                e_core = float(_res["e_core"])  # type: ignore[index]
+                if _res.get("mo_coeff") is not None:
+                    try:
+                        self.hf.mo_coeff = canonical_mo_coeff(np.asarray(_res["mo_coeff"]))  # type: ignore[index]
+                    except Exception:
+                        pass
+
+                self.hf.e_tot = float(_res.get("e_hf", 0.0))  # type: ignore[attr-defined]
+                # In cloud mode, skip local HF run
+                self.e_hf = float(_res.get("e_hf", 0.0))
+            else:
+                # Local HF
+                self.hf.kernel()
+                self.e_hf = self.hf.e_tot
+                self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
+        else:
+            #外部传入计算好的hf
+            self.e_hf = self.hf.e_tot
+            self.hf._eri = self.mol.intor("int2e", aosym="s8")
+            self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
+
+        
+        # mp2
+        if init_method == 'mp2' and not isinstance(self.hf, ROHF_TYPE):
+            mp2 = _mp2(self.hf)
+            if frozen_idx:
+                mp2.frozen = frozen_idx
+            e_corr_mp2, mp2_t2 = mp2.kernel()
+            self.e_mp2 = self.e_hf + e_corr_mp2
+        else:
+            self.e_mp2 = None
+            mp2_t2 = None
+        # ccsd
+        if init_method == 'ccsd' and not isinstance(self.hf, ROHF_TYPE):
+            ccsd = _ccsd.CCSD(self.hf)
+            if frozen_idx:
+                ccsd.frozen = frozen_idx
+            e_corr_ccsd, ccsd_t1, ccsd_t2 = ccsd.kernel()
+            self.e_ccsd = self.e_hf + e_corr_ccsd
+        else:
+            self.e_ccsd = None
+            ccsd_t1 = ccsd_t2 = None
+        
+
+        # MP2 and CCSD rely on canonical HF orbitals but FCI doesn't
+        # so set custom mo_coeff after MP2 and CCSD and before FCI
+        if mo_coeff is not None:
+            # use user defined coefficient
+            self.hf.mo_coeff = canonical_mo_coeff(mo_coeff)
+
+
+        # Hamiltonian related（先构建以获得 self.e_core 再计算 e_fci）
+        self.hamiltonian_lib = {}
+        self.int1e = self.int2e = None
+        # e_core includes nuclear repulsion energy
+        self.hamiltonian, self.e_core, _ = self._get_hamiltonian_and_core(self.numeric_engine)
+
+        # fci（口径：电子能 + e_core，与 kernel/energy 返回一致）
+        if run_fci:
+            fci = CASCI(self.hf, self.active_space[1], self.active_space[0])
+            mo = fci.sort_mo(active_orbital_indices, base=0)
+            res = fci.kernel(mo)
+
+            # self.e_fci = res[0]
+            # self.civector_fci = res[2].ravel()
+            #TODO check the energy should be total or e_core in pyscf？
+            self.e_fci = float(res[0]) + float(self.e_core)
+            self.civector_fci = None if res[2] is None else res[2].ravel()
+
+        else:
+            self.e_fci = None
+            self.civector_fci = None
+
+        self.e_nuc = mol.energy_nuc()
+
+
+
+        # initial guess
+        self.t1 = np.zeros([self.no, self.nv])
+        self.t2 = np.zeros([self.no, self.no, self.nv, self.nv])
+        self.init_method = init_method
+        if init_method is None or init_method in ["zeros", "zero"]:
+            pass
+        elif init_method.lower() == "ccsd":
+            self.t1, self.t2 = ccsd_t1, ccsd_t2
+        elif init_method.lower() == "fe":
+            self.t2 = compute_fe_t2(self.no, self.nv, self.int1e, self.int2e)
+        elif init_method.lower() == "mp2":
+            self.t2 = mp2_t2
+        else:
+            raise ValueError(f"Unknown initialization method: {init_method}")
+
+
+        # circuit related
+        self.init_state = None
         self.ex_ops = list(ex_ops) if ex_ops is not None else None
         self.param_ids = list(param_ids) if param_ids is not None else None
         self.init_state = init_state
+
+
+
+        # optimization related
+        self.scipy_minimize_options = None
+        self.grad: str = "param-shift"
+        # optimization result
+        self.opt_res = None
+        # for manually set
+        self._params = None
+        if runtime is None:
+            self.runtime = 'device'
+        else:
+            self.runtime = runtime
+
+        
+
         self.decompose_multicontrol = bool(decompose_multicontrol)
         self.trotter = bool(trotter)
-        self.scipy_minimize_options: dict | None = None
-        self.grad: str = "param-shift"
-        # init guess (zeros by default if ex_ops present)
-        if self.ex_ops is not None:
-            self.init_guess = np.zeros(self.n_params, dtype=np.float64)
-        else:
-            self.init_guess = np.zeros(0, dtype=np.float64)
 
-    def _runtime(self) -> UCCDeviceRuntime:
-        return UCCDeviceRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            mode=self.mode,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            decompose_multicontrol=self.decompose_multicontrol,
-            trotter=self.trotter,
-            qop=getattr(self, "_qop_cached", None),
-        )
+        #set cache to speedup the shots=0
+        hq = self.h_qubit_op
+        self._qop_cached = hq
+
+
+        # init guess (zeros by default if ex_ops present)
+        # if self.ex_ops is not None:
+        #     self.init_guess = np.zeros(self.n_params, dtype=np.float64)
+        # else:
+        #     self.init_guess = np.zeros(0, dtype=np.float64)
+
+
+
+    def _get_hamiltonian_and_core(self, numeric_engine):
+        self._check_numeric_engine(numeric_engine)
+        if numeric_engine is None:
+            engine = self.numeric_engine
+            hamiltonian = self.hamiltonian
+            e_core = self.e_core
+        else:
+            if numeric_engine.startswith("civector") or numeric_engine == "pyscf":
+                htype = "fcifunc"
+            else:
+                assert numeric_engine in ["tensornetwork", "statevector"]
+                htype = "sparse"
+            hamiltonian = self.hamiltonian_lib.get(htype)
+            if hamiltonian is None:
+                if self.int1e is None:
+                    self.int1e, self.int2e, e_core = get_integral_from_hf(self.hf, self.active_space, self.active_orbital_indices)
+                else:
+                    e_core = self.e_core
+                hamiltonian = get_h_from_integral(self.int1e, self.int2e, self.n_elec_s, self.mode, htype)
+                self.hamiltonian_lib[htype] = hamiltonian
+            else:
+                e_core = self.e_core
+        return hamiltonian, e_core, numeric_engine
+
+    def _check_numeric_engine(self, numeric_engine):
+        supported_engine = [None, "tensornetwork", "statevector", "civector", "civector-large", "pyscf"]
+        if not numeric_engine in supported_engine:
+            raise ValueError(f"Numeric engine '{numeric_engine}' not supported")
+
+
+    # ---------------- TCC-aligned helpers ----------------
+    def _sanity_check(self):
+        if self.ex_ops is None:
+            return
+        if self.param_ids is None:
+            return
+        if len(self.param_ids) != len(self.ex_ops):
+            raise ValueError(
+                f"Excitation operator size {len(self.ex_ops)} and parameter size {len(self.param_ids)} do not match"
+            )
+
+    def apply_excitation(self, state: np.ndarray, ex_op: Tuple, *, numeric_engine: str | None = None) -> np.ndarray:
+        self._sanity_check()
+        eng = numeric_engine or getattr(self, "numeric_engine", None) or "statevector"
+        return _apply_excitation_numeric(state, self.n_qubits, self.n_elec_s, ex_op, self.mode, numeric_engine=eng)
 
     def energy(self, params: np.ndarray | None = None, **opts) -> float:
         runtime = str(opts.pop("runtime", self.runtime))
         numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
         
         if runtime == "device":
-            rt = self._runtime()
+            rt = UCCDeviceRuntime(
+                self.n_qubits,
+                self.n_elec_s,
+                self.h_qubit_op,
+                mode=self.mode,
+                ex_ops=self.ex_ops,
+                param_ids=self.param_ids,
+                init_state=self.init_state,
+                decompose_multicontrol=self.decompose_multicontrol,
+                trotter=self.trotter,
+                qop=getattr(self, "_qop_cached", None),
+            )
             e = rt.energy(params, **opts)
             return float(e + self.e_core)
         if runtime == "numeric":
-            # Construct optional CI Hamiltonian for CI engines
-            ci_hamiltonian = None
-            try:
-                # Pass (na, nb) explicitly to support open-shell
-                ci_hamiltonian = get_h_fcifunc_from_integral(self._int1e, self._int2e, self.n_elec_s)
-            except Exception:
-                ci_hamiltonian = None
+            ci_hamiltonian =  self.hamiltonian
             rt = UCCNumericRuntime(
                 self.n_qubits,
                 self.n_elec_s,
@@ -113,21 +400,26 @@ class UCC:
         raise ValueError(f"unknown runtime: {runtime}")
 
     def energy_and_grad(self, params: np.ndarray | None = None, **opts):
-        runtime = str(opts.pop("runtime", self.runtime))
+        runtime = opts.get('runtime',self.runtime)
         numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
         
         if runtime == "device":
-            rt = self._runtime()
+            rt = UCCDeviceRuntime(
+            self.n_qubits,
+            self.n_elec_s,
+            self.h_qubit_op,
+            mode=self.mode,
+            ex_ops=self.ex_ops,
+            param_ids=self.param_ids,
+            init_state=self.init_state,
+            decompose_multicontrol=self.decompose_multicontrol,
+            trotter=self.trotter,
+            qop=getattr(self, "_qop_cached", None),
+        )
             e, g = rt.energy_and_grad(params, **opts)
             return float(e+self.e_core), g
         if runtime == "numeric":
-            # Construct optional CI Hamiltonian for CI engines
-            ci_hamiltonian = None
-            try:
-                # Pass (na, nb) explicitly to support open-shell
-                ci_hamiltonian = get_h_fcifunc_from_integral(self._int1e, self._int2e, self.n_elec_s)
-            except Exception:
-                ci_hamiltonian = None
+            ci_hamiltonian =  self.hamiltonian
             rt = UCCNumericRuntime(
                 self.n_qubits,
                 self.n_elec_s,
@@ -241,78 +533,23 @@ class UCC:
         int2e: np.ndarray,
         n_elec: Union[int, Tuple[int, int]],
         *,
-        mode: str = "fermion",
-        runtime: str = "device",
-        ex_ops: List[tuple] | None = None,
-        param_ids: List[int] | None = None,
-        init_state: np.ndarray | None = None,
-        decompose_multicontrol: bool = False,
-        trotter: bool = False,
+        e_core: float | None = None,
+        ovlp: np.ndarray = None,
+        classical_provider: str = 'local',
+        classical_device: str = 'auto',
+        **kwargs
     ) -> "UCC":
-        if isinstance(n_elec, int):
+        if isinstance(n_elec, tuple):
+            spin = abs(n_elec[0] - n_elec[1])
+            n_elec = n_elec[0] + n_elec[1]
+        else:
             assert n_elec % 2 == 0
-            n_elec_s = (n_elec // 2, n_elec // 2)
-        else:
-            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
-        if mode in ["fermion", "qubit"]:
-            n_qubits = 2 * len(int1e)
-            fop = get_hop_from_integral(int1e, int2e)
-            hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
-        else:
-            n_qubits = len(int1e)
-            # 简化：HCB 模式暂不在 algorithms 中构造，后续补充
-            raise NotImplementedError("hcb mode not yet supported in algorithms.ucc.from_integral")
-        inst = cls(
-            n_qubits=n_qubits,
-            n_elec_s=n_elec_s,
-            h_qubit_op=hq,
-            runtime=runtime,
-            mode=mode,
-            ex_ops=ex_ops,
-            param_ids=param_ids,
-            init_state=init_state,
-            decompose_multicontrol=decompose_multicontrol,
-            trotter=trotter,
-        )
-        # cache QubitOperator for runtime direct use
-        inst._qop_cached = hq
-        return inst
+            spin = 0
 
-    @classmethod
-    def from_molecule(
-        cls,
-        m,
-        *,
-        active_space=None,
-        active_orbital_indices=None,
-        mode: str = "fermion",
-        runtime: str = "device",
-        ex_ops: List[tuple] | None = None,
-        param_ids: List[int] | None = None,
-        init_state: np.ndarray | None = None,
-        decompose_multicontrol: bool = False,
-        trotter: bool = False,
-    ) -> "UCC":
-        hf = RHF(m)
-        hf.chkfile = None
-        hf.verbose = 0
-        hf.kernel()
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
-        n_elec = active_space[0] if active_space is not None else int(m.nelectron)
-        inst = cls.from_integral(
-            int1e,
-            int2e,
-            n_elec,
-            mode=mode,
-            runtime=runtime,
-            ex_ops=ex_ops,
-            param_ids=param_ids,
-            init_state=init_state,
-            decompose_multicontrol=decompose_multicontrol,
-            trotter=trotter,
-        )
-        inst.e_core = float(e_core)
-        return inst
+
+        m = _Molecule(int1e, int2e, n_elec, spin, e_core, ovlp)
+
+        return cls(m, classical_provider=classical_provider, classical_device=classical_device, **kwargs)
 
     # ---- Helpers mirrored from static for compatibility ----
     def _check_params_argument(self, params: Sequence[float] | None, *, strict: bool = False) -> np.ndarray:
@@ -349,6 +586,23 @@ class UCC:
             trotter=self.trotter if trotter is None else bool(trotter),
         )
 
+    def get_ex_ops(self, t1: np.ndarray = None, t2: np.ndarray = None):
+        """Virtual method to be implemented"""
+        raise NotImplementedError
+
+    # ---- Excitation generators (TCC-style, default UCCSD semantics) ----
+    def get_ex1_ops(self, t1: np.ndarray | None = None) -> Tuple[List[Tuple], List[int], List[float]]:
+        no = self.no
+        nv = self.nv
+        ops, pids, init = generate_uccsd_ex1_ops(no, nv, t1, mode=self.mode)
+        return ops, pids, init
+
+    def get_ex2_ops(self, t2: np.ndarray | None = None) -> Tuple[List[Tuple], List[int], List[float]]:
+        no = self.no
+        nv = self.nv
+        ops, pids, init = generate_uccsd_ex2_ops(no, nv, t2, mode=self.mode)
+        return ops, pids, init
+
     def energy_device(
         self,
         params: Sequence[float] | None = None,
@@ -362,7 +616,18 @@ class UCC:
             # HF only
             return float(self.e_core)
         p = self._check_params_argument(params, strict=False)
-        rt = self._runtime()
+        rt = UCCDeviceRuntime(
+            self.n_qubits,
+            self.n_elec_s,
+            self.h_qubit_op,
+            mode=self.mode,
+            ex_ops=self.ex_ops,
+            param_ids=self.param_ids,
+            init_state=self.init_state,
+            decompose_multicontrol=self.decompose_multicontrol,
+            trotter=self.trotter,
+            qop=getattr(self, "_qop_cached", None),
+        )
         e = rt.energy(p, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
         return float(e + self.e_core)
 
@@ -454,6 +719,52 @@ class UCC:
             except Exception:
                 pass
         return rdm2_mo
+    
+    def embed_rdm_cas(self, rdm_cas):
+        """
+        Embed CAS RDM into RDM of the whole system
+        """
+        if self.inactive_occ == 0 and self.inactive_vir == 0:
+            # active space approximation not employed
+            return rdm_cas
+        # slice of indices in rdm corresponding to cas
+        slice_cas = slice(self.inactive_occ, self.inactive_occ + len(rdm_cas))
+        if rdm_cas.ndim == 2:
+            rdm1_cas = rdm_cas
+            rdm1 = np.zeros((self.mol.nao, self.mol.nao))
+            for i in range(self.inactive_occ):
+                rdm1[i, i] = 2
+            rdm1[slice_cas, slice_cas] = rdm1_cas
+            return rdm1
+        else:
+            rdm2_cas = rdm_cas
+            # active space approximation employed
+            rdm1 = self.make_rdm1(basis="MO")
+            rdm1_cas = rdm1[slice_cas, slice_cas]
+            rdm2 = np.zeros((self.mol.nao, self.mol.nao, self.mol.nao, self.mol.nao))
+            rdm2[slice_cas, slice_cas, slice_cas, slice_cas] = rdm2_cas
+            for i in range(self.inactive_occ):
+                for j in range(self.inactive_occ):
+                    rdm2[i, i, j, j] += 4
+                    rdm2[i, j, j, i] -= 2
+                rdm2[i, i, slice_cas, slice_cas] = rdm2[slice_cas, slice_cas, i, i] = 2 * rdm1_cas
+                rdm2[i, slice_cas, slice_cas, i] = rdm2[slice_cas, i, i, slice_cas] = -rdm1_cas
+            return rdm2
+    
+
+    def _statevector_to_civector(self, statevector=None):
+        if statevector is None:
+            civector = self.civector()
+        else:
+            if len(statevector) == self.statevector_size:
+                ci_strings = self.get_ci_strings()
+                civector = statevector[ci_strings]
+            else:
+                if len(statevector) == self.civector_size:
+                    civector = statevector
+                else:
+                    raise ValueError(f"Incompatible statevector size: {len(statevector)}")
+        return nb.array(civector)
 
     # ---- CI helpers ----
     def civector(self, params: Sequence[float] | None = None, *, numeric_engine: str | None = None) -> np.ndarray:
@@ -564,6 +875,54 @@ class UCC:
             print("############################### Circuit ###############################")
             self.print_circuit()
 
+    # ---- Dimensions and sizes (parity with TCC) ----
+    @property
+    def n_elec_s(self):
+        """The number of electrons for alpha and beta spin"""
+        return (self.n_elec + self.spin) // 2, (self.n_elec - self.spin) // 2
+    @property
+    def no(self) -> int:
+        return int(self.n_elec_s[0])
+
+    @property
+    def nv(self) -> int:
+        return int(self.n_qubits // 2 - self.no)
+
+    @property
+    def h_fermion_op(self) -> FermionOperator:
+        """
+        Hamiltonian as openfermion.FermionOperator
+        """
+        if self.mode == "hcb":
+            raise ValueError("No FermionOperator available for hard-core boson Hamiltonian")
+        return get_hop_from_integral(self.int1e, self.int2e) + self.e_core
+
+    @property
+    def h_qubit_op(self) -> QubitOperator:
+        """
+        Hamiltonian as openfermion.QubitOperator, mapped by
+        Jordan-Wigner transformation.
+        """
+        if self.mode in ["fermion", "qubit"]:
+            return reverse_qop_idx(jordan_wigner(self.h_fermion_op), self.n_qubits)
+        else:
+            assert self.mode == "hcb"
+            return get_hop_hcb_from_integral(self.int1e, self.int2e) + self.e_core
+
+    @property
+    def statevector_size(self) -> int:
+        return 1 << int(self.n_qubits)
+
+    @property
+    def civector_size(self) -> int:
+        from math import comb
+        na, nb = self.n_elec_s
+        n_orb = int(self.n_qubits // 2)
+        try:
+            return int(comb(n_orb, int(na)) * comb(n_orb, int(nb)))
+        except Exception:
+            return int(self.statevector_size)
+
     # ---- Params mapping ----
     @property
     def param_to_ex_ops(self):
@@ -584,3 +943,94 @@ class UCC:
         self._params = None if v is None else np.asarray(v, dtype=np.float64)
 
 
+def compute_fe_t2(no, nv, int1e, int2e):
+    n_orb = no + nv
+
+    def translate_o(n):
+        if n % 2 == 0:
+            return n // 2 + n_orb
+        else:
+            return n // 2
+
+    def translate_v(n):
+        if n % 2 == 0:
+            return n // 2 + no + n_orb
+        else:
+            return n // 2 + no
+    t2 = np.zeros((2 * no, 2 * no, 2 * nv, 2 * nv))
+    for i, j, k, l in product(range(2 * no), range(2 * no), range(2 * nv), range(2 * nv)):
+        # spin not conserved
+        if i % 2 != k % 2 or j % 2 != l % 2:
+            continue
+        a = translate_o(i)
+        b = translate_o(j)
+        s = translate_v(l)
+        r = translate_v(k)
+        if len(set([a, b, s, r])) != 4:
+            continue
+        # r^ s^ b a
+        rr, ss, bb, aa = [i % n_orb for i in [r, s, b, a]]
+        if (r < n_orb and s < n_orb) or (r >= n_orb and s >= n_orb):
+            e_inter = int2e[aa, rr, bb, ss] - int2e[aa, ss, bb, rr]
+        else:
+            e_inter = int2e[aa, rr, bb, ss]
+        if np.allclose(e_inter, 0):
+            continue
+        e_diff = _compute_e_diff(r, s, b, a, int1e, int2e, n_orb, no)
+        if np.allclose(e_diff, 0):
+            raise RuntimeError("RHF degenerate ground state")
+        theta = np.arctan(-2 * e_inter / e_diff) / 2
+        t2[i, j, k, l] = theta
+    return t2
+
+def _compute_e_diff(r, s, b, a, int1e, int2e, n_orb, no):
+    inert_a = list(range(no))
+    inert_b = list(range(no))
+    old_a = []
+    old_b = []
+    for i in [b, a]:
+        if i < n_orb:
+            inert_b.remove(i)
+            old_b.append(i)
+        else:
+            inert_a.remove(i % n_orb)
+            old_a.append(i % n_orb)
+
+    new_a = []
+    new_b = []
+    for i in [r, s]:
+        if i < n_orb:
+            new_b.append(i)
+        else:
+            new_a.append(i % n_orb)
+
+    diag1e = np.diag(int1e)
+    diagj = np.einsum("iijj->ij", int2e)
+    diagk = np.einsum("ijji->ij", int2e)
+
+    e_diff_1e = diag1e[new_a].sum() + diag1e[new_b].sum() - diag1e[old_a].sum() - diag1e[old_b].sum()
+    # fmt: off
+    e_diff_j = _compute_j_outer(diagj, inert_a, inert_b, new_a, new_b) \
+               - _compute_j_outer(diagj, inert_a, inert_b, old_a, old_b)
+    e_diff_k = _compute_k_outer(diagk, inert_a, inert_b, new_a, new_b) \
+               - _compute_k_outer(diagk, inert_a, inert_b, old_a, old_b)
+    # fmt: on
+    return e_diff_1e + 1 / 2 * (e_diff_j - e_diff_k)
+
+
+def _compute_j_outer(diagj, inert_a, inert_b, outer_a, outer_b):
+    # fmt: off
+    v = diagj[inert_a][:, outer_a].sum() + diagj[outer_a][:, inert_a].sum() + diagj[outer_a][:, outer_a].sum() \
+      + diagj[inert_a][:, outer_b].sum() + diagj[outer_a][:, inert_b].sum() + diagj[outer_a][:, outer_b].sum() \
+      + diagj[inert_b][:, outer_a].sum() + diagj[outer_b][:, inert_a].sum() + diagj[outer_b][:, outer_a].sum() \
+      + diagj[inert_b][:, outer_b].sum() + diagj[outer_b][:, inert_b].sum() + diagj[outer_b][:, outer_b].sum()
+    # fmt: on
+    return v
+
+
+def _compute_k_outer(diagk, inert_a, inert_b, outer_a, outer_b):
+    # fmt: off
+    v = diagk[inert_a][:, outer_a].sum() + diagk[outer_a][:, inert_a].sum() + diagk[outer_a][:, outer_a].sum() \
+      + diagk[inert_b][:, outer_b].sum() + diagk[outer_b][:, inert_b].sum() + diagk[outer_b][:, outer_b].sum()
+    # fmt: on
+    return v
