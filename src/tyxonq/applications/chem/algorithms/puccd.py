@@ -44,7 +44,7 @@ class PUCCD(UCC):
         active_space: Tuple[int, int] | None = None,
         active_orbital_indices: List[int] | None = None,
         mo_coeff: np.ndarray | None = None,
-        runtime: str | None = None,
+        runtime: str = 'device',
         numeric_engine: str | None = None,
         run_fci: bool = False,
         classical_provider: str = 'local',

@@ -37,9 +37,9 @@ class KUPCCGSD(_UCCBase):
         mo_coeff: np.ndarray = None,
         k: int = 3,
         n_tries: int = 1,
-        runtime: str = None,
+        runtime: str = 'device',
         run_fci: bool = False,
-        numeric_engine: str = 'device',
+        numeric_engine: str | None = None,
         classical_provider: str = 'local',
         classical_device: str = 'auto',
         # Optional PySCF-style direct molecule construction

@@ -164,7 +164,7 @@ def test_mf_input():
     ucc = UCCSD(hf, active_space=(4, 4))
     e = ucc.kernel(shots=0)
     np.testing.assert_allclose(ucc.e_hf, -153.603405, atol=1e-4)
-    # np.testing.assert_allclose(e, ucc.e_fci, atol=2e-2)
+    np.testing.assert_allclose(e, ucc.e_fci, atol=2e-2)
 
 
 def test_hea_active_space_numeric():

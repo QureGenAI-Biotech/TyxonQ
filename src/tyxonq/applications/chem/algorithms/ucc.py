@@ -10,8 +10,10 @@ from pyscf.scf import ROHF  # type: ignore
 
 from pyscf.scf.hf import RHF as RHF_TYPE
 from pyscf.scf.rohf import ROHF as ROHF_TYPE
+from pyscf.cc.addons import spatial2spin
 from pyscf import fci  # type: ignore
 from scipy.optimize import minimize
+import logging
 
 from ..runtimes.ucc_device_runtime import UCCDeviceRuntime
 from ..runtimes.ucc_numeric_runtime import UCCNumericRuntime, apply_excitation as _apply_excitation_numeric
@@ -39,9 +41,11 @@ from pyscf.mp import MP2 as _mp2
 from pyscf.cc import ccsd as _ccsd
 from pyscf.mcscf import CASCI
 from tyxonq.applications.chem.molecule import _Molecule
-
+from tyxonq.libs.hamiltonian_encoding.pauli_io import get_fermion_phase
 from itertools import product
 from tyxonq.numerics import NumericBackend as nb
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -112,6 +116,9 @@ class UCC:
                 f"Unknown input type {type(mol)}. If you're performing open shell calculations, "
                 "please use ROHF instead."
             )
+
+        if runtime is None:
+            runtime='device'
 
         if active_space is None:
             active_space = (mol.nelectron, int(mol.nao))
@@ -196,7 +203,8 @@ class UCC:
                 self.e_hf = float(_res.get("e_hf", 0.0))
             else:
                 # Local HF
-                self.hf.kernel()
+                # avoid pyscf 1.7+ return fload and assert error of nuc.real
+                self.hf.kernel(dump_chk=False)
                 self.e_hf = self.hf.e_tot
                 self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
         else:
@@ -247,17 +255,17 @@ class UCC:
             mo = fci.sort_mo(active_orbital_indices, base=0)
             res = fci.kernel(mo)
 
-            # self.e_fci = res[0]
-            # self.civector_fci = res[2].ravel()
+            self.e_fci = res[0]
+            self.civector_fci = res[2].ravel()
             #TODO check the energy should be total or e_core in pyscf？
-            self.e_fci = float(res[0]) + float(self.e_core)
-            self.civector_fci = None if res[2] is None else res[2].ravel()
+            # self.e_fci = float(res[0]) + float(self.e_core)
+            # self.civector_fci = None if res[2] is None else res[2].ravel()
 
         else:
             self.e_fci = None
             self.civector_fci = None
 
-        self.e_nuc = mol.energy_nuc()
+        self.e_nuc = float(mol.energy_nuc())
 
 
 
@@ -304,7 +312,6 @@ class UCC:
 
         #set cache to speedup the shots=0
         hq = self.h_qubit_op
-        self._qop_cached = hq
 
 
         # init guess (zeros by default if ex_ops present)
@@ -318,14 +325,14 @@ class UCC:
     def _get_hamiltonian_and_core(self, numeric_engine):
         self._check_numeric_engine(numeric_engine)
         if numeric_engine is None:
-            engine = self.numeric_engine
+            numeric_engine = self.numeric_engine
             hamiltonian = self.hamiltonian
             e_core = self.e_core
         else:
             if numeric_engine.startswith("civector") or numeric_engine == "pyscf":
                 htype = "fcifunc"
             else:
-                assert numeric_engine in ["tensornetwork", "statevector"]
+                assert numeric_engine in ["statevector"]
                 htype = "sparse"
             hamiltonian = self.hamiltonian_lib.get(htype)
             if hamiltonian is None:
@@ -365,23 +372,18 @@ class UCC:
         runtime = str(opts.pop("runtime", self.runtime))
         numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
         
-        if runtime == "device":
-            rt = UCCDeviceRuntime(
-                self.n_qubits,
-                self.n_elec_s,
-                self.h_qubit_op,
-                mode=self.mode,
-                ex_ops=self.ex_ops,
-                param_ids=self.param_ids,
-                init_state=self.init_state,
-                decompose_multicontrol=self.decompose_multicontrol,
-                trotter=self.trotter,
-                qop=getattr(self, "_qop_cached", None),
-            )
-            e = rt.energy(params, **opts)
-            return float(e + self.e_core)
-        if runtime == "numeric":
-            ci_hamiltonian =  self.hamiltonian
+        self._sanity_check()
+        params = self._check_params_argument(params)
+
+        if params is self.params and self.opt_res is not None:
+            return self.opt_res.e
+        # Always fetch the correct Hamiltonian for the requested numeric_engine
+        self.hamiltonian, self.e_core, self.numeric_engine = self._get_hamiltonian_and_core(numeric_engine)
+
+        if runtime == "numeric" or int(opts.get('shots',2048)) == 0 :
+            logger.info('go to analytic numeric engine path when shots == 0')
+            #shots = 0 go to analytic numeric path 
+            # Ensure engine-specific Hamiltonian type is used (sparse for statevector, callable for CI)
             rt = UCCNumericRuntime(
                 self.n_qubits,
                 self.n_elec_s,
@@ -391,19 +393,13 @@ class UCC:
                 init_state=self.init_state,
                 mode=self.mode,
                 numeric_engine=numeric_engine,
-                ci_hamiltonian=ci_hamiltonian,
-                qop=getattr(self, "_qop_cached", None),
+                hamiltonian=self.hamiltonian
                 
             )
             base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
             return float(rt.energy(base)+self.e_core)
-        raise ValueError(f"unknown runtime: {runtime}")
 
-    def energy_and_grad(self, params: np.ndarray | None = None, **opts):
-        runtime = opts.get('runtime',self.runtime)
-        numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
-        
-        if runtime == "device":
+        elif runtime == "device":
             rt = UCCDeviceRuntime(
             self.n_qubits,
             self.n_elec_s,
@@ -413,13 +409,29 @@ class UCC:
             param_ids=self.param_ids,
             init_state=self.init_state,
             decompose_multicontrol=self.decompose_multicontrol,
-            trotter=self.trotter,
-            qop=getattr(self, "_qop_cached", None),
+            trotter=self.trotter
         )
-            e, g = rt.energy_and_grad(params, **opts)
-            return float(e+self.e_core), g
-        if runtime == "numeric":
-            ci_hamiltonian =  self.hamiltonian
+            e = rt.energy(params, **opts)
+            return float(e + self.e_core)
+        raise ValueError(f"unknown runtime: {runtime}")
+
+    def energy_and_grad(self, params: np.ndarray | None = None, **opts):
+        runtime = opts.get('runtime',self.runtime)
+        numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
+        
+        self._sanity_check()
+        params = self._check_params_argument(params)
+
+        if params is self.params and self.opt_res is not None:
+            return self.opt_res.e
+        # Always fetch the correct Hamiltonian for the requested numeric_engine
+        self.hamiltonian, self.e_core, self.numeric_engine = self._get_hamiltonian_and_core(numeric_engine)
+
+
+        if runtime == "numeric" or int(opts.get('shots',2048)) == 0 :
+            logger.info('go to analytic numeric engine path when shots == 0')
+            # Always fetch the correct Hamiltonian for the requested numeric_engine
+            #shots = 0 go to analytic numeric path 
             rt = UCCNumericRuntime(
                 self.n_qubits,
                 self.n_elec_s,
@@ -429,13 +441,27 @@ class UCC:
                 init_state=self.init_state,
                 mode=self.mode,
                 numeric_engine=numeric_engine,
-                ci_hamiltonian=ci_hamiltonian,
-                qop=getattr(self, "_qop_cached", None)
+                hamiltonian=self.hamiltonian
                 
             )
             base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
             e0, g = rt.energy_and_grad(base)
             return float(e0+self.e_core), g
+        elif runtime == "device":
+            rt = UCCDeviceRuntime(
+            self.n_qubits,
+            self.n_elec_s,
+            self.h_qubit_op,
+            mode=self.mode,
+            ex_ops=self.ex_ops,
+            param_ids=self.param_ids,
+            init_state=self.init_state,
+            decompose_multicontrol=self.decompose_multicontrol,
+            trotter=self.trotter
+        )
+            e, g = rt.energy_and_grad(params, **opts)
+            return float(e+self.e_core), g
+        
         raise ValueError(f"unknown runtime: {runtime}")
 
     @property
@@ -497,11 +523,17 @@ class UCC:
             res = minimize(lambda x: func(x), x0=self.init_guess, jac=False, method="COBYLA", options=minimize_options)
         else:
             res = minimize(lambda x: func(x)[0], x0=self.init_guess, jac=lambda x: func(x)[1], method="L-BFGS-B", options=minimize_options)
+        
+        if not res.success:
+            logger.warning("Optimization failed. See `.opt_res` for details.")
         # Store optimizer result for downstream algorithms (KUPCCGSD expects .opt_res)
         res['init_guess'] = self.init_guess
+        res["e"] = float(res.fun)
+        
+
         self.opt_res = res
         self._params = np.asarray(getattr(res, "x", self.init_guess), dtype=np.float64)
-        return float(getattr(res, "fun", self.energy(self._params)))
+        return res.e
 
     # ---------- Optimization helper (parity with HEA) ----------
     def get_opt_function(self, *, with_time: bool = False):
@@ -533,7 +565,7 @@ class UCC:
         int2e: np.ndarray,
         n_elec: Union[int, Tuple[int, int]],
         *,
-        e_core: float | None = None,
+        e_core: float = 0,
         ovlp: np.ndarray = None,
         classical_provider: str = 'local',
         classical_device: str = 'auto',
@@ -592,16 +624,170 @@ class UCC:
 
     # ---- Excitation generators (TCC-style, default UCCSD semantics) ----
     def get_ex1_ops(self, t1: np.ndarray | None = None) -> Tuple[List[Tuple], List[int], List[float]]:
-        no = self.no
-        nv = self.nv
-        ops, pids, init = generate_uccsd_ex1_ops(no, nv, t1, mode=self.mode)
-        return ops, pids, init
+        """
+        Get one-body excitation operators.
+
+        Parameters
+        ----------
+        t1: np.ndarray, optional
+            Initial one-body amplitudes based on e.g. CCSD
+
+        Returns
+        -------
+        ex_op: List[Tuple]
+            The excitation operators. Each operator is represented by a tuple of ints.
+        param_ids: List[int]
+            The mapping from excitations to parameters.
+        init_guess: List[float]
+            The initial guess for the parameters.
+
+        See Also
+        --------
+        get_ex2_ops: Get two-body excitation operators.
+        get_ex_ops: Get one-body and two-body excitation operators for UCCSD ansatz.
+        """
+        # single excitations
+        no, nv = self.no, self.nv
+        if t1 is None:
+            t1 = self.t1
+
+        if t1.shape == (self.no, self.nv):
+            t1 = spatial2spin(t1)
+        else:
+            assert t1.shape == (2 * self.no, 2 * self.nv)
+
+        ex1_ops = []
+        # unique parameters. -1 is a place holder
+        ex1_param_ids = [-1]
+        ex1_init_guess = []
+        for i in range(no):
+            for a in range(nv):
+                # alpha to alpha
+                ex_op_a = (2 * no + nv + a, no + nv + i)
+                # beta to beta
+                ex_op_b = (no + a, i)
+                ex1_ops.extend([ex_op_a, ex_op_b])
+                ex1_param_ids.extend([ex1_param_ids[-1] + 1] * 2)
+                ex1_init_guess.append(t1[i, a])
+        ex1_param_ids = ex1_param_ids[1:]
+
+        # deal with qubit symmetry
+        if self.mode == "qubit":
+            ex1_ops, ex1_param_ids, ex1_init_guess = self._qubit_phase(ex1_ops, ex1_param_ids, ex1_init_guess)
+
+        return ex1_ops, ex1_param_ids, ex1_init_guess
 
     def get_ex2_ops(self, t2: np.ndarray | None = None) -> Tuple[List[Tuple], List[int], List[float]]:
-        no = self.no
-        nv = self.nv
-        ops, pids, init = generate_uccsd_ex2_ops(no, nv, t2, mode=self.mode)
-        return ops, pids, init
+        """
+        Get two-body excitation operators.
+
+        Parameters
+        ----------
+        t2: np.ndarray, optional
+            Initial two-body amplitudes based on e.g. MP2
+
+        Returns
+        -------
+        ex_op: List[Tuple]
+            The excitation operators. Each operator is represented by a tuple of ints.
+        param_ids: List[int]
+            The mapping from excitations to parameters.
+        init_guess: List[float]
+            The initial guess for the parameters.
+
+        See Also
+        --------
+        get_ex1_ops: Get one-body excitation operators.
+        get_ex_ops: Get one-body and two-body excitation operators for UCCSD ansatz.
+        """
+
+        # t2 in oovv 1212 format
+        no, nv = self.no, self.nv
+        if t2 is None:
+            t2 = self.t2
+
+        if t2.shape == (self.no, self.no, self.nv, self.nv):
+            t2 = spatial2spin(t2)
+        else:
+            assert t2.shape == (2 * self.no, 2 * self.no, 2 * self.nv, 2 * self.nv)
+
+        def alpha_o(_i):
+            return no + nv + _i
+
+        def alpha_v(_i):
+            return 2 * no + nv + _i
+
+        def beta_o(_i):
+            return _i
+
+        def beta_v(_i):
+            return no + _i
+
+        # double excitations
+        ex_ops = []
+        ex2_param_ids = [-1]
+        ex2_init_guess = []
+        # 2 alphas or 2 betas
+        for i in range(no):
+            for j in range(i):
+                for a in range(nv):
+                    for b in range(a):
+                        # i correspond to a and j correspond to b, as in PySCF convention
+                        # otherwise the t2 amplitude has incorrect phase
+                        # 2 alphas
+                        ex_op_aa = (alpha_v(b), alpha_v(a), alpha_o(i), alpha_o(j))
+                        # 2 betas
+                        ex_op_bb = (beta_v(b), beta_v(a), beta_o(i), beta_o(j))
+                        ex_ops.extend([ex_op_aa, ex_op_bb])
+                        ex2_param_ids.extend([ex2_param_ids[-1] + 1] * 2)
+                        ex2_init_guess.append(t2[2 * i, 2 * j, 2 * a, 2 * b])
+        assert len(ex_ops) == 2 * (no * (no - 1) / 2) * (nv * (nv - 1) / 2)
+        # 1 alpha + 1 beta
+        for i in range(no):
+            for j in range(i + 1):
+                for a in range(nv):
+                    for b in range(a + 1):
+                        # i correspond to a and j correspond to b, as in PySCF convention
+                        # otherwise the t2 amplitude has incorrect phase
+                        if i == j and a == b:
+                            # paired
+                            ex_op_ab = (beta_v(a), alpha_v(a), alpha_o(i), beta_o(i))
+                            ex_ops.append(ex_op_ab)
+                            ex2_param_ids.append(ex2_param_ids[-1] + 1)
+                            ex2_init_guess.append(t2[2 * i, 2 * i + 1, 2 * a, 2 * a + 1])
+                            continue
+                        # simple reflection
+                        ex_op_ab1 = (beta_v(b), alpha_v(a), alpha_o(i), beta_o(j))
+                        ex_op_ab2 = (alpha_v(b), beta_v(a), beta_o(i), alpha_o(j))
+                        ex_ops.extend([ex_op_ab1, ex_op_ab2])
+                        ex2_param_ids.extend([ex2_param_ids[-1] + 1] * 2)
+                        ex2_init_guess.append(t2[2 * i, 2 * j + 1, 2 * a, 2 * b + 1])
+                        if (i != j) and (a != b):
+                            # exchange alpha and beta
+                            ex_op_ab3 = (beta_v(a), alpha_v(b), alpha_o(i), beta_o(j))
+                            ex_op_ab4 = (alpha_v(a), beta_v(b), beta_o(i), alpha_o(j))
+                            ex_ops.extend([ex_op_ab3, ex_op_ab4])
+                            ex2_param_ids.extend([ex2_param_ids[-1] + 1] * 2)
+                            ex2_init_guess.append(t2[2 * i, 2 * j + 1, 2 * b, 2 * a + 1])
+        ex2_param_ids = ex2_param_ids[1:]
+
+        # deal with qubit symmetry
+        if self.mode == "qubit":
+            ex_ops, ex2_param_ids, ex2_init_guess = self._qubit_phase(ex_ops, ex2_param_ids, ex2_init_guess)
+
+        return ex_ops, ex2_param_ids, ex2_init_guess
+
+    def _qubit_phase(self, ex_ops, ex_param_ids, ex_init_guess):
+
+        hf_str = np.array(self.get_ci_strings()[:1], dtype=np.uint64)
+        iterated_ids = set()
+        for i, ex_op in enumerate(ex_ops):
+            if ex_param_ids[i] in iterated_ids:
+                continue
+            phase = get_fermion_phase(ex_op, self.n_qubits, hf_str)[0]
+            ex_init_guess[ex_param_ids[i]] *= phase
+            iterated_ids.add(ex_param_ids[i])
+        return ex_ops, ex_param_ids, ex_init_guess
 
     def energy_device(
         self,
@@ -625,8 +811,7 @@ class UCC:
             param_ids=self.param_ids,
             init_state=self.init_state,
             decompose_multicontrol=self.decompose_multicontrol,
-            trotter=self.trotter,
-            qop=getattr(self, "_qop_cached", None),
+            trotter=self.trotter
         )
         e = rt.energy(p, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
         return float(e + self.e_core)
@@ -936,11 +1121,16 @@ class UCC:
     # ---- Params property ----
     @property
     def params(self) -> np.ndarray | None:
-        return self._params
+        if getattr(self, "_params", None) is not None:
+            return self._params
+        if getattr(self, "opt_res", None) is not None:
+            return getattr(self.opt_res, "x", None)
+        return None
 
     @params.setter
     def params(self, v: Sequence[float] | None) -> None:
         self._params = None if v is None else np.asarray(v, dtype=np.float64)
+
 
 
 def compute_fe_t2(no, nv, int1e, int2e):

@@ -120,6 +120,8 @@ def qubit_operator(string: str, coeff: float) -> QubitOperator:
 
 
 def get_hop_hcb_from_integral(int1e, int2e):
+    # Hard core boson Hamiltonian
+    # https://arxiv.org/pdf/2002.00035.pdf
     n_orb = int1e.shape[0]
     qop = QubitOperator()
     for p in range(n_orb):
@@ -163,24 +165,11 @@ def get_h_fcifunc_from_integral(int1e, int2e, n_elec):
     This matches the alpha/beta-separated CI basis order we construct via get_ci_strings.
     """
     n_orb = len(int1e)
-    # Ensure (na, nb) tuple
-    if isinstance(n_elec, int):
-        assert n_elec % 2 == 0, "total electron number must be even to split into (na, nb)"
-        nelec_ab = (n_elec // 2, n_elec // 2)
-    else:
-        nelec_ab = (int(n_elec[0]), int(n_elec[1]))
-
-    # Absorb one-electron integrals into two-electron tensor (PySCF handles symmetry internally)
-    h2e = direct_spin1.absorb_h1e(int1e, int2e, n_orb, nelec_ab, 0.5)
-    na, nb = nelec_ab
-    nA = cistring.num_strings(n_orb, na)
-    nB = cistring.num_strings(n_orb, nb)
-
+    h2e = direct_nosym.absorb_h1e(int1e, int2e, n_orb, n_elec, 0.5)
     def fci_func(civector):
-        civector = np.asarray(civector, dtype=np.float64).reshape((nA, nB))
-        out = direct_spin1.contract_2e(h2e, civector, norb=n_orb, nelec=nelec_ab)
-        return np.asarray(out, dtype=np.float64).reshape(-1)
-
+        civector = np.asarray(civector, dtype=np.float64)
+        out = direct_nosym.contract_2e(h2e, civector, norb=n_orb, nelec=n_elec)
+        return np.asarray(out, dtype=np.float64)
     return fci_func
 
 
@@ -285,5 +274,24 @@ def symmetrize_int2e(int2e):
     int2e = 0.5 * (int2e + int2e.transpose(3, 2, 1, 0))
     return int2e
 
+from scipy.sparse import issparse  # type: ignore
+from inspect import isfunction
 
+def apply_op(hamiltonian, ket: np.ndarray) -> np.ndarray:
+    """Apply Hamiltonian to ket"""
+    try:
+        if issparse is not None and issparse(hamiltonian):
+            return np.asarray(hamiltonian.dot(ket), dtype=ket.dtype)
+        if hasattr(hamiltonian, "eval_matrix") and callable(getattr(hamiltonian, "eval_matrix")):
+            mat = np.asarray(hamiltonian.eval_matrix())
+            return np.asarray(mat.dot(ket), dtype=ket.dtype)
+        if hasattr(hamiltonian, "dot"):
+            return np.asarray(hamiltonian.dot(ket), dtype=ket.dtype)
+    except Exception:
+        pass
+    if isfunction (hamiltonian):
+        # CI engine callable expects CI-shaped input; keep float64
+        return np.asarray(hamiltonian(np.asarray(ket, dtype=np.float64)), dtype=np.float64)
+    else:
+        return np.asarray(np.dot(hamiltonian,ket), dtype=ket.dtype)
 

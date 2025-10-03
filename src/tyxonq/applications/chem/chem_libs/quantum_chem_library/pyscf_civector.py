@@ -46,7 +46,7 @@ from pyscf.fci.addons import des_a, cre_a, des_b, cre_b  # type: ignore
 import tyxonq as tq
 from tyxonq.libs.circuits_library.utils import unpack_nelec
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_init_civector
-
+from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
 
 Tensor = Any
 
@@ -182,24 +182,19 @@ def get_energy_and_grad_pyscf(params, hamiltonian, n_qubits: int, n_elec_s, ex_o
     params = np.asarray(params)
     ket = get_civector_pyscf(params, n_qubits, n_elec_s, ex_ops, param_ids, mode, init_state)
     ket = np.asarray(ket, dtype=np.float64)
-    bra = np.asarray(hamiltonian(ket) if callable(hamiltonian) else (hamiltonian @ ket), dtype=np.float64)
-    N = float(bra @ ket)
-    D = float(ket @ ket)
-    energy = N / D if D != 0.0 else float("nan")
+    # bra = np.asarray(hamiltonian(ket) if callable(hamiltonian) else (hamiltonian @ ket), dtype=np.float64)
+    # N = float(bra @ ket)
+    # D = float(ket @ ket)
+    # energy = N / D if D != 0.0 else float("nan")
 
-    gN_pre = _get_gradients_pyscf(bra, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
-    gD_pre = _get_gradients_pyscf(ket, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
-    gN = np.zeros(params.shape)
-    gD = np.zeros(params.shape)
-    for v, pid in zip(gN_pre, param_ids):
-        gN[pid] += v
-    for v, pid in zip(gD_pre, param_ids):
-        gD[pid] += v
-    if D == 0.0:
-        gradients = np.zeros_like(params)
-    else:
-        gradients = (2.0 / D) * (gN - (N / D) * gD)
-    return float(energy), gradients
+    bra = apply_op(hamiltonian,ket)
+    energy = float(np.dot(bra, ket))
+
+    gradients_beforesum = _get_gradients_pyscf(bra, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
+    gradients = np.zeros(params.shape)
+    for v, pid in zip(gradients_beforesum, param_ids):
+        gradients[pid] += v
+    return float(energy), 2.0 * gradients
 
 
 def apply_excitation_pyscf(civector, n_qubits: int, n_elec_s, f_idx: Tuple[int, ...], mode: str):

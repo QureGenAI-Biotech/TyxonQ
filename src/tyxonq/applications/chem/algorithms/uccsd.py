@@ -56,7 +56,7 @@ class UCCSD(UCC):
         epsilon: float = DISCARD_EPS,
         sort_ex2: bool = True,
         mode: str = "fermion",
-        runtime: str = None,
+        runtime: str = 'device',
         numeric_engine: str | None = None,
         run_fci: bool = False,
         *,
@@ -199,8 +199,8 @@ class UCCSD(UCC):
         [0.0, ...]
         """
         # Delegate ex-op generation to libs to keep one source of truth
-        ex1_ops, ex1_param_ids, ex1_init_guess = generate_uccsd_ex1_ops(self.no, self.nv, t1, mode=self.mode)
-        ex2_ops, ex2_param_ids, ex2_init_guess = generate_uccsd_ex2_ops(self.no, self.nv, t2, mode=self.mode)
+        ex1_ops, ex1_param_ids, ex1_init_guess = self.get_ex1_ops(t1)
+        ex2_ops, ex2_param_ids, ex2_init_guess = self.get_ex2_ops(t2)
 
         # screen out symmetrically not allowed excitation
         ex2_ops, ex2_param_ids, ex2_init_guess = self.pick_and_sort(
@@ -251,7 +251,8 @@ class ROUCCSD(UCC):
         active_space: Tuple[int, int] = None,
         active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
-        numeric_engine: str | None = None,
+        numeric_engine: str ='civector',
+        runtime = 'device',
         run_fci: bool = False,
         *,
         

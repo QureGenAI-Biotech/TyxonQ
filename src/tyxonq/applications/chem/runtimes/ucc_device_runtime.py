@@ -39,8 +39,7 @@ class UCCDeviceRuntime:
         param_ids: List[int] | None = None,
         init_state: Sequence[float] | None = None,
         decompose_multicontrol: bool = False,
-        trotter: bool = False,
-        qop: QubitOperator | None = None,
+        trotter: bool = False
     ):
         self.n_qubits = int(n_qubits)
         self.n_elec_s = (int(n_elec_s[0]), int(n_elec_s[1]))
@@ -52,8 +51,6 @@ class UCCDeviceRuntime:
         self.init_state = init_state
         self.decompose_multicontrol = bool(decompose_multicontrol)
         self.trotter = bool(trotter)
-        # Optional: pre-mapped QubitOperator cache for shots==0 fast path
-        self._qop_cached = qop
 
         # 推断参数个数
         if self.ex_ops is not None:
@@ -173,21 +170,21 @@ class UCCDeviceRuntime:
         **device_kwargs,
     ) -> float:
         # Fast path: simulator/local + shots==0 → 使用 numeric 的 CI-embedding 生成 ψ，确保与数值基准完全一致
-        if (provider in ("simulator", "local")) and int(shots) == 0:
-            from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
-                get_statevector_from_params, energy_from_statevector,
-            )
-            x = np.asarray(params if params is not None else (np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)), dtype=np.float64)
-            psi = get_statevector_from_params(
-                x,
-                self.n_qubits,
-                self.n_elec_s,
-                self.ex_ops,
-                self.param_ids,
-                mode=self.mode,
-                init_state=None,
-            )
-            return float(energy_from_statevector(psi, self.h_qubit_op, self.n_qubits))
+        # if (provider in ("simulator", "local")) and int(shots) == 0:
+        #     from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
+        #         get_statevector, energy_from_statevector,
+        #     )
+        #     x = np.asarray(params if params is not None else (np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)), dtype=np.float64)
+        #     psi = get_statevector(
+        #         x,
+        #         self.n_qubits,
+        #         self.n_elec_s,
+        #         self.ex_ops,
+        #         self.param_ids,
+        #         mode=self.mode,
+        #         init_state=None,
+        #     )
+        #     return float(energy_from_statevector(psi, self.h_qubit_op, self.n_qubits))
 
         if self.n_params == 0:
             def _builder():
@@ -212,21 +209,21 @@ class UCCDeviceRuntime:
         **device_kwargs,
     ) -> Tuple[float, np.ndarray]:
         # shots==0: use finite-difference over the analytic CI-embedded energy path (PS not applicable to CI embedding)
-        if (provider in ("simulator", "local")) and int(shots) == 0:
-            if self.n_params == 0:
-                e0 = self.energy(None, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-                return float(e0), np.zeros(0, dtype=np.float64)
-            x = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
-            e0 = self.energy(x, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-            g = np.zeros_like(x)
-            eps = 1e-7
-            for i in range(len(x)):
-                p_plus = x.copy(); p_plus[i] += eps
-                p_minus = x.copy(); p_minus[i] -= eps
-                e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-                e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-                g[i] = (e_plus - e_minus) / (2.0 * eps)
-            return float(e0), g
+        # if (provider in ("simulator", "local")) and int(shots) == 0:
+        #     if self.n_params == 0:
+        #         e0 = self.energy(None, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+        #         return float(e0), np.zeros(0, dtype=np.float64)
+        #     x = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
+        #     e0 = self.energy(x, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+        #     g = np.zeros_like(x)
+        #     eps = 1e-7
+        #     for i in range(len(x)):
+        #         p_plus = x.copy(); p_plus[i] += eps
+        #         p_minus = x.copy(); p_minus[i] -= eps
+        #         e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+        #         e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
+        #         g[i] = (e_plus - e_minus) / (2.0 * eps)
+        #     return float(e0), g
 
         if self.n_params == 0:
             e0 = self.energy(None, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
