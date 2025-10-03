@@ -95,7 +95,6 @@ def apply_h_qubit_to_ci(
     mat = csr_matrix((np.asarray(data), (np.asarray(rows), np.asarray(cols))), shape=(size, size))
     return np.asarray(mat.dot(np.asarray(civector, dtype=np.float64)), dtype=np.float64)
 
-
 def get_civector(params: np.ndarray, n_qubits: int, n_elec_s, ex_ops: List[Tuple[int, ...]], param_ids: List[int], *, mode: str = "fermion", init_state: np.ndarray | None = None) -> np.ndarray:
     ci_strings, fperm, fphase, f2phase = get_operator_tensors(n_qubits, n_elec_s, ex_ops, mode)
     fperm = np.asarray(fperm, dtype=np.int64)
@@ -398,7 +397,7 @@ def get_fket_phase(f_idx, ci_strings):
     negative = masked == 0
     return positive, negative
 
-
+#TODO  add cache here like TCC
 def get_operator_tensors(
     n_qubits: int, n_elec_s, ex_ops: List[Tuple[int, ...]], mode: str = "fermion"
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:

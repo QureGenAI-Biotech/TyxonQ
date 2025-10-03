@@ -14,37 +14,51 @@ from tyxonq.applications.chem.constants import (
 )
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
+from tyxonq.libs.hamiltonian_encoding.pauli_io import ex_op_to_fop
 from .civector_ops import get_operator_tensors
 from .ci_state_mapping import get_ci_strings, civector_to_statevector
 from math import comb
 
 # from tyxonq.libs.circuits_library.qubit_state_preparation import get_init_circuit
 
-def apply_excitation_statevector(statevector, n_qubits, n_elec, f_idx, mode):
-    # Apply in CI space; if provided n_qubits/n_elec mismatch the civector size, infer active CAS
-    def _infer_active_from_len(k: int) -> tuple[int, int]:
-        # return (m, na) such that C(m,na)^2 == k with na<=m and closed-shell
-        for m in range(1, 16):
-            for na in range(0, m + 1):
-                if comb(m, na) ** 2 == k:
-                    return m, na
-        return -1, -1
+def apply_excitation_statevector(statevector, n_qubits, f_idx, mode):
+    """Apply a single excitation on a statevector (TCC-style).
 
-    civ = np.asarray(statevector, dtype=np.float64)
-    # try given
-    if isinstance(n_elec, (tuple, list)):
-        na, nb = int(n_elec[0]), int(n_elec[1])
+    - Apply local unitary ad_a_hc/adad_aa_hc on reversed bit-indices
+    - For fermion mode, apply JW Z-string phase vector with sign per qop coefficient
+    """
+    # 1) apply local fermionic unitary in the computational basis
+    psi = np.asarray(statevector, dtype=np.complex128).reshape(-1)
+    n = int(n_qubits)
+    qubit_idx = [n - 1 - int(i) for i in f_idx]
+    if len(qubit_idx) == 2:
+        U = ad_a_hc
     else:
-        na = nb = int(n_elec) // 2
-    desired = comb(n_qubits // 2, na) * comb(n_qubits // 2, nb)
-    if civ.shape[0] != desired:
-        m, na_inf = _infer_active_from_len(int(civ.shape[0]))
-        if m > 0:
-            n_qubits = 2 * m
-            na = nb = na_inf
-    _, fperm, fphase, _ = get_operator_tensors(n_qubits, (na, nb), [tuple(f_idx)], mode)
-    out = civ[fperm[0]] * fphase[0]
-    return np.asarray(out, dtype=civ.dtype)
+        assert len(qubit_idx) == 4
+        U = adad_aa_hc
+    psi = _apply_kqubit_unitary(psi, U, qubit_idx, n)
+
+    if mode != "fermion":
+        return psi.reshape(-1)
+
+    # 2) apply Z-string phase from JW mapping of the excitation operator
+    fop = ex_op_to_fop(tuple(f_idx))
+    qop = jordan_wigner(fop)
+    z_indices: list[int] = []
+    for idx, term in next(iter(qop.terms.keys())):
+        if term != "Z":
+            assert idx in f_idx
+            continue
+        z_indices.append(n - 1 - int(idx))
+    sign = 1 if sorted(qop.terms.items())[0][1].real > 0 else -1
+    phase = np.array([sign], dtype=np.int8)
+    for i in range(n):
+        if i in z_indices:
+            phase = np.kron(phase, np.array([1, -1], dtype=np.int8))
+        else:
+            phase = np.kron(phase, np.array([1, 1], dtype=np.int8))
+    psi = psi * phase
+    return psi.reshape(-1)
 
 
 
@@ -96,7 +110,8 @@ def _apply_kqubit_unitary(state: np.ndarray, unitary: np.ndarray, qubit_idx: lis
     if k == 0:
         return state
     axes_all = list(range(n_qubits))
-    target_axes = [n_qubits - 1 - int(q) for q in qubit_idx]
+    # Match StatevectorEngine bit order: axis == qubit index (LSB at index 0)
+    target_axes = [int(q) for q in qubit_idx]
     keep_axes = [ax for ax in axes_all if ax not in target_axes]
     perm = keep_axes + target_axes
     psi_nd = state.reshape([2] * n_qubits).transpose(perm).reshape(-1, 1 << k)
@@ -118,9 +133,9 @@ def evolve_excitation(statevector: np.ndarray, f_idx: tuple[int, ...], theta: fl
         U2 = adad_aa_hc2
         U1 = adad_aa_hc
     f2ket = _apply_kqubit_unitary(statevector, U2, qubit_idx, n_qubits)
-    fket = _apply_kqubit_unitary(statevector, U1, qubit_idx, n_qubits)
+    fket = apply_excitation_statevector(statevector, n_qubits,f_idx,mode)
     # Match TCC sign convention: sin term carries a negative sign
-    return statevector + (1.0 - np.cos(theta)) * f2ket - np.sin(theta) * fket
+    return statevector + (1.0 - np.cos(theta)) * f2ket + np.sin(theta) * fket
 
 
 
