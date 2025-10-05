@@ -18,10 +18,10 @@ def get_random_integral_and_fci(n):
     return int1e, int2e, e
 
 
-@pytest.mark.parametrize("hamiltonian", ["H2", "H2 integral", "random integral"])
+@pytest.mark.parametrize("hamiltonian", ["H4", "H4 integral", "random integral"])
 @pytest.mark.parametrize("ansatz_str", ["UCCSD", "kUpCCGSD"])
 def test_ucc(hamiltonian, ansatz_str):
-    m = h2
+    m = h4
     nao = m.nao
     n_elec = m.nelectron
     if ansatz_str == "UCCSD":
@@ -37,10 +37,10 @@ def test_ucc(hamiltonian, ansatz_str):
         atol = 3e-3
     else:
         assert False
-    if hamiltonian == "H2":
+    if hamiltonian == "H4":
         # from mol
         ucc = ansatz(m,run_fci=True, **kwargs)
-    elif hamiltonian == "H2 integral":
+    elif hamiltonian == "H4 integral":
         if ansatz_str == 'UCCSD':
             atol = 2e-2
         int1e = m.intor("int1e_kin") + m.intor("int1e_nuc")
@@ -161,7 +161,7 @@ def test_mf_input():
         dm, _, stable, _ = hf.stability(return_status=True)
         if stable:
             break
-    ucc = UCCSD(hf, active_space=(4, 4))
+    ucc = UCCSD(hf, active_space=(4, 4),run_fci=True)
     e = ucc.kernel(shots=0)
     np.testing.assert_allclose(ucc.e_hf, -153.603405, atol=1e-4)
     np.testing.assert_allclose(e, ucc.e_fci, atol=2e-2)
@@ -220,7 +220,7 @@ def test_pyscf_solver(method):
         hf = m.ROHF()
 
     hf.kernel()
-    e_ref = ROUCCSD(hf, active_space=(nelecas, ncas)).kernel()
+    e_ref = ROUCCSD(hf, active_space=(nelecas, ncas)).kernel(shots=0)
     mc = CASCI(hf, ncas, nelecas)
     mc.fcisolver = method.as_pyscf_solver()
     mc.kernel()
@@ -254,3 +254,7 @@ def test_pyscf_solver_small_h2(method):
     mc.kernel()
 
     np.testing.assert_allclose(mc.e_tot, ref, atol=1e-4)
+
+
+if __name__ == "__main__":
+    test_ucc('H2', 'kUpCCGSD')

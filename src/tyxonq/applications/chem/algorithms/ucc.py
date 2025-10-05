@@ -116,7 +116,7 @@ class UCC:
             runtime='device'
 
         if active_space is None:
-            active_space = (mol.nelectron, int(mol.nao))
+            active_space = (self.mol.nelectron, int(self.mol.nao))
 
         self.mode = mode
         self.spin = self.mol.spin
@@ -139,14 +139,14 @@ class UCC:
         self.active_space = active_space
         self.n_elec = active_space[0]
         self.active = active_space[1]
-        self.inactive_occ = (mol.nelectron - active_space[0]) // 2
-        assert (mol.nelectron - active_space[0]) % 2 == 0
-        self.inactive_vir = mol.nao - active_space[1] - self.inactive_occ
+        self.inactive_occ = (self.mol.nelectron - active_space[0]) // 2
+        assert (self.mol.nelectron - active_space[0]) % 2 == 0
+        self.inactive_vir = self.mol.nao - active_space[1] - self.inactive_occ
         if active_orbital_indices is None:
-            active_orbital_indices = list(range(self.inactive_occ, mol.nao - self.inactive_vir))
+            active_orbital_indices = list(range(self.inactive_occ, self.mol.nao - self.inactive_vir))
         if len(active_orbital_indices) != active_space[1]:
             raise ValueError("sort_mo should have the same length as the number of active orbitals.")
-        frozen_idx = [i for i in range(mol.nao) if i not in active_orbital_indices]
+        frozen_idx = [i for i in range(self.mol.nao) if i not in active_orbital_indices]
         self.active_orbital_indices = active_orbital_indices
 
 
@@ -260,7 +260,7 @@ class UCC:
             self.e_fci = None
             self.civector_fci = None
 
-        self.e_nuc = float(mol.energy_nuc())
+        self.e_nuc = float(self.mol.energy_nuc())
 
 
 
@@ -439,8 +439,7 @@ class UCC:
                 hamiltonian=self.hamiltonian
                 
             )
-            base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
-            e0, g = rt.energy_and_grad(base)
+            e0, g = rt.energy_and_grad(params)
             return float(e0+self.e_core), g
         elif runtime == "device":
             rt = UCCDeviceRuntime(
@@ -475,8 +474,8 @@ class UCC:
         Any options in **opts will be forwarded to energy_and_grad (e.g.,
         shots/provider/device for device runtime, numeric_engine for numeric runtime).
         """
-        if self.n_params == 0:
-            return float(self.e_core)
+        # if self.n_params == 0:
+        #     return float(self.e_core)
 
         if self.init_guess is None:
             self.init_guess = np.zeros(self.n_params)
@@ -560,7 +559,6 @@ class UCC:
         int1e: np.ndarray,
         int2e: np.ndarray,
         n_elec: Union[int, Tuple[int, int]],
-        *,
         e_core: float = 0,
         ovlp: np.ndarray = None,
         classical_provider: str = 'local',
@@ -975,11 +973,13 @@ class UCC:
         return (self.n_elec + self.spin) // 2, (self.n_elec - self.spin) // 2
     @property
     def no(self) -> int:
-        return int(self.n_elec_s[0])
+        """The number of occupied orbitals."""
+        return self.n_elec // 2
 
     @property
     def nv(self) -> int:
-        return int(self.n_qubits // 2 - self.no)
+        """The number of virtual (unoccupied orbitals)."""
+        return self.active - self.no
 
     @property
     def h_fermion_op(self) -> FermionOperator:

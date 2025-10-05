@@ -15,7 +15,6 @@ from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_bu
 from tyxonq.libs.hamiltonian_encoding.fermion_to_qubit import fop_to_qop, parity, binary
 from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
 from openfermion import QubitOperator, FermionOperator, hermitian_conjugated
-from pyscf.scf import RHF  # type: ignore
 from tyxonq.libs.circuits_library.qiskit_real_amplitudes import (
     real_amplitudes_circuit_template_converter,
 )
@@ -45,6 +44,7 @@ class HEA:
     """
     def __init__(self, 
     molecule: object | None = None, 
+    #from integral to build hea
     n_qubits: int | None = None, 
     layers: int | None = None, 
     hamiltonian: Hamiltonian | None = None, 
@@ -54,12 +54,13 @@ class HEA:
     mapping: str = "parity", 
     classical_provider: str = "local", 
     classical_device: str = "auto",
-     atom: object | None = None, 
-     basis: str = "sto-3g", 
-     unit: str = "Angstrom", 
-     charge: int = 0, 
-     spin: int = 0,
-     **kwargs):
+    #build from mole
+    atom: object | None = None, 
+    basis: str = "sto-3g", 
+    unit: str = "Angstrom", 
+    charge: int = 0, 
+    spin: int = 0,
+    **kwargs):
         # Runtime selection
         self.runtime = runtime
         # 可选：外部参数化电路模板（例如来自 Qiskit RealAmplitudes 的转换）
@@ -78,6 +79,7 @@ class HEA:
         self._params: np.ndarray | None = None
         self.opt_res: dict | None = None
         self.numeric_engine = kwargs.get('numeric_engine','statevector')
+        
 
         # If atom is provided, construct PySCF Mole directly (PySCF style)
 
@@ -437,8 +439,8 @@ class HEA:
         h_qubit_op: QubitOperator,
         circuit: object,
         init_guess: Sequence[float],
-        *,
         runtime: str = "device",
+        **kwargs
     ) -> "HEA":
         """从 QubitOperator 与外部参数化电路构建 HEA（一次性薄封装）。
 

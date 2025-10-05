@@ -8,24 +8,10 @@ from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 from pyscf.scf import ROHF
 from pyscf.fci import direct_spin1 
-from pyscf import gto
+from pyscf import gto,scf
 
 import warnings as _warnings
 from .ucc import UCC
-from pyscf.mp import MP2  # type: ignore
-
-from pyscf.cc import ccsd  # type: ignore
-from openfermion.transforms import jordan_wigner
-from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
-    get_integral_from_hf,
-    get_hop_from_integral,
-)
-from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_uccsd import (
-    generate_uccsd_ex1_ops,
-    generate_uccsd_ex2_ops,
-)
-from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
 from ..constants import DISCARD_EPS
 
 
@@ -47,7 +33,7 @@ class UCCSD(UCC):
 
     def __init__(
         self,
-        mol: Union[Mole, RHF],
+        mol: Union[Mole, scf.hf.RHF],
         init_method: str = "mp2",
         active_space: Tuple[int, int] = None,
         active_orbital_indices: List[int] = None,

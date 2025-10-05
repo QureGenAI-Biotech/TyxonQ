@@ -7,18 +7,7 @@ from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 
 from .ucc import UCC as _UCCBase
-from openfermion.transforms import jordan_wigner
-from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
-    get_hop_from_integral,
-)
-from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_kupccgsd import (
-    generate_kupccgsd_ex1_ops,
-    generate_kupccgsd_ex2_ops,
-    generate_kupccgsd_ex_ops,
-)
 
-from pyscf.fci import direct_spin1
 
 logger = logging.getLogger(__name__)
 
@@ -103,8 +92,8 @@ class KUPCCGSD(_UCCBase):
             mol=mol,
             active_space=active_space,
             active_orbital_indices=active_orbital_indices,
+            init_method=None,
             mo_coeff=mo_coeff,
-            mode="hcb",
             runtime=runtime,
             numeric_engine=numeric_engine,
             run_fci=run_fci,
@@ -201,8 +190,17 @@ class KUPCCGSD(_UCCBase):
         >>> init_guess  # doctest:+ELLIPSIS
         array([...])
         """
-        ex_op, param_ids, init_guess = generate_kupccgsd_ex_ops(self.no, self.nv, self.k)
-        return ex_op, param_ids, init_guess
+        ex1_ops, ex1_param_id, _ = self.get_ex1_ops()
+        ex2_ops, ex2_param_id, _ = self.get_ex2_ops()
+
+        ex_op = []
+        param_ids = [-1]
+        for _ in range(self.k):
+            ex_op.extend(ex2_ops + ex1_ops)
+            param_ids.extend([i + param_ids[-1] + 1 for i in ex2_param_id])
+            param_ids.extend([i + param_ids[-1] + 1 for i in ex1_param_id])
+        init_guess = np.random.rand(max(param_ids) + 1) - 0.5
+        return ex_op, param_ids[1:], init_guess
 
     def get_ex1_ops(self, t1: np.ndarray = None) -> Tuple[List[Tuple], List[int], np.ndarray]:
         """
@@ -228,7 +226,22 @@ class KUPCCGSD(_UCCBase):
         get_ex_ops: Get one-body and two-body excitation operators for :math:`k`-UpCCGSD ansatz.
         """
         assert t1 is None
-        return generate_kupccgsd_ex1_ops(self.no, self.nv)
+        no, nv = self.no, self.nv
+
+        ex1_ops = []
+        ex1_param_id = [-1]
+
+        for a in range(no + nv):
+            for i in range(a):
+                # alpha to alpha
+                ex_op_a = (no + nv + a, no + nv + i)
+                # beta to beta
+                ex_op_b = (a, i)
+                ex1_ops.extend([ex_op_a, ex_op_b])
+                ex1_param_id.extend([ex1_param_id[-1] + 1] * 2)
+
+        ex1_init_guess = np.zeros(max(ex1_param_id) + 1)
+        return ex1_ops, ex1_param_id[1:], ex1_init_guess
 
     def get_ex2_ops(self, t2: np.ndarray = None) -> Tuple[List[Tuple], List[int], np.ndarray]:
         """
@@ -255,7 +268,22 @@ class KUPCCGSD(_UCCBase):
         """
 
         assert t2 is None
-        return generate_kupccgsd_ex2_ops(self.no, self.nv)
+        no, nv = self.no, self.nv
+
+        ex2_ops = []
+        ex2_param_id = [-1]
+
+        for a in range(no + nv):
+            for i in range(a):
+                # i correspond to a and j correspond to b, as in PySCF convention
+                # otherwise the t2 amplitude has incorrect phase
+                # paired
+                ex_op_ab = (a, no + nv + a, no + nv + i, i)
+                ex2_ops.append(ex_op_ab)
+                ex2_param_id.append(ex2_param_id[-1] + 1)
+
+        ex2_init_guess = np.zeros(max(ex2_param_id) + 1)
+        return ex2_ops, ex2_param_id[1:], ex2_init_guess
 
     @property
     def e_kupccgsd(self):

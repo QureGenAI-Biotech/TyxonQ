@@ -70,7 +70,7 @@ def test_hamiltonian_fcifunc(m, mode):
 @pytest.mark.parametrize("m", [h4, _random(4, 4), h6])
 @pytest.mark.parametrize("encode", [binary, parity])
 def test_hea_encoding(m, encode):
-    uccsd = UCCSD(m)
+    uccsd = UCCSD(m,run_fci=True)
     qubit_hamiltonian = encode(uccsd.h_fermion_op, uccsd.n_qubits, uccsd.n_elec)
     e1 = eigenspectrum(qubit_hamiltonian)[0]
     np.testing.assert_allclose(e1, uccsd.e_fci)

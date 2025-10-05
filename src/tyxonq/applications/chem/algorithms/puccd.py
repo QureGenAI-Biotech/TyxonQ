@@ -6,15 +6,9 @@ from typing import Tuple, List, Union
 import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf.scf import RHF as _RHF
-from openfermion.transforms import jordan_wigner
 
 from tyxonq.core.ir.circuit import Circuit
-from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_puccd import generate_puccd_ex_ops
-from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx, rdm_mo2ao
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
-    get_integral_from_hf,
-    get_hop_from_integral,
-)
+from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
 from .ucc import UCC
 from tyxonq.libs.circuits_library.qubit_state_preparation import get_circuit_givens_swap
 from pyscf import fci as _fci
@@ -90,9 +84,16 @@ class PUCCD(UCC):
         no, nv = self.no, self.nv
         if t2 is None:
             t2 = np.zeros((no, no, nv, nv))
-
         t2 = spatial2spin(t2)
-        return generate_puccd_ex_ops(no, nv, t2)
+
+        ex_ops = []
+        ex_init_guess = []
+        # to be consistent with givens rotation circuit
+        for i in range(no):
+            for a in range(nv - 1, -1, -1):
+                ex_ops.append((no + a, i))
+                ex_init_guess.append(t2[2 * i, 2 * i + 1, 2 * a, 2 * a + 1])
+        return ex_ops, list(range(len(ex_ops))), ex_init_guess
 
     # ---- RDM in MO basis (spin-traced) specialized for pUCCD ----
     def make_rdm1(self, statevector=None, basis: str = "AO",**kwargs) -> np.ndarray:

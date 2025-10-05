@@ -47,6 +47,17 @@ def test_build_from_integral_and_mapping():
     e = hea.kernel(shots=0)
     np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
 
+    
+def test_qiskit_circuit():
+    m = h2
+    uccsd = UCCSD(m,run_fci=True)
+    qc = real_amplitudes(2)
+    hea = HEA.from_qiskit_circuit(parity(uccsd.h_fermion_op, 4, 2), qc, np.random.rand(qc.num_parameters), runtime="device")
+    e = hea.kernel(shots=0, provider="simulator", device="statevector")
+    
+    np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
+    hea.print_summary()
+
 
 @pytest.mark.parametrize("runtime", ["device", "numeric"])
 @pytest.mark.parametrize("grad_method", ["free", "autodiff"])  # autodiff 通过 value_and_grad 等价路径
@@ -103,15 +114,7 @@ def test_hea_convergence(runtime, grad_method, numeric_engine, shots):
             print(f"[HEA noisy] shots={shots}, E_noisy={e_noisy:.10f}")
             print(f"[HEA mitigated] shots={shots}, E_mitigated={e_mitig:.10f}")
 
-def test_qiskit_circuit():
-    m = h2
-    uccsd = UCCSD(m,run_fci=True)
-    qc = real_amplitudes(2)
-    hea = HEA.from_qiskit_circuit(parity(uccsd.h_fermion_op, 4, 2), qc, np.random.rand(qc.num_parameters), runtime="device")
-    e = hea.kernel(shots=0, provider="simulator", device="statevector")
-    
-    np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
-    hea.print_summary()
+
 
 
 @pytest.mark.parametrize("runtime", ["device", "numeric"]) 
@@ -207,4 +210,5 @@ def test_open_shell():
     np.testing.assert_allclose(hea.make_rdm2(), ucc.make_rdm2(basis="MO"), atol=5e-3)
 
 if __name__ == "__main__":
-    test_rdm(mapping="jordan-wigner")
+    # test_rdm(mapping="jordan-wigner")
+    test_qiskit_circuit()
