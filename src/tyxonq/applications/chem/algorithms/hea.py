@@ -315,12 +315,15 @@ class HEA:
         4) 以 n_qubits = n_sorb or n_sorb-2（parity 两比特节省）实例化 HEA。
         """
         n_sorb = 2 * len(int1e)
-        if isinstance(n_elec, int):
+        if isinstance(n_elec, tuple) or isinstance(n_elec, list):
+            n_elec_s = n_elec
+            n_elec = sum(n_elec)
+            spin = abs(n_elec_s[0] - n_elec_s[1])
+        else:
             if n_elec % 2 != 0:
                 raise ValueError("Odd total electrons: pass (na, nb) tuple instead")
             n_elec_s = (n_elec // 2, n_elec // 2)
-        else:
-            n_elec_s = n_elec
+            spin = 0
         # TCC: hop 已经包含 e_core 常数项（见 tencirchem/static/hea.py::from_integral）
         fop = get_hop_from_integral(int1e, int2e) + float(e_core)
         if mapping == "jordan-wigner":
@@ -340,8 +343,8 @@ class HEA:
         inst.mapping = str(mapping)
         inst.int1e = np.array(int1e)
         inst.int2e = np.array(int2e)
-        inst.n_elec = int(sum(n_elec_s))
-        inst.spin = int(n_elec_s[0] - n_elec_s[1])
+        inst.n_elec = n_elec
+        inst.spin = spin
         inst.e_core = float(e_core)
         inst.h_qubit_op = qop
         inst.runtime = runtime
@@ -415,7 +418,7 @@ class HEA:
             spin = int(res.get("spin", int(getattr(m, "spin", 0))))
             return cls.ry(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, **kwargs)
         else:
-            inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec, ucc_object.e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
+            inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
             return inst
 
     @classmethod

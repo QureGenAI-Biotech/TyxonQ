@@ -187,7 +187,7 @@ def test_open_shell():
 
     m = h_chain(3, charge=0, spin=1)
 
-    hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="device")
+    hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="numeric")
     # try multiple times to avoid local minimum
     es = []
     for i in range(3):
@@ -211,4 +211,5 @@ def test_open_shell():
 
 if __name__ == "__main__":
     # test_rdm(mapping="jordan-wigner")
-    test_qiskit_circuit()
+    # test_qiskit_circuit()
+    test_open_shell()
