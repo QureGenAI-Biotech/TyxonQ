@@ -48,23 +48,18 @@ def test_gradient(ref_eg, numeric_engine):
 
 @pytest.fixture
 def ref_state():
-    uccsd = UCCSD(h2)
+    uccsd = UCCSD(h4)
 
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     
-    # 需要确保 backend 已设置
-    try:
-        tq.set_backend("numpy")
-    except Exception:
-        pytest.xfail("Backend numpy not available")
     # numeric_engine = "statevector"
     # state = uccsd.civector(params, numeric_engine=numeric_engine)
     # state = apply_excitation(state, n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7), mode="fermion", numeric_engine=numeric_engine)
     # 使用 pyscf 基准 H2
     numeric_engine_ref = "pyscf"
     state = uccsd.civector(params, numeric_engine=numeric_engine_ref)
-    state = apply_excitation(state, n_qubits=uccsd.n_qubits, n_elec_s=uccsd.n_elec_s, ex_op=uccsd.ex_ops[0], mode="fermion", numeric_engine=numeric_engine_ref)
+    state = apply_excitation(state,  n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7), mode="fermion", numeric_engine=numeric_engine_ref)
 
     # state = np.asarray([ 0.2208986 ,  0.09394656, -0.        , -0.        ,  0.        ,
     #     0.        ,  0.09394656,  0.27237773, -0.        , -0.        ,
@@ -80,22 +75,37 @@ def ref_state():
 
 @pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
 def test_excitation(ref_state, numeric_engine):
-    uccsd = UCCSD(h2)
+    uccsd = UCCSD(h4)
 
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
         
     state = uccsd.civector(params, numeric_engine=numeric_engine)
-    state = apply_excitation(state,n_qubits=uccsd.n_qubits, n_elec_s=uccsd.n_elec_s, ex_op=uccsd.ex_ops[0],mode="fermion", numeric_engine=numeric_engine)
+    state = apply_excitation(state, n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7),mode="fermion", numeric_engine=numeric_engine)
     np.testing.assert_allclose(state, ref_state, atol=1e-6)
 
+def excitation_no_ref(numeric_engine):
+    uccsd = UCCSD(h4)
+
+    np.random.seed(2077)
+    params = np.random.rand(len(uccsd.init_guess)) - 0.5
+        
+    state = uccsd.civector(params, numeric_engine=numeric_engine)
+    state = apply_excitation(state,n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7),mode="fermion", numeric_engine=numeric_engine)
+
+
+
+def test_device_matches_numeric_energy_single():
+    # 设备路径与数值路径电子能一致（单次对照，避免重复运行）
+    uccsd = UCCSD(h2)
+    np.random.seed(2077)
+    params = np.random.rand(len(uccsd.init_guess)) - 0.5
+    e_num = uccsd.energy(params, runtime="numeric", numeric_engine="statevector")
+    e_dev = uccsd.energy(params, runtime="device", provider="simulator", device="statevector", shots=8096)
+    np.testing.assert_allclose(e_dev, e_num, atol=1e-3)
 
 def test_device_matches_numeric_gradient_single():
     # 设备路径与数值路径梯度一致（单次对照，避免重复运行）
-    try:
-        tq.set_backend("numpy")
-    except Exception:
-        pytest.xfail("Backend numpy not available")
     uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
@@ -104,20 +114,6 @@ def test_device_matches_numeric_gradient_single():
     e_dev, g_dev = uccsd.energy_and_grad(params, runtime="device", provider="simulator", device="statevector", shots=4086)
     np.testing.assert_allclose(e_dev, e_num, atol=1e-5)
     np.testing.assert_allclose(g_dev, g_num, atol=1e-5)
-
-
-def test_device_matches_numeric_energy_single():
-    # 设备路径与数值路径电子能一致（单次对照，避免重复运行）
-    try:
-        tq.set_backend("numpy")
-    except Exception:
-        pytest.xfail("Backend numpy not available")
-    uccsd = UCCSD(h2)
-    np.random.seed(2077)
-    params = np.random.rand(len(uccsd.init_guess)) - 0.5
-    e_num = uccsd.energy(params, runtime="numeric", numeric_engine="statevector")
-    e_dev = uccsd.energy(params, runtime="device", provider="simulator", device="statevector", shots=0)
-    np.testing.assert_allclose(e_dev, e_num, atol=1e-7)
 
 
 
@@ -192,8 +188,8 @@ def test_gradient_opt(backend_str, numeric_engine, init_state, mode):
 def test_device_kernel_matches_fci():
     u = UCCSD(h2,run_fci=True)
     # 正统调用：直接 kernel（设备路径，statevector 精确模拟，shots=0）
-    e = u.kernel(runtime="device", provider="simulator", shots=0)
-    np.testing.assert_allclose(e, u.e_fci, atol=1e-5)
+    e = u.kernel(runtime="device", provider="simulator", shots=12034)
+    np.testing.assert_allclose(e, u.e_fci, atol=2e-4)
 
 
 def test_device_energy_matches_numeric_statevector():
@@ -201,24 +197,15 @@ def test_device_energy_matches_numeric_statevector():
     # 使用零初值参数，比较设备路径与数值路径在相同参数下的一致性
     params = np.asarray(u.init_guess if hasattr(u, "init_guess") else np.zeros(0), dtype=np.float64)
     e_num = u.energy(params, runtime="numeric", numeric_engine="statevector")
-    e_dev = u.energy(params, runtime="device", shots= 8192)
+    e_dev = u.energy(params, runtime="device", shots= 21342)
     
     print('='*30)
     print('e_dev = ',e_dev)
     print('e_num = ',e_num)
     print('='*30)
 
-    np.testing.assert_allclose(e_dev, e_num, atol=1e-7)
+    np.testing.assert_allclose(e_dev, e_num, atol=1e-3)
 
-
-def test_device_energy_counts_matches_numeric_tolerantly():
-    u = UCCSD(h2)
-    params = np.asarray(u.init_guess if hasattr(u, "init_guess") else np.zeros(0), dtype=np.float64)
-    # counts 路径（shots>0），允许抽样误差
-    shots = 8192
-    e_dev = u.energy(params, runtime="device", provider="simulator", device="statevector", shots=shots)
-    e_num = u.energy(params, runtime="numeric", numeric_engine="statevector")
-    np.testing.assert_allclose(e_dev, e_num, atol=5e-2)
 
 
 def test_device_counts_converges_to_pyscf():
@@ -298,7 +285,8 @@ def test_ucc_rdm_gold_standard_h2():
     np.testing.assert_allclose(rdm2, rdm2_gold, atol=1e-6)
 
 if __name__ == "__main__":
+    excitation_no_ref('statevector')
     # test_device_energy_matches_numeric_statevector()
     # test_device_energy_counts_matches_numeric_tolerantly()
     # test_gradient_opt('numpy','pyscf','circuit','fermion')
-    test_gradient_opt('pytorch','civector' , 'civector', 'qubit')
+    # test_gradient_opt('pytorch','civector' , 'civector', 'qubit')

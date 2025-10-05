@@ -19,14 +19,9 @@ from ..runtimes.ucc_device_runtime import UCCDeviceRuntime
 from ..runtimes.ucc_numeric_runtime import UCCNumericRuntime, apply_excitation as _apply_excitation_numeric
 from tyxonq.libs.circuits_library.analysis import get_circuit_summary
 from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
-from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_uccsd import (
-    generate_uccsd_ex1_ops,
-    generate_uccsd_ex2_ops,
-)
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
     get_integral_from_hf,
     get_hop_from_integral,
-    get_h_fcifunc_from_integral,
     get_h_from_integral,
     get_hop_hcb_from_integral
 )
@@ -41,7 +36,7 @@ from pyscf.mp import MP2 as _mp2
 from pyscf.cc import ccsd as _ccsd
 from pyscf.mcscf import CASCI
 from tyxonq.applications.chem.molecule import _Molecule
-from tyxonq.libs.hamiltonian_encoding.pauli_io import get_fermion_phase
+from tyxonq.libs.hamiltonian_encoding.pauli_io import get_fermion_phase,rdm_mo2ao
 from itertools import product
 from tyxonq.numerics import NumericBackend as nb
 
@@ -412,7 +407,7 @@ class UCC:
             trotter=self.trotter
         )
             e = rt.energy(params, **opts)
-            return float(e + self.e_core)
+            return float(e)
         raise ValueError(f"unknown runtime: {runtime}")
 
     def energy_and_grad(self, params: np.ndarray | None = None, **opts):
@@ -460,7 +455,8 @@ class UCC:
             trotter=self.trotter
         )
             e, g = rt.energy_and_grad(params, **opts)
-            return float(e+self.e_core), g
+            # return float(e+self.e_core), g
+            return float(e), g
         
         raise ValueError(f"unknown runtime: {runtime}")
 
@@ -789,121 +785,35 @@ class UCC:
             iterated_ids.add(ex_param_ids[i])
         return ex_ops, ex_param_ids, ex_init_guess
 
-    def energy_device(
-        self,
-        params: Sequence[float] | None = None,
-        *,
-        shots: int = 8192,
-        provider: str = "simulator",
-        device: str = "statevector",
-        postprocessing: dict | None = None,
-    ) -> float:
-        if self.ex_ops is None:
-            # HF only
-            return float(self.e_core)
-        p = self._check_params_argument(params, strict=False)
-        rt = UCCDeviceRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            mode=self.mode,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            decompose_multicontrol=self.decompose_multicontrol,
-            trotter=self.trotter
-        )
-        e = rt.energy(p, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
-        return float(e + self.e_core)
 
     # ---- RDM in MO basis (spin-traced) ----
-    def make_rdm1(self, params: Sequence[float] | None = None, *, basis: str = "AO") -> np.ndarray:
-        if basis not in ("MO", "AO"):
-            raise NotImplementedError("algorithms.UCC.make_rdm1 supports basis in {'MO','AO'}")
-        # Prefer PySCF CASCI path for active-space AO RDM to match reference exactly
-        if basis == "AO" and getattr(self, "hf", None) is not None and getattr(self, "active_space", None) is not None:
-            try:
-                from pyscf.mcscf import CASCI  # type: ignore
-                n_elec, n_cas = map(int, self.active_space)
-                casci = CASCI(self.hf, n_cas, n_elec)
-                active_orbital_indices = getattr(self, "active_orbital_indices", None)
-                if active_orbital_indices is not None:
-                    mo = casci.sort_mo(active_orbital_indices, base=0)
-                    casci.kernel(mo)
-                else:
-                    casci.kernel()
-                return np.asarray(casci.make_rdm1(), dtype=np.float64)
-            except Exception:
-                pass
-        p = self._check_params_argument(params, strict=False)
-        rt = UCCNumericRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            mode=self.mode,
-        )
-        psi = rt._state(p)
-        cis = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
-        civ = psi[cis]
-        rdm1_cas = fci.direct_spin1.make_rdm1(civ.astype(np.float64), self.n_qubits // 2, self.n_elec_s)
-        rdm1_mo = np.asarray(rdm1_cas, dtype=np.float64)
-        if basis == "AO":
-            try:
-                from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
-                mo = getattr(getattr(self, "hf", None), "mo_coeff", None)
-                if mo is not None:
-                    return rdm_mo2ao(rdm1_mo, np.asarray(mo))
-            except Exception:
-                pass
-        return rdm1_mo
+    def make_rdm1(self, params: Sequence[float] | None = None,  statevector= None, basis: str = "AO") -> np.ndarray:
+    
+        assert self.mode in ["fermion", "qubit"]
+        civector = self._statevector_to_civector(statevector).astype(np.float64)
 
-    def make_rdm2(self, params: Sequence[float] | None = None, *, basis: str = "AO") -> np.ndarray:
-        if basis not in ("MO", "AO"):
-            raise NotImplementedError("algorithms.UCC.make_rdm2 supports basis in {'MO','AO'}")
-        # Prefer PySCF CASCI path for active-space AO RDM2 to match reference exactly
-        if basis == "AO" and getattr(self, "hf", None) is not None and getattr(self, "active_space", None) is not None:
-            try:
-                from pyscf.mcscf import CASCI  # type: ignore
-                from pyscf.mcscf.addons import make_rdm12  # type: ignore
-                n_elec, n_cas = map(int, self.active_space)
-                casci = CASCI(self.hf, n_cas, n_elec)
-                active_orbital_indices = getattr(self, "active_orbital_indices", None)
-                if active_orbital_indices is not None:
-                    mo = casci.sort_mo(active_orbital_indices, base=0)
-                    casci.kernel(mo)
-                else:
-                    casci.kernel()
-                _, rdm2 = make_rdm12(casci)
-                return np.asarray(rdm2, dtype=np.float64)
-            except Exception:
-                pass
-        p = self._check_params_argument(params, strict=False)
-        rt = UCCNumericRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            mode=self.mode,
-        )
-        psi = rt._state(p)
-        cis = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
-        civ = psi[cis]
-        rdm2_cas = fci.direct_spin1.make_rdm12(civ.astype(np.float64), self.n_qubits // 2, self.n_elec_s)[1]
-        rdm2_mo = np.asarray(rdm2_cas, dtype=np.float64)
-        if basis == "AO":
-            try:
-                from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
-                mo = getattr(getattr(self, "hf", None), "mo_coeff", None)
-                if mo is not None:
-                    return rdm_mo2ao(rdm2_mo, np.asarray(mo))
-            except Exception:
-                pass
-        return rdm2_mo
+        rdm1_cas = fci.direct_spin1.make_rdm1(civector, self.n_qubits // 2, self.n_elec_s)
+
+        rdm1 = self.embed_rdm_cas(rdm1_cas)
+
+        if basis == "MO":
+            return rdm1
+        else:
+            return rdm_mo2ao(rdm1, self.hf.mo_coeff)
+
+    def make_rdm2(self, params: Sequence[float] | None = None, statevector=None, basis: str = "AO") -> np.ndarray:
+    
+        assert self.mode in ["fermion", "qubit"]
+        civector = self._statevector_to_civector(statevector).astype(np.float64)
+
+        rdm2_cas = fci.direct_spin1.make_rdm12(civector.astype(np.float64), self.n_qubits // 2, self.n_elec_s)[1]
+
+        rdm2 = self.embed_rdm_cas(rdm2_cas)
+
+        if basis == "MO":
+            return rdm2
+        else:
+            return rdm_mo2ao(rdm2, self.hf.mo_coeff)
     
     def embed_rdm_cas(self, rdm_cas):
         """
@@ -964,9 +874,7 @@ class UCC:
             mode=self.mode,
             numeric_engine=numeric_engine,
         )
-        psi = rt._state(p)
-        ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
-        return psi[ci_strings]
+        return rt._civector(p)
 
     def statevector(self, params: Sequence[float] | None = None) -> np.ndarray:
         p = self._check_params_argument(params, strict=False)

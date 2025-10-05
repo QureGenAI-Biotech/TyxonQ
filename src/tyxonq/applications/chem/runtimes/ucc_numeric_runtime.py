@@ -13,7 +13,8 @@ from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
 from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import (
     get_ci_strings,
-    statevector_to_civector
+    statevector_to_civector,
+    civector_to_statevector
 )
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.civector_ops import (
     get_civector,
@@ -121,35 +122,32 @@ class UCCNumericRuntime:
 
     def _civector(self, params: Sequence[float]) -> np.ndarray:
         """Build CI vector in CI space (no embedding), following TCC conventions."""
-        base = (
-            np.zeros(self.n_params, dtype=np.float64)
-            if (isinstance(params, Sequence) and len(params) == 0 and self.n_params > 0)
-            else np.asarray(params, dtype=np.float64)
-        )
-        ex_ops = list(self.ex_ops) if self.ex_ops is not None else list()
-        param_ids = self.param_ids if self.param_ids is not None else list(range(self.n_params))
+        if params is None:
+            base =  np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)
+        else:
+            base = np.asarray(params, dtype=np.float64)
 
-        civ_init = None
-        init = self.init_state
-        if init is not None:
-            try:
-                if isinstance(init, Circuit):
-                    eng0 = StatevectorEngine()
-                    psi0 = np.asarray(eng0.state(init), dtype=np.complex128)
-                    ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, "fermion")
-                    civ_init = np.real(psi0[ci_strings]).astype(np.float64, copy=False)
-                elif isinstance(init, np.ndarray):
-                    arr = np.asarray(init)
-                    ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, "fermion")
-                    if arr.size == (1 << self.n_qubits):
-                        civ_init = np.real(arr[ci_strings]).astype(np.float64, copy=False)
-                    elif arr.size == len(ci_strings):
-                        civ_init = np.real(arr).astype(np.float64, copy=False)
-            except Exception:
-                civ_init = None
+        ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
 
-        civ = get_civector(base, self.n_qubits, self.n_elec_s, list(ex_ops), param_ids, mode=self.mode, init_state=civ_init)
-        return np.asarray(civ, dtype=np.float64).reshape(-1)
+        init_state = translate_init_state(self.init_state, self.n_qubits, ci_strings)
+
+        self.init_state = init_state
+
+        if self.numeric_engine == "civector":
+            ket = get_civector(base, self.n_qubits, self.n_elec_s, list(self.ex_ops or ()), list(self.param_ids or ()), mode=self.mode, init_state=init_state)
+        elif self.numeric_engine == "civector-large":
+            ket = get_civector_nocache(base, self.n_qubits, self.n_elec_s, list(self.ex_ops or ()), list(self.param_ids or ()), mode=self.mode, init_state=init_state)
+        elif self.numeric_engine == "pyscf":
+            ket = get_civector_pyscf(base, self.n_qubits, self.n_elec_s, list(self.ex_ops or ()), list(self.param_ids or ()), mode=self.mode, init_state=init_state)
+        else:
+            #statevector
+            ket = get_statevector(base,self.n_qubits, self.n_elec_s, list(self.ex_ops or ()), list(self.param_ids or ()), mode=self.mode, init_state=init_state)
+
+        if self.numeric_engine.startswith("civector") or self.numeric_engine == "pyscf":
+            civ = ket
+        else:
+            civ = ket[ci_strings]
+        return np.asarray(civ, dtype=np.float64)
 
     # removed energy helpers; statevector path aligns to CI baseline for numeric parity
 
@@ -246,21 +244,36 @@ class UCCNumericRuntime:
 
 # Compatibility helper for tests (replaces legacy engine_ucc.apply_excitation)
 def apply_excitation(state: np.ndarray, n_qubits: int, n_elec_s, ex_op: tuple, mode: str, numeric_engine: str | None = None, engine: str | None = None) -> np.ndarray:
-    eng = (numeric_engine or "statevector").lower()
-    if eng == "statevector":
-        from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import apply_excitation_statevector as _apply_excitation_sv
-        n_elec = int(sum(n_elec_s)) if isinstance(n_elec_s, (tuple, list)) else int(n_elec_s)
-        return _apply_excitation_sv(state, n_qubits, n_elec, ex_op, mode)
-    if eng == "civector":
-        return _apply_excitation_civ(state, n_qubits, n_elec_s, ex_op, mode)
-    if eng == "civector-large":
-        return _apply_excitation_civ_nc(state, n_qubits, n_elec_s, ex_op, mode)
-    if eng == "pyscf":
-        return _apply_excitation_pyscf(state, n_qubits, n_elec_s, ex_op, mode)
-    # fallback
-    from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import apply_excitation_statevector as _apply_excitation_sv
+    # eng = (numeric_engine or "statevector").lower()
+    is_statevector_input = len(state) == (1 << n_qubits)
+    is_statevector_engine = numeric_engine  == "statevector"
+
     n_elec = int(sum(n_elec_s)) if isinstance(n_elec_s, (tuple, list)) else int(n_elec_s)
-    return _apply_excitation_sv(state, n_qubits, n_elec, ex_op, mode)
+    if is_statevector_input and not is_statevector_engine:
+        ci_strings = get_ci_strings(n_qubits, n_elec_s, mode)
+        state = statevector_to_civector(state, ci_strings)
+
+    if not is_statevector_input and is_statevector_engine:
+        ci_strings = get_ci_strings(n_qubits, n_elec_s, mode)
+        state = civector_to_statevector(state, n_qubits, ci_strings)
+
+    if numeric_engine == "statevector":
+        from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import apply_excitation_statevector as _apply_excitation_sv
+        
+        res_state = _apply_excitation_sv(state, n_qubits, ex_op, mode)
+    if numeric_engine == "civector":
+        res_state = _apply_excitation_civ(state, n_qubits, n_elec_s, ex_op, mode)
+    if numeric_engine == "civector-large":
+        res_state =  _apply_excitation_civ_nc(state, n_qubits, n_elec_s, ex_op, mode)
+    if numeric_engine == "pyscf":
+        res_state = _apply_excitation_pyscf(state, n_qubits, n_elec_s, ex_op, mode)
+    if is_statevector_input and not is_statevector_engine:
+        return civector_to_statevector(res_state, n_qubits, ci_strings)
+    if not is_statevector_input and is_statevector_engine:
+        return statevector_to_civector(res_state, ci_strings)
+    return res_state
+
+
 
 
 def translate_init_state(init_state, n_qubits, ci_strings):

@@ -21,8 +21,8 @@ from tyxonq.libs.circuits_library.qiskit_real_amplitudes import (
 )
 
 from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
-
-
+from .ucc import UCC
+from pyscf import gto,scf
 Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
 
 
@@ -43,10 +43,25 @@ class HEA:
     - 从分子积分/活性空间（PySCF）与费米子算符映射（parity/JW/BK）构建 HEA；
     - 与旧版 static/hea.py 的功能对应，但实现已迁移到 algorithms/runtimes/libs，移除张量网络依赖。
     """
-    def __init__(self, molecule: object | None = None, n: int | None = None, layers: int | None = None, hamiltonian: Hamiltonian | None = None, runtime: str = "device", numeric_engine: str | None = None, *, active_space=None, mapping: str = "parity", classical_provider: str = "local", classical_device: str = "auto", atom: object | None = None, basis: str = "sto-3g", unit: str = "Angstrom", charge: int = 0, spin: int = 0):
+    def __init__(self, 
+    molecule: object | None = None, 
+    n_qubits: int | None = None, 
+    layers: int | None = None, 
+    hamiltonian: Hamiltonian | None = None, 
+    runtime: str = "device", 
+    numeric_engine: str | None = None, 
+    active_space=None, 
+    mapping: str = "parity", 
+    classical_provider: str = "local", 
+    classical_device: str = "auto",
+     atom: object | None = None, 
+     basis: str = "sto-3g", 
+     unit: str = "Angstrom", 
+     charge: int = 0, 
+     spin: int = 0,
+     **kwargs):
         # Runtime selection
         self.runtime = runtime
-        self.numeric_engine = numeric_engine
         # 可选：外部参数化电路模板（例如来自 Qiskit RealAmplitudes 的转换）
         # 形如 [("ry", q, ("p", idx)), ("cx", c, t), ...]
         self.circuit_template = None
@@ -62,31 +77,28 @@ class HEA:
         self.scipy_minimize_options: dict | None = None
         self._params: np.ndarray | None = None
         self.opt_res: dict | None = None
+        self.numeric_engine = kwargs.get('numeric_engine','statevector')
 
         # If atom is provided, construct PySCF Mole directly (PySCF style)
-        if atom is not None:
-            from pyscf import gto as _gto  # type: ignore
-            mm = _gto.Mole()
-            mm.atom = atom  # accepts string or list spec per PySCF
-            mm.unit = str(unit)
-            mm.basis = str(basis)
-            mm.charge = int(charge)
-            mm.spin = int(spin)
-            mm.build()
-            molecule = mm
 
         # Initialize from molecule if available (cloud/local HF handled inside)
         if molecule is not None:
             inst = HEA.from_molecule(
-                molecule,
+                mol = molecule,
                 active_space=active_space,
-                n_layers=(int(layers) if layers is not None else 1),
+                n_layers=(int(layers) if layers is not None else 3),
                 mapping=mapping,
                 runtime=runtime,
                 classical_provider=classical_provider,
                 classical_device=classical_device,
+                atom=atom,
+                basis=basis,
+                unit=unit,
+                charge=charge,
+                spin=spin,
+                **kwargs
             )
-            self.n = int(inst.n)
+            self.n_qubits = int(inst.n_qubits)
             self.layers = int(inst.layers)
             self.hamiltonian = list(inst.hamiltonian)
             self.mapping = inst.mapping
@@ -97,14 +109,14 @@ class HEA:
             self.e_core = inst.e_core
         else:
             # Otherwise require explicit (n, layers, hamiltonian)
-            if n is None or layers is None or hamiltonian is None:
-                raise TypeError("HEA requires either 'molecule'/'atom' or explicit 'n', 'layers', and 'hamiltonian'")
-        self.n = int(n)
+            if n_qubits is None or layers is None or hamiltonian is None:
+                raise TypeError("HEA requires either 'molecule'/'atom' or explicit 'n_qubits', 'layers', and 'hamiltonian'")
+        self.n_qubits = n_qubits
         self.layers = int(layers)
         self.hamiltonian = list(hamiltonian)
 
         # RY ansatz: (layers + 1) * n parameters
-        self.n_params = (self.layers + 1) * self.n
+        self.n_params = (self.layers + 1) * self.n_qubits
         # Use a deterministic non-trivial initial guess to avoid zero-gradient plateaus
         rng = np.random.default_rng(7)
         self.init_guess = rng.random(self.n_params, dtype=np.float64)
@@ -127,9 +139,9 @@ class HEA:
         # 优先：若存在外部模板（如 RealAmplitudes 转换得到），实例化为我们的 IR Circuit
         if self.circuit_template is not None:
             from tyxonq.libs.circuits_library.qiskit_real_amplitudes import build_circuit_from_template
-            return build_circuit_from_template(self.circuit_template, np.asarray(params, dtype=np.float64), n_qubits=self.n)
+            return build_circuit_from_template(self.circuit_template, np.asarray(params, dtype=np.float64), n_qubits=self.n_qubits)
         # 默认：RY-only ansatz
-        return build_hwe_ry_ops(self.n, self.layers, params)
+        return build_hwe_ry_ops(self.n_qubits, self.layers, params)
 
     def energy(self, params: Sequence[float] | None = None, **device_opts) -> float:
         """基于计数的能量评估（设备路径）。
@@ -137,15 +149,16 @@ class HEA:
         内部对哈密顿量进行按基分组的测量流程：对每个基组应用相应的基变换（X→H，Y→S^†H），
         然后做 Z 基测量并从计数中估计 <H>。
         """
-        if self.runtime == "device":
-            rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template)
-            p = self.init_guess if params is None else params
-            qop = getattr(self, "_qop_cached", None)
-            return HEADeviceRuntime(self.n, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template, qop=qop).energy(p, **device_opts)
-        if self.runtime == "numeric":
-            rt = HEANumericRuntime(self.n, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
+        if self.runtime == "numeric" or device_opts.get('shots',2048) == 0:
+            rt = HEANumericRuntime(self.n_qubits, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
             p = self.init_guess if params is None else params
             return rt.energy(p, self.get_circuit)
+        if self.runtime == "device":
+            rt = HEADeviceRuntime(self.n_qubits, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template)
+            p = self.init_guess if params is None else params
+            qop = getattr(self, "_qop_cached", None)
+            return HEADeviceRuntime(self.n_qubits, self.layers, self.hamiltonian, n_elec_s=self.n_elec_s, mapping=self.mapping, circuit_template=self.circuit_template, qop=qop).energy(p, **device_opts)
+
         raise NotImplementedError(f"unsupported runtime: {self.runtime}")
 
     def energy_and_grad(self, params: Sequence[float] | None = None, **device_opts):
@@ -155,15 +168,16 @@ class HEA:
             g_k = 0.5 * (E(θ_k+s) - E(θ_k-s))
         与 energy 一样采用计数估计。
         """
-        if self.runtime == "device":
-            rt = HEADeviceRuntime(self.n, self.layers, self.hamiltonian, circuit_template=self.circuit_template)
-            p = self.init_guess if params is None else params
-            qop = getattr(self, "_qop_cached", None)
-            return HEADeviceRuntime(self.n, self.layers, self.hamiltonian, circuit_template=self.circuit_template, qop=qop).energy_and_grad(p, **device_opts)
-        if self.runtime == "numeric":
-            rt = HEANumericRuntime(self.n, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
+        if self.runtime == "numeric" or device_opts.get('shots',2048) == 0:
+            rt = HEANumericRuntime(self.n_qubits, self.layers, self.hamiltonian, numeric_engine=(self.numeric_engine or "statevector"))
             p = self.init_guess if params is None else params
             return rt.energy_and_grad(p, self.get_circuit)
+        if self.runtime == "device":
+            rt = HEADeviceRuntime(self.n_qubits, self.layers, self.hamiltonian, circuit_template=self.circuit_template)
+            p = self.init_guess if params is None else params
+            qop = getattr(self, "_qop_cached", None)
+            return HEADeviceRuntime(self.n_qubits, self.layers, self.hamiltonian, circuit_template=self.circuit_template, qop=qop).energy_and_grad(p, **device_opts)
+
         raise NotImplementedError(f"unsupported runtime: {self.runtime}")
 
     # ---------- Optimization (SciPy) ----------
@@ -196,6 +210,9 @@ class HEA:
         """运行变分优化，返回最优能量并保存 `opt_res` 与 `params`。"""
         # 持久化运行选项（shots/provider/device 等）到优化闭包中
         runtime_opts = dict(opts)
+        self.runtime = runtime_opts.get("runtime", self.runtime)
+        self.provider = runtime_opts.get("provider",'local')
+        self.device = runtime_opts.get("device", 'statevector')
         if "shots" not in runtime_opts:
             if str(runtime_opts.get("runtime", self.runtime)) == "device":
                 if  str(runtime_opts.get("provider", 'simulator')) in ["simulator",'local']:
@@ -209,6 +226,7 @@ class HEA:
             runtime_opts["shots"] = shots
         else:
             shots = runtime_opts["shots"]
+        self.shots = shots
         self._opt_runtime_opts = dict(runtime_opts)
         func = self.get_opt_function()
 
@@ -258,6 +276,21 @@ class HEA:
             terms.append((cval, ops))
         return terms
 
+    # --- Consistent expectation via HEA.energy (TCC-style parity) ---
+    def _energy_with_qop(self, qop: QubitOperator, params: Sequence[float]) -> float:
+        terms = self._qop_to_term_list(qop, n_qubits=self.n_qubits)
+        inst = HEA(
+            n_qubits=self.n_qubits,
+            layers=self.layers,
+            hamiltonian=terms,
+            runtime=self.runtime,
+            numeric_engine=self.numeric_engine,
+        )
+        # Reuse the same parameter vector; avoid optimizer artifacts
+        p = self._resolve_params(params)
+        # For exact expectation on simulator, prefer shots=0 fast path (routes to numeric inside HEA.energy)
+        return float(inst.energy(p, shots=0, provider="simulator", device="statevector"))
+
     @classmethod
     def from_integral(
         cls,
@@ -269,6 +302,7 @@ class HEA:
         n_layers: int = 1,
         mapping: str = "parity",
         runtime: str = "device",
+        **kwargs
     ) -> "HEA":
         """从分子积分构建 HEA。
 
@@ -298,7 +332,7 @@ class HEA:
         terms = cls._qop_to_term_list(qop, n_qubits=(n_sorb - 2 if mapping == "parity" else n_sorb))
         n_qubits = (n_sorb - 2) if mapping == "parity" else n_sorb
         # 预映射缓存：记录 QubitOperator，供 runtime shots==0 快径直接消费
-        inst = cls(n=n_qubits, layers=int(n_layers), hamiltonian=terms, runtime=runtime)
+        inst = cls(n_qubits=n_qubits, layers=int(n_layers), hamiltonian=terms, runtime=runtime)
         inst._qop_cached = qop
         # record chemistry metadata for downstream features (RDM等)
         inst.mapping = str(mapping)
@@ -307,19 +341,26 @@ class HEA:
         inst.n_elec = int(sum(n_elec_s))
         inst.spin = int(n_elec_s[0] - n_elec_s[1])
         inst.e_core = float(e_core)
+        inst.h_qubit_op = qop
+        inst.runtime = runtime
         return inst
 
     @classmethod
     def from_molecule(
         cls,
-        m,
-        *,
+        mol,
         active_space=None,
-        n_layers: int = 1,
+        n_layers: int = 3,
         mapping: str = "parity",
         runtime: str = "device",
         classical_provider: str = "local",
         classical_device: str = "auto",
+        atom = None,
+        basis = "sto-3g",
+        unit = "Angstrom",
+        charge = 0,
+        spin = 0,
+        **kwargs
     ) -> "HEA":
         """从 PySCF 分子对象构建 HEA。
 
@@ -327,7 +368,26 @@ class HEA:
         - 根据分子总电子数与自旋计算 (n_alpha, n_beta)；
         - 复用 from_integral 流程完成映射与实例化。
         """
+        # if atom is not None:
+        #     mm = gto.Mole()
+        #     mm.atom = atom  # accepts string or list spec per PySCF
+        #     mm.unit = str(unit)
+        #     mm.basis = str(basis)
+        #     mm.charge = int(charge)
+        #     mm.spin = int(spin)
+        #     mm.build()
+        #     mol = mm
+        
+        if isinstance(mol, gto.Mole):
+            if mol.spin == 0:
+                init_method = "mp2"
+            else:
+                init_method = "zeros"
+        else:
+            init_method = "zeros"
+
         # Expect a PySCF Mole. If you want to pass XYZ coordinates, use HEA(..., atom=..., basis=..., unit=..., charge=..., spin=...)
+        ucc_object = UCC(mol=mol, init_method=init_method, active_space=active_space, runtime=runtime, classical_provider=classical_provider, classical_device=classical_device,**kwargs)
 
         if str(classical_provider) != "local":
             # 云端路径：通过 cloud client 获取 HF 收敛后的积分和 e_core
@@ -351,26 +411,10 @@ class HEA:
             e_core = float(res["e_core"])  # type: ignore[index]
             tot = int(res.get("nelectron", int(getattr(m, "nelectron", 0))))
             spin = int(res.get("spin", int(getattr(m, "spin", 0))))
+            return cls.ry(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, **kwargs)
         else:
-            hf = RHF(m)
-            # avoid serialization warnings in some envs
-            hf.chkfile = None
-            hf.verbose = 0
-            hf.kernel()
-            int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space)
-            # derive (na, nb) from m
-            if hasattr(m, "nelectron"):
-                tot = int(getattr(m, "nelectron"))
-            else:
-                tot = int(getattr(m, "n_elec", 0))
-            if hasattr(m, "spin"):
-                spin = int(getattr(m, "spin"))
-            else:
-                spin = 0
-        na = (tot + spin) // 2
-        nb = (tot - spin) // 2
-        inst = cls.from_integral(int1e, int2e, (na, nb), e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
-        return inst
+            inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec, ucc_object.e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
+            return inst
 
     @classmethod
     def ry(
@@ -380,9 +424,9 @@ class HEA:
         n_elec: Union[int, Tuple[int, int]],
         e_core: float,
         n_layers: int,
-        *,
         mapping: str = "parity",
         runtime: str = "device",
+        **kwargs
     ) -> "HEA":
         """兼容旧接口的 RY 构造器（等价于 from_integral(..., n_layers, mapping, engine)）。"""
         return cls.from_integral(int1e, int2e, n_elec, e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
@@ -421,7 +465,7 @@ class HEA:
         # 若电路与我们的 RY ansatz 等价（如 RealAmplitudes），优先直接映射 reps→layers，避免额外模板路径
         layers = int(getattr(circuit, "reps", 1)) if hasattr(circuit, "reps") else 0
         terms = cls._qop_to_term_list(qop_real, n_qubits=n_qubits)
-        inst = cls(n=n_qubits, layers=layers, hamiltonian=terms, runtime=runtime)
+        inst = cls(n_qubits=n_qubits, layers=layers, hamiltonian=terms, runtime=runtime)
         inst.init_guess = np.asarray(init_guess, dtype=np.float64)
         # 如果无法直接映射（layers==0 或者后续需要更复杂门集），可退回模板方案
         if layers == 0:
@@ -474,8 +518,8 @@ class HEA:
         return int(na), int(nb)
 
     def _expect_qubit_operator(self, qop: QubitOperator, params: Sequence[float]) -> float:
-        terms = self._qop_to_term_list(qop, n_qubits=self.n)
-        rt = HEADeviceRuntime(self.n, self.layers, terms)
+        terms = self._qop_to_term_list(qop, n_qubits=self.n_qubits)
+        rt = HEADeviceRuntime(self.n_qubits, self.layers, terms)
         # Use analytic expectation on simulator to avoid sampling noise in RDM
         return float(rt.energy(params, shots=0, provider="simulator", device="statevector"))
 
@@ -486,9 +530,9 @@ class HEA:
             raise ValueError("RDM 需要在 from_integral/from_molecule 构建并携带 mapping 与电子数信息")
         mapping = str(self.mapping)
         if mapping == "parity":
-            n_sorb = self.n + 2
+            n_sorb = self.n_qubits + 2
         else:
-            n_sorb = self.n
+            n_sorb = self.n_qubits
         n_orb = n_sorb // 2
         rdm1 = np.zeros((n_orb, n_orb), dtype=np.float64)
         for i in range(n_orb):
@@ -499,7 +543,18 @@ class HEA:
                     fop = FermionOperator(f"{i}^ {j}") + FermionOperator(f"{i+n_orb}^ {j+n_orb}")
                 fop = fop + hermitian_conjugated(fop)
                 qop = fop_to_qop(fop, mapping, n_sorb, self.n_elec_s)
-                val = 0.5 * self._expect_qubit_operator(qop, params)
+                # val = 0.5 * self._energy_with_qop(qop, params)
+                terms = self._qop_to_term_list(qop, n_qubits=self.n_qubits)
+                inst = HEA(
+                    n_qubits=self.n_qubits,
+                    layers=self.layers,
+                    hamiltonian=terms,
+                    runtime=self.runtime
+                )
+                # Reuse the same parameter vector; avoid optimizer artifacts
+                p = self._resolve_params(params)
+                # For exact expectation on simulator, prefer shots=0 fast path (routes to numeric inside HEA.energy)
+                val = 0.5 *float(inst.energy(p, shots=self.shots, provider=self.provider, device=self.device))
                 rdm1[i, j] = rdm1[j, i] = float(val)
         return rdm1
 
@@ -510,9 +565,9 @@ class HEA:
             raise ValueError("RDM 需要在 from_integral/from_molecule 构建并携带 mapping 与电子数信息")
         mapping = str(self.mapping)
         if mapping == "parity":
-            n_sorb = self.n + 2
+            n_sorb = self.n_qubits + 2
         else:
-            n_sorb = self.n
+            n_sorb = self.n_qubits
         n_orb = n_sorb // 2
         rdm2 = np.zeros((n_orb, n_orb, n_orb, n_orb), dtype=np.float64)
         calculated: set[Tuple[int, int, int, int]] = set()
@@ -532,7 +587,18 @@ class HEA:
                             fop = fop_aaaa + fop_abba + fop_bbbb + fop_baab
                         fop = fop + hermitian_conjugated(fop)
                         qop = fop_to_qop(fop, mapping, n_sorb, self.n_elec_s)
-                        val = 0.5 * self._expect_qubit_operator(qop, params)
+                        # val = 0.5 * self._energy_with_qop(qop, params)
+                        terms = self._qop_to_term_list(qop, n_qubits=self.n_qubits)
+                        inst = HEA(
+                            n_qubits=self.n_qubits,
+                            layers=self.layers,
+                            hamiltonian=terms,
+                            runtime=self.runtime
+                        )
+                        # Reuse the same parameter vector; avoid optimizer artifacts
+                        theta = self._resolve_params(params)
+                        # For exact expectation on simulator, prefer shots=0 fast path (routes to numeric inside HEA.energy)
+                        val = 0.5 * float(inst.energy(theta, shots=self.shots, provider=self.provider, device=self.device))
                         idxs = [(p, q, r, s), (s, r, q, p), (q, p, s, r), (r, s, p, q)]
                         for idx in idxs:
                             rdm2[idx] = float(val)

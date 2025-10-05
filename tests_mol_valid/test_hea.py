@@ -141,15 +141,17 @@ def test_mapping(mapping, runtime):
 def test_rdm(mapping):
     # 使用 TCC 金标准对齐 HEA 的 1RDM/2RDM（H2, MO 基），独立于 UCC 参考
     uccsd = UCCSD(h2)
-    uccsd.kernel(shots=0)
+    # uccsd.kernel(shots=0)
     hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping, runtime="device")
-    hea.kernel(shots=0, provider="simulator", device="statevector")
+    hea.kernel(shots=0, provider="simulator", device="statevector",runtime='numeric')
 
     r1_h = hea.make_rdm1()
     r2_h = hea.make_rdm2()
 
-    r1_uccsd = uccsd.make_rdm1(basis="MO")
-    r2_uccsd = uccsd.make_rdm2(basis="MO")
+    uccsd.kernel(runtime='numeric')
+    r1_uccsd =  uccsd.make_rdm1(basis="MO")
+    uccsd.kernel(runtime='numeric')
+    r2_uccsd =uccsd.make_rdm2(basis="MO")
 
     # TCC 金标准（H2, MO 基）
     rdm1_gold = np.array([[1.97457654e+00, -2.00371787e-16],
@@ -169,12 +171,12 @@ def test_rdm(mapping):
            [2.56462238e-17, 2.54234643e-02]]]], dtype=np.float64)
 
     # 数值实现细节（端序/稀疏求值/阈值）导致 JW/Parity 在 1e-5 量级的偏差，放宽容差至 2e-5
-    np.testing.assert_allclose(r1_h, rdm1_gold, atol=1e-4)
-    np.testing.assert_allclose(r2_h, rdm2_gold, atol=1e-4)
-    # np.testing.assert_allclose(r1_uccsd, rdm1_gold, atol=1e-6)
-    # np.testing.assert_allclose(r2_uccsd, rdm2_gold, atol=1e-6)
-    # np.testing.assert_allclose(r1_uccsd, r1_h, atol=1e-4)
-    # np.testing.assert_allclose(r2_uccsd, r2_h, atol=1e-4)
+    # np.testing.assert_allclose(r1_h, rdm1_gold, atol=1e-4)
+    # np.testing.assert_allclose(r2_h, rdm2_gold, atol=1e-4)
+    np.testing.assert_allclose(r1_uccsd, rdm1_gold, atol=1e-6)
+    np.testing.assert_allclose(r2_uccsd, rdm2_gold, atol=1e-6)
+    np.testing.assert_allclose(r1_uccsd, r1_h, atol=1e-4)
+    np.testing.assert_allclose(r2_uccsd, r2_h, atol=1e-4)
 
 
 
@@ -198,8 +200,11 @@ def test_open_shell():
     # ucc.print_summary()
 
     # usually ROUCCSD is more accurate
-    # np.testing.assert_allclose(e2, ucc.e_fci, atol=1e-4)
+    np.testing.assert_allclose(e2, ucc.e_fci, atol=1e-4)
     np.testing.assert_allclose(e1, ucc.e_fci, atol=2e-3)
 
-    # np.testing.assert_allclose(hea.make_rdm1(), ucc.make_rdm1(basis="MO"), atol=5e-3)
-    # np.testing.assert_allclose(hea.make_rdm2(), ucc.make_rdm2(basis="MO"), atol=5e-3)
+    np.testing.assert_allclose(hea.make_rdm1(), ucc.make_rdm1(basis="MO"), atol=5e-3)
+    np.testing.assert_allclose(hea.make_rdm2(), ucc.make_rdm2(basis="MO"), atol=5e-3)
+
+if __name__ == "__main__":
+    test_rdm(mapping="jordan-wigner")

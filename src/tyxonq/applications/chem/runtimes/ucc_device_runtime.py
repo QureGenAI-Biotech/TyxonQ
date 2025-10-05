@@ -72,15 +72,17 @@ class UCCDeviceRuntime:
         if bases in self._prefix_cache:
             return self._prefix_cache[bases]
         ops: List[Tuple] = []
-        # bases order originates from grouping assuming OpenFermion little-endian (q=0 LSB)
-        # Our IR uses big-endian; keep direct indexing consistent with UCC conventions
+        # Map OpenFermion little-endian bases (q=0 is LSB) to IR qubit indices by bit-reversal
+        n = self.n_qubits
         for q, p in enumerate(bases):
+            qq = n - 1 - q
             if p == "X":
-                ops.append(("h", q))
+                ops.append(("h", qq))
             elif p == "Y":
-                ops.append(("rz", q, -pi/2)); ops.append(("h", q))
-        for q in range(self.n_qubits):
-            ops.append(("measure_z", q))
+                ops.append(("rz", qq, -pi/2)); ops.append(("h", qq))
+        # Measure all qubits in the mapped order
+        for q in range(n):
+            ops.append(("measure_z", n - 1 - q))
         self._prefix_cache[bases] = ops
         return ops
 
@@ -93,18 +95,36 @@ class UCCDeviceRuntime:
         # 6) Caching of expectation terms across close parameters during local line-search
 
     def _build_hf_circuit(self) -> Circuit:
-        c = Circuit(self.n_qubits, ops=[])
-        if self.mode in ["fermion", "qubit"]:
-            na, nb = self.n_elec_s
-            # 与 circuits_library.ucc._hf_init_ops 保持一致：先置 alpha（高位半区），再置 beta（低位半区）
-            for i in range(na):
-                c.ops.append(("x", self.n_qubits - 1 - i))
-            for i in range(nb):
-                c.ops.append(("x", self.n_qubits // 2 - 1 - i))
+        # c = Circuit(self.n_qubits, ops=[])
+        # if self.mode in ["fermion", "qubit"]:
+        #     na, nb = self.n_elec_s
+        #     # 与 circuits_library.ucc._hf_init_ops 保持一致：先置 alpha（高位半区），再置 beta（低位半区）
+        #     for i in range(na):
+        #         c.ops.append(("x", self.n_qubits - 1 - i))
+        #     for i in range(nb):
+        #         c.ops.append(("x", self.n_qubits // 2 - 1 - i))
+        # else:
+        #     na = sum(self.n_elec_s) // 2
+        #     for i in range(na):
+        #         c.ops.append(("x", self.n_qubits - 1 - i))
+        # return c
+        n = int(self.n_qubits)
+        c = Circuit(n, ops=[])
+        if isinstance(self.n_elec_s, (tuple, list)):
+            na = int(self.n_elec_s[0])
+            nb = int(self.n_elec_s[1])
         else:
-            na = sum(self.n_elec_s) // 2
+            ne = int(self.n_elec_s)
+            na = nb = ne // 2
+        if self.mode in ("fermion", "qubit"):
+            for i in range(nb):
+                c.X(n - 1 - i)
             for i in range(na):
-                c.ops.append(("x", self.n_qubits - 1 - i))
+                c.X(n // 2 - 1 - i)
+        else:
+            assert self.mode == "hcb"
+            for i in range(na):
+                c.X(n - 1 - i)
         return c
 
     def _build_ucc_circuit(self, params: Sequence[float]) -> Circuit:
@@ -140,6 +160,7 @@ class UCCDeviceRuntime:
     ) -> float:
         # Use cached grouping and measurement prefixes
         energy_val = float(self._identity_const)
+        # energy_val = float(0.0)
         for bases, items in self._groups.items():
             c = c_builder()
             c.ops.extend(self._prefix_ops_for_bases(bases))
@@ -169,23 +190,6 @@ class UCCDeviceRuntime:
         noise: dict | None = None,
         **device_kwargs,
     ) -> float:
-        # Fast path: simulator/local + shots==0 → 使用 numeric 的 CI-embedding 生成 ψ，确保与数值基准完全一致
-        # if (provider in ("simulator", "local")) and int(shots) == 0:
-        #     from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
-        #         get_statevector, energy_from_statevector,
-        #     )
-        #     x = np.asarray(params if params is not None else (np.zeros(self.n_params, dtype=np.float64) if self.n_params > 0 else np.zeros(0, dtype=np.float64)), dtype=np.float64)
-        #     psi = get_statevector(
-        #         x,
-        #         self.n_qubits,
-        #         self.n_elec_s,
-        #         self.ex_ops,
-        #         self.param_ids,
-        #         mode=self.mode,
-        #         init_state=None,
-        #     )
-        #     return float(energy_from_statevector(psi, self.h_qubit_op, self.n_qubits))
-
         if self.n_params == 0:
             def _builder():
                 return self._build_hf_circuit()
@@ -206,25 +210,9 @@ class UCCDeviceRuntime:
         device: str = "statevector",
         postprocessing: dict | None = None,
         noise: dict | None = None,
+        gradient_method: str = "fd",
         **device_kwargs,
     ) -> Tuple[float, np.ndarray]:
-        # shots==0: use finite-difference over the analytic CI-embedded energy path (PS not applicable to CI embedding)
-        # if (provider in ("simulator", "local")) and int(shots) == 0:
-        #     if self.n_params == 0:
-        #         e0 = self.energy(None, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-        #         return float(e0), np.zeros(0, dtype=np.float64)
-        #     x = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
-        #     e0 = self.energy(x, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-        #     g = np.zeros_like(x)
-        #     eps = 1e-7
-        #     for i in range(len(x)):
-        #         p_plus = x.copy(); p_plus[i] += eps
-        #         p_minus = x.copy(); p_minus[i] -= eps
-        #         e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-        #         e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing)
-        #         g[i] = (e_plus - e_minus) / (2.0 * eps)
-        #     return float(e0), g
-
         if self.n_params == 0:
             e0 = self.energy(None, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
             return e0, np.zeros(0, dtype=np.float64)
@@ -237,7 +225,7 @@ class UCCDeviceRuntime:
 
         e0 = self._energy_core(_builder_with(base), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
         g = np.zeros_like(base)
-        # 对于 shots>0 的硬件/采样路径，使用对称有限差分以避免参数移位缩放不一致问题
+         # 对于 shots>0 的硬件/采样路径，使用对称有限差分以避免参数移位缩放不一致问题
         # ~2°，数值稳定且差分信号明显
         # Gradient strategy for counts (shots > 0): finite-difference vs parameter-shift
         #
@@ -257,9 +245,19 @@ class UCCDeviceRuntime:
         #   (to batch and share shifts safely across measurement groups). Until that pass exists, FD is consistent
         #   with the exact energy functional we are sampling. The chosen step (~2 degrees) balances truncation bias
         #   against shot noise; increasing shots reduces variance, while decreasing step reduces bias.
-        #
-        # - Simulators (shots == 0): handled elsewhere via an analytic numeric path (value_and_grad), not this branch.
-        step = float(np.pi / 90.0)  # ~2 degrees: numerically stable for counts
+
+        method = str(gradient_method).lower()
+        if method == "fd":
+            shift = float(np.pi / 2.0)
+            for i in range(len(base)):
+                p_plus = base.copy(); p_plus[i] += shift
+                p_minus = base.copy(); p_minus[i] -= shift
+                e_plus = self._energy_core(_builder_with(p_plus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+                e_minus = self._energy_core(_builder_with(p_minus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise,  **device_kwargs)
+                g[i] = 0.5 * (e_plus - e_minus)
+            return float(e0), g
+        # default: finite-difference (small angle)
+        step = float(np.pi / 90.0)
         for i in range(len(base)):
             p_plus = base.copy(); p_plus[i] += step
             p_minus = base.copy(); p_minus[i] -= step

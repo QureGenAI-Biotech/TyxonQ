@@ -4,6 +4,7 @@ from pyscf.fci import cistring
 import tyxonq as tq
 
 from tyxonq.numerics import NumericBackend as nb
+from tyxonq.libs.circuits_library.utils import unpack_nelec
 
 
 def jit(f, static_argnums=None):
@@ -32,8 +33,6 @@ def get_uint_type():
     import numpy as _np
     return _np.uint64 if getattr(tq, "rdtypestr", "float64") == "float64" else _np.uint32
 
-
-from tyxonq.libs.circuits_library.utils import unpack_nelec
 
 
 def get_ci_strings(n_qubits, n_elec_s, mode, strs2addr=False):
@@ -104,7 +103,7 @@ def get_addr(excitation, n_qubits, n_elec_s, strs2addr, mode, num_strings=None):
     assert mode in ["fermion", "qubit"]
     alpha = excitation >> (n_qubits // 2)
     beta = excitation & (2 ** (n_qubits // 2) - 1)
-    na, nb = n_elec_s
+    na, nb = unpack_nelec(n_elec_s)
     if na == nb:
         alpha_addr = strs2addr[alpha]
         beta_addr = strs2addr[beta]

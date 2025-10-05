@@ -96,7 +96,7 @@ class PUCCD(UCC):
 
     # ---- RDM in MO basis (spin-traced) specialized for pUCCD ----
     def make_rdm1(self, statevector=None, basis: str = "AO",**kwargs) -> np.ndarray:
-        # Build CI vector under current ansatz (numeric statevector path)
+    #     # Build CI vector under current ansatz (numeric statevector path)
 
         civector = self._statevector_to_civector(statevector)
         ci_strings = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode)
@@ -149,6 +149,8 @@ class PUCCD(UCC):
             return rdm2
         else:
             return rdm_mo2ao(rdm2, self.hf.mo_coeff)
+
+
 
     def get_circuit(self, params=None, trotter=False, givens_swap=False) -> Circuit:
         """

@@ -65,15 +65,15 @@ class HEADeviceRuntime:
             raise ValueError(f"params length {len(params)} != {self.n_params}")
 
         # Fast analytic path: shots==0 → single statevector + full-H expectation (no grouping)
-        if (provider in ("simulator", "local")) and int(shots) == 0:
-            from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
-            from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import pauli_sum_to_qubit_operator
-            from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import energy_from_statevector
-            c = self._build_circuit(params)
-            eng = StatevectorEngine()
-            psi = eng.state(c)
-            qop = self._qop_cached if self._qop_cached is not None else pauli_sum_to_qubit_operator(self.hamiltonian, self.n)
-            return float(energy_from_statevector(psi, qop, self.n))
+        # if (provider in ("simulator", "local")) and int(shots) == 0:
+        #     from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
+        #     from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import pauli_sum_to_qubit_operator
+        #     from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import energy_from_statevector
+        #     c = self._build_circuit(params)
+        #     eng = StatevectorEngine()
+        #     psi = eng.state(c)
+        #     qop = self._qop_cached if self._qop_cached is not None else pauli_sum_to_qubit_operator(self.hamiltonian, self.n)
+        #     return float(energy_from_statevector(psi, qop, self.n))
 
         # Use cached grouping and prefixes for shots>0
         energy_val = self._identity_const
@@ -105,19 +105,19 @@ class HEADeviceRuntime:
         base = np.asarray(params, dtype=np.float64)
 
         # shots==0: use parameter-shift (s=pi/2) over analytic energy path
-        if (provider in ("simulator", "local")) and int(shots) == 0:
-            e0 = self.energy(base, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-            if len(base) == 0:
-                return float(e0), np.zeros(0, dtype=np.float64)
-            g = np.zeros_like(base)
-            s = 0.5 * pi
-            for i in range(len(base)):
-                p_plus = base.copy(); p_plus[i] += s
-                p_minus = base.copy(); p_minus[i] -= s
-                e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-                e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-                g[i] = 0.5 * (e_plus - e_minus)
-            return float(e0), g
+        # if (provider in ("simulator", "local")) and int(shots) == 0:
+        #     e0 = self.energy(base, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+        #     if len(base) == 0:
+        #         return float(e0), np.zeros(0, dtype=np.float64)
+        #     g = np.zeros_like(base)
+        #     s = 0.5 * pi
+        #     for i in range(len(base)):
+        #         p_plus = base.copy(); p_plus[i] += s
+        #         p_minus = base.copy(); p_minus[i] -= s
+        #         e_plus = self.energy(p_plus, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+        #         e_minus = self.energy(p_minus, shots=0, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
+        #         g[i] = 0.5 * (e_plus - e_minus)
+        #     return float(e0), g
 
         e0 = self.energy(base, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
         g = np.zeros_like(base)
