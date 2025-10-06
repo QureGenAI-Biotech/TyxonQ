@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import List, Tuple
+from functools import lru_cache
 
 import numpy as np
 from openfermion import QubitOperator
@@ -397,18 +398,59 @@ def get_fket_phase(f_idx, ci_strings):
     negative = masked == 0
     return positive, negative
 
-#TODO  add cache here like TCC
+
+
 def get_operator_tensors(
     n_qubits: int, n_elec_s, ex_ops: List[Tuple[int, ...]], mode: str = "fermion"
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """TCC-exact: get_operator_tensors from evolve_civector.py"""
+    """TCC-exact: get_operator_tensors from evolve_civector.py with caching.
+
+    Cache key depends on (n_qubits, normalized n_elec_s, ordered ex_ops, mode).
+    """
+
+    def _normalize_nelec(nelec):
+        if isinstance(nelec, (list, tuple)):
+            return (int(nelec[0]), int(nelec[1]))
+        return (int(nelec),)
+
+    def _normalize_exops(exops):
+        return tuple(tuple(int(x) for x in f) for f in exops)
+
+    ne_key = _normalize_nelec(n_elec_s)
+    ex_key = _normalize_exops(ex_ops)
+
+    ci_strings, fperm_t, fphase_t, f2phase_t = _build_operator_tensors_cached(
+        int(n_qubits), ne_key, ex_key, str(mode)
+    )
+    # Return copies to avoid external mutation affecting cache
+    return (
+        np.array(ci_strings, copy=True),
+        np.array(fperm_t, copy=True),
+        np.array(fphase_t, copy=True),
+        np.array(f2phase_t, copy=True),
+    )
+
+
+@lru_cache(maxsize=256)
+def _build_operator_tensors_cached(
+    n_qubits: int,
+    ne_key: Tuple[int, ...],
+    ex_key: Tuple[Tuple[int, ...], ...],
+    mode: str,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    # Reconstruct original arguments
+    if len(ne_key) == 2:
+        n_elec_s = (int(ne_key[0]), int(ne_key[1]))
+    else:
+        n_elec_s = int(ne_key[0])
+    ex_ops = [tuple(f) for f in ex_key]
+
     ci_strings, strs2addr = get_ci_strings(n_qubits, n_elec_s, mode, strs2addr=True)
-    
+
     fket_permutation_tensor = np.zeros((len(ex_ops), len(ci_strings)), dtype=get_uint_type())
-    # Force numpy arrays to avoid backend tensor mixing (torch/cupy) in numpy ops
     fket_phase_tensor = np.zeros((len(ex_ops), len(ci_strings)), dtype=np.int8)
     f2ket_phase_tensor = np.zeros((len(ex_ops), len(ci_strings)), dtype=np.int8)
-    
+
     for i, f_idx in enumerate(ex_ops):
         fket_permutation, fket_phase, f2ket_phase = get_operators(
             n_qubits, n_elec_s, strs2addr, f_idx, ci_strings, mode

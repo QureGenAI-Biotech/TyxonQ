@@ -250,12 +250,9 @@ class UCC:
             mo = fci.sort_mo(active_orbital_indices, base=0)
             res = fci.kernel(mo)
 
+            #energey here include the e_core
             self.e_fci = res[0]
             self.civector_fci = res[2].ravel()
-            #TODO check the energy should be total or e_core in pyscf？
-            # self.e_fci = float(res[0]) + float(self.e_core)
-            # self.civector_fci = None if res[2] is None else res[2].ravel()
-
         else:
             self.e_fci = None
             self.civector_fci = None
@@ -896,41 +893,32 @@ class UCC:
 
     # ---- PySCF solver adapter (minimal, aligned with HEA style) ----
     @classmethod
-    def as_pyscf_solver(cls, *, runtime: str = "device", config_function=None):  # pragma: no cover
+    def as_pyscf_solver(cls, config_function = None,runtime: str = "numeric", **kwargs):  # pragma: no cover
         class _FCISolver:
             def __init__(self):
                 self.instance: UCC | None = None  # type: ignore[name-defined]
+                self.config_function = config_function
+                self.instance_kwargs = kwargs
+                for arg in ["run_ccsd", "run_fci"]:
+                    # keep MP2 for initial guess
+                    self.instance_kwargs[arg] = False
 
-            def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0.0, **kwargs):
-                # Prefer passing e_core when supported to match CASCI e_tot
-                if hasattr(cls, "from_integral"):
-                    try:
-                        self.instance = cls.from_integral(h1, h2, nelec, e_core=float(ecore), runtime=runtime)  # type: ignore[misc]
-                    except TypeError:
-                        self.instance = cls.from_integral(h1, h2, nelec, runtime=runtime)  # type: ignore[misc]
-                else:
-                    self.instance = UCC.from_integral(h1, h2, nelec, runtime=runtime)  # type: ignore[misc]
-                if callable(config_function):
-                    config_function(self.instance)
-                e = float(self.instance.kernel(runtime=runtime))
-                # If e_core not recorded internally but CASCI supplies it, add here
-                try:
-                    inst_ec = float(getattr(self.instance, "e_core", 0.0))
-                except Exception:
-                    inst_ec = 0.0
-                if inst_ec == 0.0 and float(ecore) != 0.0 and runtime == "numeric":
-                    e = e + float(ecore)
-                return e, getattr(self.instance, "params", None)
+            def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0, **kwargs):
+                self.instance = cls.from_integral(h1, h2, nelec, **self.instance_kwargs)
+                if self.config_function is not None:
+                    self.config_function(self.instance)
+                e = self.instance.kernel(shots=kwargs.get("shots",0),runtime=kwargs.get('runtime','numeric'))
+                return e + ecore, self.instance.params
 
-            def make_rdm1(self, ci, norb, nelec):
-                assert self.instance is not None
-                return self.instance.make_rdm1(basis="MO")
+            def make_rdm1(self,params, norb, nelec):
+                civector = self.instance.civector(params)
+                return self.instance.make_rdm1(civector)
 
-            def make_rdm12(self, ci, norb, nelec):
-                assert self.instance is not None
-                r1 = self.instance.make_rdm1(basis="MO")
-                r2 = self.instance.make_rdm2(basis="MO")
-                return r1, r2
+            def make_rdm12(self,params,norb, nelec):
+                civector = self.instance.civector(params)
+                rdm1 = self.instance.make_rdm1(civector)
+                rdm2 = self.instance.make_rdm2(civector)
+                return rdm1, rdm2
 
             def spin_square(self, ci, norb, nelec):
                 return 0.0, 1.0

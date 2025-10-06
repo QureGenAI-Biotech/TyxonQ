@@ -174,15 +174,15 @@ def test_gradient_opt(backend_str, numeric_engine, init_state, mode):
     np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-4)
 
 
-# @pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
-# def test_open_shell(numeric_engine):
+@pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
+def test_open_shell(numeric_engine):
 
-#     m = M(atom=[["O", 0, 0, 0], ["O", 0, 0, 1]], spin=2)
-#     active_space = (6, 4)
+    m = M(atom=[["O", 0, 0, 0], ["O", 0, 0, 1]], spin=2)
+    active_space = (6, 4)
 
-#     uccsd = ROUCCSD(m, active_space=active_space, numeric_engine=numeric_engine,run_fci=True)
-#     uccsd.kernel(shots=0)
-#     np.testing.assert_allclose(uccsd.e_ucc, uccsd.e_fci, atol=1e-4)
+    uccsd = ROUCCSD(m, active_space=active_space, numeric_engine=numeric_engine,run_fci=True)
+    uccsd.kernel(shots=0)
+    np.testing.assert_allclose(uccsd.e_ucc, uccsd.e_fci, atol=1e-4)
 
 
 def test_device_kernel_matches_fci():

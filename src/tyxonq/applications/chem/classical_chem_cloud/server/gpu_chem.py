@@ -20,12 +20,6 @@ try:
     gpu_available = True
 except:
     gpu_available = False
-# Placeholder for ByteQC GPU backend integration.
-# TODO: Replace with actual ByteQC client calls when repository and API are integrated.
-
-
-
-
 
 def compute(payload: Dict[str, Any]) -> Dict[str, Any]:
     method = str(payload.get("method", "fci")).lower()

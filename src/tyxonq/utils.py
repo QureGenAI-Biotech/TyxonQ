@@ -9,15 +9,6 @@ import re
 import time
 
 
-def gpu_memory_share(flag: bool = True) -> None:
-    # TODO(@refraction-ray): the default torch behavior should be True
-    # preallocate behavior for torch to be investigated
-    if flag is True:
-        os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
-        os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
-    else:
-        os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "false"
-        os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "true"
 
 
 def return_partial(
