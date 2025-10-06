@@ -303,7 +303,10 @@ class UCC:
         self.trotter = bool(trotter)
 
         #set cache to speedup the shots=0
-        hq = self.h_qubit_op
+        self._cached_h_fermion_op = None
+        self._cached_h_qubit_op = None
+        # warm up JW cache once to avoid repeated heavy transforms in optimization
+        _ = self.h_qubit_op
 
 
         # init guess (zeros by default if ex_ops present)
@@ -976,7 +979,9 @@ class UCC:
         """
         if self.mode == "hcb":
             raise ValueError("No FermionOperator available for hard-core boson Hamiltonian")
-        return get_hop_from_integral(self.int1e, self.int2e) + self.e_core
+        if getattr(self, "_cached_h_fermion_op", None) is None:
+            self._cached_h_fermion_op = get_hop_from_integral(self.int1e, self.int2e) + self.e_core
+        return self._cached_h_fermion_op
 
     @property
     def h_qubit_op(self) -> QubitOperator:
@@ -985,7 +990,9 @@ class UCC:
         Jordan-Wigner transformation.
         """
         if self.mode in ["fermion", "qubit"]:
-            return reverse_qop_idx(jordan_wigner(self.h_fermion_op), self.n_qubits)
+            if getattr(self, "_cached_h_qubit_op", None) is None:
+                self._cached_h_qubit_op = reverse_qop_idx(jordan_wigner(self.h_fermion_op), self.n_qubits)
+            return self._cached_h_qubit_op
         else:
             assert self.mode == "hcb"
             return get_hop_hcb_from_integral(self.int1e, self.int2e) + self.e_core
