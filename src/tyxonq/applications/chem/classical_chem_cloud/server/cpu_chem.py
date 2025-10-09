@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 import os
-import math
+import base64
+import tempfile
 import numpy as np
 
 try:
@@ -17,9 +18,7 @@ from pyscf import mp
 from pyscf import dft
 from pyscf import mcscf
 from pyscf import lib
-
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_integral_from_hf
-
+from pyscf.mcscf import CASCI
 
 def _sys_limits() -> tuple[int, int]:
     cores = max(1, int((os.cpu_count() or 1) * 0.95))
@@ -42,7 +41,7 @@ def setup_cpu_resources() -> None:
     os.environ["PYSCF_MAX_MEMORY"] = str(mem_mb)
 
 
-def _build_mol(mdat: Dict[str, Any]) -> gto.Mole:
+def build_mol(mdat: Dict[str, Any]) -> gto.Mole:
     m = gto.Mole()
     m.atom = mdat.get("atom")
     m.basis = mdat.get("basis", "sto-3g")
@@ -55,89 +54,135 @@ def _build_mol(mdat: Dict[str, Any]) -> gto.Mole:
 
 setup_cpu_resources()
 
-def compute(payload: Dict[str, Any],pre_build_mol= None,pre_compute_hf = None) -> Dict[str, Any]:
-    method = str(payload.get("method", "fci")).lower()
-    verbose = bool(payload.get("verbose", False))
+def compute(payload: Dict[str, Any], pre_build_mol: gto.Mole | None = None, pre_compute_hf=None) -> Dict[str, Any]:
+    method_payload = payload.get("method", "hf")
+
+    if isinstance(method_payload, str):
+        method_list = [method_payload.lower()]
+    else:
+        method_list = [x.lower() for x in method_payload]
+    
+    if 'hf' not in method_list:
+        method_list.append("hf")
+
     mdat = dict(payload.get("molecule_data", {}))
     use_density_fit = bool(payload.get("use_density_fit", True))
-    if pre_build_mol:
-        m = pre_build_mol
+    m = pre_build_mol if pre_build_mol is not None else build_mol(mdat)
+
+    # Build or reuse HF; run once and reuse for all requested methods
+    if pre_compute_hf is not None:
+        mf = pre_compute_hf
     else:
-        m = _build_mol(mdat)
+        if m.spin == 0:
+            mf = scf.RHF(m)
+        else:
+            mf = scf.ROHF(m)
+        if use_density_fit and hasattr(mf, "density_fit"):
+            mf = mf.density_fit()
+        # ensure chkfile available for artifact export
+        with tempfile.NamedTemporaryFile(prefix="hf_", suffix=".chk", delete=False) as tf:
+            mf.chkfile = tf.name
+        mf.verbose = 0
+        mf = mf.run()
+
+    # Ensure we can export chkfile even when HF is precomputed
+    chk_b64: str | None = None
+    try:
+        if not getattr(mf, "chkfile", None):
+            with tempfile.NamedTemporaryFile(prefix="hf_", suffix=".chk") as tf:
+                mf.chkfile = tf.name
+            # dump current SCF state
+            mf.dump_chk()
+        with open(mf.chkfile, "rb") as fr:
+            chk_b64 = base64.b64encode(fr.read()).decode("ascii")
+    except Exception:
+        chk_b64 = None
+
+    final_result: Dict[str, Any] = {}
+    active_space = payload.get('active_space',None)
+    if active_space is None:
+        active_space = (m.nelectron, int(m.nao))
+    active_orbital_indices = payload.get("active_orbital_indices", None)
 
 
-    
-    if method == "hf_integrals":
-        mf = scf.RHF(m)
-        mf.kernel()
-        int1e, int2e, e_core = get_integral_from_hf(
-            mf,
-            active_space=payload.get("active_space"),
-            active_orbital_indices=payload.get("active_orbital_indices"),
-        )
-        return {
-            "int1e": np.asarray(int1e).tolist(),
-            "int2e": np.asarray(int2e).tolist(),
-            "e_core": float(e_core),
-            "e_hf": float(getattr(mf, "e_tot", 0.0)),
-            "mo_coeff": np.asarray(getattr(mf, "mo_coeff", None)).tolist()
-            if getattr(mf, "mo_coeff", None) is not None
-            else None,
-            "nelectron": int(getattr(m, "nelectron", 0)),
-            "nao": int(getattr(m, "nao", 0)),
-            "spin": int(getattr(m, "spin", 0)),
-            "basis": str(getattr(m, "basis", "")),
-        }
 
+    inactive_occ = (m.nelectron - active_space[0]) // 2
+    assert (m.nelectron - active_space[0]) % 2 == 0
+    inactive_vir = m.nao - active_space[1] - inactive_occ
+
+    if active_orbital_indices is None:
+        active_orbital_indices = list(range(inactive_occ, m.nao - inactive_vir))
+    frozen_idx = None
+    if active_orbital_indices is not None:
+        frozen_idx = [i for i in range(m.nao) if i not in active_orbital_indices]
     opts = dict(payload.get("method_options", {}))
 
-    if method == "fci":
-        if pre_compute_hf:
-            mf = pre_compute_hf     
-        else:
-            mf = scf.RHF(m)
-            mf.kernel()
-        #fci doesn't support density fit
-        e = float(fci.FCI(mf).kernel(**opts)[0])
-    elif method == "ccsd":
-        mf = scf.RHF(m).run()
-        mycc = cc.CCSD(mf).run(**opts)
-        e = mycc.e_tot
-    elif method in ("ccsd(t)", "ccsd_t"):
-        if pre_compute_hf:
-            mf = pre_compute_hf     
-        else:
-            mf = scf.RHF(m).run()
-        mycc = cc.CCSD(mf).run(**opts)
-        e = mycc.e_tot
-        et = mycc.ccsd_t()
-        e = float(e + et)
-    elif method == "mp2":
-        mf = scf.RHF(m).run()
-        ret = mp.MP2(mf).run(**opts)
-        e = float(ret.e_tot)
-    elif method == "dft":
-        xc = str(opts.get("functional", "b3lyp"))
-        rks = dft.RKS(m)
-        rks.xc = xc
-        e = float(rks.kernel())
-    elif method == "casscf":
-        mf = scf.RHF(m).run()
-        ncas = int(opts.get("ncas"))
-        nelecas = opts.get("nelecas")
-        if isinstance(nelecas, (list, tuple)):
-            nele = (int(nelecas[0]), int(nelecas[1]))
-        else:
-            nele = int(nelecas)
-        mycas = mcscf.CASSCF(mf, ncas, nele)
-        e = float(mycas.kernel(**{k: v for k, v in opts.items() if k not in ("ncas", "nelecas")} )[0])
-    else:
-        return {"error": f"unsupported method: {method}"}
+    for method in method_list:
+        method_result: Dict[str, Any] = {}
+        if method == "hf":
+            method_result["e_hf"] = mf.e_tot
+            method_result["mo_coeff"] = mf.mo_coeff
+            method_result["nao"] = m.nao
+            method_result["spin"] = m.spin
+            method_result["basis"] = m.basis
+            method_result["_eri"] = m.intor("int2e", aosym="s8")
+            method_result['energy'] = mf.e_tot
+            if chk_b64 is not None:
+                method_result["chkfile_b64"] = chk_b64
+        elif method == "fci":
+            fci = CASCI(mf, active_space[1], active_space[0])
+            mo = fci.sort_mo(active_orbital_indices, base=0)
+            res = fci.kernel(mo)
 
-    resp: Dict[str, Any] = {
-        "energy": float(e),
-        "classical_device": payload.get("classical_device", "cpu"),
-    }
-    return resp
+            #energey here include the e_core
+            method_result["e_fci"] = res[0]
+            method_result["civector_fci"] = res[2].ravel()
+            method_result['energy'] = res[0]
+        elif method == "ccsd":
+            method_result = {}
+            if frozen_idx:
+                mycc = cc.CCSD(mf,frozen=frozen_idx).run(**opts)
+            else:
+                mycc = cc.CCSD(mf).run(**opts)
+            method_result["e_ccsd"] = mycc.e_tot
+            method_result["ccsd_t1"] = mycc.t1
+            method_result["ccsd_t2"] = mycc.t2
+            method_result['energy'] = mycc.e_tot
+        elif method in ("ccsd(t)", "ccsd_t"):
+
+            if frozen_idx:
+                mycc = cc.CCSD(mf,frozen=frozen_idx).run(**opts)
+            else:
+                mycc = cc.CCSD(mf).run(**opts)
+            
+            method_result["e_ccsd"] = mycc.e_tot
+            method_result["ccsd_t1"] = mycc.t1
+            method_result["ccsd_t2"] = mycc.t2
+            et = mycc.ccsd_t()
+            method_result["et_ccsd_t"] = et
+            method_result["e_ccsd_t"] = mycc.e_tot +et
+            method_result['energy'] = mycc.e_tot +et
+        elif method == "mp2":
+            if frozen_idx:
+                mycc = mp.MP2(mf,frozen=frozen_idx).run(**opts)
+            else:
+                mycc = mp.MP2(mf).run(**opts)
+            
+            method_result["e_mp2"] = mycc.e_tot
+            method_result["mp2_t2"] = mycc.t2
+            method_result['energy'] = mycc.e_tot
+        elif method == "dft":
+            xc = str(opts.get("functional", "b3lyp"))
+            rks = dft.RKS(m)
+            rks.xc = xc
+            e = float(rks.kernel())
+            method_result["energy"] = e
+            method_result["e_dft"] = e
+            method_result["xc"] = xc
+        else:
+            method_result = {"error": f"unsupported method: {method}"}
+        final_result[method] = method_result
+
+    return final_result
 
 

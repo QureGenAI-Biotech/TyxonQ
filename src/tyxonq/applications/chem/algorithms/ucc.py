@@ -12,6 +12,8 @@ from pyscf.scf.hf import RHF as RHF_TYPE
 from pyscf.scf.rohf import ROHF as ROHF_TYPE
 from pyscf.cc.addons import spatial2spin
 from pyscf import fci  # type: ignore
+from pyscf import lib as pyscf_lib
+import os, base64, tempfile
 from scipy.optimize import minimize
 import logging
 
@@ -166,8 +168,56 @@ class UCC:
         # classical quantum chemistry
         # hf
         #hf 的积分 和kernel没有计算
-        if not self.hf.e_tot:
-            if str(classical_provider) != "local":
+        if str(classical_provider) == "local":
+            # cloud or  tyxonq
+            # 判断是否hf 已经执行完kernel了
+            if not self.hf.e_tot:
+                # Local HF
+                # avoid pyscf 1.7+ return fload and assert error of nuc.real
+                self.hf.kernel(dump_chk=False)
+                self.e_hf = self.hf.e_tot
+                self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
+            else:
+                #外部传入计算好的hf
+                self.e_hf = self.hf.e_tot
+                self.hf._eri = self.mol.intor("int2e", aosym="s8")
+                self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
+            # mp2
+            if init_method == 'mp2' and not isinstance(self.hf, ROHF_TYPE):
+                mp2 = _mp2(self.hf)
+                if frozen_idx:
+                    mp2.frozen = frozen_idx
+                e_corr_mp2, mp2_t2 = mp2.kernel()
+                self.e_mp2 = self.e_hf + e_corr_mp2
+            else:
+                self.e_mp2 = None
+                mp2_t2 = None
+            # ccsd
+            if init_method == 'ccsd' and not isinstance(self.hf, ROHF_TYPE):
+                ccsd = _ccsd.CCSD(self.hf)
+                if frozen_idx:
+                    ccsd.frozen = frozen_idx
+                e_corr_ccsd, ccsd_t1, ccsd_t2 = ccsd.kernel()
+                self.e_ccsd = self.e_hf + e_corr_ccsd
+            else:
+                self.e_ccsd = None
+                ccsd_t1 = ccsd_t2 = None
+
+            # fci（口径：电子能 + e_core，与 kernel/energy 返回一致）
+            if run_fci:
+                fci = CASCI(self.hf, self.active_space[1], self.active_space[0])
+                mo = fci.sort_mo(active_orbital_indices, base=0)
+                res = fci.kernel(mo)
+
+                #energey here include the e_core
+                self.e_fci = res[0]
+                self.civector_fci = res[2].ravel()
+            else:
+                self.e_fci = None
+                self.civector_fci = None
+
+        else:
+            #using cloud compute
                 # Offload HF convergence and MO-basis integrals to cloud
                 client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
                 mdat = {
@@ -176,59 +226,68 @@ class UCC:
                     "charge": int(getattr(self.mol, "charge", 0)),
                     "spin": int(getattr(self.mol, "spin", 0)),
                 }
+                method_list = ["hf"]
+                if init_method == 'mp2':
+                    method_list.append("mp2")
+                if init_method == 'ccsd':
+                    method_list.append("ccsd")
+                if run_fci:
+                    method_list.append("fci")
                 task = {
-                    "method": "hf_integrals",
+                    "method": method_list,
                     "molecule_data": mdat,
                     "active_space": active_space,
                     "active_orbital_indices": active_orbital_indices,
                 }
                 _res = client.submit_classical_calculation(task)
-                # Load results
-                int1e = np.asarray(_res["int1e"])  # type: ignore[index]
-                int2e = np.asarray(_res["int2e"])  # type: ignore[index]
-                e_core = float(_res["e_core"])  # type: ignore[index]
-                if _res.get("mo_coeff") is not None:
-                    try:
-                        self.hf.mo_coeff = canonical_mo_coeff(np.asarray(_res["mo_coeff"]))  # type: ignore[index]
-                    except Exception:
-                        pass
 
-                self.hf.e_tot = float(_res.get("e_hf", 0.0))  # type: ignore[attr-defined]
+                # cloud_res is a mapping: method -> result dict
+                hf_info = _res.get("hf", {}) if isinstance(_res, dict) else {}
+
+                # Reconstruct HF from chkfile if provided; else set basic fields
+                chk_b64 = hf_info.get("chkfile_b64")
+                if chk_b64:
+                    data = base64.b64decode(chk_b64.encode("ascii"))
+                    with tempfile.NamedTemporaryFile(prefix="hf_", suffix=".chk") as tf:
+                        tf.write(data)
+                        chk_path = tf.name
+                        # restore SCF data
+                        self.hf.__dict__.update(pyscf_lib.chkfile.load(chk_path, 'scf'))
+                        tf.close()
+   
+
+                self.e_hf = hf_info.get('e_tot',0.0)
+                self.hf._eri = self.mol.intor("int2e", aosym="s8")
                 # In cloud mode, skip local HF run
-                self.e_hf = float(_res.get("e_hf", 0.0))
-            else:
-                # Local HF
-                # avoid pyscf 1.7+ return fload and assert error of nuc.real
-                self.hf.kernel(dump_chk=False)
-                self.e_hf = self.hf.e_tot
-                self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
-        else:
-            #外部传入计算好的hf
-            self.e_hf = self.hf.e_tot
-            self.hf._eri = self.mol.intor("int2e", aosym="s8")
-            self.hf.mo_coeff = canonical_mo_coeff(self.hf.mo_coeff)
+                mo_coeff = hf_info.get("mo_coeff")
+                # fci method
+                if run_fci:
+                    fci_info = _res.get("fci", {}) if isinstance(_res, dict) else {}
+                    self.e_fci = fci_info.get('e_fci',0.0)
+                    self.civector_fci = fci_info.get('civector_fci',None)
+                else:
+                    self.e_fci = None
+                    self.civector_fci = None
+                # ccsd method
+                if init_method == 'ccsd':
+                    ccsd_info = _res.get("ccsd", {}) if isinstance(_res, dict) else {}
+                    self.e_ccsd = ccsd_info.get('e_ccsd',0.0)
+                    self.ccsd_t1 = ccsd_info.get('ccsd_t1',None)
+                    self.ccsd_t2 = ccsd_info.get('ccsd_t2',None)
+                else:
+                    self.e_ccsd = None
+                    self.ccsd_t1 = None
+                    self.ccsd_t2 = None
+                # mp2 method
+                if init_method == 'mp2':
+                    mp2_info = _res.get("mp2", {}) if isinstance(_res, dict) else {}
+                    self.e_mp2 = mp2_info.get('e_mp2',0.0)
+                    self.mp2_t2 = mp2_info.get('mp2_t2',None)
+                else:
+                    self.e_mp2 = None
+                    self.mp2_t2 = None
 
-        
-        # mp2
-        if init_method == 'mp2' and not isinstance(self.hf, ROHF_TYPE):
-            mp2 = _mp2(self.hf)
-            if frozen_idx:
-                mp2.frozen = frozen_idx
-            e_corr_mp2, mp2_t2 = mp2.kernel()
-            self.e_mp2 = self.e_hf + e_corr_mp2
-        else:
-            self.e_mp2 = None
-            mp2_t2 = None
-        # ccsd
-        if init_method == 'ccsd' and not isinstance(self.hf, ROHF_TYPE):
-            ccsd = _ccsd.CCSD(self.hf)
-            if frozen_idx:
-                ccsd.frozen = frozen_idx
-            e_corr_ccsd, ccsd_t1, ccsd_t2 = ccsd.kernel()
-            self.e_ccsd = self.e_hf + e_corr_ccsd
-        else:
-            self.e_ccsd = None
-            ccsd_t1 = ccsd_t2 = None
+
         
 
         # MP2 and CCSD rely on canonical HF orbitals but FCI doesn't
@@ -244,18 +303,6 @@ class UCC:
         # e_core includes nuclear repulsion energy
         self.hamiltonian, self.e_core, _ = self._get_hamiltonian_and_core(self.numeric_engine)
 
-        # fci（口径：电子能 + e_core，与 kernel/energy 返回一致）
-        if run_fci:
-            fci = CASCI(self.hf, self.active_space[1], self.active_space[0])
-            mo = fci.sort_mo(active_orbital_indices, base=0)
-            res = fci.kernel(mo)
-
-            #energey here include the e_core
-            self.e_fci = res[0]
-            self.civector_fci = res[2].ravel()
-        else:
-            self.e_fci = None
-            self.civector_fci = None
 
         self.e_nuc = float(self.mol.energy_nuc())
 
