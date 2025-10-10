@@ -66,7 +66,7 @@ def compute(payload: Dict[str, Any], pre_build_mol: gto.Mole | None = None, pre_
         method_list.append("hf")
 
     mdat = dict(payload.get("molecule_data", {}))
-    use_density_fit = bool(payload.get("use_density_fit", True))
+    use_density_fit = bool(payload.get("use_density_fit", False))
     m = pre_build_mol if pre_build_mol is not None else build_mol(mdat)
 
     # Build or reuse HF; run once and reuse for all requested methods
@@ -121,11 +121,12 @@ def compute(payload: Dict[str, Any], pre_build_mol: gto.Mole | None = None, pre_
         method_result: Dict[str, Any] = {}
         if method == "hf":
             method_result["e_hf"] = mf.e_tot
-            method_result["mo_coeff"] = mf.mo_coeff
+            method_result["mo_coeff"] =np.asarray(mf.mo_coeff).tolist()
+            method_result["mo_energy"] =np.asarray(mf.mo_energy).tolist()
             method_result["nao"] = m.nao
             method_result["spin"] = m.spin
             method_result["basis"] = m.basis
-            method_result["_eri"] = m.intor("int2e", aosym="s8")
+            method_result["_eri"] = np.asarray(m.intor("int2e", aosym="s8")).tolist()
             method_result['energy'] = mf.e_tot
             if chk_b64 is not None:
                 method_result["chkfile_b64"] = chk_b64
@@ -135,42 +136,42 @@ def compute(payload: Dict[str, Any], pre_build_mol: gto.Mole | None = None, pre_
             res = fci.kernel(mo)
 
             #energey here include the e_core
-            method_result["e_fci"] = res[0]
-            method_result["civector_fci"] = res[2].ravel()
-            method_result['energy'] = res[0]
+            method_result["e_fci"] = float(res[0])
+            method_result["civector_fci"] = np.asarray(res[2]).ravel().tolist()
+            method_result['energy'] = float(res[0])
         elif method == "ccsd":
             method_result = {}
             if frozen_idx:
-                mycc = cc.CCSD(mf,frozen=frozen_idx).run(**opts)
+                mycc = cc.CCSD(mf,frozen=frozen_idx).run()
             else:
-                mycc = cc.CCSD(mf).run(**opts)
-            method_result["e_ccsd"] = mycc.e_tot
-            method_result["ccsd_t1"] = mycc.t1
-            method_result["ccsd_t2"] = mycc.t2
-            method_result['energy'] = mycc.e_tot
+                mycc = cc.CCSD(mf).run()
+            method_result["e_ccsd"] = float(mycc.e_tot)
+            method_result["ccsd_t1"] = np.asarray(mycc.t1).tolist()
+            method_result["ccsd_t2"] = np.asarray(mycc.t2).tolist()
+            method_result['energy'] = float(mycc.e_tot)
         elif method in ("ccsd(t)", "ccsd_t"):
 
             if frozen_idx:
-                mycc = cc.CCSD(mf,frozen=frozen_idx).run(**opts)
+                mycc = cc.CCSD(mf,frozen=frozen_idx).run()
             else:
-                mycc = cc.CCSD(mf).run(**opts)
+                mycc = cc.CCSD(mf).run()
             
-            method_result["e_ccsd"] = mycc.e_tot
-            method_result["ccsd_t1"] = mycc.t1
-            method_result["ccsd_t2"] = mycc.t2
+            method_result["e_ccsd"] = float(mycc.e_tot)
+            method_result["ccsd_t1"] = np.asarray(mycc.t1).tolist()
+            method_result["ccsd_t2"] = np.asarray(mycc.t2).tolist()
             et = mycc.ccsd_t()
             method_result["et_ccsd_t"] = et
-            method_result["e_ccsd_t"] = mycc.e_tot +et
-            method_result['energy'] = mycc.e_tot +et
+            method_result["e_ccsd_t"] = float(mycc.e_tot +et)
+            method_result['energy'] = float(mycc.e_tot +et)
         elif method == "mp2":
             if frozen_idx:
-                mycc = mp.MP2(mf,frozen=frozen_idx).run(**opts)
+                mycc = mp.MP2(mf,frozen=frozen_idx).run()
             else:
-                mycc = mp.MP2(mf).run(**opts)
+                mycc = mp.MP2(mf).run()
             
-            method_result["e_mp2"] = mycc.e_tot
-            method_result["mp2_t2"] = mycc.t2
-            method_result['energy'] = mycc.e_tot
+            method_result["e_mp2"] = float(mycc.e_tot)
+            method_result["mp2_t2"] = np.asarray(mycc.t2).tolist()
+            method_result['energy'] = float(mycc.e_tot)
         elif method == "dft":
             xc = str(opts.get("functional", "b3lyp"))
             rks = dft.RKS(m)

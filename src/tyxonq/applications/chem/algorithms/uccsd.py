@@ -33,7 +33,7 @@ class UCCSD(UCC):
 
     def __init__(
         self,
-        mol: Union[Mole, scf.hf.RHF],
+        mol: Union[Mole, scf.hf.RHF] = None,
         init_method: str = "mp2",
         active_space: Tuple[int, int] = None,
         active_orbital_indices: List[int] = None,

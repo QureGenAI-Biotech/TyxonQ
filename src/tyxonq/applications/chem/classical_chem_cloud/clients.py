@@ -53,10 +53,10 @@ class TyxonQClassicalClient:
         Accepts keys:
           - molecule_data, basis, active_space, method_options, classical_device, verbose
         """
-        verbose = bool(task_spec.get("verbose", False))
+        # verbose = bool(task_spec.get("verbose", False))
         payload = dict(task_spec)
         payload["classical_device"] = self.device
-        payload["verbose"] = verbose
+        # payload["verbose"] = verbose
         return self._post(payload)
 
     # retained for potential future serialization needs

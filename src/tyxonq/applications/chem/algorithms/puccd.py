@@ -32,7 +32,7 @@ class PUCCD(UCC):
 
     def __init__(
         self,
-        mol: Union[Mole, _RHF],
+        mol=None,
         init_method: str = "mp2",
         *,
         active_space: Tuple[int, int] | None = None,

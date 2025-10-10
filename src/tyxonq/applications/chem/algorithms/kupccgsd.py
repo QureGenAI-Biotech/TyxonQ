@@ -20,7 +20,7 @@ class KUPCCGSD(_UCCBase):
 
     def __init__(
         self,
-        mol: Union[Mole, RHF],
+        mol = None,
         active_space: Tuple[int, int] = None,
         active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,

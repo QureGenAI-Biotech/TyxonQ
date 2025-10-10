@@ -59,8 +59,7 @@ class UCC:
 
     def __init__(
         self,
-        mol,
-        *,
+        mol=None,
         init_method="mp2",
         active_space=None,
         active_orbital_indices=None,
@@ -92,7 +91,9 @@ class UCC:
             mm.spin = int(spin)
             mm.build()
             mol = mm
-        
+        else:
+            if mol is None:
+                raise ValueError("mol or atom is required")
 
         self.hf = None
         # process mol
@@ -259,12 +260,12 @@ class UCC:
                 self.e_hf = hf_info.get('e_tot',0.0)
                 self.hf._eri = self.mol.intor("int2e", aosym="s8")
                 # In cloud mode, skip local HF run
-                mo_coeff = hf_info.get("mo_coeff")
+                mo_coeff = np.asarray(hf_info.get("mo_coeff"))
                 # fci method
                 if run_fci:
                     fci_info = _res.get("fci", {}) if isinstance(_res, dict) else {}
                     self.e_fci = fci_info.get('e_fci',0.0)
-                    self.civector_fci = fci_info.get('civector_fci',None)
+                    self.civector_fci = np.asarray(fci_info.get('civector_fci',None))
                 else:
                     self.e_fci = None
                     self.civector_fci = None
@@ -272,8 +273,8 @@ class UCC:
                 if init_method == 'ccsd':
                     ccsd_info = _res.get("ccsd", {}) if isinstance(_res, dict) else {}
                     self.e_ccsd = ccsd_info.get('e_ccsd',0.0)
-                    self.ccsd_t1 = ccsd_info.get('ccsd_t1',None)
-                    self.ccsd_t2 = ccsd_info.get('ccsd_t2',None)
+                    self.ccsd_t1 = np.asarray(ccsd_info.get('ccsd_t1',None))
+                    self.ccsd_t2 = np.asarray(ccsd_info.get('ccsd_t2',None))    
                 else:
                     self.e_ccsd = None
                     self.ccsd_t1 = None
@@ -282,7 +283,8 @@ class UCC:
                 if init_method == 'mp2':
                     mp2_info = _res.get("mp2", {}) if isinstance(_res, dict) else {}
                     self.e_mp2 = mp2_info.get('e_mp2',0.0)
-                    self.mp2_t2 = mp2_info.get('mp2_t2',None)
+                    self.mp2_t2 = np.asarray(mp2_info.get('mp2_t2',None))
+                    mp2_t2 = np.asarray(mp2_info.get('mp2_t2',None))
                 else:
                     self.e_mp2 = None
                     self.mp2_t2 = None
@@ -301,6 +303,7 @@ class UCC:
         self.hamiltonian_lib = {}
         self.int1e = self.int2e = None
         # e_core includes nuclear repulsion energy
+        #following step will set self.int1e, self.int2e
         self.hamiltonian, self.e_core, _ = self._get_hamiltonian_and_core(self.numeric_engine)
 
 
@@ -835,7 +838,8 @@ class UCC:
     def make_rdm1(self, params: Sequence[float] | None = None,  statevector= None, basis: str = "AO") -> np.ndarray:
     
         assert self.mode in ["fermion", "qubit"]
-        civector = self._statevector_to_civector(statevector).astype(np.float64)
+        # civector = self._statevector_to_civector(statevector).astype(np.float64)
+        civector = np.asarray(self._statevector_to_civector(statevector),dtype=np.float64)
 
         rdm1_cas = fci.direct_spin1.make_rdm1(civector, self.n_qubits // 2, self.n_elec_s)
 
@@ -849,9 +853,10 @@ class UCC:
     def make_rdm2(self, params: Sequence[float] | None = None, statevector=None, basis: str = "AO") -> np.ndarray:
     
         assert self.mode in ["fermion", "qubit"]
-        civector = self._statevector_to_civector(statevector).astype(np.float64)
+        # civector = self._statevector_to_civector(statevector).astype(np.float64)
+        civector = np.asarray(self._statevector_to_civector(statevector),dtype=np.float64)
 
-        rdm2_cas = fci.direct_spin1.make_rdm12(civector.astype(np.float64), self.n_qubits // 2, self.n_elec_s)[1]
+        rdm2_cas = fci.direct_spin1.make_rdm12(civector, self.n_qubits // 2, self.n_elec_s)[1]
 
         rdm2 = self.embed_rdm_cas(rdm2_cas)
 

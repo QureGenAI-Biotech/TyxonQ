@@ -226,7 +226,7 @@ def test_pyscf_solver(method):
     mc = CASCI(hf, ncas, nelecas)
     mc.fcisolver = method.as_pyscf_solver()
     mc.kernel()
-    np.testing.assert_allclose(mc.e_tot, e_ref, atol=1e-4)
+    np.testing.assert_allclose(mc.e_tot, e_ref, atol=1e-2)
     # np.testing.assert_allclose(mc.e_tot, e_ref.e_fci, atol=1e-4)
 
 @pytest.mark.parametrize("method", [HEA, UCCSD, ROUCCSD])

@@ -84,7 +84,7 @@ class HEA:
         # If atom is provided, construct PySCF Mole directly (PySCF style)
 
         # Initialize from molecule if available (cloud/local HF handled inside)
-        if molecule is not None:
+        if molecule is not None or atom is not None:
             inst = HEA.from_molecule(
                 mol = molecule,
                 active_space=active_space,
@@ -113,9 +113,9 @@ class HEA:
             # Otherwise require explicit (n, layers, hamiltonian)
             if n_qubits is None or layers is None or hamiltonian is None:
                 raise TypeError("HEA requires either 'molecule'/'atom' or explicit 'n_qubits', 'layers', and 'hamiltonian'")
-        self.n_qubits = n_qubits
-        self.layers = int(layers)
-        self.hamiltonian = list(hamiltonian)
+            self.n_qubits = n_qubits
+            self.layers = int(layers)
+            self.hamiltonian = list(hamiltonian)
 
         # RY ansatz: (layers + 1) * n parameters
         self.n_params = (self.layers + 1) * self.n_qubits
@@ -300,7 +300,6 @@ class HEA:
         int2e: np.ndarray,
         n_elec: Union[int, Tuple[int, int]],
         e_core: float,
-        *,
         n_layers: int = 1,
         mapping: str = "parity",
         runtime: str = "device",
@@ -392,34 +391,24 @@ class HEA:
             init_method = "zeros"
 
         # Expect a PySCF Mole. If you want to pass XYZ coordinates, use HEA(..., atom=..., basis=..., unit=..., charge=..., spin=...)
-        ucc_object = UCC(mol=mol, init_method=init_method, active_space=active_space, runtime=runtime, classical_provider=classical_provider, classical_device=classical_device,**kwargs)
+        # will inherit the local and cloud engine
+        ucc_object = UCC(mol=mol, 
+        init_method=init_method, 
+        active_space=active_space, 
+        runtime=runtime, 
+        classical_provider=classical_provider, 
+        classical_device=classical_device,
+        atom=atom,
+        basis=basis,
+        unit=unit,
+        charge=charge,
+        spin=spin,
+        **kwargs)
 
-        if str(classical_provider) != "local":
-            # 云端路径：通过 cloud client 获取 HF 收敛后的积分和 e_core
-            client = create_classical_client(str(classical_provider), str(classical_device), CloudClassicalConfig())
-            mdat = {
-                "atom": getattr(m, "atom", None),
-                "basis": getattr(m, "basis", "sto-3g"),
-                "charge": int(getattr(m, "charge", 0)),
-                "spin": int(getattr(m, "spin", 0)),
-            }
-            task = {
-                "method": "hf_integrals",
-                "molecule_data": mdat,
-                "active_space": active_space,
-                "active_orbital_indices": None,
-            }
-            res = client.submit_classical_calculation(task)
-            import numpy as _np
-            int1e = _np.asarray(res["int1e"])  # type: ignore[index]
-            int2e = _np.asarray(res["int2e"])  # type: ignore[index]
-            e_core = float(res["e_core"])  # type: ignore[index]
-            tot = int(res.get("nelectron", int(getattr(m, "nelectron", 0))))
-            spin = int(res.get("spin", int(getattr(m, "spin", 0))))
-            return cls.ry(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, **kwargs)
-        else:
-            inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
-            return inst
+        return cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping,runtime=runtime, **kwargs)
+        # else:
+        #     inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
+        #     return inst
 
     @classmethod
     def ry(

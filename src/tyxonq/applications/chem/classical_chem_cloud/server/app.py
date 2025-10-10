@@ -1,29 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
-from fastapi import FastAPI
-from pydantic import BaseModel
+from typing import Any, Dict
+from fastapi import FastAPI, Request
+import json
+from fastapi.responses import Response
 
 from tyxonq.applications.chem.classical_chem_cloud.server import cpu_chem
 from tyxonq.applications.chem.classical_chem_cloud.server  import gpu_chem
-
-
-class MoleculeData(BaseModel):
-    atom: str
-    basis: str = "sto-3g"
-    charge: int = 0
-    spin: int = 0
-    unit: str = "Angstrom"
-
-
-class ClassicalRequest(BaseModel):
-    method: str
-    molecule_data: MoleculeData
-    active_space: Optional[tuple[int, int]] = None
-    active_orbital_indices: Optional[list[int]] = None
-    method_options: Optional[dict] = None
-    classical_device: str = "auto"
-    verbose: bool = False
 
 
 app = FastAPI()
@@ -41,9 +24,13 @@ def _route_backend(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @app.post("/classical/compute")
-def classical_compute(req: ClassicalRequest):
-    payload: Dict[str, Any] = req.model_dump()
-    return _route_backend(payload)
+async def classical_compute(request: Request):
+    # 直接接收 JSON 为 dict，放宽对字段类型的限制
+    payload: Dict[str, Any] = await request.json()
+    result = _route_backend(payload)
+    # 直接用 json.dumps 生成字符串响应，避免 jsonable_encoder 的严格检查
+    body = json.dumps(result)
+    return Response(content=body, media_type="application/json")
 
 if __name__ == "__main__":
     import uvicorn
