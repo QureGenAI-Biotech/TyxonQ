@@ -4,13 +4,14 @@
 
 ## Abstract
 
-TyxonQ is a revolutionary modular quantum computing platform that addresses critical challenges in quantum software engineering by introducing novel architectural patterns for hardware-realistic quantum program execution. The framework centers on five key innovations: (1) **Stable Intermediate Representation (IR)** as a system-wide contract, (2) **Compiler-driven measurement optimization** with explicit grouping and shot scheduling, (3) **Dual-path execution model** with semantic consistency between device and numeric paths, (4) **Counts-first semantics** with unified postprocessing, and (5) **Single numeric backend abstraction** enabling seamless ML framework integration. These innovations collectively solve the fragmentation problem in quantum software ecosystems while maintaining high engineering usability and research productivity.
+TyxonQ is a revolutionary modular quantum computing platform that addresses critical challenges in quantum software engineering by introducing novel architectural patterns for hardware-realistic quantum program execution. The framework centers on five key innovations: (1) **Stable Intermediate Representation (IR)** as a system-wide contract, (2) **Compiler-driven measurement optimization** with explicit grouping and shot scheduling, (3) **Dual-path execution model** with semantic consistency between device and numeric paths, (4) **Counts-first semantics** with unified postprocessing, and (5) **Single numeric backend abstraction** enabling seamless ML framework integration. In addition, TyxonQ integrates a **cloud-local hybrid classical acceleration path** for quantum chemistry workflows, offloading heavy PySCF kernels (HF/post-HF) to cloud resources while keeping VQE iteration locally controlled via artifact-based HF state transfer. These innovations collectively solve the fragmentation problem in quantum software ecosystems while maintaining high engineering usability and research productivity.
 
 **Key Contributions:**
 - Novel dual-path execution model that unifies hardware-realistic device execution with exact numeric simulation under consistent semantics
 - Compiler-driven measurement grouping and shot scheduling that elevates quantum measurement optimization from device layer to compiler layer
 - Counts-first result semantics with provider-neutral postprocessing for cross-vendor portability
 - Single ArrayBackend protocol supporting NumPy/PyTorch/CuPyNumeric with transparent gradient integration
+- Cloud-local hybrid classical acceleration for PySCF HF/post-HF with GPU-first routing and artifact-based SCF state transfer to local VQE
 - Domain-specialized quantum chemistry stack (Quantum AIDD) providing PySCF-level user experience with hardware readiness
 
 ## 1. Introduction and Research Context
@@ -41,10 +42,11 @@ TyxonQ addresses these challenges through five architectural innovations:
 - Deterministic shot scheduling based on grouping information
 - Unified basis transformation handling at compiler level
 
-**Innovation 3: Dual-Path Execution Model**
+**Innovation 3: Dual-Path Execution Model (with Hybrid Classical Offloading)**
 - Semantic consistency: device and numeric paths use identical Hamiltonian representations and measurement semantics
 - Performance specialization: device path optimizes for real hardware execution, numeric path supports fast iteration and gradient computation
 - Seamless switching via simple API parameter changes
+- Cloud-local hybrid for quantum chemistry: classical HF/post-HF kernels can be offloaded to cloud (GPU-first, CPU fallback) and restored locally via HF chkfile artifacts, preserving local control of VQE optimization.
 
 **Innovation 4: Counts-First Semantics with Unified Postprocessing**
 - Cross-vendor consistency: all device drivers return uniform counts format with expectations computed by postprocessing layer
@@ -92,7 +94,7 @@ graph TB
     subgraph "Execution Layer"
         C1[Simulators<br/>Statevector/MPS/DM]
         C2[Real Hardware<br/>IBM/TyxonQ/etc.]
-        C3[Cloud Providers<br/>Unified Sessions]
+        C3[Cloud Classical Kernels<br/>HF/MP2/CCSD]
     end
     
     subgraph "Libraries"
@@ -762,6 +764,15 @@ The Quantum AIDD application stack demonstrates how domain-specific optimization
 Looking forward, TyxonQ's modular architecture and clear separation of concerns position it well for the evolving quantum computing landscape. As hardware capabilities expand and new algorithms emerge, the framework's pluggable design ensures that innovations can be rapidly integrated without disrupting existing workflows.
 
 The framework's emphasis on reproducibility, portability, and hardware realism makes it particularly valuable for the quantum computing community as it transitions from experimental research to practical applications in drug discovery and pharmaceutical research. TyxonQ's contributions to measurement optimization, execution model design, and cross-platform compatibility establish new standards for quantum software engineering that will benefit the entire ecosystem.
+
+In addition, the cloud-local hybrid classical acceleration introduced for quantum chemistry strengthens these conclusions by providing practical, engineering-level advantages without disturbing the core programming model:
+
+- **Selective offloading, full local control**: Only heavy PySCF kernels (HF/post-HF) are offloaded; the VQE loop remains local for debuggability and research agility.
+- **Artifact-based reproducibility**: HF `chkfile` artifacts (base64) enable exact SCF-state restoration locally, avoiding redundant recomputation (integrals/RDM) and ensuring reproducible pipelines.
+- **GPU-first with graceful fallback**: A unified client and lightweight server route to GPU when available and fall back to CPU otherwise, delivering performance portability with a single API.
+- **Stable, language-agnostic interface**: Plain-JSON requests and responses, with numeric arrays serialized to lists and artifacts encoded as strings, simplify integration and long-term maintenance.
+- **Consistency and validation**: Unified total-energy conventions and golden tests ensure local/cloud equivalence, aligning with TyxonQ’s dual-path semantic consistency.
+- **Minimal user friction**: Users only set `classical_provider`/`classical_device`, and can pass PySCF-style molecule parameters directly; default behavior remains local.
 
 ---
 
