@@ -77,8 +77,8 @@ def compute(payload: Dict[str, Any], pre_build_mol: gto.Mole | None = None, pre_
             mf = scf.RHF(m)
         else:
             mf = scf.ROHF(m)
-        if use_density_fit and hasattr(mf, "density_fit"):
-            mf = mf.density_fit()
+        # if use_density_fit and hasattr(mf, "density_fit"):
+        #     mf = mf.density_fit()
         # ensure chkfile available for artifact export
         with tempfile.NamedTemporaryFile(prefix="hf_", suffix=".chk", delete=False) as tf:
             mf.chkfile = tf.name

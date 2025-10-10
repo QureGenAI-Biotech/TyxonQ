@@ -56,7 +56,7 @@ def test_gpu_classical_methods_smoke():
     payload_base = {"molecule_data": _mol_data(), "classical_device": "gpu"}
 
     # batch compute: request multiple methods at once to match new cpu_chem API
-    res = cpu_chem.compute({**payload_base, "method": ["fci", "ccsd", "ccsd(t)", "mp2", "dft"], "method_options": {"functional": "b3lyp"}})
+    res = gpu_chem.compute({**payload_base, "method": ["fci", "ccsd", "ccsd(t)", "mp2", "dft"], "method_options": {"functional": "b3lyp"}})
 
     assert isinstance(res["hf"]["energy"], float)
     assert abs(res["hf"]["energy"] - gold_results["hf"]) < 1e-6
@@ -114,14 +114,18 @@ def test_uccsd_local_vs_cloud_equal():
         u_local = UCCSD(**mol, classical_provider="local", runtime="device",run_fci=True)
         e_local = u_local.kernel(shots=0, provider="simulator", device="statevector")
 
-        u_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="auto", runtime="device",run_fci=True)
+        u_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="cpu", runtime="device",run_fci=True)
         e_cloud = u_cloud.kernel(shots=0, provider="simulator", device="statevector")
+
+        u_gpu_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="gpu", runtime="device",run_fci=True)
+        e_gpu_cloud = u_gpu_cloud.kernel(shots=0, provider="simulator", device="statevector")
 
         u_hea_cloud = HEA(**mol, classical_provider="tyxonq", classical_device="auto", runtime="device",run_fci=True)
         e_hea_cloud = u_hea_cloud.kernel(shots=0, provider="simulator", device="statevector")
 
         assert abs(e_local - u_local.e_fci) < 1e-6
         assert abs(e_local - e_cloud) < 1e-6
+        assert abs(e_local - e_gpu_cloud) < 1e-6
         assert abs(e_local - e_hea_cloud) < 1e-6
     finally:
         proc.terminate()
@@ -135,7 +139,8 @@ def test_uccsd_local_vs_cloud_equal():
 
 if __name__ == "__main__":
     # test_cpu_classical_methods_smoke()
-    test_uccsd_local_vs_cloud_equal()
+    # test_uccsd_local_vs_cloud_equal()
+    test_gpu_classical_methods_smoke()
     # test_cpu_hf_integrals_to_uccsd_and_hea()
     # test_gpu_chem_smoke_delegation
     # test_gpu_hf_integrals_ccsd_casstf_paths()
