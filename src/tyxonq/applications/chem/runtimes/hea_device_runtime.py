@@ -13,6 +13,8 @@ from tyxonq.compiler.utils.hamiltonian_grouping import (
 )
 from openfermion import QubitOperator
 from openfermion.linalg import get_sparse_operator
+from tyxonq.postprocessing import apply_postprocessing
+from tyxonq.devices import base as device_base
 
 
 Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
@@ -77,15 +79,21 @@ class HEADeviceRuntime:
 
         # Use cached grouping and prefixes for shots>0
         energy_val = self._identity_const
+        # 仅构建一次基电路；将各分组电路合并为一批提交
+        base_circuit = self._build_circuit(params)
+        circuits: List[Circuit] = []
+        items_by_idx: List[List[Tuple]] = []  # type: ignore[type-arg]
         for bases, items in self._groups.items():
-            c = self._build_circuit(params)
-            c.ops.extend(self._prefix_ops_for_bases(bases))
-            dev = c.device(provider=provider, device=device, shots=shots, noise=noise, **device_kwargs)
+            circuits.append(base_circuit.extended(self._prefix_ops_for_bases(bases)))
+            items_by_idx.append(items)
+
+        tasks = device_base.run(provider=provider, device=device, circuit=circuits, shots=shots, noise=noise, **device_kwargs)
+        for k, t in enumerate(tasks):
+            rr = t.get_result(wait=False)
             pp_opts = dict(postprocessing or {})
-            pp_opts.update({"method": "expval_pauli_sum", "identity_const": 0.0, "items": items})
-            dev = dev.postprocessing(**pp_opts)
-            res = dev.run()
-            payload = res[0]["postprocessing"]["result"] if isinstance(res, list) else (res.get("postprocessing", {}) or {}).get("result", {})
+            pp_opts.update({"method": "expval_pauli_sum", "identity_const": 0.0, "items": items_by_idx[k]})
+            post = apply_postprocessing(rr, pp_opts)
+            payload = post.get("result", {})
             energy_val += float((payload or {}).get("energy", 0.0))
         return float(energy_val)
 
@@ -119,16 +127,53 @@ class HEADeviceRuntime:
         #         g[i] = 0.5 * (e_plus - e_minus)
         #     return float(e0), g
 
-        e0 = self.energy(base, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-        g = np.zeros_like(base)
+        # ---- Batch base energy and parameter-shift in one submission ----
+        groups_seq = list(self._groups.items())
+        circuits_all: List[Circuit] = []
+        items_by_circuit: List[List[Tuple]] = []  # type: ignore[type-arg]
+        tags: List[Tuple[str, int]] = []
+
+        def _append_variant(pvec: np.ndarray, tag: Tuple[str, int]):
+            c0 = self._build_circuit(pvec)
+            for bases, items in groups_seq:
+                circuits_all.append(c0.extended(self._prefix_ops_for_bases(bases)))
+                items_by_circuit.append(items)
+                tags.append(tag)
+
+        # base
+        _append_variant(base, ("base", -1))
+
         s = 0.5 * pi
         for i in range(len(base)):
             p_plus = base.copy(); p_plus[i] += s
             p_minus = base.copy(); p_minus[i] -= s
-            e_plus = self.energy(p_plus, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-            e_minus = self.energy(p_minus, shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-            g[i] = 0.5 * (e_plus - e_minus)
-        return e0, g
+            _append_variant(p_plus, ("plus", i))
+            _append_variant(p_minus, ("minus", i))
+        tasks = device_base.run(provider=provider, device=device, circuit=circuits_all, shots=shots, noise=noise, **device_kwargs)
+
+
+        e0 = float(self._identity_const)
+        plus_energy = np.zeros(len(base), dtype=np.float64)
+        minus_energy = np.zeros(len(base), dtype=np.float64)
+
+        for k, t in enumerate(tasks):
+            rr = t.get_result(wait=False)
+            pp_opts = dict(postprocessing or {})
+            pp_opts.update({"method": "expval_pauli_sum", "identity_const": 0.0, "items": items_by_circuit[k]})
+            post = apply_postprocessing(rr, pp_opts)
+            e = float((post.get("result", {}) or {}).get("energy", 0.0))
+            tag, idx = tags[k]
+            if tag == "base":
+                e0 += e
+            elif tag == "plus":
+                plus_energy[idx] += e
+            elif tag == "minus":
+                minus_energy[idx] += e
+
+        g = np.zeros_like(base)
+        for i in range(len(base)):
+            g[i] = 0.5 * (plus_energy[i] - minus_energy[i])
+        return float(e0), g
 
     def _prefix_ops_for_bases(self, bases: Tuple[str, ...]) -> List[Tuple]:
         if bases in self._prefix_cache:

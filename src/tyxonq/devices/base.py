@@ -232,41 +232,56 @@ def run(
         else:
             raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
     else:
-        # circuit path
+        # circuit path (simulator/local only). Support single or batched circuits uniformly.
         if circuit is None:
             raise ValueError("run requires either circuit or source")
-        
+
         if prov not in ("simulator", "local"):
             # hardware path requires source (compilation should have been done by caller)
             raise ValueError("hardware run without source is not supported at device layer; compile in circuit layer")
-        # shots==0 + observable → use analytic expval path for testing convenience
-        try:
-            _shots_int = int(shots)  # type: ignore[arg-type]
-        except Exception:
-            _shots_int = 0
-        if _shots_int == 0 and ("observable" in opts):
-            # Compute exact expectation value via simulator engine
-            obs = opts.get("observable")
-            # Use simulator driver's expval API
-            e = expval(provider=prov, device=dev, circuit=circuit, observable=obs, **_inject_noise(opts))
-            # Wrap in a simulator task object to align with get_task_details
+
+        # Normalize to list of circuits for unified batch handling
+        circuits = list(circuit) if isinstance(circuit, (list, tuple)) else [circuit]
+
+        # shots==0 + observable → use analytic expval path (only valid for single circuit)
+        if len(circuits) == 1:
             try:
-                from .simulators.driver import SimTask  # type: ignore
-                task_like = SimTask(id="expval", device=dev, result={
-                    'result': {},
-                    'expectations': {'expval': float(e)},
-                    'probabilities': None,
-                    'statevector': None,
-                    'metadata': {'shots': 0, 'backend': 'analytic', 'provider': prov, 'device': dev},
-                })
-                raw = _normalize(task_like)
+                _shots_int = int(shots)  # type: ignore[arg-type]
             except Exception:
-                # Fallback: call through regular simulator run to keep shape
-                raw = _normalize(resolve_driver(prov, dev).run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
-        elif prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
-            raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
+                _shots_int = 0
+            if _shots_int == 0 and ("observable" in opts):
+                obs = opts.get("observable")
+                e = expval(provider=prov, device=dev, circuit=circuits[0], observable=obs, **_inject_noise(opts))
+                try:
+                    from .simulators.driver import SimTask  # type: ignore
+                    task_like = SimTask(id="expval", device=dev, result={
+                        'result': {},
+                        'expectations': {'expval': float(e)},
+                        'probabilities': None,
+                        'statevector': None,
+                        'metadata': {'shots': 0, 'backend': 'analytic', 'provider': prov, 'device': dev},
+                    })
+                    raw = _normalize(task_like)
+                except Exception:
+                    raw = _normalize(resolve_driver(prov, dev).run(dev, tok, circuit=circuits[0], shots=shots, **_inject_noise(opts)))
+            else:
+                # Single circuit standard path
+                raw = _normalize(drv.run(dev, tok, circuit=circuits[0], shots=shots, **_inject_noise(opts)))
         else:
-            raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **opts))
+            # Batched circuits path: order-preserving submission and collection
+            # Support shots as scalar or list aligned with circuits
+            if isinstance(shots, (list, tuple)):
+                shots_list = [int(s) for s in shots]
+                if len(shots_list) != len(circuits):
+                    raise ValueError("shots list length must match number of circuits")
+            else:
+                shots_list = [int(shots)] * len(circuits)
+
+            raw = []
+            for c_obj, s_val in zip(circuits, shots_list):
+                # Always inject noise settings consistently for simulators
+                per_opts = _inject_noise(opts)
+                raw.extend(_normalize(drv.run(dev, tok, circuit=c_obj, shots=s_val, **per_opts)))
 
     # Wrap into unified DeviceTask objects
 

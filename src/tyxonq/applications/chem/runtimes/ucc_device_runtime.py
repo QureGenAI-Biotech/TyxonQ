@@ -12,6 +12,8 @@ from tyxonq.compiler.utils.hamiltonian_grouping import (
     group_qubit_operator_terms,
 )
  
+from tyxonq.postprocessing import apply_postprocessing
+from tyxonq.devices import base as device_base
 
 
 try:
@@ -160,22 +162,28 @@ class UCCDeviceRuntime:
     ) -> float:
         # Use cached grouping and measurement prefixes
         energy_val = float(self._identity_const)
-        # energy_val = float(0.0)
+        # 仅构建一次基电路；将各分组电路合并为一批提交
+        base_circuit = c_builder()
+        circuits: List[Circuit] = []
+        items_by_idx: List[List[Tuple]] = []  # type: ignore[type-arg]
         for bases, items in self._groups.items():
-            c = c_builder()
-            c.ops.extend(self._prefix_ops_for_bases(bases))
-            dev = c.device(provider=provider, device=device, shots=shots, noise=noise, **device_kwargs)
-            # Chainable postprocessing: aggregate energy for this group's items
+            circuits.append(base_circuit.extended(self._prefix_ops_for_bases(bases)))
+            items_by_idx.append(items)
+
+        # 设备层批量执行，保持顺序一致
+        tasks = device_base.run(provider=provider, device=device, circuit=circuits, shots=shots, noise=noise, **device_kwargs)
+
+        # 手动应用与原先一致的后处理，累加每组能量
+        for k, t in enumerate(tasks):
+            rr = t.get_result(wait=False)
             pp_opts = dict(postprocessing or {})
             pp_opts.update({
                 "method": "expval_pauli_sum",
                 "identity_const": 0.0,
-                "items": items,
+                "items": items_by_idx[k],
             })
-            dev = dev.postprocessing(**pp_opts)
-            res = dev.run()
-            payload = res[0]["postprocessing"]["result"] if isinstance(res, list) else (res.get("postprocessing", {}) or {}).get("result", {})
-            # counts_expval.expval_pauli_sum returns dict with 'energy'
+            post = apply_postprocessing(rr, pp_opts)
+            payload = post.get("result", {})
             energy_val += float((payload or {}).get("energy", 0.0))
         return float(energy_val)
 
@@ -223,28 +231,22 @@ class UCCDeviceRuntime:
                 return self._build_ucc_circuit(pv)
             return _b
 
-        e0 = self._energy_core(_builder_with(base), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-        g = np.zeros_like(base)
-         # 对于 shots>0 的硬件/采样路径，使用对称有限差分以避免参数移位缩放不一致问题
-        # ~2°，数值稳定且差分信号明显
-        # Gradient strategy for counts (shots > 0): finite-difference vs parameter-shift
-        #
-        # - Finite-difference (FD):
-        #   Estimates dE/dθ ≈ [E(θ+δ) − E(θ−δ)] / (2δ). It works for any circuit and observable,
-        #   requires no gate-level derivative rules, but introduces truncation bias O(δ^2) and is
-        #   sensitive to sampling noise (variance roughly scales like 1/(δ^2·shots)).
-        #
-        # - Parameter-shift (PS):
-        #   Provides an exact analytic gradient for gates with suitable generators (e.g., ±1 spectra),
-        #   using two evaluations with ±s shifts (commonly s = π/2). PS has no truncation bias but still
-        #   carries sampling variance and requires compiling/executing the shifted circuits on hardware.
-        #
-        # - Why FD here for the counts path:
-        #   Our counts path measures grouped, basis-rotated Pauli sums. A naive PS over circuit parameters
-        #   can lead to scaling/mismatch with grouping unless a full compiler-level gradient transform is applied
-        #   (to batch and share shifts safely across measurement groups). Until that pass exists, FD is consistent
-        #   with the exact energy functional we are sampling. The chosen step (~2 degrees) balances truncation bias
-        #   against shot noise; increasing shots reduces variance, while decreasing step reduces bias.
+        # ---- Batch energy and gradients in one device submission ----
+        # Prepare circuits for base and all ± shifts across all groups
+        groups_seq = list(self._groups.items())
+        circuits_all: List[Circuit] = []
+        items_by_circuit: List[List[Tuple]] = []  # type: ignore[type-arg]
+        tags: List[Tuple[str, int]] = []  # (variant, param_index)
+
+        def _append_variant(pvec: np.ndarray, tag: Tuple[str, int]):
+            c0 = self._build_ucc_circuit(pvec)
+            for bases, items in groups_seq:
+                circuits_all.append(c0.extended(self._prefix_ops_for_bases(bases)))
+                items_by_circuit.append(items)
+                tags.append(tag)
+
+        # base
+        _append_variant(base, ("base", -1))
 
         method = str(gradient_method).lower()
         if method == "fd":
@@ -252,17 +254,51 @@ class UCCDeviceRuntime:
             for i in range(len(base)):
                 p_plus = base.copy(); p_plus[i] += shift
                 p_minus = base.copy(); p_minus[i] -= shift
-                e_plus = self._energy_core(_builder_with(p_plus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-                e_minus = self._energy_core(_builder_with(p_minus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise,  **device_kwargs)
-                g[i] = 0.5 * (e_plus - e_minus)
+                _append_variant(p_plus, ("plus", i))
+                _append_variant(p_minus, ("minus", i))
+        else:
+            step = float(np.pi / 90.0)
+            for i in range(len(base)):
+                p_plus = base.copy(); p_plus[i] += step
+                p_minus = base.copy(); p_minus[i] -= step
+                _append_variant(p_plus, ("plus_s", i))
+                _append_variant(p_minus, ("minus_s", i))
+
+        tasks = device_base.run(provider=provider, device=device, circuit=circuits_all, shots=shots, noise=noise, **device_kwargs)
+
+        e0 = float(self._identity_const)
+        n_params = len(base)
+        plus_energy = np.zeros(n_params, dtype=np.float64)
+        minus_energy = np.zeros(n_params, dtype=np.float64)
+
+        for k, t in enumerate(tasks):
+            rr = t.get_result(wait=False)
+            pp_opts = dict(postprocessing or {})
+            pp_opts.update({
+                "method": "expval_pauli_sum",
+                "identity_const": 0.0,
+                "items": items_by_circuit[k],
+            })
+            post = apply_postprocessing(rr, pp_opts)
+            e = float((post.get("result", {}) or {}).get("energy", 0.0))
+            tag, idx = tags[k]
+            if tag == "base":
+                e0 += e
+            elif tag.startswith("plus"):
+                if 0 <= idx < n_params:
+                    plus_energy[idx] += e
+            elif tag.startswith("minus"):
+                if 0 <= idx < n_params:
+                    minus_energy[idx] += e
+
+        g = np.zeros_like(base)
+        if method == "fd":
+            for i in range(n_params):
+                g[i] = 0.5 * (plus_energy[i] - minus_energy[i])
             return float(e0), g
-        # default: finite-difference (small angle)
-        step = float(np.pi / 90.0)
-        for i in range(len(base)):
-            p_plus = base.copy(); p_plus[i] += step
-            p_minus = base.copy(); p_minus[i] -= step
-            e_plus = self._energy_core(_builder_with(p_plus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-            e_minus = self._energy_core(_builder_with(p_minus), shots=shots, provider=provider, device=device, postprocessing=postprocessing, noise=noise, **device_kwargs)
-            g[i] = (e_plus - e_minus) / (2.0 * step)
-        return float(e0), g
+        else:
+            step = float(np.pi / 90.0)
+            for i in range(n_params):
+                g[i] = (plus_energy[i] - minus_energy[i]) / (2.0 * step)
+            return float(e0), g
 
