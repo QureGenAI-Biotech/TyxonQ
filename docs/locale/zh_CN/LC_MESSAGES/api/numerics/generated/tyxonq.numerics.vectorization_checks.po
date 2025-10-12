@@ -1,0 +1,62 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 3abced7b9fee431ca9a2afbca7ad79cd
+msgid "tyxonq.numerics.vectorization\\_checks"
+msgstr ""
+
+#: 87b82a46ca01426dbdf193b9ddda39b8
+msgid "Functions"
+msgstr ""
+
+#: 37a4f270ad5e483285b51c5e566f3bed
+msgid ""
+":py:obj:`safe_for_vectorization "
+"<tyxonq.numerics.vectorization_checks.safe_for_vectorization>`\\ \\(fn\\,"
+" args\\, kwargs\\)"
+msgstr ""
+
+#: 48a5a3410abd449b987a23ef0f7ac7c6 ab2df257a5ef4073b23fdea08313822b
+msgid "Heuristic check whether a function is likely safe to vectorize."
+msgstr ""
+
+#: 4daa50bdd76a47169c7ca38f3a09e81c
+msgid ""
+":py:obj:`warn_as_error "
+"<tyxonq.numerics.vectorization_checks.warn_as_error>`\\ \\(keywords\\)"
+msgstr ""
+
+#: 0c3c0d38f8c0462ca996f7926149f3a2 57e889d9f7994961a58a50bab490f845
+msgid ""
+"Context that converts matching warnings to exceptions and records if "
+"raised."
+msgstr ""
+
+#: 043cef3f23574d28ada583c395463d38
+msgid ""
+"Current heuristic: functions that emit warnings containing specific "
+"substrings (e.g., alias) are considered unsafe."
+msgstr ""
+
+#: 9ad29f91d4574f5787c6257962069570
+msgid "Yields a dict with 'raised' flag."
+msgstr ""
+

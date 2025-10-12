@@ -1,0 +1,276 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 62ca8a208edf4cd6ac3d30342f2f3d15
+msgid "Device Abstraction"
+msgstr ""
+
+#: f8dff4f4a36941159a9dd8459bbd690d
+msgid ""
+"TyxonQ's device layer provides a unified interface for accessing various "
+"quantum simulators and real hardware. Through abstraction design, users "
+"can seamlessly switch between different execution backends."
+msgstr ""
+
+#: c02f5ac9dd6e49d08071e7748a3712fd
+msgid "Contents"
+msgstr ""
+
+#: 1f1fd9cdf6c04598b0c894037a3eacf1
+msgid "Overview"
+msgstr ""
+
+#: c8f85a72f3084221852f5e16b8457585
+msgid "Core design principles of the TyxonQ device abstraction layer:"
+msgstr ""
+
+#: 594449ef0e664ecc9bc255b256c06f34
+msgid "**Unified Interface**: All devices implement the same API interface"
+msgstr ""
+
+#: 08e717b15ee045e4b6daca2d853b9741
+msgid ""
+"**Transparent Execution**: Users don't need to worry about underlying "
+"implementation details"
+msgstr ""
+
+#: c09bfe7f28a4410a8df316fb26bc4c11
+msgid ""
+"**Flexible Configuration**: Support for various execution parameters and "
+"device-specific options"
+msgstr ""
+
+#: 337b6f4141154628a3a099193398ca76
+msgid ""
+"**Session Management**: Provides elegant resource management and task "
+"scheduling"
+msgstr ""
+
+#: 62c3496ef9f54b1288106bd93e85e1f0
+msgid "Simulator Types"
+msgstr ""
+
+#: 94ba7db5946c4f2e8eeacd1bfa08a379
+msgid "Statevector Simulator"
+msgstr ""
+
+#: d6a45b2eba69473daa1da2ae8dfefa0d
+msgid ""
+"**Principle**: Uses complete state vector representation of quantum "
+"states."
+msgstr ""
+
+#: 65ea335dd0f849a48680a386933dd88e
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"# Use statevector simulator\n"
+"result = circuit.device('statevector').run(shots=1000)\n"
+"\n"
+"# Get exact state vector\n"
+"state_result = circuit.device('statevector').run()\n"
+"print(f\"State vector: {state_result}\")"
+msgstr ""
+
+#: 1eedd448420b4a2ab3c905efec9a9c82
+msgid "Density Matrix Simulator"
+msgstr ""
+
+#: 02df44e3a20e4f879bbf95d7205ae404
+msgid ""
+"**Principle**: Uses density matrix to represent quantum states, "
+"supporting mixed states and noise."
+msgstr ""
+
+#: 5716083952f14dafa6bd725d9dc39c6b
+#, python-brace-format
+msgid ""
+"# Use density matrix simulator\n"
+"result = circuit.device(\n"
+"    'density_matrix',\n"
+"    noise_model={'depolarizing': {'p': 0.01}}\n"
+").run(shots=1000)"
+msgstr ""
+
+#: 357ff19e6f7d4317ab4f85c278471c73
+msgid "MPS Simulator"
+msgstr ""
+
+#: 2fce90d63ba1402b911c6f2e2871d237
+msgid ""
+"**Principle**: Uses Matrix Product State representation, suitable for "
+"large-scale circuits."
+msgstr ""
+
+#: 7b95010d06974f43a0983d9739a3d152
+msgid ""
+"# Large-scale circuit\n"
+"circuit = tq.Circuit(50)\n"
+"for i in range(49):\n"
+"    circuit.h(i)\n"
+"\n"
+"# Use MPS simulator\n"
+"result = circuit.device(\n"
+"    'mps',\n"
+"    max_bond_dim=100\n"
+").run(shots=1000)"
+msgstr ""
+
+#: 602d25f5e7a64b089856d4970d5ffdde
+msgid "Hardware Devices"
+msgstr ""
+
+#: 34d1b61fd9c04f0384fdff324a10d5a8
+msgid "TyxonQ Processor"
+msgstr ""
+
+#: 15125f39428b4b00ac1d1de46514c18b
+msgid ""
+"# Connect to TyxonQ hardware\n"
+"result = circuit.device(\n"
+"    provider='tyxonq',\n"
+"    device='processor_s2',\n"
+"    shots=1024\n"
+").run()"
+msgstr ""
+
+#: 355b18051bbc4bd3ab67d1a26dd8b29f
+msgid "Session Management"
+msgstr ""
+
+#: 13211f5dbdad41e5aa312126bae33426
+msgid ""
+"from tyxonq.devices import Session\n"
+"\n"
+"# Create session\n"
+"with Session(device='statevector', shots=1000) as session:\n"
+"    result1 = circuit1.run()\n"
+"    result2 = circuit2.run()\n"
+"    result3 = circuit3.run()"
+msgstr ""
+
+#: 477a8559a65a4018ab6797131af80104
+msgid "Performance Comparison"
+msgstr ""
+
+#: 5278e0ea6d2149999e89bd0f3e327ee1
+msgid "Simulator Performance Comparison"
+msgstr ""
+
+#: b7c54c4b111846cca3fdc6fa7564c34f
+msgid "Simulator Type"
+msgstr ""
+
+#: 407bdf3c45684125b55734ff221bdfa4
+msgid "Memory Complexity"
+msgstr ""
+
+#: d6de481e28c54d08bd65af56a0760452
+msgid "Max Qubits"
+msgstr ""
+
+#: 31b7d3b1487748768061e5ce01520ac0
+msgid "Precision"
+msgstr ""
+
+#: 1fc7e435cfc6490a8d2a301dace6e5b2
+msgid "Best Application"
+msgstr ""
+
+#: 8c492d505e6d4b259296c0dfd72ef1b2
+msgid "Statevector"
+msgstr ""
+
+#: ea4c0004776d4146bc7a04c18b29164d
+msgid "O(2^n)"
+msgstr ""
+
+#: 4ce6c5c293af4939bdb7967b7f939033
+msgid "~30-35"
+msgstr ""
+
+#: dc847c01f84949a0965d2375926d06b1
+msgid "Exact"
+msgstr ""
+
+#: 084cbebd03a14a988044b8a5281b5f0e
+msgid "Small-scale simulation"
+msgstr ""
+
+#: d708ee390781484cb28c21f301334fde
+msgid "Density Matrix"
+msgstr ""
+
+#: ddc10e8d9d0942049ad712cd285a4b44
+msgid "O(4^n)"
+msgstr ""
+
+#: 1e98c549170f4820b82a8573af6145de
+msgid "~15-20"
+msgstr ""
+
+#: 4c18e869b26d491c8bf183cd42430a79
+msgid "Exact (noisy)"
+msgstr ""
+
+#: 6438be56f99a4a5a988e3f37994ac97c
+msgid "Noise research"
+msgstr ""
+
+#: 7b65c06082e7451c99b9a9d10ae56bcd
+msgid "MPS"
+msgstr ""
+
+#: ee743127fe53480a967a05ebff2f9999
+msgid "O(χ×n)"
+msgstr ""
+
+#: 8a1535d41a4f4d0792d1ecf58847f4f3
+msgid "50+"
+msgstr ""
+
+#: 0958b2cf938542569350380f958c8b00
+msgid "Approximate"
+msgstr ""
+
+#: e30124e913c143298f5a643b1f8b449d
+msgid "Large system simulation"
+msgstr ""
+
+#: 96ed5ebaa1824becb488dc28c4cffcb3
+msgid "Related Resources"
+msgstr ""
+
+#: 9045cfb37e1c4001bc20d6845438fa12
+msgid ":doc:`/api/devices/index` - Devices API Reference"
+msgstr ""
+
+#: 5aa6bf8cc4f64393986b3f23797d3daa
+msgid ":doc:`../numerics/index` - Numerical Computation Backend"
+msgstr ""
+
+#: 8d68210cdda4406483764492defb3048
+msgid ":doc:`/cloud_services/index` - Cloud Device Access"
+msgstr ""
+

@@ -1,0 +1,100 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 94494ffca1d84005b50c37a4bddb4d5a
+msgid "tyxonq.core.operations"
+msgstr ""
+
+#: 8f087c28965b4e689573d504d75c5577
+msgid "Classes"
+msgstr ""
+
+#: 0b3528d7883947db95f3bf73f55664b5
+msgid ""
+":py:obj:`GateSpec <tyxonq.core.operations.GateSpec>`\\ \\(name\\, "
+"num\\_qubits\\[\\, generator\\, ...\\]\\)"
+msgstr ""
+
+#: 45ea1a07248c459194fd2a5d00498f7d 87d268ba752e407cbc9e9670cc9e7109
+msgid "Metadata describing a gate/operator."
+msgstr ""
+
+#: 7499a2058b5b44b6acf91dc468bde459
+msgid ""
+":py:obj:`Operation <tyxonq.core.operations.Operation>`\\ \\(name\\, "
+"wires\\[\\, params\\]\\)"
+msgstr ""
+
+#: 18e8b4c53e474653b3fde472c94a1984 c07c393ee30e4e15b754cc92d1287ffd
+msgid "A placed operation referring to a gate by name on specific wires."
+msgstr ""
+
+#: 557bacc50dd8450f8f3806a46406a25c 65f669b11ce84cadb40ec09496fa35f3
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: b8e9eeb91492429a89d067c03b38cfa2
+msgid "Fields:"
+msgstr ""
+
+#: 46aed8564d0c458c9c163fc7005ab4f2
+msgid ""
+"name: Canonical gate name (e.g., \"h\", \"cx\"). num_qubits: Arity of the"
+" operation. generator: Optional generator information for gradients. "
+"differentiable: Whether parameterized variants are differentiable."
+msgstr ""
+
+#: 316c14533cf54be4a7b92f107379b44e
+msgid "Return the unitary matrix for a supported gate."
+msgstr ""
+
+#: 187af1e298ab4503aa4e21fe182c9805
+msgid "Parameters"
+msgstr ""
+
+#: 2d4c7b2983a743e482184800e7b521a4
+msgid "Gate name. Supported: \"h\", \"rz\", \"cx\"."
+msgstr ""
+
+#: ce41d35f34774984a6bb44a2c085fc12
+msgid "Gate parameters. For \"rz\", expects one angle ``theta``."
+msgstr ""
+
+#: 74271805f5694ffdb14290a821b6a635
+msgid "Returns"
+msgstr ""
+
+#: 636485460bd6440c8c2071fc7b2a5443
+msgid "The unitary matrix with dtype=complex128."
+msgstr ""
+
+#: 9410d32fb82848bb97a857d7d7111b8f
+msgid "Return type"
+msgstr ""
+
+#: f360854da31e43afb1703e0eaa5ab9cb
+msgid "Raises"
+msgstr ""
+
+#: f9ba14c27c384914a96a6214893cdc66
+msgid "If the gate is unknown or parameters are missing."
+msgstr ""
+

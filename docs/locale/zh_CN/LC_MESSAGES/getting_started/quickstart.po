@@ -1,0 +1,416 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 2be0b1eba131428eaf3d7cb1946df2e5
+msgid "Quick Start"
+msgstr ""
+
+#: 5d852f2dbd8a48ebb610e9c1d121450e
+msgid ""
+"Get up and running with TyxonQ in 5 minutes! This quick start guide will "
+"show you the basics of creating and running quantum circuits."
+msgstr ""
+
+#: c7751f802cc045329d629cbb84fbfffb
+msgid "Prerequisites"
+msgstr ""
+
+#: 6826962bd8fc4d31997cb872b6e5b8b8
+msgid "Make sure you have TyxonQ installed. If not, see :doc:`installation`."
+msgstr ""
+
+#: a0e345f76e2d40c3b13351ad0bf5f1b7
+msgid "pip install tyxonq"
+msgstr ""
+
+#: 41bb097e0d7945d28d7e43c2c5ec012f
+msgid "Your First Quantum Circuit"
+msgstr ""
+
+#: 7a721ce8dd3c499d8bb880dec01d4291
+msgid "Let's create a simple Bell state - a maximally entangled quantum state."
+msgstr ""
+
+#: d3d08c7bb6734c82b01e58ee4d446cf4
+msgid "Step 1: Import TyxonQ"
+msgstr ""
+
+#: 86eb5b2350d647d9948c2a5d88434128
+msgid ""
+"import tyxonq as tq\n"
+"import numpy as np"
+msgstr ""
+
+#: 6b4c689641534aed8085b3f1a03e7743
+msgid "Step 2: Create a Circuit"
+msgstr ""
+
+#: 693b3a617a80428ab2c478ef3866dc58
+msgid ""
+"# Create a circuit with 2 qubits\n"
+"circuit = tq.Circuit(2)\n"
+"\n"
+"# Apply Hadamard gate to qubit 0\n"
+"circuit.h(0)\n"
+"\n"
+"# Apply CNOT gate (control=0, target=1)\n"
+"circuit.cnot(0, 1)\n"
+"\n"
+"# Add measurements\n"
+"circuit.measure_all()\n"
+"\n"
+"print(circuit)"
+msgstr ""
+
+#: 223f9508863844a5be16b18444a15d42 a4b457b8bf3c4c699fef60fe443d7525
+msgid "Output:"
+msgstr ""
+
+#: f5ac142039324b499d3e5a816dcb63be
+msgid ""
+"Circuit(2 qubits, 3 operations):\n"
+"H(0)\n"
+"CNOT(0, 1)\n"
+"Measure(0, 1)"
+msgstr ""
+
+#: 25867f869b56416a9e97f0013ad83262
+msgid "Step 3: Compile and Execute"
+msgstr ""
+
+#: 0d085a6ce4c64fcd89d42a6e8246510f
+msgid ""
+"# Compile the circuit\n"
+"compiled_circuit = circuit.compile()\n"
+"\n"
+"# Execute on statevector simulator\n"
+"result = compiled_circuit.device('statevector').run(shots=1000)\n"
+"\n"
+"# View results\n"
+"print(result.counts)"
+msgstr ""
+
+#: 797ae60ffc2f47fd874d4e59e3af7cf8
+#, python-brace-format
+msgid "{'00': 502, '11': 498}"
+msgstr ""
+
+#: 8edbcc76673d4f978771d9e713b2438f
+msgid ""
+"The results show that we've created a Bell state - measuring either |00⟩ "
+"or |11⟩ with approximately equal probability."
+msgstr ""
+
+#: 5a3fccc0b1ea4833a6b4d0af76a290b9
+msgid "Understanding the Code"
+msgstr ""
+
+#: 924d2081ebe148e28682e732989ab5e1
+msgid "Circuit Creation"
+msgstr ""
+
+#: ec6d8b9d4a6741838056df055a7090a1
+msgid "circuit = tq.Circuit(n_qubits)"
+msgstr ""
+
+#: 7bb4199bdd3e43cbbeb25a310c136500
+msgid "Creates a quantum circuit with the specified number of qubits."
+msgstr ""
+
+#: 7e396521715748edb0f4dbef68e24294
+msgid "Gates"
+msgstr ""
+
+#: cd0c65683fba4fe7959a5388f2a35de4
+msgid "TyxonQ supports all standard quantum gates:"
+msgstr ""
+
+#: b0a1aa3fc2a4405786df03c127e99fc6
+msgid ""
+"circuit.h(qubit)          # Hadamard gate\n"
+"circuit.x(qubit)          # Pauli-X gate\n"
+"circuit.y(qubit)          # Pauli-Y gate\n"
+"circuit.z(qubit)          # Pauli-Z gate\n"
+"circuit.rx(qubit, theta)  # Rotation around X-axis\n"
+"circuit.ry(qubit, theta)  # Rotation around Y-axis\n"
+"circuit.rz(qubit, theta)  # Rotation around Z-axis\n"
+"circuit.cnot(control, target)  # Controlled-NOT\n"
+"circuit.cz(control, target)    # Controlled-Z"
+msgstr ""
+
+#: c51aed17a1a04b46907745e3f73696af
+msgid "Measurements"
+msgstr ""
+
+#: 24483ae6d546447b91aa34f67311752c
+msgid ""
+"circuit.measure(qubit)     # Measure specific qubit\n"
+"circuit.measure_all()      # Measure all qubits"
+msgstr ""
+
+#: 0cd066e9dfd543128bdd0baad07daa74
+msgid "Compilation"
+msgstr ""
+
+#: 88d4cda324984535a9ae02bfdc19f40c
+msgid "compiled = circuit.compile()"
+msgstr ""
+
+#: d236961ee9f147e8b35be766e94980c6
+msgid "The compiler optimizes your circuit and prepares it for execution."
+msgstr ""
+
+#: 5f0b3906c9c74413a20382be6d695b7e
+msgid "Execution"
+msgstr ""
+
+#: fdef328e5ca54721a4f7615bafce1c6f
+msgid "result = compiled.device('statevector').run(shots=1000)"
+msgstr ""
+
+#: 9cdf358084344abd98faeb957e299f62
+msgid "Executes the circuit on the specified device (simulator or hardware)."
+msgstr ""
+
+#: 0e49c4dca8ce4ce19371848dd9d8d21e
+msgid "More Examples"
+msgstr ""
+
+#: 39686021cc2f4746a18e76286bd8971b
+msgid "Example 1: Superposition"
+msgstr ""
+
+#: e1325b83425c4020a4888eaa4d6089d1
+msgid "Create a superposition of all basis states:"
+msgstr ""
+
+#: aa07d57e84ba44edaec2317f517c70d3
+msgid ""
+"circuit = tq.Circuit(3)\n"
+"for i in range(3):\n"
+"    circuit.h(i)\n"
+"circuit.measure_all()\n"
+"\n"
+"result = circuit.compile().device('statevector').run(shots=1000)\n"
+"print(result.counts)"
+msgstr ""
+
+#: d13a72d34f5f4c0f8ad41abf1fe0e538
+msgid "Example 2: Phase Kickback"
+msgstr ""
+
+#: 36d8621dc74b47fda335d3a51fa8276e
+msgid "Demonstrate quantum phase kickback:"
+msgstr ""
+
+#: 5acc5b1d086946319016e94a71ffceac
+msgid ""
+"circuit = tq.Circuit(2)\n"
+"\n"
+"# Prepare |+⟩ ⊗ |-⟩\n"
+"circuit.h(0)\n"
+"circuit.x(1)\n"
+"circuit.h(1)\n"
+"\n"
+"# Apply CNOT\n"
+"circuit.cnot(0, 1)\n"
+"\n"
+"# Measure\n"
+"circuit.h(0)\n"
+"circuit.measure_all()\n"
+"\n"
+"result = circuit.compile().device('statevector').run(shots=1000)\n"
+"print(result.counts)"
+msgstr ""
+
+#: aa6f41e80d074522826b481cb35ff418
+msgid "Example 3: Quantum Teleportation"
+msgstr ""
+
+#: 27a865c2a431467aa019b2b30b4eaf99
+msgid "A simple quantum teleportation circuit:"
+msgstr ""
+
+#: fb38d7a38c654318956fe811686a9a83
+msgid ""
+"circuit = tq.Circuit(3)\n"
+"\n"
+"# Prepare Bell pair between qubits 1 and 2\n"
+"circuit.h(1)\n"
+"circuit.cnot(1, 2)\n"
+"\n"
+"# Prepare state to teleport on qubit 0 (optional, here we use |+⟩)\n"
+"circuit.h(0)\n"
+"\n"
+"# Bell measurement on qubits 0 and 1\n"
+"circuit.cnot(0, 1)\n"
+"circuit.h(0)\n"
+"circuit.measure([0, 1])\n"
+"\n"
+"# Conditional operations on qubit 2 (classical control)\n"
+"circuit.cz(1, 2)\n"
+"circuit.cnot(0, 2)\n"
+"\n"
+"# Measure final state\n"
+"circuit.measure(2)\n"
+"\n"
+"result = circuit.compile().device('statevector').run(shots=1000)\n"
+"print(result.counts)"
+msgstr ""
+
+#: 31aba1bebafb4a2f8cd7eb634089ef72
+msgid "Working with Different Backends"
+msgstr ""
+
+#: e2286373265c4f498d812dc483fa3b58
+msgid "TyxonQ supports multiple numerical backends:"
+msgstr ""
+
+#: cc8d98dcf5864850b278687fb4d763d6
+msgid "NumPy Backend (Default)"
+msgstr ""
+
+#: e7d8ee34426040628a7fc76aca6afc32
+msgid ""
+"import tyxonq as tq\n"
+"tq.set_backend('numpy')\n"
+"\n"
+"circuit = tq.Circuit(2)\n"
+"circuit.h(0)\n"
+"circuit.cnot(0, 1)"
+msgstr ""
+
+#: ad1b82692ec8451b9a6bce683e149cd3
+msgid "PyTorch Backend"
+msgstr ""
+
+#: 72d79627cd644050990747f9e2ff3d38
+msgid "Enable automatic differentiation:"
+msgstr ""
+
+#: a4d4425498eb4f54bca806c2f2b72255
+msgid ""
+"tq.set_backend('pytorch')\n"
+"\n"
+"# Same circuit code works with PyTorch backend\n"
+"circuit = tq.Circuit(2)\n"
+"circuit.h(0)\n"
+"circuit.cnot(0, 1)"
+msgstr ""
+
+#: 769ea129aca34a598942dfdd2598f933
+msgid "GPU Acceleration"
+msgstr ""
+
+#: fc16b5c808e64b7e9526ad8d9cb4d44e
+msgid "Use CuPy for GPU acceleration:"
+msgstr ""
+
+#: 36a5d161169c4c0ba238625770ff8b10
+msgid ""
+"tq.set_backend('cupy')\n"
+"\n"
+"# Circuits automatically use GPU\n"
+"circuit = tq.Circuit(10)  # Larger circuits benefit more from GPU\n"
+"for i in range(10):\n"
+"    circuit.h(i)"
+msgstr ""
+
+#: 6f7871bd12754bc3ad590243a20f61c7
+msgid "Using Different Simulators"
+msgstr ""
+
+#: 262fe9d450c24681914f3da9017a1cda
+msgid "Statevector Simulator"
+msgstr ""
+
+#: 70807acfb0b24895a286dd9ad92138a5
+msgid "result = circuit.compile().device('statevector').run(shots=1000)"
+msgstr ""
+
+#: 1ecfcfbed7c045e8a07c98191a71d94b
+msgid "Density Matrix Simulator"
+msgstr ""
+
+#: 7790c5fad3494b78a889c56d2054a8de
+msgid "For simulations with noise:"
+msgstr ""
+
+#: e9dcd665620d4fd691b00429b11df04b
+msgid "result = circuit.compile().device('density_matrix').run(shots=1000)"
+msgstr ""
+
+#: 99a5d861119f49cc9304efa18d3a3da4
+msgid "MPS Simulator"
+msgstr ""
+
+#: 757100d34314437181d6c7355ed62447
+msgid "For large circuits with limited entanglement:"
+msgstr ""
+
+#: a8606a91e7d04fb487ce1affad2dd384
+msgid "result = circuit.compile().device('mps').run(shots=1000)"
+msgstr ""
+
+#: 77b00063f4f9459eba3d62db318658d3
+msgid "Next Steps"
+msgstr ""
+
+#: 19e8f912ddb842d4b412d66d75b32d49
+msgid "Now that you've learned the basics, explore:"
+msgstr ""
+
+#: 092d2c592fbc48fc8d833038644c2635
+msgid ":doc:`first_circuit` - Deep dive into circuit construction"
+msgstr ""
+
+#: a755332c5d43442d8d0fe3d1bf795539
+msgid ":doc:`first_chemistry` - Quantum chemistry applications"
+msgstr ""
+
+#: cb7d0847f9004c5188b90a25ceebcaf2
+msgid ":doc:`../user_guide/index` - Comprehensive user guides"
+msgstr ""
+
+#: 9770435d2ad34041841b2ff32a54fc0c
+msgid ":doc:`../tutorials/index` - Step-by-step tutorials"
+msgstr ""
+
+#: 528d3a2fa24542b1bd1a75573c388259
+msgid ":doc:`../examples/index` - More example code"
+msgstr ""
+
+#: f369d011e27647bf8aef7b084982fec0
+msgid "For detailed API documentation:"
+msgstr ""
+
+#: 3b4c6edefe2443e29098cee01168062d
+msgid ":doc:`../api/core/circuit` - Circuit API reference"
+msgstr ""
+
+#: 0f970011d68e4d299e44b1a3786b24e8
+msgid ":doc:`../api/devices/index` - Device backends"
+msgstr ""
+
+#: 1c81fae8e73f492eb5f0f202462f0821
+msgid ":doc:`../api/compiler/index` - Compilation pipeline"
+msgstr ""
+

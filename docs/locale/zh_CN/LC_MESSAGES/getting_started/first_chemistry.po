@@ -1,0 +1,397 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 2a75f65cf2134ef69f74434ed0951ec8
+msgid "第一个量子化学计算"
+msgstr ""
+
+#: 1c77b71f27164d448aa1fb1b177142b0
+msgid "欢迎来到量子化学的世界！本指南将带您一步步学习如何使用TyxonQ的VQE（变分量子本征求解器）执行您的第一个量子化学计算。"
+msgstr ""
+
+#: b46a6098597442b6a6ca4b256461c2f5
+msgid "本页内容"
+msgstr ""
+
+#: bd52ed4e4c7844a58eda53d5a0cb4cba
+msgid "概述"
+msgstr ""
+
+#: fb5c9a73bc2d4f7892124a4c86cf8e5b
+msgid "量子化学是量子计算最重要的应用领域之一。TyxonQ提供了完整的量子化学模块，包括："
+msgstr ""
+
+#: fc0ed1b94b044c5e9d3af6c7110a2162
+msgid "**分子建模**：使用 :class:`Molecule` 类定义分子结构"
+msgstr ""
+
+#: c745d0677fdf46f1bfbafe46f3642779
+msgid "**哈密顿量构建**：自动生成量子哈密顿量"
+msgstr ""
+
+#: 6725d60ae2fb4db0a8bcd7523e9b0811
+msgid "**VQE算法**：包括UCCSD、HEA等多种拟设"
+msgstr ""
+
+#: 205224bd30d24842829949c032c2948e
+msgid "**变分优化**：集成多种优化器"
+msgstr ""
+
+#: 955e54d074634ebfa130ce7d5b5bc8ab
+msgid "**核心概念**"
+msgstr ""
+
+#: 37aedba4f90c48589d828352fcba7188
+msgid "**VQE算法**：通过变分原理求解分子基态能量"
+msgstr ""
+
+#: 72ac55eeea574ba3b82af4daa3ef274e
+msgid "**拟设电路**：参数化的量子电路，用于准备试探波函数"
+msgstr ""
+
+#: ba6c5b0cb3174f8d878e9bdd0e043b0a
+msgid "**哈密顿量**：描述分子电子结构的量子算符"
+msgstr ""
+
+#: 89e16a6577cc407ab00480392bc7688f
+msgid "**对称性破缺**：从有限对称群到可解的类群"
+msgstr ""
+
+#: 495dd7b61a5f49208349d712821f6ed0
+msgid "分子设置与建模"
+msgstr ""
+
+#: 7ef38ee6379a4ac195989acf9f7e68cd
+msgid "创建分子对象"
+msgstr ""
+
+#: 402f384bae104cb2bb6fc2f8b29f0c19
+msgid "使用TyxonQ的 :class:`Molecule` 类定义分子："
+msgstr ""
+
+#: e2a3411400794dd4b8eefdc19917f690
+#, python-brace-format
+msgid ""
+"from tyxonq.applications.chem import Molecule\n"
+"\n"
+"# 定义氢分子 (H2)\n"
+"h2_molecule = Molecule(\n"
+"    atoms=[\n"
+"        [\"H\", [0.0, 0.0, 0.0]],      # 第一个氢原子\n"
+"        [\"H\", [0.0, 0.0, 0.74]]      # 第二个氢原子，间距0.74埃\n"
+"    ],\n"
+"    basis=\"sto-3g\",                   # 使用STO-3G基组\n"
+"    charge=0,                         # 中性分子\n"
+"    spin=0                            # 单重态\n"
+")\n"
+"\n"
+"print(f\"分子电荷: {h2_molecule.charge}\")\n"
+"print(f\"自旋: {h2_molecule.spin}\")\n"
+"print(f\"电子数: {h2_molecule.n_electrons}\")"
+msgstr ""
+
+#: 1adfeb25e33440ad97a80034f780eb44
+msgid "复杂分子示例"
+msgstr ""
+
+#: 6e9b2c3b309d4457bfefc0e25b95a1b7
+msgid "创建水分子（H2O）："
+msgstr ""
+
+#: 71602940f09b48a7b99190ed39ff352c
+#, python-brace-format
+msgid ""
+"# 水分子的优化几何结构\n"
+"h2o_molecule = Molecule(\n"
+"    atoms=[\n"
+"        [\"O\", [0.0, 0.0, 0.0]],\n"
+"        [\"H\", [0.757, 0.586, 0.0]],\n"
+"        [\"H\", [-0.757, 0.586, 0.0]]\n"
+"    ],\n"
+"    basis=\"6-31g\",                    # 使用更精确的基组\n"
+"    charge=0,\n"
+"    spin=0\n"
+")\n"
+"\n"
+"print(f\"H2O电子数: {h2o_molecule.n_electrons}\")\n"
+"print(f\"轨道数: {h2o_molecule.n_orbitals}\")"
+msgstr ""
+
+#: 966e13548992492f9aefbbb6650742e3
+msgid "哈密顿量构建"
+msgstr ""
+
+#: d980d959794849f2877c0b767bd4482d
+msgid "电子哈密顿量"
+msgstr ""
+
+#: 28a155a6e2a941a5aa9862753d1398ed
+msgid "在二次量子化表示中，分子哈密顿量的一般形式为："
+msgstr ""
+
+#: b127583a4f6b4a9e9ae67cc1d8739d0a
+#, python-brace-format
+msgid ""
+"H = \\sum_{ij} h_{ij} a_i^\\dagger a_j + \\frac{1}{2}\\sum_{ijkl} "
+"h_{ijkl} a_i^\\dagger a_j^\\dagger a_k a_l"
+msgstr ""
+
+#: 6ee4f85322ae42148201c30fdb396431
+msgid "其中： - 第一项：单电子项（动能 + 核吸引） - 第二项：双电子项（电子排斥）"
+msgstr ""
+
+#: 2345c177baf2475499d045d5955363c7
+msgid "费米-量子比特映射"
+msgstr ""
+
+#: bc476c23003d44c389d41fbbd9dbf982
+msgid "将费米子哈密顿量转换为量子比特哈密顿量："
+msgstr ""
+
+#: bf9ad79a137747979e33311d5e555a63
+#, python-brace-format
+msgid ""
+"# 获取哈密顿量（自动使用Jordan-Wigner变换）\n"
+"hamiltonian = h2_molecule.get_hamiltonian()\n"
+"\n"
+"print(f\"哈密顿量项数: {len(hamiltonian)}\")\n"
+"print(f\"需要的量子比特数: {h2_molecule.n_qubits}\")\n"
+"\n"
+"# 查看哈密顿量的第一项\n"
+"if hamiltonian:\n"
+"    coeff, pauli_string = hamiltonian[0]\n"
+"    print(f\"第一项: {coeff:.6f} * {pauli_string}\")"
+msgstr ""
+
+#: 0eb50c0bd85543adbb52097d03b5c7db
+msgid "VQE算法基础"
+msgstr ""
+
+#: 40de0081ac6d4b9eb82de5e266f29d9b
+msgid "变分原理"
+msgstr ""
+
+#: 9b0df2b96866458d80d2136ded952e0f
+msgid "VQE基于变分原理，通过优化参数化量子态来求解基态能量："
+msgstr ""
+
+#: b52d186e7c634969b04644c95cff3685
+#, python-brace-format
+msgid ""
+"E_0 = \\min_{\\theta} \\langle \\psi(\\theta) | H | \\psi(\\theta) "
+"\\rangle"
+msgstr ""
+
+#: d4395fd582494435bb89547bf3fb0214
+msgid "其中 $|\\psi(\\theta)\\rangle$ 是由拟设电路准备的试探波函数。"
+msgstr ""
+
+#: 2a401a7594e64c089c5c8950a86fc172
+msgid "运行VQE计算"
+msgstr ""
+
+#: dda7fd8bf80a445da964fd8d30fcf201
+msgid "使用HEA拟设"
+msgstr ""
+
+#: 95918dd65de94592bb4f828cd77cc3b4
+msgid "硬件适配拟设（HEA）是近期量子设备的理想选择："
+msgstr ""
+
+#: 309d82a5d76848ae8546f0d3a230f3a5
+#, python-brace-format
+msgid ""
+"from tyxonq.applications.chem import HEA\n"
+"\n"
+"# 创建HEA算法实例\n"
+"hea = HEA(\n"
+"    molecule=h2_molecule,\n"
+"    layers=2,                      # 拟设层数\n"
+"    runtime=\"numeric\",             # 使用数值后端\n"
+"    mapping=\"jordan_wigner\"        # 映射方法\n"
+")\n"
+"\n"
+"print(f\"HEA参数数量: {hea.n_params}\")\n"
+"print(f\"使用的量子比特数: {hea.n_qubits}\")"
+msgstr ""
+
+#: 87032010a6bb47aeaa988c0580b0d1a8
+msgid "执行VQE优化"
+msgstr ""
+
+#: 50c7c0ee2fc74871b34c7fe58efb6d71
+#, python-brace-format
+msgid ""
+"# 运行VQE优化\n"
+"result = hea.kernel(\n"
+"    method=\"COBYLA\",               # 优化算法\n"
+"    options={\n"
+"        \"maxiter\": 100,            # 最大迭代次数\n"
+"        \"disp\": True               # 显示优化过程\n"
+"    }\n"
+")\n"
+"\n"
+"print(f\"VQE能量: {result:.6f} Hartree\")\n"
+"print(f\"HF能量: {h2_molecule.hf_energy:.6f} Hartree\")\n"
+"print(f\"相关能: {result - h2_molecule.hf_energy:.6f} Hartree\")"
+msgstr ""
+
+#: 9d2f8a8d45f04c7b8137c7928c4018bd
+msgid "完整示例：H2分子VQE计算"
+msgstr ""
+
+#: ed301b1490a24ef68bef66a78a10966f
+msgid "以下是一个完整的H2分子VQE计算示例："
+msgstr ""
+
+#: 0c4a3d5e448e4cb2b41d68cff4b2765a
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"from tyxonq.applications.chem import Molecule, HEA\n"
+"import numpy as np\n"
+"\n"
+"def h2_vqe_calculation():\n"
+"    \"\"\"完整的H2分子VQE计算示例\"\"\"\n"
+"\n"
+"    # 1. 定义分子\n"
+"    print(\"步骤1: 创建氢分子...\")\n"
+"    h2 = Molecule(\n"
+"        atoms=[\n"
+"            [\"H\", [0.0, 0.0, 0.0]],\n"
+"            [\"H\", [0.0, 0.0, 0.74]]\n"
+"        ],\n"
+"        basis=\"sto-3g\",\n"
+"        charge=0,\n"
+"        spin=0\n"
+"    )\n"
+"\n"
+"    print(f\"分子信息:\")\n"
+"    print(f\"  电子数: {h2.n_electrons}\")\n"
+"    print(f\"  量子比特数: {h2.n_qubits}\")\n"
+"    print(f\"  HF能量: {h2.hf_energy:.6f} Hartree\")\n"
+"\n"
+"    # 2. 创建HEA算法\n"
+"    print(\"\\n步骤2: 设置HEA算法...\")\n"
+"    hea = HEA(\n"
+"        molecule=h2,\n"
+"        layers=2,\n"
+"        runtime=\"numeric\"\n"
+"    )\n"
+"\n"
+"    print(f\"HEA配置:\")\n"
+"    print(f\"  层数: {hea.layers}\")\n"
+"    print(f\"  参数数: {hea.n_params}\")\n"
+"\n"
+"    # 3. 执行VQE优化\n"
+"    print(\"\\n步骤3: 执行VQE优化...\")\n"
+"    vqe_energy = hea.kernel(\n"
+"        method=\"COBYLA\",\n"
+"        options={\"maxiter\": 100, \"disp\": False}\n"
+"    )\n"
+"\n"
+"    # 4. 结果分析\n"
+"    print(\"\\n结果分析:\")\n"
+"    print(f\"VQE能量: {vqe_energy:.6f} Hartree\")\n"
+"    print(f\"HF能量:  {h2.hf_energy:.6f} Hartree\")\n"
+"    print(f\"相关能: {vqe_energy - h2.hf_energy:.6f} Hartree\")\n"
+"\n"
+"    return vqe_energy\n"
+"\n"
+"# 运行计算\n"
+"if __name__ == \"__main__\":\n"
+"    result = h2_vqe_calculation()"
+msgstr ""
+
+#: 916e4e6857a344839bcd2c07eae91196
+msgid "下一步"
+msgstr ""
+
+#: d2860cf259264277a292e67e5de0d673
+msgid "恭喜！您已经成功完成了第一个量子化学计算。接下来推荐学习："
+msgstr ""
+
+#: 12959b3c24e8443286754a30a062eb21
+msgid ":doc:`../quantum_chemistry/algorithms/index` - 学习更多算法"
+msgstr ""
+
+#: 1176b22cebc4494fbec19143fd1dc396
+msgid ":doc:`../quantum_chemistry/fundamentals/index` - 深入理论基础"
+msgstr ""
+
+#: b59560bfbf374f59a5e23611a42f6b5b
+msgid ":doc:`../examples/chemistry_examples` - 查看更多化学示例"
+msgstr ""
+
+#: d0fa48d6b5bf4d138c5ea840ba196e12
+msgid ":doc:`../user_guide/numerics/index` - 了解数值后端"
+msgstr ""
+
+#: e1cb04ed1ccc45f1993dcc143ff50cfd
+msgid "常见问题"
+msgstr ""
+
+#: a67fcbcb89f14736a82f5e8fd3dcc1f1
+msgid "**Q: 如何选择合适的基组？**"
+msgstr ""
+
+#: ada207ee40a14df2913ba3d0dba48902
+msgid "A: 基组选择影响计算精度和效率： - STO-3G: 最小基组，适合快速测试 - 6-31G: 平衡精度和效率 - cc-pVDZ: 高精度计算"
+msgstr ""
+
+#: 1f48e329c1fe4ab4a3f53ffae316e900
+msgid "**Q: VQE算法不收敛怎么办？**"
+msgstr ""
+
+#: 010fe8a31dff47869df546056b60f546
+msgid "A: 尝试以下方法： - 增加最大迭代次数 - 更改优化器（如BFGS、SLSQP） - 调整拟设层数 - 使用更好的初始参数"
+msgstr ""
+
+#: 4561facbad0640b18698d45f277572d7
+msgid "**Q: 如何估计计算时间？**"
+msgstr ""
+
+#: 660bc71d315a4df9899e051d3827ffa4
+msgid ""
+"A: 计算时间主要取决于： - 分子大小（量子比特数） - 拟设复杂度（参数数量） - 优化迭代次数 - 所选的后端（numeric vs "
+"device）"
+msgstr ""
+
+#: db0a32204875498ca36304523f09c626
+msgid "相关资源"
+msgstr ""
+
+#: 3205f35dbd3b470ca0a73914de663280
+msgid ":doc:`/api/applications/index` - 应用API参考"
+msgstr ""
+
+#: ac911591353244fc84869ee6e38b9a74
+msgid ":doc:`/quantum_chemistry/index` - 量子化学模块"
+msgstr ""
+
+#: e80ba551de674054b97268bbbe976fd1
+msgid ":doc:`/examples/chemistry_examples` - 化学示例"
+msgstr ""
+
+#: 2843f80c8c544677809e464f124f9483
+msgid ":doc:`/user_guide/postprocessing/index` - 结果分析"
+msgstr ""
+

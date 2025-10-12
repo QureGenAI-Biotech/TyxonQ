@@ -1,0 +1,603 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: f3320602459c43a38e8dddcd51d64875
+msgid "Core Module"
+msgstr ""
+
+#: 9542b78931814ec38a95c1a87c71471a
+msgid ""
+"The Core module provides the foundational abstractions and data "
+"structures for the TyxonQ framework, including the Intermediate "
+"Representation (IR), type system, and error handling. These components "
+"form the basis of the entire framework, offering stable and reliable "
+"interfaces for upper-layer applications and compilers."
+msgstr ""
+
+#: 6f37ece9fd5547dd947261a66f9314b4
+msgid "Contents"
+msgstr ""
+
+#: 609f9ebe56164ba3b21a8b741b7da9ea
+msgid "Overview"
+msgstr ""
+
+#: 5cb475d86210412dbab4a651e2965f95
+msgid ""
+"The TyxonQ Core module employs a layered architecture design, providing "
+"comprehensive abstraction levels for quantum computing:"
+msgstr ""
+
+#: 5eb853b7d1b643f1a19df9d0289ca743
+msgid ""
+"**Intermediate Representation (IR)**: Unified quantum circuit and pulse "
+"representation"
+msgstr ""
+
+#: ff752dadd7fe461ea6017976da5961e1
+msgid "**Type System**: Strong type constraints ensuring code safety"
+msgstr ""
+
+#: 487494e4a76f48ec8a069cf3ef05e43c
+msgid ""
+"**Error Handling**: Complete exception hierarchy and error recovery "
+"mechanisms"
+msgstr ""
+
+#: 3735ef3886af453e989072efe4ffbbe7
+msgid ""
+"**Operation Definitions**: Standardized quantum gates and measurement "
+"operations"
+msgstr ""
+
+#: 8213d08fc8c240b999ba034232b209c6
+msgid "Core Architecture"
+msgstr ""
+
+#: 5a6e0ccc64e94544a0d0a5729e7a0df8
+msgid "Intermediate Representation (IR)"
+msgstr ""
+
+#: 72d6473333f4442cadf196b3465e048f
+msgid "Circuit IR"
+msgstr ""
+
+#: 2d7224075220448ba278390e42215995
+msgid ""
+"The :class:`Circuit` class is the core data structure representing "
+"quantum circuits, providing a complete interface for circuit construction"
+" and manipulation."
+msgstr ""
+
+#: 80c2c8c5e9d1489cb9eda9c89d66cda0 bdaeef3a515243acb17c0b07d2c644c3
+msgid "**Key Features**"
+msgstr ""
+
+#: 0b5e051ea65d486abaf702e9ff1a6d9b
+msgid "**Immutable Design**: All operations return new Circuit instances"
+msgstr ""
+
+#: a20efc71b4324eba87a09d279edf1adb
+msgid "**Method Chaining**: Supports fluent API design pattern"
+msgstr ""
+
+#: 719f3c76dc284f9fa4bd45f85be63eb7
+msgid "**Metadata Support**: Can attach arbitrary metadata information"
+msgstr ""
+
+#: f29c09c2bc304b1eadccb356ca9141d7
+msgid "**Serialization Support**: JSON format import and export"
+msgstr ""
+
+#: 2f2df109c75f441ca6f2ceae02b65b86
+msgid "**Data Structure**"
+msgstr ""
+
+#: 3dbff62f5dfb4f05b6b48054ebe99675
+msgid ""
+"@dataclass\n"
+"class Circuit:\n"
+"    num_qubits: int                           # Number of qubits\n"
+"    ops: List[Any]                           # List of operations\n"
+"    metadata: Dict[str, Any]                 # Metadata dictionary\n"
+"    instructions: List[Tuple[str, Tuple]]    # Instruction sequence"
+msgstr ""
+
+#: 573700d6d7e54f70b8f4b1587ebcd833
+msgid "**Core Methods**"
+msgstr ""
+
+#: 56922d775aa844509f39dd874a653d99
+msgid "Main Methods of Circuit Class"
+msgstr ""
+
+#: a4abf2689cd84c34b9668d56a969946e
+msgid "Method"
+msgstr ""
+
+#: 11a7e4ca2c5140bd915b5b5ea6a066b4
+msgid "Functionality"
+msgstr ""
+
+#: 68ee6a578185446f90fcf0c5196aabab
+msgid "Example"
+msgstr ""
+
+#: 2442b166b00b4188a41884e1c981083c
+msgid "``with_metadata()``"
+msgstr ""
+
+#: 6d270e302d57412687b6d96c2a445951
+msgid "Add metadata"
+msgstr ""
+
+#: 99cdbb0bb9414428ba0c72579c3e0cd4
+msgid "``circuit.with_metadata(author=\"Alice\")``"
+msgstr ""
+
+#: b1022c57a1a24f13b0ac5adff066da8e
+msgid "``extended()``"
+msgstr ""
+
+#: 0c14443056844ccdb5385bf3c8922f88
+msgid "Extend circuit"
+msgstr ""
+
+#: 9bbf21f3681d4f46ba1ed8d54aca7187
+msgid "``circuit.extended([(\"h\", 0)])``"
+msgstr ""
+
+#: 6a2672f9041b43cba5793bc4345c024c
+msgid "``compose()``"
+msgstr ""
+
+#: 08b3ee7e2e3040fb88e8b7b1d64db74f
+msgid "Compose circuits"
+msgstr ""
+
+#: af946460b508410c883b1cf8e33d0cf3
+msgid "``circuit.compose(other, indices=[1])``"
+msgstr ""
+
+#: b7635dc4f46e4a5ebd7bed1a6771619b
+msgid "``remap_qubits()``"
+msgstr ""
+
+#: 8db182c241084f54bbab64586b9d0334
+msgid "Remap qubits"
+msgstr ""
+
+#: 3a004cd2475646c5aa0102d54862a6e0
+#, python-brace-format
+msgid "``circuit.remap_qubits({0: 2, 1: 3})``"
+msgstr ""
+
+#: 41aef4649f9a455c8866e2bfdfade14b
+msgid "``inverse()``"
+msgstr ""
+
+#: 97bd7902119c4c8297c6296382cbcfc1
+msgid "Inverse circuit"
+msgstr ""
+
+#: baf59453082a45a689daa6b3a3a82b0b
+msgid "``circuit.inverse()``"
+msgstr ""
+
+#: 4d2d824267c34a0a8e1353a52dd12a63 6d68d72b458d44d98d64783475b8a730
+msgid "**Usage Example**"
+msgstr ""
+
+#: b46618a858554116a1f00070ec5bbb21
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"# Create a circuit\n"
+"circuit = tq.Circuit(3)\n"
+"\n"
+"# Build with method chaining\n"
+"circuit = (\n"
+"    circuit\n"
+"    .h(0)\n"
+"    .cnot(0, 1)\n"
+"    .cnot(1, 2)\n"
+"    .with_metadata(description=\"GHZ state preparation\")\n"
+")\n"
+"\n"
+"# View circuit information\n"
+"print(f\"Number of qubits: {circuit.num_qubits}\")\n"
+"print(f\"Number of operations: {len(circuit.ops)}\")\n"
+"print(f\"Gate summary: {circuit.gate_summary()}\")\n"
+"print(f\"Metadata: {circuit.metadata}\")"
+msgstr ""
+
+#: ad3a43271f5f4d4abbd361e89da54a03
+msgid "Pulse IR"
+msgstr ""
+
+#: bdf166773b264317ae031c6f7003bb13
+msgid ""
+"The :class:`PulseSchedule` class represents pulse-level quantum control "
+"sequences, supporting hardware-level precise control."
+msgstr ""
+
+#: b5c9ce9b90f64cba86597d4120245763
+msgid "**Time Precision**: Nanosecond-level time control"
+msgstr ""
+
+#: 43234dbee0c842c4bf998e821664bf82
+msgid "**Multi-Channel Support**: Simultaneous control of multiple qubits"
+msgstr ""
+
+#: a40c30be0ef24809986a3d45693dc01e
+msgid "**Waveform Definition**: Custom pulse waveforms"
+msgstr ""
+
+#: e21abea93b1947d68d33481fe8ec82e5
+msgid "**Synchronization Mechanism**: Precise timing coordination"
+msgstr ""
+
+#: e08e4b06bb5b4c67a0d9aed912a614ac
+#, python-brace-format
+msgid ""
+"from tyxonq.core.ir.pulse import PulseSchedule, PulseInstruction\n"
+"\n"
+"# Create pulse schedule\n"
+"schedule = PulseSchedule(sampling_rate_hz=1e9)\n"
+"\n"
+"# Add pulse instruction\n"
+"schedule.append(PulseInstruction(\n"
+"    channel=\"drive_0\",\n"
+"    start_time=0.0,\n"
+"    duration=20e-9,  # 20 nanoseconds\n"
+"    waveform=\"gaussian\"\n"
+"))\n"
+"\n"
+"print(f\"Total duration: {schedule.duration_seconds():.2e} seconds\")"
+msgstr ""
+
+#: 25ff4160df654ca4ae24666bbc3be2bd
+msgid "Type System"
+msgstr ""
+
+#: d779b06944cd4318be831168a4424e64
+msgid "Basic Types"
+msgstr ""
+
+#: 11875be537be411cbfd98aa691772fd1
+msgid "TyxonQ defines a strict type system to ensure code safety:"
+msgstr ""
+
+#: a41898d024ce40d39ad50fdd14eba029
+msgid ""
+"from tyxonq.core.types import Problem\n"
+"from typing import Literal, Dict, Any\n"
+"\n"
+"# Problem type definition\n"
+"class Problem:\n"
+"    kind: Literal[\"hamiltonian\", \"circuit\", \"pulse\", \"custom\"]\n"
+"    payload: Dict[str, Any]"
+msgstr ""
+
+#: a5852dc956a64627a8785dcca3e8825f
+msgid "**Supported Problem Types**"
+msgstr ""
+
+#: 3b6c52f9b7bb4a619f06553482d2a748
+msgid "Problem Type Descriptions"
+msgstr ""
+
+#: 19f67d78b38e463995c9704ea2aa8b03
+msgid "Type"
+msgstr ""
+
+#: e035df8e8c1241729d1caf2182981c7d
+msgid "Description"
+msgstr ""
+
+#: 8efe2b800d8247309195c1a52e4d87e4
+msgid "hamiltonian"
+msgstr ""
+
+#: 54b2ec58c71f4fe2af980e98e2c3034b
+msgid "Hamiltonian-related problems"
+msgstr ""
+
+#: a2a8a087273849458680333f1da99e6d
+msgid "circuit"
+msgstr ""
+
+#: 0861879eb60941698dc08c1b44d1820c
+msgid "Quantum circuit problems"
+msgstr ""
+
+#: 46bbe39036c64fce8510e1835162333f
+msgid "pulse"
+msgstr ""
+
+#: a4dce99b1bda41d0b086728614fa6393
+msgid "Pulse control problems"
+msgstr ""
+
+#: 3cfaf29d1b604bc4bb2ca14d0b7160d7
+msgid "custom"
+msgstr ""
+
+#: 2e8f966cbae845dd965282da657dc099
+msgid "Custom problem types"
+msgstr ""
+
+#: 0c955c9f03534d7d927fdead325be3ad
+msgid "Qubit Indexing"
+msgstr ""
+
+#: 22b1ede495ce45fd919ae5181399f3fa
+msgid ""
+"Qubit indices use integer types and support negative indexing (counting "
+"from the end):"
+msgstr ""
+
+#: 31e8cb29bb084ea48c9c3f639bc482b9
+msgid ""
+"circuit = tq.Circuit(4)\n"
+"\n"
+"# Forward indexing\n"
+"circuit.h(0)    # First qubit\n"
+"circuit.h(3)    # Fourth qubit\n"
+"\n"
+"# Negative indexing (if supported)\n"
+"# circuit.h(-1)   # Last qubit"
+msgstr ""
+
+#: 181feff723ec4c5fbcd6422b03d55705
+msgid "Operation Definitions"
+msgstr ""
+
+#: 171a509ede6e45a58480e49565485e25
+msgid "Quantum Gate Operations"
+msgstr ""
+
+#: 57c69b81b930466294ef5f54ede07a1f
+msgid "TyxonQ supports a complete universal quantum gate set:"
+msgstr ""
+
+#: 8c655e1d4fce4751b511e8d077111a2e
+msgid "**Single-Qubit Gates**"
+msgstr ""
+
+#: c4bba14ddb2b49cfa6c5064b04a3b44b
+msgid ""
+"# Pauli gates\n"
+"circuit.x(0)    # Pauli-X gate\n"
+"circuit.y(0)    # Pauli-Y gate\n"
+"circuit.z(0)    # Pauli-Z gate\n"
+"\n"
+"# Hadamard gate\n"
+"circuit.h(0)    # Create superposition\n"
+"\n"
+"# Phase gates\n"
+"circuit.s(0)    # S gate (π/2 phase)\n"
+"circuit.t(0)    # T gate (π/4 phase)\n"
+"\n"
+"# Parameterized rotation gates\n"
+"circuit.rx(0, theta)    # Rotation around X-axis\n"
+"circuit.ry(0, theta)    # Rotation around Y-axis\n"
+"circuit.rz(0, theta)    # Rotation around Z-axis"
+msgstr ""
+
+#: a926ba3e0c934724a86535abeebe0605
+msgid "**Two-Qubit Gates**"
+msgstr ""
+
+#: c3c5c283cb9f49fb857fca09d61cbb18
+msgid ""
+"# Controlled gates\n"
+"circuit.cnot(0, 1)    # Controlled-NOT gate\n"
+"circuit.cx(0, 1)      # Alias for CNOT\n"
+"circuit.cz(0, 1)      # Controlled-Z gate\n"
+"circuit.cy(0, 1)      # Controlled-Y gate\n"
+"\n"
+"# SWAP gate\n"
+"circuit.swap(0, 1)    # Swap two qubits\n"
+"\n"
+"# Parameterized two-qubit gates\n"
+"circuit.rxx(0, 1, theta)    # XX rotation\n"
+"circuit.rzz(0, 1, theta)    # ZZ rotation"
+msgstr ""
+
+#: 16e42ef73cb04dc28b9f7ef2e3497663
+msgid "Measurement Operations"
+msgstr ""
+
+#: e7bbc2c1fbd3426a9ef63b9ff539cdd2
+msgid ""
+"# Z-basis measurement\n"
+"circuit.measure_z(0)\n"
+"\n"
+"# Batch measurement\n"
+"circuit.add_measure(0, 1, 2)\n"
+"\n"
+"# Reset operation\n"
+"circuit.reset(0)\n"
+"\n"
+"# Barrier operation (prevents optimization across)\n"
+"circuit.add_barrier(0, 1)"
+msgstr ""
+
+#: 815260fe284d4ca8b655738bde30784e
+msgid "Error Handling"
+msgstr ""
+
+#: f560ffe034c74a71b8a1896647b6e8cb
+msgid "Exception Hierarchy"
+msgstr ""
+
+#: f1846565a59444bf8d10d08c72e39f37
+msgid "TyxonQ defines a complete exception handling hierarchy:"
+msgstr ""
+
+#: 9a2af3708ade484d8b441183c616189c
+#, python-brace-format
+msgid ""
+"from tyxonq.core.errors import TyxonQError, CompilationError\n"
+"\n"
+"try:\n"
+"    # Quantum circuit operation that may fail\n"
+"    circuit = tq.Circuit(2)\n"
+"    circuit.cnot(0, 5)  # Error: qubit index out of range\n"
+"except ValidationError as e:\n"
+"    print(f\"Validation error: {e}\")\n"
+"except CompilationError as e:\n"
+"    print(f\"Compilation error: {e}\")\n"
+"except TyxonQError as e:\n"
+"    print(f\"TyxonQ error: {e}\")"
+msgstr ""
+
+#: 43d217c585e84ff183c9e45a422eefee
+msgid "Circuit Validation"
+msgstr ""
+
+#: 43b0a8a9280f493f82f769b66104ad05
+msgid "All circuits undergo automatic validation during creation:"
+msgstr ""
+
+#: 8e626e02b55342588d46cd78d93eeea7
+#, python-brace-format
+msgid ""
+"# Validate qubit indices\n"
+"circuit = tq.Circuit(2)\n"
+"try:\n"
+"    circuit.h(3)  # Index out of range\n"
+"except Exception as e:\n"
+"    print(f\"Index error: {e}\")\n"
+"\n"
+"# Validate gate parameters\n"
+"try:\n"
+"    circuit.rx(0, \"invalid\")  # Parameter type error\n"
+"except Exception as e:\n"
+"    print(f\"Parameter error: {e}\")"
+msgstr ""
+
+#: d33554a6e45a4f75a23a9ac1c7aba85d
+msgid "Best Practices"
+msgstr ""
+
+#: 5a6b236106c34b84b6c9b59662609f52
+msgid "Circuit Construction Guidelines"
+msgstr ""
+
+#: 1e127a66286c421e915078ac95017ded
+msgid "**Use method chaining**: Improves code readability"
+msgstr ""
+
+#: 2d25491d206f4a2388e1b8549920c15d
+msgid ""
+"# Recommended\n"
+"circuit = (\n"
+"    tq.Circuit(3)\n"
+"    .h(0)\n"
+"    .cnot(0, 1)\n"
+"    .cnot(1, 2)\n"
+"    .with_metadata(description=\"GHZ state\")\n"
+")"
+msgstr ""
+
+#: 4915c62da45f42568b644892e98e64bc
+msgid "**Appropriate error handling**: Catch specific exceptions"
+msgstr ""
+
+#: 706ac8766b41419f9adfde4ef7f6df13
+msgid ""
+"try:\n"
+"    result = circuit.run()\n"
+"except DeviceExecutionError:\n"
+"    # Retry or use another device\n"
+"    result = circuit.device('statevector').run()"
+msgstr ""
+
+#: 7e80517753ad4ebb8bb594781890e70e
+msgid "**Reasonable use of metadata**: Facilitates debugging and documentation"
+msgstr ""
+
+#: 62087a83184e4199a30eafd1877cc088
+msgid ""
+"circuit = circuit.with_metadata(\n"
+"    description=\"Bell state preparation\",\n"
+"    author=\"Alice\",\n"
+"    version=\"1.0\"\n"
+")"
+msgstr ""
+
+#: 8abc656be37541b08d17fd8a587ccd52
+msgid "Performance Optimization"
+msgstr ""
+
+#: 04ad505d84124490804cf5da3aac1d63
+msgid "**Avoid frequent circuit rebuilding**:"
+msgstr ""
+
+#: 439a22c6d5254812b314b939c72a8595
+msgid ""
+"# Inefficient\n"
+"for i in range(n):\n"
+"    circuit = circuit.h(i)\n"
+"\n"
+"# Efficient\n"
+"ops = [(\"h\", i) for i in range(n)]\n"
+"circuit = circuit.extended(ops)"
+msgstr ""
+
+#: f565c7f375214e4d8c8c791458b40c19
+msgid "**Reasonable use of immutability**:"
+msgstr ""
+
+#: c859af0729dc4a55aa4d83acc21c2347
+msgid ""
+"# If multiple modifications are needed, consider one-time operations\n"
+"base_circuit = tq.Circuit(n)\n"
+"variants = [\n"
+"    base_circuit.extended(ops1),\n"
+"    base_circuit.extended(ops2),\n"
+"    base_circuit.extended(ops3)\n"
+"]"
+msgstr ""
+
+#: ae75d4bb55df425bb323b279eaea4d42
+msgid "Related Resources"
+msgstr ""
+
+#: 5372092028ec49a7981b9da6f5f41528
+msgid ":doc:`/api/core/index` - Core API Detailed Reference"
+msgstr ""
+
+#: efa27a49ead74ee8968a522f8214cf85
+msgid ":doc:`../compiler/index` - Compiler User Guide"
+msgstr ""
+
+#: 9a42a6cf80544160a8367d2d72d5dfe1
+msgid ":doc:`../devices/index` - Device Execution Guide"
+msgstr ""
+
+#: 8ba6a82e2b4c423a8995a4c3582f0f2e
+msgid ":doc:`/getting_started/first_circuit` - Circuit Getting Started Tutorial"
+msgstr ""
+

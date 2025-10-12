@@ -1,0 +1,69 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: f68b17ff04b445cbb358e093e62394db
+msgid "tyxonq.compiler.stages.decompose.rotations"
+msgstr ""
+
+#: 16338263b2bd4fa1b432af3b914e2aaf
+msgid "Classes"
+msgstr ""
+
+#: 06f7b39a8a3947538fb952bbfc3e9fb0
+msgid ""
+":py:obj:`RotationsDecomposePass "
+"<tyxonq.compiler.stages.decompose.rotations.RotationsDecomposePass>`\\ "
+"\\(\\)"
+msgstr ""
+
+#: 8bcacf1ba969427da93821d05ef252dc 8f47298acb0d45b7bbd667fee93528c6
+#, python-brace-format
+msgid "Decompose parametric rotations into {H,RZ,CX} using standard identities."
+msgstr ""
+
+#: 3bb22647f34c47cc8bd1875efe3c0130
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 95998ca4107e4a3f924a365890119a9d
+msgid "Supported patterns:"
+msgstr ""
+
+#: d223b32f818c4d2f81c5412691d3d495
+msgid "RX(θ)  => H · RZ(θ) · H"
+msgstr ""
+
+#: 19dbe9c6921748d69b8074e85b7b706f
+msgid "RY(θ)  => S† · H · RZ(θ) · H · S  (S=RZ(π/2))"
+msgstr ""
+
+#: ed6a9cebbf7d488b936eef0c53839aba
+msgid "RZZ(θ) => CX · RZ(θ on target) · CX"
+msgstr ""
+
+#: 9ba242849e95410fa74a9c6920811b66
+msgid "RXX(θ) => H⊗H · CX · RZ(θ on target) · CX · H⊗H"
+msgstr ""
+
+#: 6db6291d4d1640899b1910718ad30093
+msgid "RYY(θ) => (S†H)⊗(S†H) · CX · RZ(θ on target) · CX · (HS)⊗(HS)"
+msgstr ""
+

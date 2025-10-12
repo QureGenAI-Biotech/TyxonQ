@@ -1,0 +1,269 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 3410bff18960446b9ff9c0723fd20ae7
+msgid "量子化学算法"
+msgstr ""
+
+#: a22daee1bcb54235bb6a13ddd1eb2a48
+msgid "TyxonQ实现了多种量子化学算法，用于求解分子电子结构问题。"
+msgstr ""
+
+#: 3926f1756c7a41cead828727043a339a
+msgid "本页内容"
+msgstr ""
+
+#: 3a11422365444429b3c5c76598d0949f
+msgid "概述"
+msgstr ""
+
+#: fbd393a4d07b47fc82978cfac322b2c7
+msgid "TyxonQ支持的主要量子化学算法："
+msgstr ""
+
+#: 04cb5baf3add468b9c0ff61d3851c2f8
+msgid "**VQE算法**：变分量子本征求解器"
+msgstr ""
+
+#: 9cebc749019a4c98bbaa2739c62a3220
+msgid "**UCCSD**：酷似耦合簇簇式拟设"
+msgstr ""
+
+#: 99c164440254496eb58d292552aea1ac
+msgid "**HEA**：硬件有效拟设"
+msgstr ""
+
+#: ed937ded7d284b369e513c666286a911
+msgid "**k-UpCCGSD**：可调k层拟设"
+msgstr ""
+
+#: 360d65f83c80414a82bffdd767f3697e
+msgid "**PUCCD**：对耦合簇簇式拟设"
+msgstr ""
+
+#: dae0da6469314856bce28ff728e3f646
+msgid "VQE算法"
+msgstr ""
+
+#: 9651ddcac5754564bd6e4011ca1f9108
+msgid "算法原理"
+msgstr ""
+
+#: 95ad198481a34e2bba7898a2d0c86a78
+msgid "VQE通过变分原理求解基态能量："
+msgstr ""
+
+#: 3f0ee7d610a64310b00fcadfa61b8693
+#, python-brace-format
+msgid ""
+"E_0 = \\min_{\\theta} \\langle \\psi(\\theta) | H | \\psi(\\theta) "
+"\\rangle"
+msgstr ""
+
+#: 10067b4dd6e74223bbeec5ed51a4414c
+msgid ""
+"from tyxonq.applications.chem import HEA\n"
+"\n"
+"# 创建HEA算法\n"
+"hea = HEA(molecule=molecule, layers=2)\n"
+"result = hea.kernel(method=\"COBYLA\")"
+msgstr ""
+
+#: 1114a1bcb5c4457facb5a4e3c66a90d6
+msgid "UCCSD算法"
+msgstr ""
+
+#: f9b0b586536a47f49edf14963ba2223e
+msgid "**拟设形式**："
+msgstr ""
+
+#: ad0a5d510aa541318b2c6caedf446ba3
+#, python-brace-format
+msgid "|\\psi(\\theta)\\rangle = e^{T - T^\\dagger} |\\text{HF}\\rangle"
+msgstr ""
+
+#: 3f1c3204ef394556ba5f7cb5fcd1655e
+msgid ""
+"from tyxonq.applications.chem import UCCSD\n"
+"\n"
+"uccsd = UCCSD(molecule=molecule, init_method=\"mp2\")\n"
+"result = uccsd.kernel(method=\"BFGS\")"
+msgstr ""
+
+#: 4aa154ef06a44162b4bdefc3b05f2628
+msgid "HEA算法"
+msgstr ""
+
+#: 6ead03ce9b9243a1b037b918e4a7d3ef
+msgid "**层结构**： - 单量子比特旋转层 - 纠缠门层"
+msgstr ""
+
+#: b2814922c7034006aa797b07b1014c6a
+msgid ""
+"hea = HEA(\n"
+"    molecule=molecule,\n"
+"    layers=3,\n"
+"    entanglement='linear'\n"
+")"
+msgstr ""
+
+#: e9ac24c472554bed92615dbd9aae05db
+msgid "算法对比"
+msgstr ""
+
+#: 45e5e8e1d8304b8d961a757cc1d31786
+msgid "算法特性对比"
+msgstr ""
+
+#: 97c5252fa8634ddd9d1334e75918361c
+msgid "算法"
+msgstr ""
+
+#: fa9b592e80214156814a440638a2e8a2
+msgid "参数数量"
+msgstr ""
+
+#: 8470a0c896404bb9bccc24e23d6bc18d
+msgid "电路深度"
+msgstr ""
+
+#: 24ed97bf80754a7e9d3d73403fcaebb2
+msgid "精度"
+msgstr ""
+
+#: 45ac8816cd144546828afcaef862b142
+msgid "适用场景"
+msgstr ""
+
+#: 39c2f6b89ed44b5183ade0c53b307acd
+msgid "UCCSD"
+msgstr ""
+
+#: 8d0cff5a37004058b909b1b008e88221
+msgid "多"
+msgstr ""
+
+#: dd4e2d5fd56342cfb736775ad61fbf88
+msgid "深"
+msgstr ""
+
+#: 194f463c26b54ec59154c764e446e2e5 905b2d94ed364874a1ffe375ab2d8116
+msgid "高"
+msgstr ""
+
+#: 5b94685aa1cf4e6a99a39042e3be69a4
+msgid "化学精度"
+msgstr ""
+
+#: 47145d5deb22457b9430d9238a3f1d70
+msgid "HEA"
+msgstr ""
+
+#: 36379c123b69422bb5be16915f8ee1e3 702963fd6d2743b1acc0a3f2e4bef000
+#: 869f4a6235a14ba4ac1d11a2968cb054
+msgid "中"
+msgstr ""
+
+#: 54e01541ed1b493fad56833993fa7906
+msgid "浅"
+msgstr ""
+
+#: eed131c1796f4a4db7eb40c12158968d
+msgid "近期设备"
+msgstr ""
+
+#: f4fa9997ffca4a4bb8e52aeca3eae972
+msgid "k-UpCCGSD"
+msgstr ""
+
+#: e6197ab4c35d4ef6a7d200153065c602
+msgid "可调"
+msgstr ""
+
+#: 0dc74976545e407a9755a4ba203f851a
+msgid "灵活性"
+msgstr ""
+
+#: db074a268ba2417e8c95e8786e2a5429
+msgid "执行运行时"
+msgstr ""
+
+#: cdbab0c2928146068da2f36abc7e71ac
+msgid "Device Runtime"
+msgstr ""
+
+#: 4433d896a22243a18c6f6f446899540d
+msgid "在真实设备/模拟器上执行。"
+msgstr ""
+
+#: 94ebbbb7dbbc4bd580559c6dd06bf82a
+msgid "Numeric Runtime"
+msgstr ""
+
+#: 7fd8d322ed2746ed88a88ac00df9dbe0
+msgid "使用数值方法计算。"
+msgstr ""
+
+#: f44725b0e3ba45d799d4aa823d234e16
+msgid ""
+"# Device runtime\n"
+"hea_device = HEA(molecule=mol, runtime=\"device\")\n"
+"\n"
+"# Numeric runtime\n"
+"hea_numeric = HEA(molecule=mol, runtime=\"numeric\")"
+msgstr ""
+
+#: 45503c5df6a04e81a9566ce9c869796b
+msgid "最佳实践"
+msgstr ""
+
+#: c892de07522a456a9695609c6488bbf9
+msgid "**算法选择**：根据精度要求选择"
+msgstr ""
+
+#: 2cbb0cee4e9c4b5eb68dbb8f6174387f
+msgid "**参数初始化**：使用MP2或CCSD结果"
+msgstr ""
+
+#: 2040356a1f864b20a6ad8631a82bed74
+msgid "**优化器配置**：选择合适的优化算法"
+msgstr ""
+
+#: 239bbf181cff424e846d449c92137067
+msgid "相关资源"
+msgstr ""
+
+#: 4fa31bfb9e6a455dba6a88e6bda85b6e
+msgid ":doc:`../fundamentals/index` - 理论基础"
+msgstr ""
+
+#: 66ab4ad0d4134e7188edb21690098098
+msgid ":doc:`../runtimes/index` - 运行时详解"
+msgstr ""
+
+#: 4b8bc6d45edf4eb1a70707c5bbfe33f5
+msgid ":doc:`/examples/chemistry_examples` - 化学示例"
+msgstr ""
+
+#: 08581934d00a4eb7a7d7a7f7dc068a0d
+msgid ":doc:`/api/applications/index` - 应用API"
+msgstr ""
+

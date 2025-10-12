@@ -1,0 +1,750 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 2bbe91c3586e4bbfb213bcf7edc8f11e
+msgid "第一个量子电路"
+msgstr ""
+
+#: d11169bf18a94b38bf89130f596a4e5f
+msgid "欢迎来到TyxonQ的量子电路世界！本指南将带您从零开始，学习如何创建、操作和执行量子电路。"
+msgstr ""
+
+#: b12ff2bbb6d044fba26f1dabffb571fb
+msgid "本页内容"
+msgstr ""
+
+#: 547deb3a10cb4234a4932748aa8455a8
+msgid "概述"
+msgstr ""
+
+#: 098b92725c024014a49ce5d7a1c69daf
+msgid "量子电路是量子计算的基础构建块。在TyxonQ中，电路通过 :class:`Circuit` 类表示，它提供了直观的API来构建和执行量子算法。"
+msgstr ""
+
+#: d705b795506e47c9af4051635f548baf
+msgid "**核心概念**"
+msgstr ""
+
+#: a7e9d0c5cde541368651db09283158eb
+msgid "**量子比特（Qubit）**：量子信息的基本单位"
+msgstr ""
+
+#: 058b0d56c34b44ee8cfd3a90a741a61b
+msgid "**量子门（Gates）**：对量子比特执行的操作"
+msgstr ""
+
+#: 977d3fc9927b41bd89f3c04ffb9e17d5
+msgid "**测量（Measurement）**：从量子态中提取经典信息"
+msgstr ""
+
+#: 432f6ec4c899409ba7188500b6935930
+msgid "**电路（Circuit）**：量子门和测量的有序序列"
+msgstr ""
+
+#: a0ebdef633fa43dca7507c99b7029096
+msgid "创建您的第一个电路"
+msgstr ""
+
+#: ffd64cc8aa794d2aa174026fdbbec94d
+msgid "基础电路构建"
+msgstr ""
+
+#: f8df62f1fc5d4419a13ed7e35fe6ec1e
+msgid "让我们从最简单的例子开始 - 创建一个Bell态（贝尔态）："
+msgstr ""
+
+#: ca55fd8d3d0143f6b6ecf6a2dd1e3b65
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"# 创建2个量子比特的电路\n"
+"circuit = tq.Circuit(2)\n"
+"\n"
+"# 添加Hadamard门到量子比特0\n"
+"circuit.h(0)\n"
+"\n"
+"# 添加CNOT门，控制位为0，目标位为1\n"
+"circuit.cnot(0, 1)\n"
+"\n"
+"print(f\"电路包含 {circuit.num_qubits} 个量子比特\")\n"
+"print(f\"门操作数量: {len(circuit.ops)}\")"
+msgstr ""
+
+#: 8b47e58ab8954520b26e513b35343f60
+msgid "**输出结果**::"
+msgstr ""
+
+#: 53d79001701f4cebb9153331ed53953a
+msgid ""
+"电路包含 2 个量子比特\n"
+"门操作数量: 2"
+msgstr ""
+
+#: ee11a6382f2044daaf56115929bd7527
+msgid "链式API构建"
+msgstr ""
+
+#: 6064e9b9b4eb4687acbe0965783460a5
+msgid "TyxonQ支持链式调用，让代码更简洁："
+msgstr ""
+
+#: 0c678f50557644b39a6a2eb43734ef00
+msgid ""
+"# 链式构建相同的Bell态电路\n"
+"bell_circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"# 更复杂的例子：GHZ态\n"
+"ghz_circuit = (\n"
+"    tq.Circuit(3)\n"
+"    .h(0)\n"
+"    .cnot(0, 1)\n"
+"    .cnot(1, 2)\n"
+")"
+msgstr ""
+
+#: 065c7a09c7cd4b5c925ce8a53cc91ebc
+msgid "常用量子门"
+msgstr ""
+
+#: 30654bdd38d34ca3875b59eb404396e1
+msgid "单量子比特门"
+msgstr ""
+
+#: f037ab5f715747f2a0e66e0c952c26fc
+msgid "TyxonQ支持的单量子比特门"
+msgstr ""
+
+#: 1a0085f74a0547baa6c7288cb26e6e95 b2f100def1ef4f32bad83f36b2f4dad9
+msgid "门名称"
+msgstr ""
+
+#: 4839a36ed77a4a0195b91b3c96cf6749 ce6613484a76407680a06c224894571c
+msgid "方法调用"
+msgstr ""
+
+#: 3d89da241c944573ab925293429eacbf 962399afc6924d84889494c7e60d4119
+msgid "功能描述"
+msgstr ""
+
+#: 55480e26c37b4356a22b419a4bec3c33
+msgid "Pauli-X"
+msgstr ""
+
+#: 8556d99297df40e68a3ddd0e7ca94333
+msgid "``circuit.x(qubit)``"
+msgstr ""
+
+#: e8ede4eaf8ef4c578f75a43ae9f6134f
+msgid "比特翻转门（量子非门）"
+msgstr ""
+
+#: 9a51ccd4a987442583e0cd0db73c93d5
+msgid "Pauli-Y"
+msgstr ""
+
+#: 5c3e21399c5946e0b0528bda14c65af4
+msgid "``circuit.y(qubit)``"
+msgstr ""
+
+#: b2a6ec5147974d0fa746a6593fc9a589
+msgid "Y方向旋转门"
+msgstr ""
+
+#: ea3f925880b44afa9cb0807fb012e967
+msgid "Pauli-Z"
+msgstr ""
+
+#: 7034619ba7d44e0fba042bf5a15dae25
+msgid "``circuit.z(qubit)``"
+msgstr ""
+
+#: 42632504dc0c4baaa8ebc3047d4ecfca
+msgid "相位翻转门"
+msgstr ""
+
+#: e7a4a0d9a3084b118034861ad45912a5
+msgid "Hadamard"
+msgstr ""
+
+#: 0d719a07321b4d328d82e647be4e8bdf
+msgid "``circuit.h(qubit)``"
+msgstr ""
+
+#: 49b5ac90162c4abf8e383449eed2cd8f
+msgid "叠加态生成门"
+msgstr ""
+
+#: 1a539bdb00f1496d855c0486e632d256
+msgid "S门"
+msgstr ""
+
+#: d008f568c8f84093b694d572e5acc603
+msgid "``circuit.s(qubit)``"
+msgstr ""
+
+#: 86d2bef1031642d1838ec75e8da4fb16
+msgid "相位门（π/2旋转）"
+msgstr ""
+
+#: c3971f447315459ba6e3d29718a23eeb
+msgid "T门"
+msgstr ""
+
+#: c19395d962674847a5eb77ab89daea3a
+msgid "``circuit.t(qubit)``"
+msgstr ""
+
+#: dd95bdb277304e969519ef4d99526797
+msgid "π/4相位门"
+msgstr ""
+
+#: 2884c9a6f65a4544ada63ccc4868bc5b
+msgid "**示例：单量子比特门操作**"
+msgstr ""
+
+#: c028fde10c224c18931a8cb37446c09a
+msgid ""
+"# 创建单量子比特电路并应用不同的门\n"
+"single_qubit = tq.Circuit(1)\n"
+"\n"
+"# 应用Hadamard门创建叠加态\n"
+"single_qubit.h(0)\n"
+"\n"
+"# 应用Pauli-X门\n"
+"single_qubit.x(0)\n"
+"\n"
+"# 查看电路摘要\n"
+"print(single_qubit.gate_summary())"
+msgstr ""
+
+#: 8c3985e30e9c491ea7c839fe5f10cef6
+msgid "参数化旋转门"
+msgstr ""
+
+#: 6168810616364130946ec85114e98670
+msgid "参数化门允许您指定旋转角度："
+msgstr ""
+
+#: 14d55649a4cb4cbda5d37f66e5100ce7
+msgid ""
+"import numpy as np\n"
+"\n"
+"# 参数化旋转门\n"
+"param_circuit = tq.Circuit(2)\n"
+"\n"
+"# RX门：绕X轴旋转π/4弧度\n"
+"param_circuit.rx(0, np.pi/4)\n"
+"\n"
+"# RY门：绕Y轴旋转π/2弧度\n"
+"param_circuit.ry(1, np.pi/2)\n"
+"\n"
+"# RZ门：绕Z轴旋转任意角度\n"
+"theta = 0.5\n"
+"param_circuit.rz(0, theta)"
+msgstr ""
+
+#: 809e90dafc4d4ecd88e2fecb95ac2b53 b1ff74af61c144c087aaf6dce34dec39
+msgid "双量子比特门"
+msgstr ""
+
+#: 2432bd1f831a42ca893c5fe3d912c680
+msgid "CNOT"
+msgstr ""
+
+#: 2992761598214632b8663641db39b8bb
+msgid "``circuit.cnot(control, target)``"
+msgstr ""
+
+#: 0cf2bbbb68014236a960f5fafd1b4a3c
+msgid "受控非门"
+msgstr ""
+
+#: dde59334f4214f86a4f6270e1e6de81c
+msgid "CZ"
+msgstr ""
+
+#: 6f598d96d3ef4ecea077f18332c07be8
+msgid "``circuit.cz(control, target)``"
+msgstr ""
+
+#: 350621320d604c50a14cd88ddfd7ac24
+msgid "受控Z门"
+msgstr ""
+
+#: 4e41de81b18d47208dd928a33bb6a973
+msgid "SWAP"
+msgstr ""
+
+#: 5ab7b9cf757c4af28104229949f38ee4
+msgid "``circuit.swap(qubit1, qubit2)``"
+msgstr ""
+
+#: 69908665a09e456581376bb98c1971eb
+msgid "交换门"
+msgstr ""
+
+#: b2835f5d583145fcbd13bbe568a3d1dd
+msgid "CX"
+msgstr ""
+
+#: 400d06da50de4ca48cfcac1d691747c7
+msgid "``circuit.cx(control, target)``"
+msgstr ""
+
+#: b6ad75944c1b4604bd761561072b50ba
+msgid "CNOT的别名"
+msgstr ""
+
+#: 7a6abaccaa6a4a16a6ae9bd03e54a0f1
+msgid "**示例：创建纠缠态**"
+msgstr ""
+
+#: 7c425234401c426aa8c4d7f13fe549c5
+msgid ""
+"# 创建最大纠缠态（Bell态）\n"
+"entangled = (\n"
+"    tq.Circuit(2)\n"
+"    .h(0)        # 创建叠加态\n"
+"    .cnot(0, 1)  # 创建纠缠\n"
+")\n"
+"\n"
+"# 创建三量子比特GHZ态\n"
+"ghz_state = (\n"
+"    tq.Circuit(3)\n"
+"    .h(0)\n"
+"    .cnot(0, 1)\n"
+"    .cnot(1, 2)\n"
+")"
+msgstr ""
+
+#: 79f1e800dda545dca53d2f9324ae007a
+msgid "测量操作"
+msgstr ""
+
+#: 1cf59403486d46f0b8af0b6a7aeb756b
+msgid "添加测量"
+msgstr ""
+
+#: 45fcaa0a20c74908b18b05f7375f5b7f
+msgid "测量是从量子电路中提取经典信息的方式："
+msgstr ""
+
+#: b058e458fcfe452f931712d67f7bdb84
+msgid ""
+"# 创建电路并添加测量\n"
+"measured_circuit = (\n"
+"    tq.Circuit(2)\n"
+"    .h(0)\n"
+"    .cnot(0, 1)\n"
+"    .measure_z(0)  # 测量量子比特0\n"
+"    .measure_z(1)  # 测量量子比特1\n"
+")\n"
+"\n"
+"# 或者测量所有量子比特\n"
+"all_measured = (\n"
+"    tq.Circuit(2)\n"
+"    .h(0)\n"
+"    .cnot(0, 1)\n"
+")\n"
+"# 添加全局测量\n"
+"for i in range(2):\n"
+"    all_measured.measure_z(i)"
+msgstr ""
+
+#: 7572930b3ec743d993c72117c99b6e04
+msgid "执行电路"
+msgstr ""
+
+#: 68d734f9026f47f48c97b4ed45e65acb
+msgid "基本执行"
+msgstr ""
+
+#: 6a41750980094705895b9425eda548d2
+msgid "使用TyxonQ的链式API执行电路："
+msgstr ""
+
+#: fe150ab98f904c3390267134c91d4b6e
+msgid ""
+"# 执行Bell态电路\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"# 添加测量\n"
+"for i in range(2):\n"
+"    circuit.measure_z(i)\n"
+"\n"
+"# 执行电路（使用默认设置）\n"
+"result = circuit.run()\n"
+"\n"
+"print(\"测量结果:\", result)"
+msgstr ""
+
+#: 4abfad0670754e679d41aefcfa889da2
+msgid "指定执行选项"
+msgstr ""
+
+#: c360c9834af74a6cbc1abc8d57ca9e3a
+msgid "您可以自定义执行选项："
+msgstr ""
+
+#: 5f779e02f9d24886893b69f11f776a24
+#, python-brace-format
+msgid ""
+"# 指定shots数和设备类型\n"
+"result = (\n"
+"    circuit\n"
+"    .device(provider=\"simulator\", device=\"statevector\", shots=1024)\n"
+"    .run()\n"
+")\n"
+"\n"
+"# 查看counts结果\n"
+"if isinstance(result, list) and result:\n"
+"    counts = result[0].get(\"result\", {})\n"
+"    print(\"Counts:\", counts)\n"
+"    # 期望输出类似: {'00': 512, '11': 512}"
+msgstr ""
+
+#: a1c8240b06d34afaa7e81e9df4679039
+msgid "不同设备类型"
+msgstr ""
+
+#: daa0117789a54912a5ce802c22f3bf90
+msgid ""
+"# 状态矢量模拟器（精确模拟）\n"
+"sv_result = (\n"
+"    circuit\n"
+"    .device(provider=\"simulator\", device=\"statevector\")\n"
+"    .run()\n"
+")\n"
+"\n"
+"# 密度矩阵模拟器（支持噪声）\n"
+"dm_result = (\n"
+"    circuit\n"
+"    .device(provider=\"simulator\", device=\"density_matrix\")\n"
+"    .run()\n"
+")\n"
+"\n"
+"# 矩阵乘积态模拟器（大规模电路）\n"
+"mps_result = (\n"
+"    circuit\n"
+"    .device(provider=\"simulator\", device=\"mps\")\n"
+"    .run()\n"
+")"
+msgstr ""
+
+#: 170ba8d70c9e4507b6df6edab0b7d311
+msgid "电路属性和方法"
+msgstr ""
+
+#: 0f9e6a8f335f4641b4d28da4d3da698b
+msgid "查询电路信息"
+msgstr ""
+
+#: 78272a1dfbc44b029e020318980b8d50
+#, python-brace-format
+msgid ""
+"circuit = tq.Circuit(3).h(0).cnot(0, 1).rx(2, 0.5)\n"
+"\n"
+"# 基本属性\n"
+"print(f\"量子比特数: {circuit.num_qubits}\")\n"
+"print(f\"操作数量: {len(circuit.ops)}\")\n"
+"\n"
+"# 门操作摘要\n"
+"print(f\"门摘要: {circuit.gate_summary()}\")\n"
+"\n"
+"# 查看指令列表\n"
+"print(f\"指令: {circuit.instructions}\")"
+msgstr ""
+
+#: 0edd80b1a5db4296af1fd184faa7667a
+msgid "元数据管理"
+msgstr ""
+
+#: 820ba8b2d03649b18b6f4b2e9e625b0c
+msgid "为电路添加描述信息："
+msgstr ""
+
+#: 8ff2ca9fdbd543fabb70cd26f80c86aa
+msgid ""
+"# 添加元数据\n"
+"circuit_with_meta = (\n"
+"    tq.Circuit(2)\n"
+"    .h(0).cnot(0, 1)\n"
+"    .with_metadata(description=\"Bell state preparation\", "
+"author=\"Alice\")\n"
+")\n"
+"\n"
+"print(\"元数据:\", circuit_with_meta.metadata)"
+msgstr ""
+
+#: 0b88bb683fc7408ba9e0dead87449e4b
+msgid "进阶示例"
+msgstr ""
+
+#: a6d234604e384be9b2c34bdf853cf2d5
+msgid "量子傅里叶变换"
+msgstr ""
+
+#: 81f02e6c95284dd4aa84e3fdc360ef85
+msgid "实现量子傅里叶变换（QFT）："
+msgstr ""
+
+#: a5b12cc7eb70465da4d84a31e6e816de
+#, python-brace-format
+msgid ""
+"def qft_circuit(n_qubits):\n"
+"    \"\"\"构建n量子比特的量子傅里叶变换电路\"\"\"\n"
+"    circuit = tq.Circuit(n_qubits)\n"
+"\n"
+"    for j in range(n_qubits):\n"
+"        circuit.h(j)\n"
+"        for k in range(j + 1, n_qubits):\n"
+"            angle = np.pi / (2 ** (k - j))\n"
+"            # 受控相位门（需要实现controlled RZ）\n"
+"            # 这里简化为RZ门示例\n"
+"            circuit.rz(k, angle / 2)\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 创建3量子比特QFT电路\n"
+"qft_3 = qft_circuit(3)\n"
+"print(f\"QFT电路门数: {len(qft_3.ops)}\")"
+msgstr ""
+
+#: ef190821604c4099b47bd789ffb8cb94
+msgid "变分量子电路"
+msgstr ""
+
+#: 27d21d0e8ba045a184a012e033cc47e4
+msgid "创建参数化的变分电路："
+msgstr ""
+
+#: 23bc81ac3b8c444298b7c3754871873e
+#, python-brace-format
+msgid ""
+"def variational_circuit(n_qubits, layers, parameters):\n"
+"    \"\"\"构建变分量子电路\"\"\"\n"
+"    circuit = tq.Circuit(n_qubits)\n"
+"    param_idx = 0\n"
+"\n"
+"    for layer in range(layers):\n"
+"        # 单量子比特旋转层\n"
+"        for i in range(n_qubits):\n"
+"            circuit.ry(i, parameters[param_idx])\n"
+"            param_idx += 1\n"
+"\n"
+"        # 纠缠层\n"
+"        for i in range(n_qubits - 1):\n"
+"            circuit.cnot(i, i + 1)\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 创建变分电路\n"
+"n_qubits, layers = 4, 2\n"
+"n_params = n_qubits * layers\n"
+"params = np.random.uniform(0, 2*np.pi, n_params)\n"
+"\n"
+"var_circuit = variational_circuit(n_qubits, layers, params)\n"
+"print(f\"变分电路参数数: {n_params}\")"
+msgstr ""
+
+#: 9d9d9f4a67f74fe3874f33630d76079a
+msgid "最佳实践"
+msgstr ""
+
+#: 154e5326b27d40678e6151c6e07e911f
+msgid "代码组织"
+msgstr ""
+
+#: 1b28424811844de3936fea99adc1c120
+msgid "**使用链式API**：提高代码可读性"
+msgstr ""
+
+#: 661b2058bb304a90b5601ac9cd0402b0
+msgid ""
+"# 推荐\n"
+"result = (\n"
+"    tq.Circuit(2).h(0).cnot(0, 1)\n"
+"    .device(shots=1024)\n"
+"    .run()\n"
+")"
+msgstr ""
+
+#: 11263263add84aed8f1f050f25542f78
+msgid "**合理命名**：使用描述性变量名"
+msgstr ""
+
+#: f72243492be9437a977867030a1ab9c4
+msgid ""
+"bell_state = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"ghz_state = tq.Circuit(3).h(0).cnot(0, 1).cnot(1, 2)"
+msgstr ""
+
+#: e67a0058f3f94fca9cc311bbede8ff81
+msgid "**添加注释**：解释复杂的量子算法"
+msgstr ""
+
+#: 0bfc841936ac41c7b07cd749cdf60313
+msgid ""
+"# 准备Bell态 |00⟩ + |11⟩\n"
+"circuit = tq.Circuit(2)\n"
+"circuit.h(0)        # 创建叠加态\n"
+"circuit.cnot(0, 1)  # 创建纠缠"
+msgstr ""
+
+#: 06e18fef6cf644b08df086267943dcc4
+msgid "错误处理"
+msgstr ""
+
+#: a5881bec00694d3398b6f3e8d95f541e
+#, python-brace-format
+msgid ""
+"try:\n"
+"    circuit = tq.Circuit(2).h(0).cnot(0, 3)  # 错误：量子比特3不存在\n"
+"    result = circuit.run()\n"
+"except Exception as e:\n"
+"    print(f\"电路执行错误: {e}\")"
+msgstr ""
+
+#: dd2eb2c4ffbe471ba3e417890c425a96
+msgid "性能提示"
+msgstr ""
+
+#: a12a20a773934be7b636e5cd42592d70
+msgid "**合理选择设备类型**："
+msgstr ""
+
+#: 25b53ed9eae24f92ad057992d5936b7f
+msgid "小电路（<20量子比特）：使用``statevector``"
+msgstr ""
+
+#: 9fb584ea1f4743bab850df58da6645d1
+msgid "需要噪声模拟：使用``density_matrix``"
+msgstr ""
+
+#: 5df46a80aeb4475aa76dd7095faf2d55
+msgid "大电路：使用``mps``"
+msgstr ""
+
+#: 51eff8cafd364ed8be067ce82d64b1d2
+msgid "**优化shots数量**："
+msgstr ""
+
+#: 2c4b0acaa37a4b79a8b3d0de2a4ec26c
+msgid "调试阶段：使用较少shots（100-1000）"
+msgstr ""
+
+#: 6474d4d520254728a7b3c9d69523d321
+msgid "生产环境：使用足够的shots（1000-10000）"
+msgstr ""
+
+#: 49027584c9ee430495093911f0545ab7
+msgid "下一步"
+msgstr ""
+
+#: 53ebf80e9b69479c8584c02af3cef373
+msgid "恭喜！您已经掌握了TyxonQ量子电路的基础知识。接下来推荐学习："
+msgstr ""
+
+#: ff438261762c40bb8e5f2676ddeeebf5
+msgid ":doc:`first_chemistry` - 学习量子化学应用"
+msgstr ""
+
+#: a62953f0a5c44a4ab99fef0b199e6a4a
+msgid ":doc:`basic_concepts` - 深入了解量子计算概念"
+msgstr ""
+
+#: a371df8f4c064cdba848ab67b165fb8c
+msgid ":doc:`../user_guide/compiler/index` - 了解编译优化"
+msgstr ""
+
+#: fabc9b0b86c348c7bc371fc4fabd2f26
+msgid ":doc:`../examples/basic_examples` - 查看更多示例"
+msgstr ""
+
+#: 0a87ee01fa1747dbb8d1d31617ac09f7
+msgid "常见问题"
+msgstr ""
+
+#: fabc0f9bebd54959b4f4071323ccdcb0
+msgid "**Q: 如何查看电路的量子态？**"
+msgstr ""
+
+#: b97a792f35294cd6ad710706721f561b
+msgid "A: 使用状态矢量模拟器可以获取精确的量子态："
+msgstr ""
+
+#: a235c506135544179cf9d8c2c137cc0c
+msgid ""
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"# 获取状态矢量（不添加测量）\n"
+"result = circuit.device(device=\"statevector\").run()\n"
+"# 结果包含量子态信息"
+msgstr ""
+
+#: c6e0627a8dfb43e6b7dbf96ee3eb7091
+msgid "**Q: 如何重复使用电路？**"
+msgstr ""
+
+#: bb5371770f484ba394e48d228b4eb0b3
+msgid "A: 电路对象可以重复执行："
+msgstr ""
+
+#: c35799294ff04d66a49b339ec40250c0
+msgid ""
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"# 多次执行\n"
+"result1 = circuit.run()\n"
+"result2 = circuit.run()"
+msgstr ""
+
+#: 76b7456b90a14b97b5e1798c7b2540ea
+msgid "**Q: 支持哪些量子门？**"
+msgstr ""
+
+#: 66dfee5c77a04ba4ab38a7a695e002ac
+msgid ""
+"A: TyxonQ支持完整的通用量子门集，包括Pauli门、旋转门、Hadamard门、CNOT门等。详见API文档 "
+":doc:`../api/core/index`。"
+msgstr ""
+
+#: d36c3c2f63fb4e0ba76c5820c988bf97
+msgid "相关资源"
+msgstr ""
+
+#: 0020b9ae3cf24c83ac20c4f7f39a4f3e
+msgid ":doc:`/api/core/index` - Core API参考"
+msgstr ""
+
+#: 1b431c9347af4f45a9afebc3e5305445
+msgid ":doc:`/examples/basic_examples` - 基础示例"
+msgstr ""
+
+#: f073f44ae396475aba601ea298cfc5a3
+msgid ":doc:`/user_guide/devices/index` - 设备和模拟器"
+msgstr ""
+
+#: 1043b8f405a04828a15da71cd03a82e0
+msgid ":doc:`/user_guide/compiler/index` - 编译器优化"
+msgstr ""
+

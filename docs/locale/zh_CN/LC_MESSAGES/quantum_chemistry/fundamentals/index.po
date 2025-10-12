@@ -1,0 +1,728 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 3bf416b8d37541769ae26bf26c5edbfd
+msgid "量子化学基础"
+msgstr ""
+
+#: fbecbd703dfe4b8197256a4cfb09c6ea
+msgid "欢迎学习量子化学和TyxonQ框架的基础概念！本页面将为您介绍量子化学的核心概念以及在量子计算中的实现方法。"
+msgstr ""
+
+#: fde7de7319c44811a9cacc0d291fd9cc
+msgid "本页内容"
+msgstr ""
+
+#: 9ced51388cb14aba87afbfa14ac99732
+msgid "概述"
+msgstr ""
+
+#: 20b812f83346454ea436ad0bb1caa8dc
+msgid "量子化学是量子计算最重要的应用领域之一。TyxonQ提供了完整的量子化学模块，支持从分子建模到算法实现的全流程计算："
+msgstr ""
+
+#: 86ce926f2fc6461c8d15d9edffd66983
+msgid "**分子哈密顿量**：电子结构问题的量子力学描述"
+msgstr ""
+
+#: e54949876c9d4715813b5e64be06672b
+msgid "**二次量子化**：费米子系统的代数表示"
+msgstr ""
+
+#: cefc8dcf474144c582ad6f5dc4353974
+msgid "**费米-量子比特映射**：将费米算符转换为量子比特操作"
+msgstr ""
+
+#: 5aede4eacf194ee5b3973e6c62f6a525
+msgid "**变分算法**：VQE等量子算法的理论基础"
+msgstr ""
+
+#: 3b82511bd38746b9b290b0c7f9963f91
+msgid "电子结构问题"
+msgstr ""
+
+#: 25e388e422404d7a9b94fda158e5aa03
+msgid "分子哈密顿量"
+msgstr ""
+
+#: e0eb57b503d14c008f334462450d61b1
+msgid "在Born-Oppenheimer近似下，分子的电子哈密顿量可以写为："
+msgstr ""
+
+#: a75a1a278602460ca4be01aeb908a7fb
+msgid ""
+"H = -\\sum_i \\frac{1}{2}\\nabla_i^2 - \\sum_{i,A} \\frac{Z_A}{r_{iA}} + "
+"\\sum_{i<j} \\frac{1}{r_{ij}} + \\sum_{A<B} \\frac{Z_A Z_B}{R_{AB}}"
+msgstr ""
+
+#: 8222ea16dd744de1ae90a2a3a1ac0ed8
+msgid "**各项物理意义**："
+msgstr ""
+
+#: 63b52bb8fbab4a948330057a7c1e4b59
+msgid "第一项：电子动能"
+msgstr ""
+
+#: 5e83118fdd434ddcb043faf58bcea1ae
+msgid "第二项：电子-核吸引势能"
+msgstr ""
+
+#: 3a72b7bb603c4d4db0a1d46f80b35321
+msgid "第三项：电子-电子排斥势能"
+msgstr ""
+
+#: de692fe4255346b286b6dbdc846b23b6
+msgid "第四项：核-核排斥势能（常数项）"
+msgstr ""
+
+#: 3ca327aae6734062bba0f681fc809750
+msgid "Born-Oppenheimer近似"
+msgstr ""
+
+#: ae4711db25ff4a2c87182cb71f4fa15e
+msgid "Born-Oppenheimer近似假设原子核相对于电子是静止的，从而将分子哈密顿量分离为电子和核运动部分："
+msgstr ""
+
+#: 2811d298ae1d49ea94996ed0209c3969
+#, python-brace-format
+msgid "\\Psi_{total}(r,R) \\approx \\psi_{elec}(r;R) \\cdot \\chi_{nuclear}(R)"
+msgstr ""
+
+#: fa31d514293a4270b1a3df1e321d1ef4
+msgid "这一近似的合理性基于： - 电子质量 << 原子核质量 - 电子运动速度 >> 原子核运动速度"
+msgstr ""
+
+#: 222738dbf8d4465988132279e17428d8
+msgid "**TyxonQ中的应用**："
+msgstr ""
+
+#: d7a52d08e4024473afb721775c5c832e
+#, python-brace-format
+msgid ""
+"from tyxonq.applications.chem import Molecule\n"
+"\n"
+"# 定义分子几何结构（核坐标固定）\n"
+"h2o = Molecule(\n"
+"    atoms=[\n"
+"        [\"O\", [0.0, 0.0, 0.0]],\n"
+"        [\"H\", [0.757, 0.586, 0.0]],\n"
+"        [\"H\", [-0.757, 0.586, 0.0]]\n"
+"    ],\n"
+"    basis=\"sto-3g\"\n"
+")\n"
+"\n"
+"print(f\"分子总电子数: {h2o.n_electrons}\")\n"
+"print(f\"HF能量: {h2o.hf_energy:.6f} Hartree\")"
+msgstr ""
+
+#: 2f3683227981496f8360dca3e445b6cd
+msgid "基组理论"
+msgstr ""
+
+#: 55e83f3c78844ef49f0b17b78b170fc4
+msgid "量子化学计算中，分子轨道用基函数的线性组合表示："
+msgstr ""
+
+#: 17e672a4a99245c480bdb503ab17f5f5
+#, python-brace-format
+msgid "\\psi_i = \\sum_{\\mu} c_{\\mu i} \\phi_\\mu"
+msgstr ""
+
+#: c8f97c567fc244c5b7eebfff9ad23255
+msgid "**常用基组类型**："
+msgstr ""
+
+#: 15d54044d8ea4294b9d4ca999cf3809f
+msgid "基组对比"
+msgstr ""
+
+#: b387990d62004c278ca857d3966af6bd
+msgid "基组名称"
+msgstr ""
+
+#: d38f437a9b784a5db56a50c0e1623082
+msgid "描述"
+msgstr ""
+
+#: 1fd09a2dbe6a487e9495902f8a574ef9
+msgid "计算成本"
+msgstr ""
+
+#: 2c2af6d3bfd643d39209a9555820d146
+msgid "精度"
+msgstr ""
+
+#: 05d9e0eba5d64c9080ae38946273338a
+msgid "STO-3G"
+msgstr ""
+
+#: 48fa2d5c619643929c3dfcc2a382461c
+msgid "最小基组"
+msgstr ""
+
+#: cafe4ca1638344a486395620911d2050
+msgid "很低"
+msgstr ""
+
+#: bd89d7be55fd4b62abd434649db808a7
+msgid "定性结果"
+msgstr ""
+
+#: 65fd8159be324543bd76d3516c57525f
+msgid "6-31G"
+msgstr ""
+
+#: 59943bcb64124e649170c78a2224a8c0
+msgid "分裂价基组"
+msgstr ""
+
+#: fedfce4f142e44ee9cdbda32a493ae3c
+msgid "中等"
+msgstr ""
+
+#: b505d12e8426456895d7a2f1d491f891
+msgid "定量结果"
+msgstr ""
+
+#: cbb26a9773724a11966af1a1eedec707
+msgid "cc-pVDZ"
+msgstr ""
+
+#: a12fdcd9dee6462984e5eb71ce5d878a
+msgid "相关一致基组"
+msgstr ""
+
+#: fba88a55a35547b3b1bd4b3b4081f1a1
+msgid "高"
+msgstr ""
+
+#: 871008a7d4f44e7d967246bc4d8845d3
+msgid "高精度"
+msgstr ""
+
+#: 7accc1b80b244b14b2b6010f95697c2d
+msgid "aug-cc-pVTZ"
+msgstr ""
+
+#: 38729f306a6641dc9d96b6fe10e31785
+msgid "增强相关一致基组"
+msgstr ""
+
+#: e23a36043d114debba82d413045c7a44
+msgid "很高"
+msgstr ""
+
+#: 28ca9ef370004621a1ecaee68ee1681b
+msgid "极高精度"
+msgstr ""
+
+#: 9def41dd68994871a47be374502fab46
+#, python-brace-format
+msgid ""
+"# 不同基组的精度对比\n"
+"molecules = {\n"
+"    \"sto-3g\": Molecule(atoms=[[\"H\", [0, 0, 0]], [\"H\", [0, 0, "
+"0.74]]], basis=\"sto-3g\"),\n"
+"    \"6-31g\": Molecule(atoms=[[\"H\", [0, 0, 0]], [\"H\", [0, 0, "
+"0.74]]], basis=\"6-31g\"),\n"
+"    \"cc-pvdz\": Molecule(atoms=[[\"H\", [0, 0, 0]], [\"H\", [0, 0, "
+"0.74]]], basis=\"cc-pvdz\")\n"
+"}\n"
+"\n"
+"for basis, mol in molecules.items():\n"
+"    print(f\"{basis}: HF能量 = {mol.hf_energy:.6f} Hartree\")"
+msgstr ""
+
+#: 369d2d35e9d84fb3b1864d03259fcdf6
+msgid "二次量子化"
+msgstr ""
+
+#: be6eef8bc5754173a0ed818dea52af73
+msgid "费米算符"
+msgstr ""
+
+#: 1e133cb6dcd649909f8fe7de01857cca
+msgid "在二次量子化表示中，使用产生和湮灭算符描述电子："
+msgstr ""
+
+#: 44d53ed8451b4fe183670f7df7f12185
+msgid "$a_p^\\dagger$：在轨道p中产生一个电子"
+msgstr ""
+
+#: d55b8def3a7842d794ae134720576177
+msgid "$a_p$：在轨道p中湮灭一个电子"
+msgstr ""
+
+#: df5382ba29ad479fbd035d51ebd3c3e4
+msgid "**反对易关系**："
+msgstr ""
+
+#: c67736ea33d34aaea1c854800f7e6d60
+#, python-brace-format
+msgid ""
+"\\{a_p^\\dagger, a_q\\} = \\delta_{pq}\n"
+"\n"
+"\\{a_p^\\dagger, a_q^\\dagger\\} = 0\n"
+"\n"
+"\\{a_p, a_q\\} = 0"
+msgstr ""
+
+#: 84e80a11231f49e6af2f92b64fea3ac8
+msgid "电子哈密顿量"
+msgstr ""
+
+#: 393257c5f384482cb6cc9453896553b5
+msgid "二次量子化形式的电子哈密顿量："
+msgstr ""
+
+#: 2a845f46e1234081944033d1d9c3772f
+#, python-brace-format
+msgid ""
+"H = \\sum_{pq} h_{pq} a_p^\\dagger a_q + \\frac{1}{2}\\sum_{pqrs} "
+"h_{pqrs} a_p^\\dagger a_q^\\dagger a_s a_r"
+msgstr ""
+
+#: 97a0c8d91e7949c9925febda292e6d92
+#, python-brace-format
+msgid "其中： - $h_{pq}$：单电子积分（动能 + 核吸引） - $h_{pqrs}$：双电子积分（电子排斥）"
+msgstr ""
+
+#: 6c7b7fca83aa4a449c703d58c5188c4b
+msgid "**积分计算**："
+msgstr ""
+
+#: 226db7ae8b044ea892513dbc34e74370
+#, python-brace-format
+msgid ""
+"h_{pq} = \\int \\phi_p^*(r) \\left(-\\frac{1}{2}\\nabla^2 - \\sum_A "
+"\\frac{Z_A}{|r-R_A|}\\right) \\phi_q(r) dr\n"
+"\n"
+"h_{pqrs} = \\int\\int \\phi_p^*(r_1)\\phi_q^*(r_2) \\frac{1}{|r_1-r_2|} "
+"\\phi_r(r_1)\\phi_s(r_2) dr_1 dr_2"
+msgstr ""
+
+#: af8880d3695a47689e41bb9549f0bda5
+msgid "费米-量子比特映射"
+msgstr ""
+
+#: 84a564a811dc41189057110f50938833
+msgid "Jordan-Wigner变换"
+msgstr ""
+
+#: 6fbf5ed5a15745ab8ffd87533c2a9471
+msgid "Jordan-Wigner变换是最直观的费米-量子比特映射："
+msgstr ""
+
+#: 498e4a78d28140eba9b83ccdbea24f0c
+#, python-brace-format
+msgid ""
+"a_j^\\dagger = \\left(\\bigotimes_{k=0}^{j-1} Z_k\\right) \\otimes "
+"\\sigma_j^+\n"
+"\n"
+"a_j = \\left(\\bigotimes_{k=0}^{j-1} Z_k\\right) \\otimes \\sigma_j^-"
+msgstr ""
+
+#: 85378f1f99f640669cff11381df8e9c1
+msgid "其中 $\\sigma^+ = (X + iY)/2$ 和 $\\sigma^- = (X - iY)/2$。"
+msgstr ""
+
+#: d8306d426f8a486d9adb02a588170081
+msgid "**TyxonQ实现**："
+msgstr ""
+
+#: d106a56e3aef4831961920b0a50a58bd
+#, python-brace-format
+msgid ""
+"# 获取Jordan-Wigner映射的哈密顿量\n"
+"hamiltonian = h2o.get_hamiltonian(mapping=\"jordan_wigner\")\n"
+"\n"
+"print(f\"哈密顿量项数: {len(hamiltonian)}\")\n"
+"print(f\"需要的量子比特数: {h2o.n_qubits}\")\n"
+"\n"
+"# 查看前几项\n"
+"for i, (coeff, pauli_string) in enumerate(hamiltonian[:3]):\n"
+"    print(f\"项 {i+1}: {coeff:.6f} * {pauli_string}\")"
+msgstr ""
+
+#: 7d986dc9d4d94c11a0d495acf3ebd751
+msgid "Bravyi-Kitaev变换"
+msgstr ""
+
+#: 9f20399716d64986b8ae0269b997a20e
+msgid "Bravyi-Kitaev变换通过二进制树结构减少了量子门的数量："
+msgstr ""
+
+#: 81e8c7e7b58f4717ad7a5ce6868f0ea1
+#, python-brace-format
+msgid ""
+"a_j^\\dagger = \\frac{1}{2}\\left(\\bigotimes_{k \\in P(j)} Z_k\\right) "
+"\\otimes \\left(\\bigotimes_{k \\in Q(j)} X_k\\right) \\otimes (X_j - "
+"iY_j)"
+msgstr ""
+
+#: f41db6269f874a4dbc480bcef19949b5
+msgid "其中P(j)和Q(j)是基于二进制表示定义的索引集合。"
+msgstr ""
+
+#: b6f9f67b426d4ad7a4712e07a2e2ef16
+msgid "**映射对比**："
+msgstr ""
+
+#: d82469dc291149eeb8da11cd21cde2cf
+#, python-brace-format
+msgid ""
+"# 比较不同映射方法\n"
+"mappings = ['jordan_wigner', 'bravyi_kitaev', 'parity']\n"
+"\n"
+"for mapping in mappings:\n"
+"    ham = h2o.get_hamiltonian(mapping=mapping)\n"
+"    print(f\"{mapping}: {len(ham)} 项\")"
+msgstr ""
+
+#: 9b769a10f6484735872232c32d9a5bf3
+msgid "Parity变换"
+msgstr ""
+
+#: 3b6d99eea20e4207ac0f3172f9c050c6
+msgid "Parity变换基于奇偶性编码："
+msgstr ""
+
+#: 689d739038744421b68e6932ecc977cd
+#, python-brace-format
+msgid ""
+"|n_0, n_1, \\ldots, n_{N-1}\\rangle \\rightarrow |p_0, p_1, \\ldots, "
+"p_{N-1}\\rangle"
+msgstr ""
+
+#: c1ceac6288334a6a9bb716043baefb78
+msgid "其中 $p_j = n_0 \\oplus n_1 \\oplus \\cdots \\oplus n_j$。"
+msgstr ""
+
+#: 32f6958a090b4136acb026948e278bf6
+msgid "变分方法基础"
+msgstr ""
+
+#: 7f2cb2ba2e714bad97da7268610659dd
+msgid "变分原理"
+msgstr ""
+
+#: bfad1f70bc594d94b162d84e4267ef7d
+msgid "量子力学中的变分原理指出，对于任意试探波函数 $|\\psi\\rangle$："
+msgstr ""
+
+#: 8799752a475f4df9811445b0c84b8cf6
+#, python-brace-format
+msgid ""
+"E_0 \\leq "
+"\\frac{\\langle\\psi|H|\\psi\\rangle}{\\langle\\psi|\\psi\\rangle}"
+msgstr ""
+
+#: 203bb3150305450d8759d5ebfe9ff092
+msgid "这是VQE算法的理论基础。"
+msgstr ""
+
+#: 47b0760a76424aeea2da133fc14430cc
+msgid "**VQE算法流程**："
+msgstr ""
+
+#: f2fb5635787e47918e58ee5b87fe80ef
+msgid "拟设电路设计"
+msgstr ""
+
+#: 297ff6d44ec8414897c87fd8700ebaf5
+msgid "**硬件有效拟设（HEA）**："
+msgstr ""
+
+#: 2e3f0affcb304410b019834b2aabf973
+#, python-brace-format
+msgid ""
+"from tyxonq.applications.chem import HEA\n"
+"\n"
+"# 创建HEA算法实例\n"
+"hea = HEA(\n"
+"    molecule=h2o,\n"
+"    layers=3,\n"
+"    runtime=\"numeric\"\n"
+")\n"
+"\n"
+"print(f\"HEA参数数量: {hea.n_params}\")\n"
+"print(f\"电路深度估计: {3 * h2o.n_qubits * 2}\")"
+msgstr ""
+
+#: 62ad1707c5e642b39f1bc19e061f0484
+msgid "**UCCSD拟设**："
+msgstr ""
+
+#: 7b96cafbbd7042e68d7b8a895561aa06
+#, python-brace-format
+msgid ""
+"from tyxonq.applications.chem import UCCSD\n"
+"\n"
+"# 创建UCCSD算法实例\n"
+"uccsd = UCCSD(\n"
+"    molecule=h2o,\n"
+"    init_method=\"mp2\"\n"
+")\n"
+"\n"
+"print(f\"UCCSD参数数量: {uccsd.n_params}\")\n"
+"print(f\"激发算符数量: {len(uccsd.excitation_ops)}\")"
+msgstr ""
+
+#: df3c7ed8584544aea54acf9ccc2b2f7d
+msgid "平均场方法"
+msgstr ""
+
+#: f572ffab918b4f00919592235df84816
+msgid "Hartree-Fock理论"
+msgstr ""
+
+#: 99169ceed303421790502e7f903a88bd
+msgid "Hartree-Fock方法是最基本的平均场近似："
+msgstr ""
+
+#: e4ff46ced43f47d19564e2bef48b8623
+#, python-brace-format
+msgid "|\\Psi_{HF}\\rangle = |\\phi_1 \\phi_2 \\cdots \\phi_N\\rangle"
+msgstr ""
+
+#: 46c6ac62e4e441a8bf16b1f37bdbcd83
+msgid "**自洽场方程**："
+msgstr ""
+
+#: f09d7a944bc34fc5aec28a88ada31040
+msgid "F|\\phi_i\\rangle = \\epsilon_i|\\phi_i\\rangle"
+msgstr ""
+
+#: df6b846b84784ea5888e71548a71e154
+msgid "其中Fock算符 $F = h + \\sum_j (J_j - K_j)$。"
+msgstr ""
+
+#: c33c485ddd1e41f4a5bbb98ba9027ad5
+msgid "**TyxonQ中的HF计算**："
+msgstr ""
+
+#: 0c8400a64073414d948c521446e29093
+#, python-brace-format
+msgid ""
+"# 获取HF结果\n"
+"print(f\"HF能量: {h2o.hf_energy:.6f} Hartree\")\n"
+"print(f\"HOMO-LUMO gap: {h2o.homo_lumo_gap:.6f} Hartree\")\n"
+"\n"
+"# 获取分子轨道系数\n"
+"mo_coeffs = h2o.mo_coefficients\n"
+"print(f\"分子轨道数: {mo_coeffs.shape}\")"
+msgstr ""
+
+#: 06d66b8cb60043a48a8149801723d6d4
+msgid "电子相关"
+msgstr ""
+
+#: 1011787d71bc47118f5d78dce1bb66ab
+msgid "电子相关能定义为精确基态能量与HF能量的差值："
+msgstr ""
+
+#: 50c40e5b9f9144a3afe3a39b389f28cb
+#, python-brace-format
+msgid "E_{corr} = E_{exact} - E_{HF}"
+msgstr ""
+
+#: 3d5748934b6e412e8b24a58fa3e8fee5
+msgid "**相关方法对比**："
+msgstr ""
+
+#: ac08d9d7cc9e421c9a45a743c3109d04
+msgid "相关方法精度对比"
+msgstr ""
+
+#: 1fe791fa68a54695a8b20dc69270eef4
+msgid "方法"
+msgstr ""
+
+#: cbe1cf5a21474d949af7a854d7d453ef
+msgid "计算复杂度"
+msgstr ""
+
+#: b618915a63eb4b74ba23eccc359d4b6e
+msgid "相关能回收"
+msgstr ""
+
+#: 3b8bc4a9bf4244219b8b307c17543deb
+msgid "应用范围"
+msgstr ""
+
+#: 41fcd02170314eacb8adf54da0cbba69
+msgid "MP2"
+msgstr ""
+
+#: 63deab75b5194bd09784991d404c58f5
+msgid "O(N^5)"
+msgstr ""
+
+#: 9d88b97ae80749138feda35840b3e5d6
+msgid "~80-90%"
+msgstr ""
+
+#: 0a6841c7fc76401ea7ff739c59f99db9
+msgid "弱相关系统"
+msgstr ""
+
+#: bcb993bd0a4c4ed3b1fe1d0e16d3c36a
+msgid "CCSD"
+msgstr ""
+
+#: 3b6bf6f3efb343718306f9d84da76784
+msgid "O(N^6)"
+msgstr ""
+
+#: 8ccd8ec7fc084af689c57152617a180c cf6a400bc6624d929305b858823b272d
+msgid "~95%"
+msgstr ""
+
+#: 11898fd64cb74ad892fdf4c6dd29cdcf
+msgid "中等相关系统"
+msgstr ""
+
+#: bb707796623d473fa6cf7235a96a2b0d
+msgid "CCSD(T)"
+msgstr ""
+
+#: 726f7600c27f4d8694b8d3f6481bbf59
+msgid "O(N^7)"
+msgstr ""
+
+#: e5eb392aa9eb412b986dfebbc77e3b09
+msgid "~99%"
+msgstr ""
+
+#: de294a38caa647f29779201fc28ff135
+msgid "强相关系统"
+msgstr ""
+
+#: daefcac7bb2b46db978436431dd25a22
+msgid "VQE-UCCSD"
+msgstr ""
+
+#: b28bfaae0aac45c8a8ea32e7e81ce4fe
+msgid "多项式（量子）"
+msgstr ""
+
+#: f2493e5e1cb841a985b220a098e26900
+msgid "量子算法"
+msgstr ""
+
+#: 01f761f313c6446b8fc94c8ca32b9fbf
+msgid "实际应用示例"
+msgstr ""
+
+#: 083b3258fbf4480a947cf2cf2a04d278
+msgid "氢分子解离"
+msgstr ""
+
+#: 67eae145bdbd49a8840e2cd361c0b078
+msgid ""
+"import numpy as np\n"
+"import matplotlib.pyplot as plt\n"
+"\n"
+"# 扫描H2分子的键长\n"
+"distances = np.linspace(0.5, 3.0, 11)\n"
+"hf_energies = []\n"
+"vqe_energies = []\n"
+"\n"
+"for d in distances:\n"
+"    h2 = Molecule(\n"
+"        atoms=[[\"H\", [0, 0, 0]], [\"H\", [0, 0, d]]],\n"
+"        basis=\"sto-3g\"\n"
+"    )\n"
+"\n"
+"    hf_energies.append(h2.hf_energy)\n"
+"\n"
+"    # VQE计算\n"
+"    hea = HEA(molecule=h2, layers=2)\n"
+"    vqe_energy = hea.kernel(method=\"COBYLA\")\n"
+"    vqe_energies.append(vqe_energy)\n"
+"\n"
+"# 绘制势能曲线\n"
+"plt.figure(figsize=(10, 6))\n"
+"plt.plot(distances, hf_energies, 'o-', label='HF')\n"
+"plt.plot(distances, vqe_energies, 's-', label='VQE-HEA')\n"
+"plt.xlabel('键长 (Bohr)')\n"
+"plt.ylabel('能量 (Hartree)')\n"
+"plt.legend()\n"
+"plt.title('H2分子势能曲线')\n"
+"plt.grid(True)\n"
+"plt.show()"
+msgstr ""
+
+#: f8633eb1316a43ea80681b619ba4eb12
+msgid "水分子基态"
+msgstr ""
+
+#: 70e5da52deba4ef4b02b8c53029b0bbb
+#, python-brace-format
+msgid ""
+"# 水分子VQE计算\n"
+"from tyxonq.applications.chem import UCCSD\n"
+"\n"
+"h2o = Molecule(\n"
+"    atoms=[\n"
+"        [\"O\", [0.0, 0.0, 0.0]],\n"
+"        [\"H\", [0.757, 0.586, 0.0]],\n"
+"        [\"H\", [-0.757, 0.586, 0.0]]\n"
+"    ],\n"
+"    basis=\"6-31g\"\n"
+")\n"
+"\n"
+"# 使用UCCSD方法\n"
+"uccsd = UCCSD(molecule=h2o, init_method=\"mp2\")\n"
+"\n"
+"print(f\"分子信息:\")\n"
+"print(f\"  电子数: {h2o.n_electrons}\")\n"
+"print(f\"  量子比特数: {h2o.n_qubits}\")\n"
+"print(f\"  HF能量: {h2o.hf_energy:.6f} Hartree\")\n"
+"\n"
+"# 执行VQE优化\n"
+"vqe_energy = uccsd.kernel(method=\"BFGS\")\n"
+"\n"
+"print(f\"\\nVQE结果:\")\n"
+"print(f\"  VQE能量: {vqe_energy:.6f} Hartree\")\n"
+"print(f\"  相关能: {vqe_energy - h2o.hf_energy:.6f} Hartree\")"
+msgstr ""
+
+#: 44c4e84bce9a457bb9bf216b793db2eb
+msgid "相关资源"
+msgstr ""
+
+#: b17200fd41624354bb9d1a2e4bca32e2
+msgid ":doc:`../algorithms/index` - 量子化学算法详解"
+msgstr ""
+
+#: bdf772db2a6f481a8bc161507c0afe72
+msgid ":doc:`../molecule/index` - 分子类使用指南"
+msgstr ""
+
+#: a759a3e330fd492b9caab14973fc321d
+msgid ":doc:`/api/applications/index` - 应用API参考"
+msgstr ""
+
+#: 714260b0022a4c85ba130246ac75f15a
+msgid ":doc:`/examples/chemistry_examples` - 量子化学示例"
+msgstr ""
+

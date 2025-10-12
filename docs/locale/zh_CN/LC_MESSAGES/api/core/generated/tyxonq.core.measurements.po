@@ -1,0 +1,60 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 476c0b5a10c549b2bbdf0076d3c10a5b
+msgid "tyxonq.core.measurements"
+msgstr ""
+
+#: b86d48d016a4457c8a8ff4f6f3f2df12
+msgid "Classes"
+msgstr ""
+
+#: 72c32f3c0ea24a828a0d149e900e1344
+msgid ""
+":py:obj:`Expectation <tyxonq.core.measurements.Expectation>`\\ \\(obs\\, "
+"wires\\)"
+msgstr ""
+
+#: f12d448c4d454e5091378587b23e8f78 f54ac3335d534ee482c8244613b38793
+msgid "Expectation measurement of an observable on given wires."
+msgstr ""
+
+#: 8b98477ff19444a68c40c6f2fa13e3cf
+msgid ":py:obj:`Probability <tyxonq.core.measurements.Probability>`\\ \\(wires\\)"
+msgstr ""
+
+#: 7e5ffdd768e740b89705daf8d22ed9b4 c866474047b54c328200ecdd2092766b
+msgid "Probability measurement over the computational basis on wires."
+msgstr ""
+
+#: b8588e3f15f645d481b7a6dd854fbbbb
+msgid ":py:obj:`Sample <tyxonq.core.measurements.Sample>`\\ \\(wires\\, shots\\)"
+msgstr ""
+
+#: 8902ba82116048c2befdc71d171b1322 d1fb3764fa5b4de0b36771489c3ea5f8
+msgid "Sample measurement on given wires with a number of shots."
+msgstr ""
+
+#: 09a5c49b3fc94255b5c6a12027bdf583 2913defc68ab4058b7ab397fff5da03c
+#: 491f7fc907cf4414b9e61a6af65baa53
+msgid "Bases: :py:class:`object`"
+msgstr ""
+

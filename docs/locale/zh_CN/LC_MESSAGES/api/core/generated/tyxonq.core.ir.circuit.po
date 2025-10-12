@@ -1,0 +1,290 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 78a45ab780ff41c2b5fe006a8610b35b
+msgid "tyxonq.core.ir.circuit"
+msgstr ""
+
+#: 851d5fd898974051950407d2d1796c78
+msgid "Functions"
+msgstr ""
+
+#: 462dfc2a4603414793a9ee1ede12e127
+msgid ":py:obj:`cancel_task <tyxonq.core.ir.circuit.cancel_task>`\\ \\(task\\)"
+msgstr ""
+
+#: b2311249337049c98e85c4bb54bd3be5
+msgid ""
+":py:obj:`get_global_compile_defaults "
+"<tyxonq.core.ir.circuit.get_global_compile_defaults>`\\ \\(\\)"
+msgstr ""
+
+#: 3ab9f88bc3a74261b8cb0fee40919cae
+msgid ""
+":py:obj:`get_global_device_defaults "
+"<tyxonq.core.ir.circuit.get_global_device_defaults>`\\ \\(\\)"
+msgstr ""
+
+#: e3fa12244297441296fb1e5ef9942fa3
+msgid ""
+":py:obj:`get_global_postprocessing_defaults "
+"<tyxonq.core.ir.circuit.get_global_postprocessing_defaults>`\\ \\(\\)"
+msgstr ""
+
+#: e0f5ceffc27d41e79a2e46b65cf24fed
+msgid ""
+":py:obj:`get_task_details <tyxonq.core.ir.circuit.get_task_details>`\\ "
+"\\(task\\, \\*\\[\\, prettify\\]\\)"
+msgstr ""
+
+#: 5071d37221f24aa29c6e02fdd143090c
+msgid ""
+":py:obj:`set_global_compile_defaults "
+"<tyxonq.core.ir.circuit.set_global_compile_defaults>`\\ \\(options\\)"
+msgstr ""
+
+#: 6678481db22e4321aea06d57177a7421
+msgid ""
+":py:obj:`set_global_device_defaults "
+"<tyxonq.core.ir.circuit.set_global_device_defaults>`\\ \\(options\\)"
+msgstr ""
+
+#: 4ea8031081d24403944f2d549016b729
+msgid ""
+":py:obj:`set_global_postprocessing_defaults "
+"<tyxonq.core.ir.circuit.set_global_postprocessing_defaults>`\\ "
+"\\(options\\)"
+msgstr ""
+
+#: 90c1a8beb50c48b7b7b686efb23e505e
+msgid "Classes"
+msgstr ""
+
+#: 4b463891bc964f4ba017cd7fefdda8f8
+msgid ""
+":py:obj:`Circuit <tyxonq.core.ir.circuit.Circuit>`\\ "
+"\\(num\\_qubits\\[\\, ops\\, metadata\\, ...\\]\\)"
+msgstr ""
+
+#: a7dcccbf8f98443d94ec49fec9f4e042 d3fbe2419b6e47f88d84ac6c8ad6df39
+msgid "Minimal intermediate representation (IR) for a quantum circuit."
+msgstr ""
+
+#: b496a04abd60428bafc272cd34ac9652
+msgid ":py:obj:`Hamiltonian <tyxonq.core.ir.circuit.Hamiltonian>`\\ \\(terms\\)"
+msgstr ""
+
+#: 105b2c1af77d42fea09d2eebced75ad3 cc37d0cc3da94ddaa123e2b70e158ab6
+msgid "IR for a Hamiltonian."
+msgstr ""
+
+#: b8bcb131daee437ea927f0978d30ebfa ba7cec21baf14a5ea15906a874a91c3e
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 11dffeac42d54ed7bc408f9936e0d1ad 8af33a943797478494b08de1e3d98720
+msgid "Number of qubits in the circuit."
+msgstr ""
+
+#: 9303081916cd47dc9afba66de244be08 e6d572e7a15642bdaa9250417e412838
+msgid "type"
+msgstr ""
+
+#: 25083e3fb69940f5a55c096e3c37221c
+msgid "int"
+msgstr ""
+
+#: 7756553e34154af3ba65abca5165a55a
+msgid ""
+"A sequence of operation descriptors. The concrete type is left open for "
+"backends/compilers to interpret (e.g., gate tuples, IR node objects). "
+"Keeping this generic allows the IR to evolve while tests exercise the "
+"structural contract."
+msgstr ""
+
+#: d480192de5ec489c97b1dcaec0c166f0
+msgid "List[Any]"
+msgstr ""
+
+#: 790516ae608640218eb677ac6fef7c21
+msgid "Initialize a Circuit."
+msgstr ""
+
+#: 7ee5abd3467046dc911c2af377768603
+msgid "Parameters"
+msgstr ""
+
+#: 656b28a575fc4cda88d68281457e8300
+msgid "List of operations. Defaults to empty list if not provided."
+msgstr ""
+
+#: f16440f5c48848699a7f25ccfe1af490
+msgid "Circuit metadata. Defaults to empty dict if not provided."
+msgstr ""
+
+#: 2de4d5d70aad4f52848208375149c82d
+msgid "List of instructions. Defaults to empty list if not provided."
+msgstr ""
+
+#: 88efe619e7d64fad8064627303e8246e
+msgid "Return a new Circuit with merged metadata (shallow merge)."
+msgstr ""
+
+#: e39883e4e0964a29bbc02fe517f8291d
+msgid "Set device options for chainable configuration."
+msgstr ""
+
+#: c2cb079ac3f64f168f109ebe49b620e2
+msgid "Set postprocessing options for chainable configuration."
+msgstr ""
+
+#: 81d639763c89495f95b627c94b33764f
+msgid ""
+"Count ops by name. If gate_list is provided, count only those (case-"
+"insensitive)."
+msgstr ""
+
+#: 0f2703f5467a4159a218acfd08185c48
+msgid "Return a mapping of op name (lower-case) to frequency."
+msgstr ""
+
+#: f5a399e391d644b1a9964132feef6c40
+msgid "Return a heuristic FLOP estimate for statevector simulation."
+msgstr ""
+
+#: 3639cd72eb544e80a53501d2bfa044db
+msgid ""
+"This avoids tensor network dependencies. The estimate is coarse: - 1q "
+"gate ~ O(2^n) - 2q gate ~ O(2^(n+1)) - other gates ignored Returns None "
+"if n is not available."
+msgstr ""
+
+#: 20655341da0e4921911209de98833369
+msgid "Return a dict summarizing the circuit if pandas is available."
+msgstr ""
+
+#: be76aba25fdd43418b9f0be83f2f3192
+msgid ""
+"Columns: #qubits, #gates, #CNOT, #multicontrol, depth (if qiskit "
+"available), #FLOP (heuristic)."
+msgstr ""
+
+#: eae510d4c0f14685b4d92bdcd3e1cee1
+msgid "Return a new Circuit with ops extended by extra_ops (no mutation)."
+msgstr ""
+
+#: a4ed0b4b47d742ca94ad11e2a29a7df4
+msgid ""
+"Append another Circuit's ops. If `indices` given, remap other's qubits by"
+" indices[i]."
+msgstr ""
+
+#: e38388eb6af2448db42c8513501b06c5
+msgid "Return a new Circuit with qubit indices remapped according to `mapping`."
+msgstr ""
+
+#: 2386863e67bd41248f6403157292ae2d
+msgid ""
+"All int arguments in ops are treated as qubit indices and must be present"
+" in mapping."
+msgstr ""
+
+#: 1c403b4472dc4c9b90e2568d47865dba
+msgid ""
+"Return positional->logical mapping from explicit instructions or "
+"measure_z ops."
+msgstr ""
+
+#: 4148968633eb45fb83be99a4c72bc39e
+msgid "Return a unitary inverse circuit for supported ops (h, cx, rz)."
+msgstr ""
+
+#: 25d928d2b0ab424da5a3f0ad60ed1f15
+msgid ""
+"Non-unitary ops like measure/reset/barrier are skipped unless strict=True"
+" (then error). Unknown ops raise if strict=True, else skipped."
+msgstr ""
+
+#: e9de685f57d04e81ba96a9a6e803bc3a
+msgid "Serialize this IR circuit to OpenQASM 2 using the compiler facade."
+msgstr ""
+
+#: 8fed1ec13fc34efa9d07f4ff475cb312
+msgid "Delegates to compiler API (provider='qiskit', output='qasm2')."
+msgstr ""
+
+#: fb36f125a3ba4cf398a96c23da7c2414
+msgid "Delegate to compiler.api.compile or act as chainable setter when no args."
+msgstr ""
+
+#: e8a443ed913a48e6984cf93d31105546
+msgid "Chainable模式：若 provider/output/target/options 全为 None，则返回 self（不触发编译）。"
+msgstr ""
+
+#: ae81443b5fbc449eb1ccfbac9de46155
+msgid "编译模式：转发到 compiler.api.compile，options 与已记录的 _compile_opts 合并。"
+msgstr ""
+
+#: 79ce44cd7bae4d00b033a0b15ec8f7b9
+msgid ""
+"执行电路： - 若构造时提供了 source，则直接按 source 提交给设备层； - 否则，先按 "
+"compile_engine/output/target 进行编译，再根据产物类型提交。 注意：不在此处补测量或发出告警；该逻辑归属编译阶段。"
+msgstr ""
+
+#: a3ef8117e7e943409afb0af0b9943b91
+msgid ""
+"Warning: reset operation is typically not supported by hardware in "
+"logical circuits. This is a simulation-only operation that projects qubit"
+" to |0⟩ state."
+msgstr ""
+
+#: c01f4c6e7f0f4b44b49bfe718f5cbb9e
+msgid "Render the circuit using Qiskit if available."
+msgstr ""
+
+#: a428b51aa1914c1da406396686730e12
+msgid ""
+"Behavior: - Convert IR → Qiskit QuantumCircuit directly (no intermediate "
+"qasm2 dump),"
+msgstr ""
+
+#: 1f76e8bf37a245dbb4de9a1eb78bcc55
+msgid "auto-adding measurements if none present."
+msgstr ""
+
+#: 9addb663f9ac4ba0850b6128c4885fe7
+msgid "Delegate all args/kwargs to `QuantumCircuit.draw`."
+msgstr ""
+
+#: 1468dab3af9144adbca179fd41ad0dae
+msgid ""
+"If Qiskit is not installed, return a minimal textual `gate_summary()` "
+"string."
+msgstr ""
+
+#: 32f58e156ee843b8b33ec67c78e9ecd9
+msgid ""
+"The `terms` field may contain a backend-specific structure, such as a "
+"Pauli-sum, sparse representation, or dense matrix. The type is "
+"intentionally loose at this stage and will be specialized by compiler "
+"stages or devices."
+msgstr ""
+

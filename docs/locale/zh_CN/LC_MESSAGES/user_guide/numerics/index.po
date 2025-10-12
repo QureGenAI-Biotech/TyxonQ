@@ -1,0 +1,391 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: f910826e48e641c4ac42ad5ce516dbbe
+msgid "Numerics Backend"
+msgstr ""
+
+#: ef2dca046c9a4fe78c43ca7527087428
+msgid ""
+"The Numerics Backend system provides a unified array interface across "
+"different computational frameworks, enabling seamless switching between "
+"NumPy, PyTorch, CuPy, and other backends for quantum simulations."
+msgstr ""
+
+#: d0bff2387e5b4cc88225efe4ff15d178
+msgid "Contents"
+msgstr ""
+
+#: d423d0ccc1a94f9785837d130eb4bf2d
+msgid "Overview"
+msgstr ""
+
+#: dd40b22712204be28eba00a33b0809ec
+msgid "The TyxonQ numerics backend system offers:"
+msgstr ""
+
+#: 8b20cb94d03c40cc950f5a0c831766d5
+msgid "**Unified Interface**: ArrayBackend protocol for framework-agnostic code"
+msgstr ""
+
+#: 04512a9b988346c8abc39f78d92b94ae
+msgid ""
+"**Multiple Backends**: Support for NumPy (CPU), PyTorch (GPU/autodiff), "
+"CuPy (GPU)"
+msgstr ""
+
+#: ae0da8338a6a41a1be09aa4f5edd8531
+msgid "**Context Management**: Easy backend switching with context managers"
+msgstr ""
+
+#: bd92dffbed9f48bea9529c83057a3450
+msgid "**Vectorization**: Automatic vectorization with vmap support"
+msgstr ""
+
+#: 658487f17995422bb5e6022b136e224f
+msgid "**Type Safety**: Runtime type checking and validation"
+msgstr ""
+
+#: e2efc349b712463f86cb8b8b6b77a498
+msgid "Available Backends"
+msgstr ""
+
+#: 8196f8cad079482892db7e277340b1f5
+msgid "NumPy Backend"
+msgstr ""
+
+#: 0d203ec0be194ca097d01e09b5670941
+msgid "**Purpose**: Default CPU-based numerical computations"
+msgstr ""
+
+#: af40519c610d4478940e54f87dfbef1d
+msgid ""
+"import tyxonq as tq\n"
+"from tyxonq.numerics import set_backend\n"
+"\n"
+"# Set NumPy backend (default)\n"
+"set_backend('numpy')\n"
+"\n"
+"# Run simulation\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"result = circuit.run()"
+msgstr ""
+
+#: b8e4d56debcc44aeb94ce585aea613a6
+msgid ""
+"**Features:** - Stable and reliable - No additional dependencies - Good "
+"for small to medium circuits - Widely compatible"
+msgstr ""
+
+#: d7469d30d50d4a3985ae952c87df5a4e
+msgid "PyTorch Backend"
+msgstr ""
+
+#: 6293efa39bbd433b83c3418e2bb762ae
+msgid "**Purpose**: GPU acceleration and automatic differentiation"
+msgstr ""
+
+#: c834181cb7584cdfb64cc164e47aaa95
+msgid ""
+"from tyxonq.numerics import set_backend\n"
+"\n"
+"# Set PyTorch backend\n"
+"set_backend('pytorch')\n"
+"\n"
+"# Enable GPU if available\n"
+"import torch\n"
+"if torch.cuda.is_available():\n"
+"    set_backend('pytorch', device='cuda')\n"
+"\n"
+"# Run simulation with automatic differentiation\n"
+"circuit = tq.Circuit(2).ry(0, theta).cnot(0, 1)\n"
+"result = circuit.run()"
+msgstr ""
+
+#: 33a19cc32c434b0da481f13579588452
+msgid ""
+"**Features:** - GPU acceleration - Automatic differentiation - "
+"Integration with PyTorch ecosystem - Ideal for variational algorithms"
+msgstr ""
+
+#: 815fe8cbb82647c6a9b69cff1dbb6b71
+msgid "CuPy Backend"
+msgstr ""
+
+#: 699d45887e5a4c15b159cb49f12a89d1
+msgid "**Purpose**: High-performance GPU computations"
+msgstr ""
+
+#: aed184c7af4c4608abb46d7760c45e60
+msgid ""
+"from tyxonq.numerics import set_backend\n"
+"\n"
+"# Set CuPy backend for GPU acceleration\n"
+"set_backend('cupy')\n"
+"\n"
+"# Run large-scale simulation\n"
+"circuit = tq.Circuit(25).h(range(25))\n"
+"result = circuit.run()"
+msgstr ""
+
+#: e9269aa6e6274410abf35e895dfdc7f2
+msgid ""
+"**Features:** - Maximum GPU performance - NumPy-compatible API - Large-"
+"scale simulations - Optimized for NVIDIA GPUs"
+msgstr ""
+
+#: e9d0b609aeee41ffa63c1f2efa63fe04
+msgid "Context Management"
+msgstr ""
+
+#: 2cc7f1aae2ac4ca9a1fefdd648826d1e
+msgid "Temporary Backend Switching"
+msgstr ""
+
+#: a26656d40cab4257a4e71b309151307a
+msgid ""
+"from tyxonq.numerics import backend_context\n"
+"\n"
+"# Default backend (NumPy)\n"
+"result1 = circuit1.run()\n"
+"\n"
+"# Temporarily use PyTorch\n"
+"with backend_context('pytorch'):\n"
+"    result2 = circuit2.run()\n"
+"\n"
+"# Back to NumPy\n"
+"result3 = circuit3.run()"
+msgstr ""
+
+#: 0252b4fef9cd47ec9334b389fe909693
+msgid "Global Backend Configuration"
+msgstr ""
+
+#: 32467c6dab834aa1b01fa596857f42d2
+#, python-brace-format
+msgid ""
+"from tyxonq.numerics import set_backend, get_backend\n"
+"\n"
+"# Check current backend\n"
+"current = get_backend()\n"
+"print(f\"Current backend: {current}\")\n"
+"\n"
+"# Set global backend\n"
+"set_backend('pytorch')\n"
+"\n"
+"# All subsequent computations use PyTorch\n"
+"result = circuit.run()"
+msgstr ""
+
+#: 4a85b85f525a4199850af0fc32587208
+msgid "Vectorization"
+msgstr ""
+
+#: d3e3d2c1bc6b40eda5ae4e3db8f293cd
+msgid "Automatic Vectorization"
+msgstr ""
+
+#: da3e4aca0e9d4495ad56acbc73863832
+msgid "The backend system provides automatic vectorization through ``vmap``:"
+msgstr ""
+
+#: ded476773f464d28939890c8e3ab3d27
+msgid ""
+"import numpy as np\n"
+"from tyxonq.numerics import vectorize_or_fallback\n"
+"\n"
+"# Function to vectorize\n"
+"def run_circuit(theta):\n"
+"    circuit = tq.Circuit(2).ry(0, theta).cnot(0, 1)\n"
+"    return circuit.run()\n"
+"\n"
+"# Vectorize over parameter array\n"
+"thetas = np.linspace(0, np.pi, 10)\n"
+"vectorized_run = vectorize_or_fallback(run_circuit)\n"
+"results = vectorized_run(thetas)"
+msgstr ""
+
+#: 93d08ef0e5c04e4cafd51c191f5d2f60
+msgid "Vectorization Policies"
+msgstr ""
+
+#: d76afeb69b0b49c0bfbae7bf45f5d546
+msgid ""
+"# Auto: Use vmap if available, fallback to loop\n"
+"vectorized_auto = vectorize_or_fallback(func, policy='auto')\n"
+"\n"
+"# Force: Always use backend vmap (error if unavailable)\n"
+"vectorized_force = vectorize_or_fallback(func, policy='force')\n"
+"\n"
+"# Off: Disable vectorization\n"
+"vectorized_off = vectorize_or_fallback(func, policy='off')"
+msgstr ""
+
+#: 11d17567671244748ecac2f3d246843e
+msgid "Best Practices"
+msgstr ""
+
+#: dec4ff1259824b01bffbf73241786602
+msgid "Choosing the Right Backend"
+msgstr ""
+
+#: 01195d87ec22433f9ca058e4cef3abfe
+msgid "Backend Selection Guide"
+msgstr ""
+
+#: 2317c190b5cc4806a5ebfd760997b760
+msgid "Use Case"
+msgstr ""
+
+#: a19d780430f54128baa07fa214c6ab35
+msgid "Recommended Backend"
+msgstr ""
+
+#: 55574797bdea4309b721961f1faa6180
+msgid "Reason"
+msgstr ""
+
+#: f3f665ca0464483bbdfb41fc48da3fcb
+msgid "Considerations"
+msgstr ""
+
+#: bda3fd445f8941518e84ef63867ca658
+msgid "Small circuits (<20 qubits)"
+msgstr ""
+
+#: 30c487fb256943168e97b51b39a8054f 3b8dd968acd740bdba06d06cfc4c28b6
+msgid "NumPy"
+msgstr ""
+
+#: dc7ec936c73449cbaf124104a60aef21
+msgid "Simple, reliable"
+msgstr ""
+
+#: 811ebac2583a442cbf4f98a43322f70c
+msgid "No GPU needed"
+msgstr ""
+
+#: e3806388a78843549b0f6492e564a934
+msgid "Variational algorithms"
+msgstr ""
+
+#: cee89b9f021a470b9af69260e8c21009
+msgid "PyTorch"
+msgstr ""
+
+#: dee684bca5154e71826cc5d461db504c
+msgid "Automatic differentiation"
+msgstr ""
+
+#: fd3c1ed051b942838d89f2ef7fe58ff8
+msgid "GPU beneficial"
+msgstr ""
+
+#: 377890be12c34ac68698c843cb177464
+msgid "Large simulations (>25 qubits)"
+msgstr ""
+
+#: ae72857aaf1c42fc853f6a3493f68f9c
+msgid "CuPy"
+msgstr ""
+
+#: f0ee8993da81483785688e874f0b49d4
+msgid "Maximum GPU performance"
+msgstr ""
+
+#: a7bd323581a44fb49b4e7fb41d147a9f
+msgid "Requires NVIDIA GPU"
+msgstr ""
+
+#: c266762b0ebf42c6bf1a813d35d00e2e
+msgid "Debugging"
+msgstr ""
+
+#: dc47290c1626430b928ad609310fd065
+msgid "Easy inspection"
+msgstr ""
+
+#: b58eb1f9a2bb4c9797946161a27ad566
+msgid "Slower but clearer"
+msgstr ""
+
+#: 974106abe95b4caaa2a7e96ba4633b15
+msgid "Performance Tips"
+msgstr ""
+
+#: b3edb230d14b4441ace947618545935d
+msgid "**Use GPU for large circuits**:"
+msgstr ""
+
+#: 335ff681de3143ffaa1a8486b9f623f5
+msgid ""
+"# For circuits with >15 qubits\n"
+"if circuit.num_qubits > 15:\n"
+"    set_backend('pytorch', device='cuda')"
+msgstr ""
+
+#: 476d4be1a38d4006ae5bc3f02444036d
+msgid "**Batch computations**:"
+msgstr ""
+
+#: 1d04a9b93a8449e1b870595e6aed5533
+msgid ""
+"# Instead of loop\n"
+"# for theta in thetas:\n"
+"#     result = run_circuit(theta)\n"
+"\n"
+"# Use vectorization\n"
+"results = vectorize_or_fallback(run_circuit)(thetas)"
+msgstr ""
+
+#: e67b7f06e6714dc987cf4eee844a57b7
+msgid "**Memory management**:"
+msgstr ""
+
+#: 9ed64abbe535450a8bd35271c30cf899
+msgid ""
+"import torch\n"
+"\n"
+"# Clear GPU cache periodically\n"
+"if torch.cuda.is_available():\n"
+"    torch.cuda.empty_cache()"
+msgstr ""
+
+#: a51bc296ce594b56948ffeb767b0b9e7
+msgid "Related Resources"
+msgstr ""
+
+#: a7f808cb41704208b501580b6d59abfc
+msgid ":doc:`/api/numerics/index` - Numerics API Reference"
+msgstr ""
+
+#: 3669c2de3c684a54bb08ffb0cc7d0420
+msgid ":doc:`../devices/index` - Device Execution Guide"
+msgstr ""
+
+#: 61ad9517490c42298716d051653caa89
+msgid ":doc:`/examples/hybrid_gpu_pipeline` - GPU Acceleration Examples"
+msgstr ""
+
+#: ee7405ff1bb04fdc9b095b83ccb063fe
+msgid ":doc:`/examples/vmap_randomness` - Vectorization Examples"
+msgstr ""
+

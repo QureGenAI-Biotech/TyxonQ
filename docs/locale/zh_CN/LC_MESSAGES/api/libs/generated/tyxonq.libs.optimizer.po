@@ -1,0 +1,49 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 52f7365e4d87440ea6af5c13048efc08
+msgid "tyxonq.libs.optimizer"
+msgstr ""
+
+#: 12594153b230437fa29ea17e18b57bd7 ecb908b002934057a12b5b07018a4763
+msgid "Sequential Optimization with Approximate Parabola (SOAP)."
+msgstr ""
+
+#: a36978b951f042a8971320f0e6e08c82
+msgid ""
+"Lightweight SciPy-compatible optimizer. Returns OptimizeResult with "
+"fields: x, fun, nit, nfev, fun_list, nfev_list, (optional) trajectory."
+msgstr ""
+
+#: a4d1c38086b7495e8ba7cce7d4a01b0d
+msgid "Modules"
+msgstr ""
+
+#: 5692ab8ff4114789924d3cd94ddea144
+msgid ":py:obj:`interop <tyxonq.libs.optimizer.interop>`\\"
+msgstr ""
+
+#: b397d6ad0f7b4180ac0ff417f5d4fc25
+msgid ""
+":py:obj:`soap <tyxonq.libs.optimizer.soap>`\\ \\(fun\\, x0\\[\\, args\\, "
+"u\\, maxfev\\, atol\\, ...\\]\\)"
+msgstr ""
+

@@ -1,0 +1,87 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: a550c8eda32e4d81b13c7de5b34029ae
+msgid "tyxonq.compiler.api"
+msgstr ""
+
+#: 0d59187776f0480a8387f29db359dca4
+msgid "Functions"
+msgstr ""
+
+#: a412806516a444b39002b61c85d135ee
+msgid ""
+":py:obj:`compile <tyxonq.compiler.api.compile>`\\ \\(circuit\\, \\*\\[\\,"
+" compile\\_engine\\, ...\\]\\)"
+msgstr ""
+
+#: 1560db6695b54b61af590087bd737587 5b699e9b23e3413799f966f9d1fcebe0
+msgid "Unified compile entry."
+msgstr ""
+
+#: bf6572262238492d910eb982b88fc986
+msgid "Classes"
+msgstr ""
+
+#: d25d89fc73fa45ea972361cdc9d0c4cb
+msgid ":py:obj:`CompileResult <tyxonq.compiler.api.CompileResult>`\\"
+msgstr ""
+
+#: 4059eff641c84121a19b542cfe1a5397 fb72f0d5a5de473aae0b88aade400f34
+msgid "Result of compilation containing the compiled circuit and metadata."
+msgstr ""
+
+#: 8f07beeb8b4b47e1a98db814a4d8ab93
+msgid ":py:obj:`Pass <tyxonq.compiler.api.Pass>`\\ \\(\\*args\\, \\*\\*kwargs\\)"
+msgstr ""
+
+#: 06478e361c124125b73d747073ed1cc5 2eb3bdf9788a4671833af8e9a1006cf2
+msgid "Compilation pass that transforms a circuit for a given target."
+msgstr ""
+
+#: bfc21dae8ffb4495b8813c1b65094d62
+msgid "Bases: :py:class:`~typing.TypedDict`"
+msgstr ""
+
+#: d808dd9276a24f9e99f65530b715feea
+msgid "Bases: :py:class:`~typing.Protocol`"
+msgstr ""
+
+#: 7ba979f1205e4a0a96a8e7ee4afd04bc
+msgid "Parameters"
+msgstr ""
+
+#: 408449f8e75242f782ee23eca7211629
+msgid "IR circuit to compile"
+msgstr ""
+
+#: 4ac003a657074f799ac688a4188ab3c3
+msgid "'tyxonq' | 'qiskit'|'default' | 'native'"
+msgstr ""
+
+#: 859cd276154f4880a481d0b0e5abe4f7
+msgid "'ir' | 'qasm2' | 'qiskit'  # 'ir' accepted as alias of 'tyxonq'"
+msgstr ""
+
+#: 439dba6b5c4b45038c05330f98150c65
+msgid "compile_engine-specific compile options"
+msgstr ""
+

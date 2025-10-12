@@ -1,0 +1,162 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: f87e87ea9d1c45a8a1be94dc71a5d9de
+msgid "tyxonq.numerics.api"
+msgstr ""
+
+#: e0c9b4a7f2764a90b661804e4772ac38
+msgid "Functions"
+msgstr ""
+
+#: 8af8fc02b86d43ec9da2f35bc40b071f
+msgid ":py:obj:`get_backend <tyxonq.numerics.api.get_backend>`\\ \\(name\\)"
+msgstr ""
+
+#: 86d7673340cd4fc78a03617310973a4b f160d9837e8644adb955d1023df22230
+msgid "Factory returning an ArrayBackend by canonical name."
+msgstr ""
+
+#: 8415d8cc409546fb84c61c76703c133b
+msgid ""
+":py:obj:`vectorize_or_fallback "
+"<tyxonq.numerics.api.vectorize_or_fallback>`\\ \\(fn\\, backend\\[\\, "
+"policy\\, ...\\]\\)"
+msgstr ""
+
+#: 6a10aff04a67464489b4100ba539b848 6e32e531ee5744ec81d5b22682722187
+msgid "Wrap a function with vectorization behavior and safe fallback."
+msgstr ""
+
+#: 908aa8110f984feb8ce90ac39742f873
+msgid "Classes"
+msgstr ""
+
+#: aa0b060e06734fba919fe951ddb5dbb6
+msgid ""
+":py:obj:`ArrayBackend <tyxonq.numerics.api.ArrayBackend>`\\ \\(\\*args\\,"
+" \\*\\*kwargs\\)"
+msgstr ""
+
+#: 5022c8849df94610a5847e3d8e678851 e913901fc0b84642bb21110fa9baa421
+msgid "Unified array/tensor backend protocol."
+msgstr ""
+
+#: 27f9dec398e244e290a8d7ee132ee43d
+msgid "Bases: :py:class:`~typing.Protocol`"
+msgstr ""
+
+#: afa45811091f40be81f6237faec8094a
+msgid ""
+"Implementations should provide a cohesive set of array creation, basic "
+"arithmetic, and optional vectorization helpers. This protocol is "
+"purposely minimal at the skeleton stage and will be extended as features "
+"are migrated."
+msgstr ""
+
+#: 89d03c1a65344b60886979e11537fe27
+msgid "Required attributes and methods:"
+msgstr ""
+
+#: 079fe6f4229341a0bd8d22299291e004
+msgid ""
+"name: Backend name. array(data, dtype): Create an array. asarray(data): "
+"Convert to backend-native array. to_numpy(data): Convert to NumPy "
+"ndarray. matmul(a, b): Matrix multiplication. einsum(subscripts, "
+"*operands): Einstein summation. rng(seed): Random generator handle. "
+"normal(rng, shape, dtype): Normal distribution array. requires_grad(x, "
+"flag): Mark tensor for autodiff if supported. detach(x): Detach tensor "
+"from autodiff graph if supported."
+msgstr ""
+
+#: 315abc7a642e4b5bb5c7e1b6f359f451
+msgid "Optional methods:"
+msgstr ""
+
+#: 84afe811ed224259b3b55226b64d1ab5
+msgid "vmap(fn): Return a vectorized version of `fn` along the leading axis."
+msgstr ""
+
+#: e07cd6e53fd240348eab1b2c590724ee
+msgid ""
+"Behavior: - policy == \"off\": return the original function. - If backend"
+" provides `vmap` and policy != \"off\": try vectorized execution."
+msgstr ""
+
+#: 9e925276647447a38addb2758dd70739
+msgid "On any exception, log (if available) and fallback to eager execution."
+msgstr ""
+
+#: 52e74ff90d93424590f5e92e1a59fc54
+msgid ""
+"If no `vmap` is provided: emulate vectorization by applying the function "
+"element-wise along the leading axis when the first positional argument is"
+" a sequence; otherwise run eagerly."
+msgstr ""
+
+#: 8ea121770933421fa522fac9a3140863
+msgid "Parameters"
+msgstr ""
+
+#: cbeed97f0b0e45e8bfd6962a93efeb9b
+msgid "Function to wrap."
+msgstr ""
+
+#: 86257c4808ae452199b5c718751b7366
+msgid "Array backend instance implementing the protocol."
+msgstr ""
+
+#: 83dc1d8655c54c37ab10a3847a34effe
+msgid "Vectorization policy (\"auto\" | \"force\" | \"off\")."
+msgstr ""
+
+#: 1ed8e409e62044c9822336c900f8be2e
+msgid "Placeholder for future safety checks before vectorizing."
+msgstr ""
+
+#: 1d95d0e68f194f0089992e09d69b2c3b
+msgid "Returns"
+msgstr ""
+
+#: 72270dcd0f904e46a0cd4b8bcdfb676b
+msgid "A callable that applies `fn` with the chosen vectorization strategy."
+msgstr ""
+
+#: fb2be332291342cda9210d8c36632d52
+msgid "Return type"
+msgstr ""
+
+#: 87beb2e6fac649d4bb795ef45813ac0f
+msgid "Supported:"
+msgstr ""
+
+#: ecf2e51dcb4e4dc89a116eee62ee0cfe
+msgid "'numpy'"
+msgstr ""
+
+#: 01db39b4ad68475a872a1a488e60b69b
+msgid "'pytorch' (requires torch)"
+msgstr ""
+
+#: 7f157cd2335f4472a45c5690a04e93e6
+msgid "'cupynumeric' (requires cunumeric)"
+msgstr ""
+

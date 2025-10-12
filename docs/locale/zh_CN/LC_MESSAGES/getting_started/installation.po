@@ -1,0 +1,441 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 77a3821c38f544e9a39ece25c7ba6008
+msgid "Installation"
+msgstr ""
+
+#: 101e5d65ec894527a96e617062a21287
+msgid ""
+"This guide covers installing TyxonQ on different platforms and "
+"configurations."
+msgstr ""
+
+#: b9422d8e32784584bba7885726658f56
+msgid "Quick Install"
+msgstr ""
+
+#: 8f002236ed894a22b440c761911288ca
+msgid "The simplest way to install TyxonQ is via pip:"
+msgstr ""
+
+#: 991c32cf87684010809bface3e45e63f bcf7526ae9cc4c2b929b6e1b1a798804
+msgid "pip install tyxonq"
+msgstr ""
+
+#: 89f58c403a134bd1a535f8d03dcf2faa
+msgid "This will install TyxonQ with default dependencies using NumPy backend."
+msgstr ""
+
+#: 06b5b027215c49e6aa3aae7d765c882d
+msgid "Installation Options"
+msgstr ""
+
+#: a6eee9c5bc2d430685168689ff10a8ce
+msgid "TyxonQ supports several optional dependencies for enhanced functionality:"
+msgstr ""
+
+#: 458d613d452149da84575cfa4e19eb2b
+msgid "Standard Installation"
+msgstr ""
+
+#: 30ba884ee9be44399bfe7377aab13348
+msgid "Install TyxonQ with NumPy backend (CPU only):"
+msgstr ""
+
+#: 0d141787472a4be683349058916685c8
+msgid "PyTorch Support"
+msgstr ""
+
+#: 995d8ae82d4d4fad93723e48db80c3a6
+msgid "Install with PyTorch backend for automatic differentiation:"
+msgstr ""
+
+#: 7b5128a5bab243609e0bbb3392dc5930 92034306920c48019b327c1e6c074615
+msgid "pip install tyxonq[torch]"
+msgstr ""
+
+#: c8aba2b7e5b842d5bbfc21fa01ae1f84
+msgid "GPU Acceleration"
+msgstr ""
+
+#: 40108f454b85424f8666d21faf2fcd4d
+msgid "Install with CuPy for GPU-accelerated simulations:"
+msgstr ""
+
+#: 19f39d8da2d7452892bd40b0a73d5fc1
+msgid "pip install tyxonq[gpu]"
+msgstr ""
+
+#: cf00819a1e704a5e9c353dd46403deef
+msgid "Full Installation"
+msgstr ""
+
+#: 41b58909c2e649959a3db695391d385d
+msgid "Install all optional dependencies:"
+msgstr ""
+
+#: ec1a9a5366cc4a629d2d43fb06e6dbc9
+msgid "pip install tyxonq[all]"
+msgstr ""
+
+#: fccf9a81859a478ebde1b3995b4eee87
+msgid "System Requirements"
+msgstr ""
+
+#: da7bbb70c8944defa3486eacac9795e3
+msgid "**Minimum Requirements**"
+msgstr ""
+
+#: 4f3335d34db34728bff44eae5dd840d5
+msgid "Python 3.9 or higher"
+msgstr ""
+
+#: c1274b6f2c9e404f9c923ec73a193729
+msgid "4GB RAM"
+msgstr ""
+
+#: a06852c2e55d4c5ea1d7030541eaa3a2
+msgid "2GB disk space"
+msgstr ""
+
+#: 7e710c3af1c54938a4d6ecd540b7c55a
+msgid "**Recommended Requirements**"
+msgstr ""
+
+#: 4aceeb62417048ac865bb643354541a7
+msgid "Python 3.10 or higher"
+msgstr ""
+
+#: 073f196205b14550b023f5b84b1c1f83
+msgid "8GB RAM (16GB for large-scale simulations)"
+msgstr ""
+
+#: 29365a91c8754a86a85c2e3ced3c8d70
+msgid "NVIDIA GPU with CUDA support (for GPU acceleration)"
+msgstr ""
+
+#: 93f7b1ec9a014c5eb9055ebef24303fc
+msgid "10GB disk space"
+msgstr ""
+
+#: 86aa0f4fdfb940b0bd0dbe46d2a2f5dc
+msgid "Platform-Specific Instructions"
+msgstr ""
+
+#: 5d127e94d5a04b6088366154a0b4677b
+msgid "Linux"
+msgstr ""
+
+#: 6292da0c63994400a5703f401d755c5c
+msgid "For Ubuntu/Debian:"
+msgstr ""
+
+#: 7c7f5b909aab49e2936ef5008b2cacb4
+msgid ""
+"# Install system dependencies\n"
+"sudo apt-get update\n"
+"sudo apt-get install python3-dev python3-pip\n"
+"\n"
+"# Install TyxonQ\n"
+"pip install tyxonq"
+msgstr ""
+
+#: f585b0f4bf404813a785bb0137454931
+msgid "For GPU support on Linux:"
+msgstr ""
+
+#: 1c4001930b5d4e72b60e3ed1ff4045e5
+msgid ""
+"# Install CUDA toolkit (example for CUDA 11.8)\n"
+"# Follow NVIDIA's installation guide for your specific version\n"
+"\n"
+"# Install TyxonQ with GPU support\n"
+"pip install tyxonq[gpu]"
+msgstr ""
+
+#: b6464d7069db4b8989a835d75a597fed
+msgid "macOS"
+msgstr ""
+
+#: 8ad5ada78fd74b468d83532206a6fee9
+msgid "Using Homebrew:"
+msgstr ""
+
+#: 703a6e55f08f4d2eb1f771d851c7eafe
+msgid ""
+"# Install Python (if not already installed)\n"
+"brew install python@3.11\n"
+"\n"
+"# Install TyxonQ\n"
+"pip install tyxonq"
+msgstr ""
+
+#: c614d29e604a49d893a1931d0a28b286
+msgid ""
+"GPU acceleration via CUDA is not available on macOS. However, you can use"
+" the PyTorch backend with MPS (Metal Performance Shaders) on Apple "
+"Silicon:"
+msgstr ""
+
+#: e30f980705c74e75854e282d3087d363
+msgid "Windows"
+msgstr ""
+
+#: 0bfa7269431f4f97ac425e6fd597e93c
+msgid ""
+"# Ensure Python is installed (download from python.org)\n"
+"\n"
+"# Install TyxonQ\n"
+"pip install tyxonq"
+msgstr ""
+
+#: 3fee2a3ca5a549b1b51d27e07143323a
+msgid "For GPU support on Windows:"
+msgstr ""
+
+#: e758d86a2a4148888f97b9f3d524e281
+msgid ""
+"# Install CUDA toolkit from NVIDIA\n"
+"# Then install TyxonQ with GPU support\n"
+"pip install tyxonq[gpu]"
+msgstr ""
+
+#: 8bf026ad2fe745ba86ef1111fc78cf21
+msgid "Development Installation"
+msgstr ""
+
+#: abf330b5c5c54b539a0b7bc55f14247d
+msgid "To contribute to TyxonQ or use the latest development version:"
+msgstr ""
+
+#: 61cbd40c1723405eb30a43eb827838fe
+msgid ""
+"# Clone the repository\n"
+"git clone https://github.com/QureGenAI-Biotech/TyxonQ.git\n"
+"cd TyxonQ\n"
+"\n"
+"# Install in editable mode with development dependencies\n"
+"pip install -e \".[dev]\"\n"
+"\n"
+"# Run tests to verify installation\n"
+"pytest tests/"
+msgstr ""
+
+#: b29d34738a0a41d5be6b7c73119df606
+msgid "Docker Installation"
+msgstr ""
+
+#: 964a5c6371b34b3d9e4cb8ea9033ce76
+msgid "TyxonQ provides Docker images for reproducible environments:"
+msgstr ""
+
+#: f41a1a16ba1e494da9a1b4514e1491a0
+msgid ""
+"# Pull the latest image\n"
+"docker pull quregenai/tyxonq:latest\n"
+"\n"
+"# Run TyxonQ in a container\n"
+"docker run -it quregenai/tyxonq:latest python\n"
+"\n"
+"# With GPU support\n"
+"docker run --gpus all -it quregenai/tyxonq:gpu python"
+msgstr ""
+
+#: 0fe5fceed5934565b543a714d415ec21
+msgid "Conda Installation"
+msgstr ""
+
+#: 0884682384bb4ce8b6615c39b2633392
+msgid "TyxonQ can be installed via Conda:"
+msgstr ""
+
+#: 5e629a7291a84544b529bee8732fa633
+msgid ""
+"# Create a new environment\n"
+"conda create -n tyxonq python=3.10\n"
+"conda activate tyxonq\n"
+"\n"
+"# Install TyxonQ\n"
+"conda install -c conda-forge tyxonq"
+msgstr ""
+
+#: 8846e14948af49c8bbedd5ac525aeeb2
+msgid "Verifying Installation"
+msgstr ""
+
+#: 8a284ae45b4c46f28b2058bdee605944
+msgid "After installation, verify that TyxonQ is working correctly:"
+msgstr ""
+
+#: cd145215daef4bb78beb6f34cf6debbc
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"# Check version\n"
+"print(tq.__version__)\n"
+"\n"
+"# Create a simple circuit to test\n"
+"circuit = tq.Circuit(2)\n"
+"circuit.h(0)\n"
+"circuit.cnot(0, 1)\n"
+"\n"
+"# Run on simulator\n"
+"result = circuit.compile().device('statevector').run(shots=100)\n"
+"print(\"Installation successful!\")\n"
+"print(result.counts)"
+msgstr ""
+
+#: b662f7e8184a4b748fb208adf59b40d3
+msgid "Expected output:"
+msgstr ""
+
+#: 0d70b7fb4f5c45ceb5ad89b115a0e36c
+#, python-brace-format
+msgid ""
+"0.1.0\n"
+"Installation successful!\n"
+"{'00': 50, '11': 50}"
+msgstr ""
+
+#: fdd70241e4cd441599c71034aabd5019
+msgid "Troubleshooting"
+msgstr ""
+
+#: fd1a48b7cb8744cc98d6058ec7237273
+msgid "Import Errors"
+msgstr ""
+
+#: 20eb42adb6ac41878b25398b9f26db85
+msgid "If you encounter import errors:"
+msgstr ""
+
+#: 41dba32883b146f89256a6012b228a57
+msgid ""
+"# Reinstall with --force-reinstall\n"
+"pip install --force-reinstall tyxonq"
+msgstr ""
+
+#: 049f7b433d4c4284ba6f420214281669
+msgid "GPU Issues"
+msgstr ""
+
+#: 9cf9eabd72b547f6ac35110c9b8fb8d1
+msgid "If GPU acceleration is not working:"
+msgstr ""
+
+#: 9c7b9831009b451c9ef11a2c6f5a0693
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"# Check GPU availability\n"
+"print(tq.numerics.gpu_available())\n"
+"\n"
+"# Check CUDA version\n"
+"import cupy\n"
+"print(cupy.cuda.runtime.runtimeGetVersion())"
+msgstr ""
+
+#: 86a23415965946eba3bf300210a1702e
+msgid "Dependency Conflicts"
+msgstr ""
+
+#: ffc15b559cc043b383a35fb658ee363f
+msgid "If you have dependency conflicts:"
+msgstr ""
+
+#: fac10d1c0fac4d69bac0a768c94de671
+msgid ""
+"# Create a fresh virtual environment\n"
+"python -m venv tyxonq_env\n"
+"source tyxonq_env/bin/activate  # On Windows: "
+"tyxonq_env\\Scripts\\activate\n"
+"\n"
+"# Install TyxonQ\n"
+"pip install tyxonq"
+msgstr ""
+
+#: 4f4c78965fd04821b818f8dcc02c739e
+msgid "Upgrading TyxonQ"
+msgstr ""
+
+#: 1c5490f7ecca454995815d3a94583d1b
+msgid "To upgrade to the latest version:"
+msgstr ""
+
+#: 9a601a3236f740fc822a4ec82f88e711
+msgid "pip install --upgrade tyxonq"
+msgstr ""
+
+#: e44e6fc6106c427a917dd640bbf25320
+msgid "To upgrade to a specific version:"
+msgstr ""
+
+#: 76614cfdf6d345979e4721ac751a6cd1
+msgid "pip install tyxonq==0.2.0"
+msgstr ""
+
+#: d53b4f43ee524897991ba56fab624ef1
+msgid "Uninstalling"
+msgstr ""
+
+#: c9ff28a948824dafbe7b48fc2bfccfe3
+msgid "To remove TyxonQ:"
+msgstr ""
+
+#: 37f08951101241b589435c628b849fc9
+msgid "pip uninstall tyxonq"
+msgstr ""
+
+#: e7b83601c74a4ac3a303dc70440d026f
+msgid "Next Steps"
+msgstr ""
+
+#: 8c82f52a367744dfa51fa8a5092f71c3
+msgid "Now that you have TyxonQ installed, proceed to:"
+msgstr ""
+
+#: 085319fc12c440ca9c67b3513f5349f0
+msgid ":doc:`quickstart` - Get started in 5 minutes"
+msgstr ""
+
+#: 8edbddec81ef4d63ac9ecde3a7ec8a0a
+msgid ":doc:`first_circuit` - Create your first quantum circuit"
+msgstr ""
+
+#: efdc5d1206894db49412fb82c09f07b6
+msgid ":doc:`basic_concepts` - Learn the fundamental concepts"
+msgstr ""
+
+#: aa2030cb53e7408aad3157c1cddaf8c9
+msgid "For more help, see:"
+msgstr ""
+
+#: 1b4e4c538c174081aba6a498f6f24de1
+msgid ":doc:`../faq` - Frequently asked questions"
+msgstr ""
+
+#: d6d6a8972fa246b38357f214d9e59320
+msgid ""
+"`GitHub Issues <https://github.com/QureGenAI-Biotech/TyxonQ/issues>`_ - "
+"Report problems"
+msgstr ""
+

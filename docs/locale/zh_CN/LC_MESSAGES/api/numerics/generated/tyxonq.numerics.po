@@ -1,0 +1,391 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 043cac6109d04f1ca74850e28fc2b5f7
+msgid "tyxonq.numerics"
+msgstr ""
+
+#: c0b67138a7cd4ba49b9efa259280a481
+msgid "Numerics backends and vectorization utilities."
+msgstr ""
+
+#: 34b6c5f4e1ec449aba33649072eb42e3
+msgid "Classes"
+msgstr ""
+
+#: 58de6eeb2463462c8d9f02fbca417e27
+msgid ":py:obj:`NumericBackend <tyxonq.numerics.NumericBackend>`\\ \\(\\)"
+msgstr ""
+
+#: 3a51bf2e1258445e9f8dfe568ba88a3d da3f946dab164d269a6c3a66e24caaa0
+msgid "Class-level proxy to the current backend (no instantiation required)."
+msgstr ""
+
+#: a9e7fd69d36b49a485f05243982ffafc
+msgid "Bases: :py:class:`~typing.Protocol`"
+msgstr ""
+
+#: 8510d83d3fd8472db511deb7a5edad22
+msgid "Unified array/tensor backend protocol."
+msgstr ""
+
+#: 6ed2d1af93e74a7ab5f39167f792c7ba
+msgid ""
+"Implementations should provide a cohesive set of array creation, basic "
+"arithmetic, and optional vectorization helpers. This protocol is "
+"purposely minimal at the skeleton stage and will be extended as features "
+"are migrated."
+msgstr ""
+
+#: a7a61f5679e643669bb2013ac3d6a033
+msgid "Required attributes and methods:"
+msgstr ""
+
+#: f8c0e7df02434c8a980b2917b738b20b
+msgid ""
+"name: Backend name. array(data, dtype): Create an array. asarray(data): "
+"Convert to backend-native array. to_numpy(data): Convert to NumPy "
+"ndarray. matmul(a, b): Matrix multiplication. einsum(subscripts, "
+"*operands): Einstein summation. rng(seed): Random generator handle. "
+"normal(rng, shape, dtype): Normal distribution array. requires_grad(x, "
+"flag): Mark tensor for autodiff if supported. detach(x): Detach tensor "
+"from autodiff graph if supported."
+msgstr ""
+
+#: d7053fc073df47f19b8e602c572c7cd4
+msgid "Optional methods:"
+msgstr ""
+
+#: 48fbc806e9f54a1da538ea9232d586e0
+msgid "vmap(fn): Return a vectorized version of `fn` along the leading axis."
+msgstr ""
+
+#: 3bac61d3b18b4f27a6944c4ca93f8916
+msgid "Wrap a function with vectorization behavior and safe fallback."
+msgstr ""
+
+#: bf4c5e29555145f4a41b10a60aad1c28
+msgid ""
+"Behavior: - policy == \"off\": return the original function. - If backend"
+" provides `vmap` and policy != \"off\": try vectorized execution."
+msgstr ""
+
+#: 3143fb54fec244f4815cb1a15e406c7b
+msgid "On any exception, log (if available) and fallback to eager execution."
+msgstr ""
+
+#: e36fc54dd90f48d28f9d4b63628287de
+msgid ""
+"If no `vmap` is provided: emulate vectorization by applying the function "
+"element-wise along the leading axis when the first positional argument is"
+" a sequence; otherwise run eagerly."
+msgstr ""
+
+#: 2b1ac941af074fc5bb4ef688d5248d49
+msgid "Parameters"
+msgstr ""
+
+#: fce0c035d53c4ef09698ce66e41461e6
+msgid "Function to wrap."
+msgstr ""
+
+#: 637e538433084e84ad59ad2f0955b4bc
+msgid "Array backend instance implementing the protocol."
+msgstr ""
+
+#: b0a57b6c91874d97ad6f2dd7ed69d06a
+msgid "Vectorization policy (\"auto\" | \"force\" | \"off\")."
+msgstr ""
+
+#: 54d6c241ffc14d04a323ee4af34b88f4
+msgid "Placeholder for future safety checks before vectorizing."
+msgstr ""
+
+#: 6b4f9354b7484723afc0a67a25be7ce5
+msgid "Returns"
+msgstr ""
+
+#: 0b00680bec9c460e8201b1edffd93f53
+msgid "A callable that applies `fn` with the chosen vectorization strategy."
+msgstr ""
+
+#: 4d6f251392b14ecaa7a81e63604b5374
+msgid "Return type"
+msgstr ""
+
+#: f5df204b79c148cd9af783922387dcc8
+msgid "Factory returning an ArrayBackend by canonical name."
+msgstr ""
+
+#: 124c956c280643a3aa2236dbec185b7b
+msgid "Supported:"
+msgstr ""
+
+#: e7b55a1e15f246c8a7904e21970b2580
+msgid "'numpy'"
+msgstr ""
+
+#: f17b1447de904e449372b3e9a5d1acfb
+msgid "'pytorch' (requires torch)"
+msgstr ""
+
+#: 23788e7a6ad14f52b3caf918749fcab2
+msgid "'cupynumeric' (requires cunumeric)"
+msgstr ""
+
+#: 406d7c3fe6cc43c3821980879418b5bc
+msgid "Set the global/default backend by name or instance."
+msgstr ""
+
+#: 6ced4993a90046409fb61f7717d04d9a
+msgid ""
+"Passing a string sets the backend name to be lazily resolved. Passing an "
+"instance pins the exact backend object to use."
+msgstr ""
+
+#: a9fed9880c35448ea5638cbd414ebcd2
+msgid "Temporarily set the global backend within a context."
+msgstr ""
+
+#: 177e0cb80f514e2d865904f2761d13ff
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 90ec769818504b9ca7f818ce74d66390
+msgid "Bases: :py:class:`~numpy.complexfloating`"
+msgstr ""
+
+#: 63781e483b314fad8a17cf77f6018a10
+msgid ""
+"Complex number type composed of two single-precision floating-point "
+"numbers."
+msgstr ""
+
+#: 4829b659806f46db85f6ce5a3bc5616b 567ef549101f4de6b35844a42cf926c7
+#: 75e2f36e794746798b02614f54a89f86 e43583bf8baf4fabaf9a425f54b87a88
+#: ebdfe0621a3d4a1aad88d28641275f2f f026ad407cf54229bdd691d60101d61d
+msgid "Character code"
+msgstr ""
+
+#: 11ff839c93844f91bb153ddeb1ac4347
+msgid "``'F'``"
+msgstr ""
+
+#: 1ee1ef0830384060a7ea1df4ad86ace6 4affdb9a17a842a4810c9504d5623f62
+#: 7ba588ea6279442e958fb1c0e892c0b7 b9ea0923f77f46adb99c73775d8f84e7
+#: c0b0778c8e394ef19925f64bf71adfe3 d4dd1acb813d4c10990a17d624ea9648
+msgid "Canonical name"
+msgstr ""
+
+#: eab29bd7796944fdbae286e740aece58
+msgid "`numpy.csingle`"
+msgstr ""
+
+#: 0d964f5b3dc048dd8f0452fbc529253e 1aeb402312734b33b45439fa6509a68d
+#: efd0a1b2f82b4ebc896ae516f6f3d1f8 f885bc025863467e89934c8be8d6d42d
+msgid "Alias"
+msgstr ""
+
+#: 4536c7ee771443c3bda7ae648992b836
+msgid "`numpy.singlecomplex`"
+msgstr ""
+
+#: 0e86a51890004d8c9acd57919f0520a0 29e4127b2f584e0c842183be1e3bd92b
+#: 3f95e56ef71d43bea520cc769fa724ab 93d41dc94bb24386b26b8da0f5e3ee64
+#: b1788ee27bbd407ba32e04cbc52cd616 db91a488f2074cada725d8a1e9206395
+#: f4f22b472f0e4e379cd3f4bc875f692c
+msgid "Alias on this platform (Darwin arm64)"
+msgstr ""
+
+#: b2e41a34cce142d2b37f176dc560fbdd
+msgid ""
+"`numpy.complex64`: Complex number type composed of 2 32-bit-precision "
+"floating-point numbers."
+msgstr ""
+
+#: 397729a9807342deaadf7ec372d84285
+msgid "Bases: :py:class:`~numpy.complexfloating`, :py:class:`complex`"
+msgstr ""
+
+#: d6dccbfe010c4761aef1d8a46da518cd
+msgid ""
+"Complex number type composed of two double-precision floating-point "
+"numbers, compatible with Python `complex`."
+msgstr ""
+
+#: 9f9515cd5b0440fa9ba8d7400f0aaf8d
+msgid "``'D'``"
+msgstr ""
+
+#: ea1cf5cd3ff24018b16d8517c1366c37
+msgid "`numpy.cdouble`"
+msgstr ""
+
+#: 82ce6047b2644e1dbc60bec664fcc9ce
+msgid "`numpy.cfloat`"
+msgstr ""
+
+#: 751280369be144b08d87bc0b3cc60485
+msgid "`numpy.complex_`"
+msgstr ""
+
+#: 4a970b756d7a44c4a3f6a4010d555194
+msgid ""
+"`numpy.complex128`: Complex number type composed of 2 64-bit-precision "
+"floating-point numbers."
+msgstr ""
+
+#: 3b41ab5f36fe4596896d952cfefbcbba
+msgid "Bases: :py:class:`~numpy.floating`"
+msgstr ""
+
+#: c5c09211782f4348be0d1b67c53abe48
+msgid "Single-precision floating-point number type, compatible with C ``float``."
+msgstr ""
+
+#: 866139d1228d4b8e924fdd702a1bf031
+msgid "``'f'``"
+msgstr ""
+
+#: 46fb688bcf63461db27f6da1ea7ec4ab
+msgid "`numpy.single`"
+msgstr ""
+
+#: 1cc67229a8ed41059a6614219bcbba6f
+msgid ""
+"`numpy.float32`: 32-bit-precision floating-point number type: sign bit, 8"
+" bits exponent, 23 bits mantissa."
+msgstr ""
+
+#: 27a055422f36416892e5512f0dcc4049 635de5fdf9fc40d0932e1d170025f979
+msgid ""
+"Return a pair of integers, whose ratio is exactly equal to the original "
+"floating point number, and with a positive denominator. Raise "
+"`OverflowError` on infinities and a `ValueError` on NaNs."
+msgstr ""
+
+#: b0fbf2429bba4d19a5fd6ef885e5a0d5 f13213b7f8df423ebee62e92f7b0ee0c
+msgid ""
+"Return ``True`` if the floating point number is finite with integral "
+"value, and ``False`` otherwise."
+msgstr ""
+
+#: 1d8846bd03be4508b58b019b7a64d354 25202ee13e3c4b16b6429695fa6d2b7c
+#: 50ab27bb489743c0b1ad95edac8a1fb7 7597a348d43643a2bf25beecb03f202c
+msgid "Examples"
+msgstr ""
+
+#: b22f06df240f49e8b2549b72ae31e4a7
+msgid "Bases: :py:class:`~numpy.floating`, :py:class:`float`"
+msgstr ""
+
+#: f35a6e4b2261419aadc38581bb48b17e
+msgid ""
+"Double-precision floating-point number type, compatible with Python "
+"`float` and C ``double``."
+msgstr ""
+
+#: 6155d89d4e714f3e81d4c33cd0def398
+msgid "``'d'``"
+msgstr ""
+
+#: 61abe500454443999c0a541aab8dfcd0
+msgid "`numpy.double`"
+msgstr ""
+
+#: ab3d9e4cf4464ed096bd5467d459cf70
+msgid "`numpy.float_`"
+msgstr ""
+
+#: eb17c494d9664766bea0ffb0b90d37a3
+msgid ""
+"`numpy.float64`: 64-bit precision floating-point number type: sign bit, "
+"11 bits exponent, 52 bits mantissa."
+msgstr ""
+
+#: 74b0e0dd26d54103a36c662a6cddfd86 74faec8c4ccc4d4db76649b83e9d01f5
+msgid "Bases: :py:class:`~numpy.signedinteger`"
+msgstr ""
+
+#: e0a8d5de4a334d5cb436749728699b8b
+msgid "Signed integer type, compatible with C ``int``."
+msgstr ""
+
+#: 6927a11bbae94dca80f1c0d0214d6231
+msgid "``'i'``"
+msgstr ""
+
+#: 37678f0f46ec49488fbdf9804beacfae
+msgid "`numpy.intc`"
+msgstr ""
+
+#: fb777eff2b1042cb827c8a6d7a9c3b6f
+msgid ""
+"`numpy.int32`: 32-bit signed integer (``-2_147_483_648`` to "
+"``2_147_483_647``)."
+msgstr ""
+
+#: 0b3f5412dc684537b55646474ea41ad1 cf9cc84d247944d88bd64c3470d478a6
+msgid ""
+"Computes the number of 1-bits in the absolute value of the input. "
+"Analogous to the builtin `int.bit_count` or ``popcount`` in C++."
+msgstr ""
+
+#: df1f79c3bf814a71955a007c6f43d106
+msgid "Signed integer type, compatible with Python `int` and C ``long``."
+msgstr ""
+
+#: 86a838b71cfd4562a1430816143065f7
+msgid "``'l'``"
+msgstr ""
+
+#: b831670170b64763a85ba54a79389426
+msgid "`numpy.int_`"
+msgstr ""
+
+#: cca2845bccbf4db59c996a2471e2a8bf
+msgid ""
+"`numpy.int64`: 64-bit signed integer (``-9_223_372_036_854_775_808`` to "
+"``9_223_372_036_854_775_807``)."
+msgstr ""
+
+#: 74960ea4ebba4dcdbb14549130d1cb19
+msgid ""
+"`numpy.intp`: Signed integer large enough to fit pointer, compatible with"
+" C ``intptr_t``."
+msgstr ""
+
+#: e08b93c6626c4fa08e58d89f58d78f7e
+msgid "Modules"
+msgstr ""
+
+#: 5434eb54d68546b5b16b3c7f031f88a1
+msgid ":py:obj:`api <tyxonq.numerics.api>`\\"
+msgstr ""
+
+#: 5af9e45e12e34d678ef3eef7b9f850c6
+msgid ":py:obj:`context <tyxonq.numerics.context>`\\"
+msgstr ""
+
+#: d98bdd0a2b7d4fbbbaf6e7468b77340b
+msgid ":py:obj:`vectorization_checks <tyxonq.numerics.vectorization_checks>`\\"
+msgstr ""
+

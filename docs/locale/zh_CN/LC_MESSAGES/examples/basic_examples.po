@@ -1,0 +1,379 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 102ca40235b54a678b7196c9cad148eb
+msgid "基础示例"
+msgstr ""
+
+#: fc981b93901546209e9049b3dbcc18fd
+msgid "本节提供TyxonQ的基础使用示例，帮助您快速上手。"
+msgstr ""
+
+#: 19a6711ff0d74832a88acf21e4424145
+msgid "示例列表"
+msgstr ""
+
+#: 1b0f5491f7404d1ba9c621c32c4532a6
+msgid "Bell态创建"
+msgstr ""
+
+#: 9f5985c6680b495282fc773cd1af4d78
+msgid "创建最简单的纠缠态："
+msgstr ""
+
+#: 9040f0a90ab2416ea92cf98c691e31e8
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"def create_bell_state():\n"
+"    \"\"\"创建Bell态 (|00⟩ + |11⟩)/√2\"\"\"\n"
+"    circuit = tq.Circuit(2)\n"
+"    circuit.h(0)        # 创建叠加态\n"
+"    circuit.cnot(0, 1)  # 创建纠缠\n"
+"\n"
+"    # 添加测量\n"
+"    circuit.measure_z(0)\n"
+"    circuit.measure_z(1)\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 执行电路\n"
+"bell_circuit = create_bell_state()\n"
+"result = bell_circuit.run(shots=1000)\n"
+"\n"
+"print(\"测量结果:\", result)\n"
+"# 期望输出: {'00': ~500, '11': ~500}"
+msgstr ""
+
+#: 2027a547884e436c9fb129ae06c3b6de
+msgid "GHZ态生成"
+msgstr ""
+
+#: 0b1bd8fd46b94b17beab5b1dc729110d
+msgid "创建多量子比特GHZ态："
+msgstr ""
+
+#: 6866072e1d0b4b638f9fdd9b4a6fb3d8
+#, python-brace-format
+msgid ""
+"def create_ghz_state(n_qubits):\n"
+"    \"\"\"创建n量子比特GHZ态\"\"\"\n"
+"    circuit = tq.Circuit(n_qubits)\n"
+"    circuit.h(0)  # 第一个量子比特叠加\n"
+"\n"
+"    # 纠缠所有量子比特\n"
+"    for i in range(n_qubits - 1):\n"
+"        circuit.cnot(i, i + 1)\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 创建3量子比特GHZ态\n"
+"ghz3 = create_ghz_state(3)\n"
+"\n"
+"# 添加测量\n"
+"for i in range(3):\n"
+"    ghz3.measure_z(i)\n"
+"\n"
+"result = ghz3.run(shots=1000)\n"
+"print(\"GHZ态结果:\", result)\n"
+"# 期望输出: {'000': ~500, '111': ~500}"
+msgstr ""
+
+#: 4d73a70b60e04361a58cf07f6bda7416
+msgid "参数化电路"
+msgstr ""
+
+#: c17977991a2c4ad1aad8572d18accc20
+msgid "使用参数化门构建灵活的电路："
+msgstr ""
+
+#: 41288d920d9f49f3b152ed89c6648ce1
+#, python-brace-format
+msgid ""
+"import numpy as np\n"
+"\n"
+"def parametrized_circuit(theta):\n"
+"    \"\"\"参数化的量子电路\"\"\"\n"
+"    circuit = tq.Circuit(2)\n"
+"\n"
+"    # 参数化旋转门\n"
+"    circuit.ry(0, theta[0])\n"
+"    circuit.ry(1, theta[1])\n"
+"\n"
+"    # 纠缠门\n"
+"    circuit.cnot(0, 1)\n"
+"\n"
+"    # 更多参数化门\n"
+"    circuit.rz(0, theta[2])\n"
+"    circuit.rz(1, theta[3])\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 使用随机参数\n"
+"params = np.random.uniform(0, 2*np.pi, 4)\n"
+"circuit = parametrized_circuit(params)\n"
+"\n"
+"print(f\"使用参数: {params}\")\n"
+"print(f\"电路门数: {len(circuit.ops)}\")"
+msgstr ""
+
+#: 70d439a96f9948318d49b451fa5f46c7
+msgid "量子傅里叶变换"
+msgstr ""
+
+#: c5d788ff3f854024ae3129440003921c
+msgid "实现简化的QFT算法："
+msgstr ""
+
+#: e2955f6dd6094baa8a1fb102143948a0
+#, python-brace-format
+msgid ""
+"def qft_circuit(n_qubits):\n"
+"    \"\"\"量子傅里叶变换电路\"\"\"\n"
+"    circuit = tq.Circuit(n_qubits)\n"
+"\n"
+"    for j in range(n_qubits):\n"
+"        circuit.h(j)\n"
+"        for k in range(j + 1, n_qubits):\n"
+"            angle = np.pi / (2 ** (k - j))\n"
+"            # 简化实现：使用RZ门代替受控相位门\n"
+"            circuit.rz(k, angle / 2)\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 创建3量子比特QFT\n"
+"qft_3 = qft_circuit(3)\n"
+"print(f\"QFT电路门数: {len(qft_3.ops)}\")"
+msgstr ""
+
+#: fa33dc3d289a49df9f433973b08007f1
+msgid "随机电路采样"
+msgstr ""
+
+#: f6aadf7af56c4707aa987411c9aa23b5
+msgid "生成和测试随机电路："
+msgstr ""
+
+#: 436f8c03c85d494aaf3d795e1afde3ac
+#, python-brace-format
+msgid ""
+"def random_circuit(n_qubits, depth, seed=None):\n"
+"    \"\"\"生成随机量子电路\"\"\"\n"
+"    if seed is not None:\n"
+"        np.random.seed(seed)\n"
+"\n"
+"    circuit = tq.Circuit(n_qubits)\n"
+"    gates = ['h', 'x', 'y', 'z']\n"
+"\n"
+"    for layer in range(depth):\n"
+"        # 随机单量子比特门\n"
+"        for qubit in range(n_qubits):\n"
+"            gate = np.random.choice(gates)\n"
+"            if gate == 'h':\n"
+"                circuit.h(qubit)\n"
+"            elif gate == 'x':\n"
+"                circuit.x(qubit)\n"
+"            elif gate == 'y':\n"
+"                circuit.y(qubit)\n"
+"            elif gate == 'z':\n"
+"                circuit.z(qubit)\n"
+"\n"
+"        # 随机双量子比特门\n"
+"        if n_qubits > 1:\n"
+"            for _ in range(n_qubits // 2):\n"
+"                q1, q2 = np.random.choice(n_qubits, 2, replace=False)\n"
+"                circuit.cnot(q1, q2)\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 生成随机电路\n"
+"random_circ = random_circuit(4, 3, seed=42)\n"
+"print(f\"随机电路门数: {len(random_circ.ops)}\")"
+msgstr ""
+
+#: 8b108a83bef9470da7740e42594b2f9b
+msgid "电路组合示例"
+msgstr ""
+
+#: 0c02c24a71ca4464a5d758ce01f7dd38
+msgid "将多个电路组合为更复杂的电路："
+msgstr ""
+
+#: c945dc7da99e48868871d7aff50e4e80
+#, python-brace-format
+msgid ""
+"def create_complex_circuit():\n"
+"    \"\"\"组合多个基础电路\"\"\"\n"
+"    # 基础电路1：Bell态\n"
+"    bell = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"    # 基础电路2：单量子比特旋转\n"
+"    rotation = tq.Circuit(1).rz(0, np.pi/4)\n"
+"\n"
+"    # 组合电路\n"
+"    # 将rotation电路应用到bell电路的第二个量子比特\n"
+"    combined = bell.compose(rotation, indices=[1])\n"
+"\n"
+"    return combined\n"
+"\n"
+"complex_circuit = create_complex_circuit()\n"
+"print(f\"组合电路门数: {len(complex_circuit.ops)}\")\n"
+"print(f\"电路摘要: {complex_circuit.gate_summary()}\")"
+msgstr ""
+
+#: b27db765d71848e68dda425d828e1a91
+msgid "电路可视化和分析"
+msgstr ""
+
+#: f532d71f58ee40bea3b36548bf9e762d
+msgid "分析电路属性和结果："
+msgstr ""
+
+#: 2daaec8617354fe2b5583d1868a1cd41
+#, python-brace-format
+msgid ""
+"def analyze_circuit(circuit):\n"
+"    \"\"\"分析电路属性\"\"\"\n"
+"    print(f\"电路分析:\")\n"
+"    print(f\"  量子比特数: {circuit.num_qubits}\")\n"
+"    print(f\"  门操作总数: {len(circuit.ops)}\")\n"
+"    print(f\"  门类型统计: {circuit.gate_summary()}\")\n"
+"\n"
+"    # 检查是否有测量\n"
+"    has_measurement = any('measure' in str(op).lower() for op in "
+"circuit.ops)\n"
+"    print(f\"  包含测量: {has_measurement}\")\n"
+"\n"
+"    return circuit\n"
+"\n"
+"# 分析Bell态电路\n"
+"bell = create_bell_state()\n"
+"analyze_circuit(bell)"
+msgstr ""
+
+#: 2ffaf5a12fb8428a970f4c89a15619cc
+msgid "性能测试示例"
+msgstr ""
+
+#: 5dc17f5f3ff1414184aab3ef588f3298
+msgid "测试不同设备的性能："
+msgstr ""
+
+#: 29d4e03611c44535912dbd2ccfa5d354
+#, python-brace-format
+msgid ""
+"import time\n"
+"\n"
+"def performance_test():\n"
+"    \"\"\"性能测试示例\"\"\"\n"
+"    # 创建测试电路\n"
+"    circuit = create_ghz_state(10)\n"
+"    for i in range(10):\n"
+"        circuit.measure_z(i)\n"
+"\n"
+"    devices = ['statevector', 'density_matrix']\n"
+"\n"
+"    for device in devices:\n"
+"        try:\n"
+"            start_time = time.time()\n"
+"            result = circuit.device(device).run(shots=100)\n"
+"            end_time = time.time()\n"
+"\n"
+"            print(f\"{device}: {end_time - start_time:.4f}秒\")\n"
+"        except Exception as e:\n"
+"            print(f\"{device}: 失败 - {e}\")\n"
+"\n"
+"# 运行性能测试\n"
+"performance_test()"
+msgstr ""
+
+#: 5c30d85d6d6d4775acbf7b85b1d08352
+msgid "实际应用示例"
+msgstr ""
+
+#: 438c19aefa91452db1c38b288e6c4b8b
+msgid "结合多个概念的完整示例："
+msgstr ""
+
+#: 6df01fe589ee4aebac8c4e02c3761fd9
+#, python-brace-format
+msgid ""
+"def complete_example():\n"
+"    \"\"\"完整的TyxonQ应用夺例\"\"\"\n"
+"    print(\"开始完整示例...\")\n"
+"\n"
+"    # 1. 创建参数化电路\n"
+"    params = [np.pi/4, np.pi/3, np.pi/6]\n"
+"    circuit = tq.Circuit(3)\n"
+"\n"
+"    # 初始化叠加态\n"
+"    for i in range(3):\n"
+"        circuit.h(i)\n"
+"\n"
+"    # 参数化门\n"
+"    circuit.ry(0, params[0])\n"
+"    circuit.ry(1, params[1])\n"
+"    circuit.ry(2, params[2])\n"
+"\n"
+"    # 纠缠操作\n"
+"    circuit.cnot(0, 1)\n"
+"    circuit.cnot(1, 2)\n"
+"\n"
+"    # 测量\n"
+"    for i in range(3):\n"
+"        circuit.measure_z(i)\n"
+"\n"
+"    # 2. 执行和分析\n"
+"    print(f\"\\n电路信息:\")\n"
+"    analyze_circuit(circuit)\n"
+"\n"
+"    # 3. 在不同设备上执行\n"
+"    print(f\"\\n执行结果:\")\n"
+"    result = circuit.device('statevector').run(shots=1000)\n"
+"    print(f\"Statevector结果: {result}\")\n"
+"\n"
+"    return circuit, result\n"
+"\n"
+"# 运行完整示例\n"
+"final_circuit, final_result = complete_example()"
+msgstr ""
+
+#: 9160cf439a3a411a918852b071eb347c
+msgid "相关资源"
+msgstr ""
+
+#: dac4ab721975408f82e12f18fef2a59b
+msgid ":doc:`/getting_started/first_circuit` - 第一个电路教程"
+msgstr ""
+
+#: 0db6e0a2d6f94dea9e008f0020afde79
+msgid ":doc:`chemistry_examples` - 量子化学示例"
+msgstr ""
+
+#: a1de13d2e50442bf8dbd5ef724957671
+msgid ":doc:`/user_guide/core/index` - 核心模块指南"
+msgstr ""
+
+#: 291a46c30e0a4731b080c1a88c1212cb
+msgid ":doc:`/api/core/index` - Core API参考"
+msgstr ""
+

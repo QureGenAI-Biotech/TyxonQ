@@ -1,0 +1,180 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: dac1327028d44e56b06dd2a50e0dae87
+msgid "Quantum Chemistry"
+msgstr ""
+
+#: d8dbc8bd8dda4c7d9ccbcd6aa6092117
+msgid ""
+"Quantum chemistry applications and algorithms for molecular electronic "
+"structure calculations."
+msgstr ""
+
+#: 9194b81119ac48bbb56cb439c1f7a691
+msgid "Contents"
+msgstr ""
+
+#: 6bacc04d244841d8bab74b762c2ef113
+msgid "Overview"
+msgstr ""
+
+#: 51935efd36d443fab72d47e7d69a5576
+msgid ""
+"The TyxonQ quantum chemistry module provides a comprehensive framework "
+"for solving molecular electronic structure problems on quantum computers."
+" It includes:"
+msgstr ""
+
+#: 45d75a91ebc949988a762afe4aaee23e
+msgid ""
+"**Variational Algorithms**: VQE-based methods for ground and excited "
+"states"
+msgstr ""
+
+#: f90a1c9900974a7f91b57ca756e6562a
+msgid "**Ansatz Libraries**: UCCSD, HEA, k-UpCCGSD, PUCCD implementations"
+msgstr ""
+
+#: f5628c9f017344aab3f243abb1a740e2
+msgid "**Molecule Class**: Interface to classical quantum chemistry codes"
+msgstr ""
+
+#: db59bd41870a44f8a98e7b858e178b67
+msgid "**Runtime Systems**: Device and numeric execution backends"
+msgstr ""
+
+#: 9bdcab62a006462e8a065cdd451f1126
+msgid "**AIDD Applications**: AI-driven drug discovery workflows"
+msgstr ""
+
+#: ddeb08f64e404fe2a45b6b67dd9c05b9
+msgid "Key Features"
+msgstr ""
+
+#: ecda9caef89740098f644a2fba030a9e
+msgid "Molecular Hamiltonian Construction"
+msgstr ""
+
+#: cf9c03ef964b4568af83fc7354d5ce87
+msgid "Support for arbitrary molecules and basis sets"
+msgstr ""
+
+#: 775ba5e8dd424fa1ab6a38dda37f4f67
+msgid "Integration with PySCF for classical computations"
+msgstr ""
+
+#: 12f61edab05249e0b3a5be62c08433b1
+msgid "Multiple fermion-to-qubit mappings (Jordan-Wigner, Bravyi-Kitaev, Parity)"
+msgstr ""
+
+#: 2d97e20c719e4ae3ab2af25266d4041d
+msgid "Efficient Hamiltonian term grouping and measurement scheduling"
+msgstr ""
+
+#: fe585482c2c3495089eca44af5d8a83f
+msgid "Quantum Algorithms"
+msgstr ""
+
+#: daee0404acff405381b8f15855bcfa0a
+msgid "**UCCSD**: Unitary Coupled Cluster Singles and Doubles"
+msgstr ""
+
+#: d050676791d541d2b9bbd82045ec881f
+msgid "**HEA**: Hardware Efficient Ansatz with customizable layers"
+msgstr ""
+
+#: efa13a554367458fb4069f6da2fb17a0
+msgid "**k-UpCCGSD**: k-layer Unitary Product Coupled Cluster"
+msgstr ""
+
+#: a29831a990c74bf2be7dca256b739571
+msgid "**PUCCD**: Paired Unitary Coupled Cluster Doubles"
+msgstr ""
+
+#: 7b63c6a6775d4a35a714a5b900740f09
+msgid "Execution Runtimes"
+msgstr ""
+
+#: 9f536d8c9df347b9b44548f02df6b8c4
+msgid "**Device Runtime**: Execute on simulators or real quantum hardware"
+msgstr ""
+
+#: 82c192de346f4b329eca4d6b9b91c154
+msgid "**Numeric Runtime**: Classical tensor network simulation"
+msgstr ""
+
+#: a26308fcbf694a449a5191774899c55f
+msgid "**Hybrid Workflows**: Combine quantum and classical computations"
+msgstr ""
+
+#: e5654626f8db483d939fed21b877e042
+msgid "Quick Start Example"
+msgstr ""
+
+#: 460787ca9f1041c78508c13f3c2410df
+#, python-brace-format
+msgid ""
+"from tyxonq.applications.chem import Molecule, UCCSD, HEA\n"
+"\n"
+"# Define water molecule\n"
+"h2o = Molecule(\n"
+"    atoms=[\n"
+"        [\"O\", [0.0, 0.0, 0.0]],\n"
+"        [\"H\", [0.757, 0.586, 0.0]],\n"
+"        [\"H\", [-0.757, 0.586, 0.0]]\n"
+"    ],\n"
+"    basis=\"sto-3g\"\n"
+")\n"
+"\n"
+"# Method 1: UCCSD algorithm\n"
+"uccsd = UCCSD(molecule=h2o, init_method=\"mp2\")\n"
+"uccsd_energy = uccsd.kernel(method=\"BFGS\")\n"
+"\n"
+"# Method 2: HEA algorithm\n"
+"hea = HEA(molecule=h2o, layers=2, runtime=\"numeric\")\n"
+"hea_energy = hea.kernel(method=\"COBYLA\")\n"
+"\n"
+"print(f\"HF energy:    {h2o.hf_energy:.6f} Hartree\")\n"
+"print(f\"UCCSD energy: {uccsd_energy:.6f} Hartree\")\n"
+"print(f\"HEA energy:   {hea_energy:.6f} Hartree\")"
+msgstr ""
+
+#: 58a0185680b241e2a3318207c0e35cc1
+msgid "Documentation Structure"
+msgstr ""
+
+#: 52cf2aae00e44681a63fb51eb5a95a91
+msgid "Related Resources"
+msgstr ""
+
+#: b721d9b1b0824e78a306f0a9cb9365ac
+msgid ":doc:`/api/applications/index` - Applications API Reference"
+msgstr ""
+
+#: b7d8f559e279496c99088baacb56df47
+msgid ":doc:`/examples/chemistry_examples` - Quantum Chemistry Examples"
+msgstr ""
+
+#: f2993ab1a004420b9a8337817b65e6e6
+msgid ":doc:`/user_guide/numerics/index` - Numerics Backend Guide"
+msgstr ""
+

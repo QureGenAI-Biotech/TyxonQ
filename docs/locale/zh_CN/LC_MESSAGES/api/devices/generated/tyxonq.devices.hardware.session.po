@@ -1,0 +1,49 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 5d82e2e58c4744d1af0d6e1af1cdee16
+msgid "tyxonq.devices.hardware.session"
+msgstr ""
+
+#: 9fdd3372c6f745e2a7397c424a9be5a5
+msgid "Functions"
+msgstr ""
+
+#: 6aac3410f60d4d0dba72c8e89f5b5844
+msgid ""
+":py:obj:`wait_for <tyxonq.devices.hardware.session.wait_for>`\\ \\(job\\,"
+" \\*\\[\\, poll\\, timeout\\]\\)"
+msgstr ""
+
+#: a8dab316dfea4f509bbcdba35baa52fe
+msgid "Classes"
+msgstr ""
+
+#: 97c7180709ca49108a0c4b9329d88cd1
+msgid ""
+":py:obj:`JobHandle <tyxonq.devices.hardware.session.JobHandle>`\\ "
+"\\(\\*args\\, \\*\\*kwargs\\)"
+msgstr ""
+
+#: 7aa6f1b806d1441694ca1290844144e9
+msgid "Bases: :py:class:`~typing.Protocol`"
+msgstr ""
+
