@@ -4,7 +4,7 @@ TyxonQ: Quantum Computing Framework
 
 **TyxonQ** is a powerful, flexible quantum computing framework designed for researchers and developers working on quantum algorithms, quantum chemistry applications, and AI-driven drug discovery (AIDD). Built with performance and extensibility in mind, TyxonQ provides a complete ecosystem for quantum circuit design, compilation, simulation, and execution on real quantum hardware.
 
-.. grid:: 2
+.. grid:: 3
    :gutter: 3
 
    .. grid-item-card:: 🚀 Getting Started
@@ -42,6 +42,30 @@ TyxonQ: Quantum Computing Framework
       :link-type: doc
 
       Access quantum hardware and cloud computing resources through TyxonQ's cloud API.
+
+   .. grid-item-card:: 📚 Libraries
+      :link: libraries/index
+      :link-type: doc
+
+      Reusable components including circuit templates, quantum kernels, and optimization tools.
+
+   .. grid-item-card:: 💡 Examples
+      :link: examples/index
+      :link-type: doc
+
+      Practical examples demonstrating quantum algorithms, chemistry calculations, and real-world applications.
+
+   .. grid-item-card:: 🔧 Developer Guide
+      :link: developer_guide/index
+      :link-type: doc
+
+      Contributing guidelines, architecture overview, and extending TyxonQ with custom components.
+
+   .. grid-item-card:: 📄 Technical References
+      :link: technical_references/index
+      :link-type: doc
+
+      Whitepapers, architecture design, performance optimization, and research publications.
 
 Key Features
 ============
@@ -116,18 +140,33 @@ Main Navigation
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
+   :caption: Core Documentation
 
    getting_started/index
    user_guide/index
    quantum_chemistry/index
    tutorials/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Libraries & Tools
+
    libraries/index
    cloud_services/index
    examples/index
    api/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development & References
+
    developer_guide/index
    technical_references/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
    faq
    glossary
    changelog

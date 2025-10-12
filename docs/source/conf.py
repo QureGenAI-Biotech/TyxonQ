@@ -99,7 +99,7 @@ html_theme_options = {
     "announcement": None,
     "use_edit_page_button": False,
     "show_version_warning_banner": False,
-    "primary_sidebar_end": ["indices.html"],
+    "primary_sidebar_end": ["page-toc"],
     "secondary_sidebar_items": ["page-toc", "edit-this-page", "sourcelink"],
 }
 
