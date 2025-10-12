@@ -153,6 +153,8 @@ class HEA:
         self.n_elec: int | None = None
         self.spin: int | None = None
         self.e_core: float | None = None
+        # Store UCC object for HOMO-LUMO gap calculation
+        self._ucc_object: UCC | None = None
         # Optimization artifacts
         self.grad: str = "param-shift"
         self.scipy_minimize_options: dict | None = None
@@ -189,6 +191,7 @@ class HEA:
             self.n_elec = inst.n_elec
             self.spin = inst.spin
             self.e_core = inst.e_core
+            self._ucc_object = inst._ucc_object
         else:
             # Otherwise require explicit (n, layers, hamiltonian)
             if n_qubits is None or layers is None or hamiltonian is None:
@@ -485,7 +488,10 @@ class HEA:
         spin=spin,
         **kwargs)
 
-        return cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping,runtime=runtime, **kwargs)
+        inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping,runtime=runtime, **kwargs)
+        # Store the UCC object for HOMO-LUMO gap calculation
+        inst._ucc_object = ucc_object
+        return inst
         # else:
         #     inst = cls.from_integral(ucc_object.int1e, ucc_object.int2e, ucc_object.n_elec_s, ucc_object.e_core, n_layers=n_layers, mapping=mapping, runtime=runtime)
         #     return inst
@@ -719,6 +725,95 @@ class HEA:
     @params.setter
     def params(self, p: Sequence[float]) -> None:
         self._params = np.asarray(p, dtype=np.float64)
+
+    # ---- HOMO-LUMO gap calculation (delegated to UCC) ----
+    def get_homo_lumo_gap(self, homo_idx: int | None = None, lumo_idx: int | None = None, 
+                          include_ev: bool = False) -> dict:
+        """Calculate HOMO-LUMO gap and corresponding orbital energies.
+
+        This method delegates to the internal UCC object for chemistry-related calculations.
+        The UCC object is created during from_molecule() construction and contains the
+        Hartree-Fock calculation results needed for HOMO-LUMO analysis.
+
+        Parameters
+        ----------
+        homo_idx : int, optional
+            Manual specification of HOMO orbital index (0-based).
+            If None, automatically determined from electron count.
+        lumo_idx : int, optional
+            Manual specification of LUMO orbital index (0-based).
+            If None, automatically determined from electron count.
+        include_ev : bool, optional
+            Whether to include eV conversion in output. Default False.
+
+        Returns
+        -------
+        dict
+            Dictionary containing:
+            - 'homo_energy': Energy of HOMO orbital (Hartree)
+            - 'lumo_energy': Energy of LUMO orbital (Hartree)
+            - 'gap': HOMO-LUMO energy gap (Hartree)
+            - 'gap_ev': HOMO-LUMO energy gap (eV) [only if include_ev=True]
+            - 'homo_idx': Index of HOMO orbital
+            - 'lumo_idx': Index of LUMO orbital
+            - 'system_type': 'closed-shell' or 'open-shell'
+
+        Examples
+        --------
+        >>> from tyxonq.chem import HEA
+        >>> from tyxonq.chem.molecule import h2
+        >>> hea = HEA(molecule=h2, layers=1)
+        >>> gap_info = hea.get_homo_lumo_gap()
+        >>> print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree")
+        
+        >>> # Include eV conversion
+        >>> gap_info = hea.get_homo_lumo_gap(include_ev=True)
+        >>> print(f"HOMO-LUMO gap: {gap_info['gap_ev']:.6f} eV")
+
+        Raises
+        ------
+        RuntimeError
+            If HEA was not constructed from molecule (no UCC object available).
+
+        Notes
+        -----
+        - Only works for HEA constructed via from_molecule() or direct molecule input
+        - For HEA built from integrals directly, no HOMO-LUMO gap calculation is possible
+        - Uses the same logic as UCC.get_homo_lumo_gap()
+        """
+        if self._ucc_object is None:
+            raise RuntimeError(
+                "HOMO-LUMO gap calculation requires HEA to be constructed from molecule. "
+                "Use HEA(molecule=mol, ...) or HEA.from_molecule(...) instead of from_integral()."
+            )
+        return self._ucc_object.get_homo_lumo_gap(homo_idx=homo_idx, lumo_idx=lumo_idx, include_ev=include_ev)
+
+    @property
+    def homo_lumo_gap(self) -> float:
+        """HOMO-LUMO energy gap in Hartree (property).
+
+        Automatically determines HOMO and LUMO based on molecular system.
+        For detailed information including orbital indices and energies,
+        use ``get_homo_lumo_gap()`` method.
+
+        Returns
+        -------
+        float
+            HOMO-LUMO gap in Hartree
+
+        Examples
+        --------
+        >>> from tyxonq.chem import HEA
+        >>> from tyxonq.chem.molecule import h2
+        >>> hea = HEA(molecule=h2, layers=1)
+        >>> gap = hea.homo_lumo_gap
+        >>> print(f"Gap: {gap:.6f} Hartree ({gap*27.2114:.4f} eV)")
+
+        See Also
+        --------
+        get_homo_lumo_gap : Detailed gap calculation with orbital information
+        """
+        return self.get_homo_lumo_gap()['gap']
 
     # small helper to choose params for evaluation (optimized if available)
     def _resolve_params(self, params: Sequence[float] | None) -> np.ndarray:

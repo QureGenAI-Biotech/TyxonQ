@@ -152,18 +152,6 @@ class UCCSD(UCC):
         PUCCD: Pair-unitary coupled cluster doubles.
         tyxonq.chem.molecule: Predefined molecular systems.
     """
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from tyxonq.chem import UCCSD
-    >>> from tyxonq.chem.molecule import h2
-    >>> uccsd = UCCSD(h2)
-    >>> e_ucc = uccsd.kernel()
-    >>> np.testing.assert_allclose(e_ucc, uccsd.e_fci, atol=1e-10)
-    >>> e_hf = uccsd.energy(np.zeros(uccsd.n_params))
-    >>> np.testing.assert_allclose(e_hf, uccsd.e_hf, atol=1e-10)
-
     def __init__(
         self,
         mol: Union[Mole, scf.hf.RHF] = None,
@@ -178,7 +166,6 @@ class UCCSD(UCC):
         runtime: str = 'device',
         numeric_engine: str | None = None,
         run_fci: bool = False,
-        *,
         classical_provider: str = "local",
         classical_device: str = "auto",
         # Optional PySCF-style direct molecule construction
@@ -371,10 +358,9 @@ class ROUCCSD(UCC):
         active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
         numeric_engine: str ='civector',
+        init_method: str = "zeros",
         runtime = 'device',
         run_fci: bool = False,
-        *,
-        
         classical_provider: str = "local",
         classical_device: str = "auto",
         # Optional PySCF-style direct molecule construction
@@ -386,7 +372,7 @@ class ROUCCSD(UCC):
         **kwargs
     ):
 
-        init_method: str = "zeros"
+        
         super().__init__(
             mol = mol,
             init_method=init_method,

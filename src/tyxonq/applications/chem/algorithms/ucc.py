@@ -1086,6 +1086,166 @@ class UCC:
     def params(self, v: Sequence[float] | None) -> None:
         self._params = None if v is None else np.asarray(v, dtype=np.float64)
 
+    # ---- HOMO-LUMO gap calculation ----
+    def get_homo_lumo_gap(self, homo_idx: int | None = None, lumo_idx: int | None = None, 
+                          include_ev: bool = False) -> dict:
+        """Calculate HOMO-LUMO gap and corresponding orbital energies.
+
+        This method automatically determines HOMO and LUMO indices based on the
+        molecular system (closed-shell or open-shell) unless explicitly specified.
+
+        Parameters
+        ----------
+        homo_idx : int, optional
+            Manual specification of HOMO orbital index (0-based).
+            If None, automatically determined from electron count.
+        lumo_idx : int, optional
+            Manual specification of LUMO orbital index (0-based).
+            If None, automatically determined from electron count.
+        include_ev : bool, optional
+            Whether to include eV conversion in output. Default False.
+
+        Returns
+        -------
+        dict
+            Dictionary containing:
+            - 'homo_energy': Energy of HOMO orbital (Hartree)
+            - 'lumo_energy': Energy of LUMO orbital (Hartree)
+            - 'gap': HOMO-LUMO energy gap (Hartree)
+            - 'gap_ev': HOMO-LUMO energy gap (eV) [only if include_ev=True]
+            - 'homo_idx': Index of HOMO orbital
+            - 'lumo_idx': Index of LUMO orbital
+            - 'system_type': 'closed-shell' or 'open-shell'
+
+        Examples
+        --------
+        >>> from tyxonq.chem import UCCSD
+        >>> from tyxonq.chem.molecule import h2
+        >>> ucc = UCCSD(h2)
+        >>> gap_info = ucc.get_homo_lumo_gap()
+        >>> print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree")
+        
+        >>> # Include eV conversion
+        >>> gap_info = ucc.get_homo_lumo_gap(include_ev=True)
+        >>> print(f"HOMO-LUMO gap: {gap_info['gap_ev']:.6f} eV")
+
+        >>> # Manual specification for specific orbitals
+        >>> gap_info = ucc.get_homo_lumo_gap(homo_idx=2, lumo_idx=3)
+
+        Notes
+        -----
+        - For closed-shell systems (spin=0): HOMO index = (n_electrons // 2) - 1,
+          LUMO index = n_electrons // 2.
+        - For open-shell systems (spin≠0): Uses orbital occupation analysis.
+        - Orbital energies are obtained from the Hartree-Fock calculation.
+        """
+        if not hasattr(self, 'hf') or self.hf is None:
+            raise RuntimeError("Hartree-Fock calculation not available. Run UCC initialization first.")
+
+        # Get molecular orbital energies
+        mo_energy = self.hf.mo_energy
+        if mo_energy is None:
+            raise RuntimeError("MO energies not available. Ensure HF calculation completed.")
+
+        # Determine system type by spin
+        is_closed_shell = (self.mol.spin == 0)
+        system_type = 'closed-shell' if is_closed_shell else 'open-shell'
+
+        # Auto-determine HOMO and LUMO indices if not specified
+        if homo_idx is None or lumo_idx is None:
+            if is_closed_shell:
+                # Closed-shell: simple electron counting method
+                n_electrons = self.mol.nelectron
+                n_occupied = n_electrons // 2
+                
+                if n_occupied == 0:
+                    raise ValueError("No occupied orbitals found.")
+                if n_occupied >= len(mo_energy):
+                    raise ValueError("No virtual orbitals found.")
+
+                if homo_idx is None:
+                    homo_idx = n_occupied - 1  # 0-based index
+                if lumo_idx is None:
+                    lumo_idx = n_occupied
+            else:
+                # Open-shell: use orbital occupation analysis
+                mo_occ = self.hf.mo_occ
+                if mo_occ is None:
+                    raise RuntimeError("MO occupations not available for open-shell system.")
+                    
+                doubly_occ = np.where(mo_occ > 1.5)[0]  # occupation ≈ 2
+                singly_occ = np.where((mo_occ > 0.5) & (mo_occ < 1.5))[0]  # occupation ≈ 1
+                virtual_indices = np.where(mo_occ < 0.5)[0]  # occupation ≈ 0
+
+                if len(doubly_occ) == 0 and len(singly_occ) == 0:
+                    raise ValueError("No occupied orbitals found in open-shell system.")
+                if len(virtual_indices) == 0:
+                    raise ValueError("No virtual orbitals found in open-shell system.")
+
+                if homo_idx is None:
+                    # HOMO is the highest occupied orbital
+                    if len(singly_occ) > 0:
+                        homo_idx = singly_occ[-1]  # highest singly occupied
+                    else:
+                        homo_idx = doubly_occ[-1]  # highest doubly occupied
+
+                if lumo_idx is None:
+                    lumo_idx = virtual_indices[0]  # lowest unoccupied
+
+        # Validate indices
+        if homo_idx < 0 or homo_idx >= len(mo_energy):
+            raise ValueError(f"Invalid HOMO index {homo_idx}. Must be in range [0, {len(mo_energy)-1}].")
+        if lumo_idx < 0 or lumo_idx >= len(mo_energy):
+            raise ValueError(f"Invalid LUMO index {lumo_idx}. Must be in range [0, {len(mo_energy)-1}].")
+
+        # Extract energies
+        homo_energy = float(mo_energy[homo_idx])
+        lumo_energy = float(mo_energy[lumo_idx])
+        gap = lumo_energy - homo_energy
+
+        result = {
+            'homo_energy': homo_energy,
+            'lumo_energy': lumo_energy,
+            'gap': gap,
+            'homo_idx': int(homo_idx),
+            'lumo_idx': int(lumo_idx),
+            'system_type': system_type,
+        }
+        
+        # Add eV conversion only if requested
+        if include_ev:
+            hartree_to_ev = 27.211386245988
+            result['gap_ev'] = gap * hartree_to_ev
+            
+        return result
+
+    @property
+    def homo_lumo_gap(self) -> float:
+        """HOMO-LUMO energy gap in Hartree (property).
+
+        Automatically determines HOMO and LUMO based on molecular system.
+        For detailed information including orbital indices and energies,
+        use ``get_homo_lumo_gap()`` method.
+
+        Returns
+        -------
+        float
+            HOMO-LUMO gap in Hartree
+
+        Examples
+        --------
+        >>> from tyxonq.chem import UCCSD
+        >>> from tyxonq.chem.molecule import h2
+        >>> ucc = UCCSD(h2)
+        >>> gap = ucc.homo_lumo_gap
+        >>> print(f"Gap: {gap:.6f} Hartree ({gap*27.2114:.4f} eV)")
+
+        See Also
+        --------
+        get_homo_lumo_gap : Detailed gap calculation with orbital information
+        """
+        return self.get_homo_lumo_gap()['gap']
+
 
 
 def compute_fe_t2(no, nv, int1e, int2e):
