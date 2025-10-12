@@ -1,0 +1,763 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Compiler Pipeline &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/compiler/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Device Abstraction" href="../devices/index.html" />
+    <link rel="prev" title="Core Module" href="../core/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../core/index.html">Core Module</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Compiler Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devices/index.html">Device Abstraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../numerics/index.html">Numerics Backend</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../postprocessing/index.html">Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/index.html">Advanced Topics</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Compiler Pipeline</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="compiler-pipeline">
+<h1>Compiler Pipeline<a class="headerlink" href="#compiler-pipeline" title="Link to this heading">#</a></h1>
+<p>The TyxonQ compiler transforms high-level quantum circuits into low-level representations that can execute on target devices. Through multi-stage optimization and transformation, the compiler ensures circuits run efficiently on various quantum devices.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p></li>
+<li><p><a class="reference internal" href="#compiler-architecture" id="id3">Compiler Architecture</a></p>
+<ul>
+<li><p><a class="reference internal" href="#pipeline-framework" id="id4">Pipeline Framework</a></p></li>
+<li><p><a class="reference internal" href="#compiler-engines" id="id5">Compiler Engines</a></p></li>
+<li><p><a class="reference internal" href="#usage-examples" id="id6">Usage Examples</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#compilation-stages" id="id7">Compilation Stages</a></p>
+<ul>
+<li><p><a class="reference internal" href="#decomposition-stage" id="id8">Decomposition Stage</a></p></li>
+<li><p><a class="reference internal" href="#rewriting-stage" id="id9">Rewriting Stage</a></p></li>
+<li><p><a class="reference internal" href="#simplification-stage" id="id10">Simplification Stage</a></p></li>
+<li><p><a class="reference internal" href="#scheduling-stage" id="id11">Scheduling Stage</a></p></li>
+<li><p><a class="reference internal" href="#gradient-processing-stage" id="id12">Gradient Processing Stage</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#best-practices" id="id13">Best Practices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#compilation-options" id="id14">Compilation Options</a></p></li>
+<li><p><a class="reference internal" href="#performance-optimization" id="id15">Performance Optimization</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#related-resources" id="id16">Related Resources</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>The TyxonQ compiler uses a multi-stage pipeline architecture, with each stage responsible for specific optimization and transformation tasks:</p>
+<ul class="simple">
+<li><p><strong>Decomposition Stage</strong>: Decomposes high-level quantum gates into basic gate sets</p></li>
+<li><p><strong>Rewriting Stage</strong>: Optimizes circuit structure and measurement strategies</p></li>
+<li><p><strong>Simplification Stage</strong>: Eliminates redundant operations and reduces circuit complexity</p></li>
+<li><p><strong>Scheduling Stage</strong>: Manages measurement allocation and shot budgets</p></li>
+<li><p><strong>Gradient Processing</strong>: Generates parameter shift circuits for gradient optimization</p></li>
+</ul>
+</section>
+<section id="compiler-architecture">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Compiler Architecture</a><a class="headerlink" href="#compiler-architecture" title="Link to this heading">#</a></h2>
+<section id="pipeline-framework">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Pipeline Framework</a><a class="headerlink" href="#pipeline-framework" title="Link to this heading">#</a></h3>
+graph LR
+    A[Source Circuit] --&gt; B[Decomposition Stage]
+    B --&gt; C[Rewriting Stage]
+    C --&gt; D[Simplification Stage]
+    D --&gt; E[Scheduling Stage]
+    E --&gt; F[Gradient Processing]
+    F --&gt; G[Target Code]</section>
+<section id="compiler-engines">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Compiler Engines</a><a class="headerlink" href="#compiler-engines" title="Link to this heading">#</a></h3>
+<p>TyxonQ supports multiple compiler engines:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Compiler Engine Comparison</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 25.0%" />
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Engine Name</p></th>
+<th class="head"><p>Target Format</p></th>
+<th class="head"><p>Use Cases</p></th>
+<th class="head"><p>Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>native</p></td>
+<td><p>TyxonQ IR</p></td>
+<td><p>Native simulators</p></td>
+<td><p>Complete optimization pipeline</p></td>
+</tr>
+<tr class="row-odd"><td><p>qiskit</p></td>
+<td><p>Qiskit QuantumCircuit</p></td>
+<td><p>IBM hardware/Qiskit integration</p></td>
+<td><p>Qiskit ecosystem compatibility</p></td>
+</tr>
+<tr class="row-even"><td><p>openqasm</p></td>
+<td><p>OpenQASM 2.0</p></td>
+<td><p>Universal quantum hardware</p></td>
+<td><p>Cross-platform compatibility</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="usage-examples">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Usage Examples</a><a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Use default compiler</span>
+<span class="n">compiled</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+<span class="c1"># Specify compiler engine</span>
+<span class="n">compiled_qiskit</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">compile_engine</span><span class="o">=</span><span class="s1">&#39;qiskit&#39;</span><span class="p">)</span>
+
+<span class="c1"># Set optimization level</span>
+<span class="n">compiled_opt</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="n">compile_engine</span><span class="o">=</span><span class="s1">&#39;native&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;optimization_level&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original circuit gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compiled gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">compiled</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="compilation-stages">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Compilation Stages</a><a class="headerlink" href="#compilation-stages" title="Link to this heading">#</a></h2>
+<section id="decomposition-stage">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Decomposition Stage</a><a class="headerlink" href="#decomposition-stage" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Decompose high-level quantum gates into basic gate sets supported by the target device.</p>
+<p><strong>Supported Decompositions</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># RX gate decomposition: RX(θ) = H · RZ(θ) · H</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">decomposed</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+<span class="c1"># RY gate decomposition: RY(θ) = S† · H · RZ(θ) · H · S</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">decomposed</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+<span class="c1"># RZZ gate decomposition: RZZ(θ) = CNOT · RZ(θ) · CNOT</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">rzz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="n">decomposed</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="rewriting-stage">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Rewriting Stage</a><a class="headerlink" href="#rewriting-stage" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Optimize circuit structure and measurement strategies.</p>
+<p><strong>Main Rewriting Rules</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Measurement Optimization</strong>: Automatically group compatible measurements</p></li>
+<li><p><strong>Gate Transformation</strong>: Standardize gate representation and apply algebraic identities</p></li>
+<li><p><strong>Auto-Measurement Insertion</strong>: Add measurements to circuits lacking them</p></li>
+<li><p><strong>Gate Merging and Pruning</strong>: Merge adjacent gates and remove redundant operations</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Gate merging example</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>  <span class="c1"># Mergeable RZ gates</span>
+    <span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>              <span class="c1"># Canceling X gates</span>
+<span class="p">)</span>
+
+<span class="n">compiled</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimized gate count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">compiled</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="simplification-stage">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Simplification Stage</a><a class="headerlink" href="#simplification-stage" title="Link to this heading">#</a></h3>
+<p><strong>Light Cone Simplification</strong></p>
+<p>Light cone simplification removes operations that don’t affect measurement results through backward analysis:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Circuit with redundant operations</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>        <span class="c1"># Apply H gates to all qubits</span>
+    <span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>       <span class="c1"># Entangling operations</span>
+    <span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>   <span class="c1"># Only measure first two qubits</span>
+<span class="p">)</span>
+
+<span class="c1"># Compilation automatically applies light cone simplification</span>
+<span class="n">simplified</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original circuit gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Simplified gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">simplified</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># Expected to remove operations related to qubits 2, 3</span>
+</pre></div>
+</div>
+</section>
+<section id="scheduling-stage">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Scheduling Stage</a><a class="headerlink" href="#scheduling-stage" title="Link to this heading">#</a></h3>
+<p><strong>Shot Scheduler</strong></p>
+<p>The shot scheduler manages measurement allocation and execution planning:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Circuit with measurement grouping</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Automatic scheduling during execution</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gradient-processing-stage">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Gradient Processing Stage</a><a class="headerlink" href="#gradient-processing-stage" title="Link to this heading">#</a></h3>
+<p><strong>Parameter Shift Rule</strong></p>
+<p>The parameter shift rule computes gradients through finite differences:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Parameterized circuit</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="p">)</span>
+
+<span class="c1"># Gradient computation is automatically handled during optimization</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<section id="compilation-options">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Compilation Options</a><a class="headerlink" href="#compilation-options" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>Choose Appropriate Optimization Level</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Debugging phase: low optimization</span>
+<span class="n">debug_compiled</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;optimization_level&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+
+<span class="c1"># Production environment: high optimization</span>
+<span class="n">prod_compiled</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;optimization_level&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Target Device Adaptation</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Optimize for specific device</span>
+<span class="n">ibm_compiled</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="n">compile_engine</span><span class="o">=</span><span class="s1">&#39;qiskit&#39;</span><span class="p">,</span>
+    <span class="n">target</span><span class="o">=</span><span class="s1">&#39;ibm_cairo&#39;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="performance-optimization">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Performance Optimization</a><a class="headerlink" href="#performance-optimization" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Compilation Caching</strong>: Reuse compilation results</p></li>
+<li><p><strong>Batch Compilation</strong>: Compile multiple similar circuits at once</p></li>
+<li><p><strong>Incremental Optimization</strong>: Start debugging from low optimization levels</p></li>
+</ol>
+</section>
+</section>
+<section id="related-resources">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Related Resources</a><a class="headerlink" href="#related-resources" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../api/compiler/index.html"><span class="doc">Compiler API</span></a> - Compiler API Reference</p></li>
+<li><p><a class="reference internal" href="../devices/index.html"><span class="doc">Device Abstraction</span></a> - Device Execution Guide</p></li>
+<li><p><a class="reference internal" href="../core/index.html"><span class="doc">Core Module</span></a> - Core Module Introduction</p></li>
+<li><p><a class="reference internal" href="../../examples/optimization_examples.html"><span class="doc">Optimization Examples</span></a> - Optimization Examples</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../core/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Core Module</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../devices/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Device Abstraction</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler-architecture">Compiler Architecture</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pipeline-framework">Pipeline Framework</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler-engines">Compiler Engines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-examples">Usage Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compilation-stages">Compilation Stages</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#decomposition-stage">Decomposition Stage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rewriting-stage">Rewriting Stage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#simplification-stage">Simplification Stage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scheduling-stage">Scheduling Stage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-processing-stage">Gradient Processing Stage</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compilation-options">Compilation Options</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-optimization">Performance Optimization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-resources">Related Resources</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/compiler/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

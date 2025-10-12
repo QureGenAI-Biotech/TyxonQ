@@ -1,0 +1,1002 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Architecture Overview &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/architecture_overview';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Testing Guidelines" href="testing_guidelines.html" />
+    <link rel="prev" title="Contributing" href="contributing.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Core Development</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Architecture Overview</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html">Testing Guidelines</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extension Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html">Extending TyxonQ</a></li>
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html">Custom Devices</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html">Numeric Engines</a></li>
+
+
+
+
+
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Developer Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Architecture Overview</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="architecture-overview">
+<h1>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Link to this heading">#</a></h1>
+<p>TyxonQ is a modular quantum computing framework built around the core workflow: <strong>问题 → 哈密顿量 → 电路 → 编译 → 执行 → 后处理</strong>. This document provides an overview of TyxonQ’s actual architecture based on the technical whitepaper and codebase.</p>
+</section>
+<section id="core-workflow">
+<h1>Core Workflow<a class="headerlink" href="#core-workflow" title="Link to this heading">#</a></h1>
+<p>TyxonQ implements the complete quantum computing pipeline:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>问题定义 (Problem Definition)
+       ↓
+哈密顿量构建 (Hamiltonian Construction)
+       ↓
+量子电路构建 (Quantum Circuit Building)
+       ↓
+编译优化 (Compilation &amp; Optimization)
+       ↓
+设备执行 (Device Execution)
+       ↓
+后处理 (Postprocessing)
+</pre></div>
+</div>
+</section>
+<section id="system-architecture">
+<h1>System Architecture<a class="headerlink" href="#system-architecture" title="Link to this heading">#</a></h1>
+<p>TyxonQ adopts a layered, modular architecture:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌───────────────────────────────────────────────────────────┐
+│                Applications Layer                           │
+│    Quantum Chemistry • Optimization • Machine Learning      │
+└───────────────────────────────────────────────────────────┘
+                             │
+┌───────────────────────────────────────────────────────────┐
+│                 Core Framework                               │
+│    Stable IR • Compiler • Device Abstraction • Numerics    │
+└───────────────────────────────────────────────────────────┘
+                             │
+┌───────────────────────────────────────────────────────────┐
+│               Execution Engines                              │
+│    Statevector • Density Matrix • MPS • Hardware           │
+└───────────────────────────────────────────────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="key-architectural-innovations">
+<h1>Key Architectural Innovations<a class="headerlink" href="#key-architectural-innovations" title="Link to this heading">#</a></h1>
+<ol class="arabic simple">
+<li><p><strong>Stable IR as System Contract</strong></p></li>
+<li><p><strong>Compiler-Driven Measurement Optimization</strong></p></li>
+<li><p><strong>Dual-Path Execution Model</strong></p></li>
+<li><p><strong>Counts-First Semantics</strong></p></li>
+<li><p><strong>Single ArrayBackend Protocol</strong></p></li>
+</ol>
+</section>
+<section id="stable-ir-intermediate-representation">
+<h1>Stable IR (Intermediate Representation)<a class="headerlink" href="#stable-ir-intermediate-representation" title="Link to this heading">#</a></h1>
+<p>TyxonQ’s core IR is minimal and stable:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.core.ir.circuit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span>
+
+<span class="c1"># Minimal design: num_qubits + ops sequence</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>      <span class="c1"># ops: [(&#39;h&#39;, 0)]</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># ops: [(&#39;h&#39;, 0), (&#39;cx&#39;, 0, 1)]</span>
+
+<span class="c1"># Core structure:</span>
+<span class="c1"># - circuit.num_qubits: int</span>
+<span class="c1"># - circuit.ops: List[Any] - operation sequence</span>
+<span class="c1"># - circuit.metadata: Dict - compiler metadata</span>
+</pre></div>
+</div>
+</section>
+<section id="chain-api-design">
+<h1>Chain API Design<a class="headerlink" href="#chain-api-design" title="Link to this heading">#</a></h1>
+<p>TyxonQ’s signature chain API makes execution flow explicit:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="c1"># Set numeric backend</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>  <span class="c1"># or &quot;pytorch&quot;, &quot;cupynumeric&quot;</span>
+
+<span class="c1"># Build circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Chain execution: compile → device → run</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">circuit</span>
+    <span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">passes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;measurement_rewrite&quot;</span><span class="p">,</span> <span class="s2">&quot;shot_scheduler&quot;</span><span class="p">])</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;statevector&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="compiler-pipeline">
+<h1>Compiler Pipeline<a class="headerlink" href="#compiler-pipeline" title="Link to this heading">#</a></h1>
+<p>Compiler transforms circuits with measurement optimization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Native compiler pipeline</span>
+<span class="n">final_pipeline</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;rewrite/auto_measure&quot;</span><span class="p">,</span>      <span class="c1"># Add measurements</span>
+    <span class="s2">&quot;rewrite/gates_transform&quot;</span><span class="p">,</span>   <span class="c1"># Gate transformations</span>
+    <span class="s2">&quot;measurement_rewrite&quot;</span><span class="p">,</span>       <span class="c1"># Group measurements</span>
+    <span class="s2">&quot;shot_scheduler&quot;</span>              <span class="c1"># Optimize shot allocation</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Key Features:</strong>
+- Measurement grouping metadata elevation
+- Deterministic shot scheduling
+- Multiple compiler engines (native, qiskit)</p>
+</section>
+<section id="device-abstraction">
+<h1>Device Abstraction<a class="headerlink" href="#device-abstraction" title="Link to this heading">#</a></h1>
+<p>Unified device interface:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Simulator devices</span>
+<span class="n">statevector_result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">circuit</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;statevector&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="n">density_matrix_result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">circuit</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;density_matrix&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="n">mps_result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">circuit</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;matrix_product_state&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="c1"># Hardware devices</span>
+<span class="n">hardware_result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="s2">&quot;qasm&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="simulation-engines">
+<h1>Simulation Engines<a class="headerlink" href="#simulation-engines" title="Link to this heading">#</a></h1>
+<section id="statevector-engine">
+<h2>Statevector Engine<a class="headerlink" href="#statevector-engine" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/devices/simulators/statevector/engine.py</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">StatevectorEngine</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;statevector&quot;</span>
+    <span class="n">capabilities</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;supports_shots&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="n">backend_name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Statevector simulation</span>
+        <span class="c1"># Memory: O(2^n)</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="density-matrix-engine">
+<h2>Density Matrix Engine<a class="headerlink" href="#density-matrix-engine" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/devices/simulators/density_matrix/engine.py</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DensityMatrixEngine</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;density_matrix&quot;</span>
+    <span class="n">capabilities</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;supports_shots&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># Density matrix simulation with noise support</span>
+        <span class="c1"># Memory: O(4^n)</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="matrix-product-state-engine">
+<h2>Matrix Product State Engine<a class="headerlink" href="#matrix-product-state-engine" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/devices/simulators/matrix_product_state/engine.py</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatrixProductStateEngine</span><span class="p">:</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;matrix_product_state&quot;</span>
+    <span class="n">capabilities</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;supports_shots&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># MPS simulation for low entanglement</span>
+        <span class="c1"># Memory: O(poly(n))</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="numeric-backend-system">
+<h1>Numeric Backend System<a class="headerlink" href="#numeric-backend-system" title="Link to this heading">#</a></h1>
+<p>ArrayBackend Protocol:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/numerics/api.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.numerics.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_backend</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="c1"># Supported backends</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>        <span class="c1"># Default, CPU</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;pytorch&quot;</span><span class="p">)</span>      <span class="c1"># GPU + autodiff</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;cupynumeric&quot;</span><span class="p">)</span>  <span class="c1"># GPU accelerated</span>
+
+<span class="c1"># Get backend for operations</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">()</span>
+<span class="n">array</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">backend</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="dual-path-execution-model">
+<h1>Dual-Path Execution Model<a class="headerlink" href="#dual-path-execution-model" title="Link to this heading">#</a></h1>
+<section id="device-path">
+<h2>Device Path<a class="headerlink" href="#device-path" title="Link to this heading">#</a></h2>
+<p>Optimized for hardware and shot-based simulation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Device path - counts-based results</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">circuit</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;statevector&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="c1"># Process counts</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;result&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+<span class="c1"># Postprocessing</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span>
+<span class="n">expectation</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="numeric-path">
+<h2>Numeric Path<a class="headerlink" href="#numeric-path" title="Link to this heading">#</a></h2>
+<p>Optimized for exact computation:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Numeric path - exact computation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.algorithms.uccsd</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">molecule</span>
+
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">.</span><span class="n">h2</span><span class="p">)</span>
+
+<span class="c1"># Exact energy</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+
+<span class="c1"># With gradients</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;pytorch&quot;</span><span class="p">)</span>
+<span class="n">energy</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">energy_and_grad</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="quantum-chemistry-stack">
+<h1>Quantum Chemistry Stack<a class="headerlink" href="#quantum-chemistry-stack" title="Link to this heading">#</a></h1>
+<p>Location: <cite>src/tyxonq/applications/chem/</cite></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">HEA</span><span class="p">,</span> <span class="n">UCC</span><span class="p">,</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.molecule</span><span class="w"> </span><span class="kn">import</span> <span class="n">h2</span><span class="p">,</span> <span class="n">h4</span>
+
+<span class="c1"># Hardware-Efficient Ansatz</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">n_qubits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="o">=</span><span class="n">h2</span><span class="o">.</span><span class="n">hamiltonian</span><span class="p">)</span>
+
+<span class="c1"># Unitary Coupled Cluster</span>
+<span class="n">ucc</span> <span class="o">=</span> <span class="n">UCC</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">h2</span><span class="p">)</span>
+
+<span class="c1"># UCCSD Algorithm</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">h2</span><span class="p">)</span>
+<span class="c1"># Device execution</span>
+<span class="n">energy_device</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;statevector&quot;</span><span class="p">)</span>
+<span class="c1"># Numeric execution</span>
+<span class="n">energy_numeric</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="runtimes">
+<h2>Runtimes<a class="headerlink" href="#runtimes" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/applications/chem/runtimes/</span>
+<span class="c1"># - hea_device_runtime.py</span>
+<span class="c1"># - hea_numeric_runtime.py</span>
+<span class="c1"># - ucc_device_runtime.py</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HEADeviceRuntime</span><span class="p">:</span>
+    <span class="c1"># Device path for HEA</span>
+    <span class="k">pass</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HEANumericRuntime</span><span class="p">:</span>
+    <span class="c1"># Numeric path for HEA</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="postprocessing">
+<h1>Postprocessing<a class="headerlink" href="#postprocessing" title="Link to this heading">#</a></h1>
+<p>Counts-first semantics with unified postprocessing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/postprocessing/</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing.error_mitigation</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_zne</span><span class="p">,</span> <span class="n">apply_dd</span><span class="p">,</span> <span class="n">apply_rc</span>
+
+<span class="c1"># Basic expectation values</span>
+<span class="n">ez</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="n">ex</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># Error mitigation</span>
+<span class="n">mitigated_result</span> <span class="o">=</span> <span class="n">apply_zne</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">executor</span><span class="p">,</span> <span class="n">num_to_average</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="libraries">
+<h1>Libraries<a class="headerlink" href="#libraries" title="Link to this heading">#</a></h1>
+<section id="circuit-library">
+<h2>Circuit Library<a class="headerlink" href="#circuit-library" title="Link to this heading">#</a></h2>
+<p>Location: <cite>src/tyxonq/libs/circuits_library/</cite></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reusable circuit templates</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library.qiskit_real_amplitudes</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_circuit_from_template</span>
+</pre></div>
+</div>
+</section>
+<section id="quantum-library">
+<h2>Quantum Library<a class="headerlink" href="#quantum-library" title="Link to this heading">#</a></h2>
+<p>Location: <cite>src/tyxonq/libs/quantum_library/</cite></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Numeric kernels for gates</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.quantum_library.kernels.gates</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">gate_h</span><span class="p">,</span> <span class="n">gate_rz</span><span class="p">,</span> <span class="n">gate_rx</span><span class="p">,</span> <span class="n">gate_cx_4x4</span>
+<span class="p">)</span>
+
+<span class="c1"># Density matrix operations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.quantum_library.kernels.density_matrix</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">init_density</span><span class="p">,</span> <span class="n">apply_1q_density</span><span class="p">,</span> <span class="n">apply_2q_density</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="hamiltonian-encoding">
+<h2>Hamiltonian Encoding<a class="headerlink" href="#hamiltonian-encoding" title="Link to this heading">#</a></h2>
+<p>Location: <cite>src/tyxonq/libs/hamiltonian_encoding/</cite></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># OpenFermion integration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openfermion</span><span class="w"> </span><span class="kn">import</span> <span class="n">QubitOperator</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="cloud-integration">
+<h1>Cloud Integration<a class="headerlink" href="#cloud-integration" title="Link to this heading">#</a></h1>
+<p>Location: <cite>src/tyxonq/cloud/</cite></p>
+<p>TyxonQ Hardware Driver:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Located: src/tyxonq/devices/hardware/tyxonq/driver.py</span>
+<span class="c1"># Cloud API integration for TyxonQ hardware</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">submit_task</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="c1"># Submit to TyxonQ cloud API</span>
+    <span class="k">pass</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">get_task_details</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="c1"># Poll for results</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+</section>
+<section id="directory-structure">
+<h1>Directory Structure<a class="headerlink" href="#directory-structure" title="Link to this heading">#</a></h1>
+<p>Actual source code organization:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>src/tyxonq/
+├── core/                       # Stable IR and operations
+│   ├── ir/
+│   │   ├── circuit.py          # Circuit IR with chain API
+│   │   └── pulse.py            # Pulse-level IR
+├── compiler/                   # Compilation pipeline
+│   ├── api.py
+│   └── compile_engine/
+│       ├── native/             # Native compiler
+│       └── qiskit/             # Qiskit adapter
+├── devices/                    # Device abstraction
+│   ├── base.py                 # Device protocol
+│   ├── simulators/
+│   │   ├── statevector/
+│   │   ├── density_matrix/
+│   │   └── matrix_product_state/
+│   └── hardware/
+│       └── tyxonq/driver.py    # TyxonQ hardware
+├── numerics/                   # ArrayBackend protocol
+│   ├── api.py
+│   └── backends/
+│       ├── numpy_backend.py
+│       ├── pytorch_backend.py
+│       └── cupynumeric_backend.py
+├── postprocessing/             # Unified postprocessing
+│   ├── metrics.py
+│   └── error_mitigation.py
+├── applications/               # Domain applications
+│   └── chem/                   # Quantum chemistry
+│       ├── algorithms/
+│       ├── runtimes/
+│       └── molecule.py
+└── libs/                       # Library components
+    ├── circuits_library/
+    ├── quantum_library/
+    └── hamiltonian_encoding/
+</pre></div>
+</div>
+</section>
+<section id="performance-characteristics">
+<h1>Performance Characteristics<a class="headerlink" href="#performance-characteristics" title="Link to this heading">#</a></h1>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Engine              | Memory      | Best Use Case
+--------------------|-------------|---------------------------
+Statevector         | O(2^n)     | Pure states, &lt; 20 qubits
+Density Matrix      | O(4^n)     | Noise modeling, &lt; 15 qubits
+Matrix Product State| O(poly(n)) | Low entanglement, large n
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Global configuration</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="c1"># Backend configuration</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>  <span class="c1"># or &quot;pytorch&quot;, &quot;cupynumeric&quot;</span>
+
+<span class="c1"># Device defaults</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;statevector&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">compile_engine</span><span class="o">=</span><span class="s2">&quot;native&quot;</span><span class="p">)</span>
+
+<span class="c1"># Use defaults</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This architecture overview is based on TyxonQ’s actual implementation
+as documented in the technical whitepaper and source code.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="contributing.html"><span class="doc">Contributing</span></a> - Development guidelines</p></li>
+<li><p><a class="reference internal" href="extending_tyxonq.html"><span class="doc">Extending TyxonQ</span></a> - Extension guide</p></li>
+<li><p><a class="reference internal" href="custom_devices.html"><span class="doc">Custom Devices</span></a> - Device development</p></li>
+<li><p><a class="reference internal" href="testing_guidelines.html"><span class="doc">Testing Guidelines</span></a> - Testing practices</p></li>
+</ul>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="contributing.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="testing_guidelines.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Testing Guidelines</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Architecture Overview</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#core-workflow">Core Workflow</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#system-architecture">System Architecture</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#key-architectural-innovations">Key Architectural Innovations</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#stable-ir-intermediate-representation">Stable IR (Intermediate Representation)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#chain-api-design">Chain API Design</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler-pipeline">Compiler Pipeline</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#device-abstraction">Device Abstraction</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#simulation-engines">Simulation Engines</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#statevector-engine">Statevector Engine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#density-matrix-engine">Density Matrix Engine</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#matrix-product-state-engine">Matrix Product State Engine</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#numeric-backend-system">Numeric Backend System</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#dual-path-execution-model">Dual-Path Execution Model</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-path">Device Path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#numeric-path">Numeric Path</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-chemistry-stack">Quantum Chemistry Stack</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtimes">Runtimes</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#postprocessing">Postprocessing</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#libraries">Libraries</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#circuit-library">Circuit Library</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-library">Quantum Library</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hamiltonian-encoding">Hamiltonian Encoding</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#cloud-integration">Cloud Integration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#directory-structure">Directory Structure</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-characteristics">Performance Characteristics</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">Configuration</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developer_guide/architecture_overview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1031 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Getting Started &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'cloud_services/getting_started';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Device Management" href="device_management.html" />
+    <link rel="prev" title="Cloud Services" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Getting Started</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="device_management.html">Device Management</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="task_submission.html">Task Submission</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="hardware_access.html">Hardware Access</a></li>
+
+
+
+
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Cloud Services</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Getting Started</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h1>
+<section id="id1">
+<h2>Getting Started<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>TyxonQ provides seamless access to real quantum hardware through cloud services, enabling you to run quantum algorithms on actual quantum processors with <strong>gate-level</strong> and <strong>pulse-level</strong> control.</p>
+</section>
+</section>
+<section id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h1>
+<p><strong>TyxonQ Quantum Cloud Services</strong> powered by <strong>QureGenAI</strong> give you access to:</p>
+<ul class="simple">
+<li><p><strong>Homebrew_S2</strong> quantum processor - 13-qubit superconducting quantum computer</p></li>
+<li><p><strong>Gate-level execution</strong> - Standard gate model quantum computing</p></li>
+<li><p><strong>Pulse-level control</strong> - Direct microwave pulse programming via TQASM 0.2</p></li>
+<li><p><strong>Real-time task submission</strong> - Submit and monitor quantum jobs via REST API</p></li>
+<li><p><strong>Unified programming model</strong> - Same code runs on simulators and hardware</p></li>
+<li><p><strong>Hardware optimization</strong> - Qubit mapping, gate decomposition, initial mapping</p></li>
+</ul>
+</section>
+<section id="obtaining-api-access">
+<h1>Obtaining API Access<a class="headerlink" href="#obtaining-api-access" title="Link to this heading">#</a></h1>
+<p>Visit the <strong>TyxonQ Quantum Cloud Portal</strong>:</p>
+<p>🌐 <a class="reference external" href="https://www.tyxonq.com/">https://www.tyxonq.com/</a></p>
+<ul class="simple">
+<li><p>Create an account with email verification</p></li>
+<li><p>Complete the registration process</p></li>
+<li><p>Access your user dashboard</p></li>
+</ul>
+<p>From your dashboard:</p>
+<ol class="arabic simple">
+<li><p>Navigate to <strong>API Keys</strong> section</p></li>
+<li><p>Click <strong>Generate New Key</strong></p></li>
+<li><p>Copy and save your API key (format: “username;priority”)</p></li>
+<li><p><strong>Important</strong>: Keep your API key confidential - treat it like a password</p></li>
+</ol>
+<p><strong>Homebrew_S2</strong> quantum processor access:</p>
+<ul class="simple">
+<li><p>Submit hardware access request through portal at <a class="reference external" href="https://www.tyxonq.com/">https://www.tyxonq.com/</a></p></li>
+<li><p>Provide research/project description</p></li>
+<li><p>Await approval notification (typically 1-3 business days)</p></li>
+<li><p>Once approved, you can submit jobs to <code class="docutils literal notranslate"><span class="pre">homebrew_s2</span></code> device</p></li>
+<li><p><strong>Pulse-level access</strong>: Requires additional approval for TQASM 0.2 programming</p></li>
+</ul>
+</section>
+<section id="api-configuration">
+<h1>API Configuration<a class="headerlink" href="#api-configuration" title="Link to this heading">#</a></h1>
+<p><strong>Method 1: In Code (Recommended for Testing)</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+
+<span class="c1"># Prompt for API key (secure input)</span>
+<span class="n">API_KEY</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s2">&quot;Input your TyxonQ API_KEY: &quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Verify configuration</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Token configured successfully!&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Method 2: Environment Variable (Recommended for Production)</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Unix/Linux/macOS</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">TYXONQ_API_KEY</span><span class="o">=</span><span class="s2">&quot;username;priority&quot;</span>
+
+<span class="c1"># Windows PowerShell</span>
+<span class="nv">$env</span>:TYXONQ_API_KEY<span class="o">=</span><span class="s2">&quot;username;priority&quot;</span>
+</pre></div>
+</div>
+<p>Then in Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="c1"># Token loaded automatically from environment</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="your-first-quantum-job">
+<h1>Your First Quantum Job<a class="headerlink" href="#your-first-quantum-job" title="Link to this heading">#</a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+
+<span class="c1"># Configure API key</span>
+<span class="n">API_KEY</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s2">&quot;Input your TyxonQ API_KEY: &quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create Bell state circuit</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Submit to real quantum hardware</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Wait and get results</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Measurement counts:&quot;</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<span class="c1"># Expected: {&quot;00&quot;: ~50, &quot;11&quot;: ~50} (entangled state with hardware noise)</span>
+</pre></div>
+</div>
+<p><strong>Output Example</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Measurement counts: {&#39;00&#39;: 47, &#39;11&#39;: 53}
+</pre></div>
+</div>
+<p>TyxonQ supports <strong>pulse-level control</strong> through TQASM 0.2 format:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Param</span><span class="p">,</span> <span class="n">waveforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+
+<span class="c1"># Configure API</span>
+<span class="n">API_KEY</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s2">&quot;Input your TyxonQ API_KEY: &quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create pulse-level circuit</span>
+<span class="n">qc</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>  <span class="c1"># Enable pulse mode</span>
+
+<span class="c1"># Define parametric calibration</span>
+<span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;rabi_test&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Add calibration call</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;rabi_test&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">])</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># View generated TQASM 0.2 code</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qc</span><span class="o">.</span><span class="n">to_tqasm</span><span class="p">())</span>
+<span class="c1"># Output:</span>
+<span class="c1"># TQASM 0.2;</span>
+<span class="c1"># QREG q[1];</span>
+<span class="c1"># defcal rabi_test q[0] {</span>
+<span class="c1">#   frame drive_frame = newframe(q[0]);</span>
+<span class="c1">#   play(drive_frame, cosine_drag(50, 0.2, 0.0, 0.0));</span>
+<span class="c1"># }</span>
+<span class="c1"># rabi_test q[0];</span>
+<span class="c1"># MEASZ q[0];</span>
+
+<span class="c1"># Submit to hardware</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">qc</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Keep pulse-level</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rabi oscillation:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Supported Waveforms</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CosineDrag(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma,</span> <span class="pre">beta)</span></code> - Cosine DRAG pulse</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Flattop(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma)</span></code> - Flat-top Gaussian</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Gaussian(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma)</span></code> - Gaussian envelope</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sine(duration,</span> <span class="pre">amp,</span> <span class="pre">phase,</span> <span class="pre">freq,</span> <span class="pre">angle)</span></code> - Sine wave</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Constant(duration,</span> <span class="pre">amp)</span></code> - Constant amplitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GaussianSquare(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma,</span> <span class="pre">width)</span></code> - Gaussian square</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Cosine(duration,</span> <span class="pre">amp,</span> <span class="pre">freq,</span> <span class="pre">phase)</span></code> - Cosine wave</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Drag(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma,</span> <span class="pre">beta)</span></code> - DRAG pulse</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="c1"># Same circuit</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Run on local simulator (ideal)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.runtime.simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span>
+<span class="n">sim_result</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">sim_counts</span> <span class="o">=</span> <span class="n">sim_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+<span class="c1"># Run on real hardware (noisy)</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span>
+<span class="p">)</span>
+<span class="n">hw_counts</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Simulator:&quot;</span><span class="p">,</span> <span class="n">sim_counts</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hardware: &quot;</span><span class="p">,</span> <span class="n">hw_counts</span><span class="p">)</span>
+<span class="c1"># Simulator: Perfect {&quot;00&quot;: 50, &quot;11&quot;: 50}</span>
+<span class="c1"># Hardware:  Noisy {&quot;00&quot;: 47, &quot;01&quot;: 1, &quot;10&quot;: 2, &quot;11&quot;: 50}</span>
+</pre></div>
+</div>
+<p>For long-running jobs, use asynchronous mode:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="n">c</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="c1"># Submit without waiting</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Job submitted: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial status: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Do other work...</span>
+<span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Check if complete</span>
+<span class="n">details</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="n">details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;result_meta&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;raw&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;task&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Wait for completion with timeout</span>
+<span class="n">final_result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">final_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Results:&quot;</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="device-availability">
+<h1>Device Availability<a class="headerlink" href="#device-availability" title="Link to this heading">#</a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="c1"># Configure token first</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">YOUR_API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># List all available devices</span>
+<span class="n">devices</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">list_devices</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Available devices:&quot;</span><span class="p">,</span> <span class="n">devices</span><span class="p">)</span>
+
+<span class="c1"># Output: [&#39;tyxonq::homebrew_s2&#39;, ...]</span>
+</pre></div>
+</div>
+<p>Retrieve detailed device specifications from the cloud:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.devices.hardware.tyxonq.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_properties</span>
+
+<span class="c1"># Get all device properties</span>
+<span class="n">props</span> <span class="o">=</span> <span class="n">list_properties</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">YOUR_API_KEY</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Name: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Qubits: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;qubits&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Queue: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;queue&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Status: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="understanding-results">
+<h1>Understanding Results<a class="headerlink" href="#understanding-results" title="Link to this heading">#</a></h1>
+<p>Cloud jobs return results in the following format:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># From task.results()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;00&quot;</span><span class="p">:</span> <span class="mi">47</span><span class="p">,</span>
+        <span class="s2">&quot;01&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;10&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;11&quot;</span><span class="p">:</span> <span class="mi">50</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;result_meta&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;tyxonq::homebrew_s2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;raw&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;JOB_ID&gt;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;homebrew_s2?o=3&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;qubits&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="s2">&quot;completed&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+                <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;00&quot;</span><span class="p">:</span> <span class="mi">47</span><span class="p">,</span> <span class="s2">&quot;01&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;11&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+                <span class="s2">&quot;ts&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;pending&quot;</span><span class="p">:</span> <span class="mi">1754275502265270</span><span class="p">,</span>
+                    <span class="s2">&quot;scheduled&quot;</span><span class="p">:</span> <span class="mi">1754275502260031</span><span class="p">,</span>
+                    <span class="s2">&quot;completed&quot;</span><span class="p">:</span> <span class="mi">1754275505649825</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;runDur&quot;</span><span class="p">:</span> <span class="mi">2532053</span><span class="p">,</span>
+                <span class="s2">&quot;atChip&quot;</span><span class="p">:</span> <span class="mi">1754275446369691</span><span class="p">,</span>
+                <span class="s2">&quot;durChip&quot;</span><span class="p">:</span> <span class="mi">120185</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+
+<span class="c1"># Compute expectation values</span>
+<span class="n">ez</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;Z0⊗Z1&gt; = </span><span class="si">{</span><span class="n">ez</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Compute fidelity to ideal state</span>
+<span class="n">ideal_counts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;00&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;11&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">}</span>
+<span class="n">fidelity</span> <span class="o">=</span> <span class="n">metrics</span><span class="o">.</span><span class="n">fidelity</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">ideal_counts</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fidelity = </span><span class="si">{</span><span class="n">fidelity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h1>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h1>
+<p><strong>Always test on simulators first</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.runtime.simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span> <span class="k">as</span> <span class="n">sim_run</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="c1"># Debug on local simulator</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">create_complex_circuit</span><span class="p">()</span>
+<span class="n">sim_result</span> <span class="o">=</span> <span class="n">sim_run</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Simulator result:&quot;</span><span class="p">,</span> <span class="n">sim_result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+
+<span class="c1"># Once validated, run on hardware</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">)</span>
+<span class="n">hw_result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hardware result:&quot;</span><span class="p">,</span> <span class="n">hw_result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Use appropriate shot counts</strong>:</p>
+<ul class="simple">
+<li><p><strong>Quick tests</strong>: 100-500 shots</p></li>
+<li><p><strong>Standard runs</strong>: 1000-2000 shots</p></li>
+<li><p><strong>High precision</strong>: 4000-8000 shots</p></li>
+<li><p><strong>Research quality</strong>: 10000+ shots</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Quick validation</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">)</span>
+
+<span class="c1"># Production run</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+<span class="k">except</span> <span class="ne">ConnectionError</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Network error - check connection&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">TimeoutError</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Job timeout - try reducing circuit depth&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Execution error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.devices.hardware.tyxonq.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_properties</span>
+
+<span class="c1"># Check queue before submission</span>
+<span class="n">props</span> <span class="o">=</span> <span class="n">list_properties</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">YOUR_API_KEY</span><span class="p">)</span>
+<span class="n">queue_length</span> <span class="o">=</span> <span class="n">props</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;queue&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">queue_length</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: </span><span class="si">{</span><span class="n">queue_length</span><span class="si">}</span><span class="s2"> jobs in queue&quot;</span><span class="p">)</span>
+
+<span class="c1"># Submit job</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>TyxonQ supports <strong>device-specific optimization flags</strong> via query parameters:</p>
+<p><strong>Optimization Flags</strong> (additive combination):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">o=1</span></code>: <strong>Qubit mapping</strong> - Map logical to physical qubits</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=2</span></code>: <strong>Gate decomposition</strong> - Decompose to native gates</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=4</span></code>: <strong>Initial mapping</strong> - Optimize initial qubit layout</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=7</span></code>: <strong>All optimizations</strong> (1+2+4) - Enable all features</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic qubit mapping only</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=1&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Qubit mapping + gate decomposition (1+2=3)</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=3&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># All optimizations (1+2+4=7)</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Alternatively, use kwargs</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>       <span class="c1"># o=1</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># o=2</span>
+    <span class="n">enable_qos_initial_mapping</span><span class="o">=</span><span class="kc">True</span>      <span class="c1"># o=4</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h1>
+<p><strong>Authentication Failed</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: &quot;Invalid API key&quot; or authentication error</span>
+<span class="c1"># Solution: Verify your token format (should be &quot;username;priority&quot;)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="s2">&quot;username;0&quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test connection</span>
+<span class="n">devices</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">list_devices</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">devices</span><span class="p">)</span>  <span class="c1"># Should list devices if token is valid</span>
+</pre></div>
+</div>
+<p><strong>Device Not Available</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: Device &#39;homebrew_s2&#39; not accessible</span>
+<span class="c1"># Solution: Check access permissions</span>
+<span class="n">devices</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">list_devices</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="s2">&quot;tyxonq::homebrew_s2&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">devices</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hardware access not yet approved&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Visit https://www.tyxonq.com/ to request access&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Job Timeout</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Increase timeout for complex circuits</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span>
+    <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mi">300</span>  <span class="c1"># 5 minutes</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Circuit Compilation Error</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: Submit Task Failed</span>
+<span class="c1"># Solution: Check device properties and optimize circuit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.devices.hardware.tyxonq.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_properties</span>
+
+<span class="n">props</span> <span class="o">=</span> <span class="n">list_properties</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">YOUR_API_KEY</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max qubits: </span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;qubits&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device status: </span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Reduce circuit complexity or wait for device to be online</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h1>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h1>
+<ul class="simple">
+<li><p>📖 Read <a class="reference internal" href="device_management.html"><span class="doc">Device Management</span></a> for advanced device configuration and optimization flags</p></li>
+<li><p>📖 Read <a class="reference internal" href="task_submission.html"><span class="doc">Task Submission</span></a> for detailed task management and monitoring</p></li>
+<li><p>📖 Read <a class="reference internal" href="api_reference.html"><span class="doc">API Reference</span></a> for complete API documentation</p></li>
+<li><p>📖 Read <a class="reference internal" href="hardware_access.html"><span class="doc">Hardware Access</span></a> for Homebrew_S2 specifications and <strong>pulse-level programming</strong></p></li>
+</ul>
+<p><strong>Ready for Pulse-Level Control?</strong></p>
+<p>Check out pulse programming examples:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span><span class="p">,</span> <span class="n">Param</span><span class="p">,</span> <span class="n">waveforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="c1"># Rabi oscillation experiment</span>
+<span class="n">qc</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>
+
+<span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;rabi&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+<span class="c1"># Sweep pulse duration</span>
+<span class="k">for</span> <span class="n">duration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;rabi&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">])</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Submit to hardware</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">qc</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TQASM 0.2 code:</span><span class="se">\n</span><span class="si">{</span><span class="n">qc</span><span class="o">.</span><span class="n">to_tqasm</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Cloud Services</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="device_management.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Device Management</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Getting Started</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Getting Started</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#obtaining-api-access">Obtaining API Access</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#api-configuration">API Configuration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#your-first-quantum-job">Your First Quantum Job</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#device-availability">Device Availability</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#understanding-results">Understanding Results</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/cloud_services/getting_started.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

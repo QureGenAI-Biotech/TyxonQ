@@ -177,12 +177,50 @@ class Circuit:
 
     # ---- Chainable configuration stages ----
     def device(self, **options: Any) -> "Circuit":
-        """Set device options for chainable configuration."""
+        """Configure device execution options for the circuit.
+        
+        This method sets device-related parameters that will be used when the circuit
+        is executed. It supports chainable configuration.
+        
+        Args:
+            **options: Device configuration options. Common options include:
+                provider (str): Execution provider ("simulator", "tyxonq", etc.)
+                device (str): Specific device name ("statevector", "homebrew_s2", etc.)
+                shots (int): Number of measurement shots
+                
+        Returns:
+            Circuit: The same circuit instance with updated device options.
+            
+        Examples:
+            >>> c = Circuit(2)
+            >>> c.h(0).cx(0,1)
+            >>> configured = c.device(provider="simulator", device="statevector", shots=1000)
+            >>> # Chain with execution:
+            >>> result = c.device(shots=100).run()
+        """
         self._device_opts.update(dict(options))
         return self
 
     def postprocessing(self, **options: Any) -> "Circuit":
-        """Set postprocessing options for chainable configuration."""
+        """Configure postprocessing options for measurement results.
+        
+        This method sets postprocessing parameters that will be applied to
+        measurement results after circuit execution.
+        
+        Args:
+            **options: Postprocessing configuration options. Common options include:
+                method (str): Postprocessing method ("readout_mitigation", etc.)
+                
+        Returns:
+            Circuit: The same circuit instance with updated postprocessing options.
+            
+        Examples:
+            >>> c = Circuit(2)
+            >>> c.h(0).cx(0,1).measure_all()
+            >>> configured = c.postprocessing(method="readout_mitigation")
+            >>> # Chain with device and execution:
+            >>> result = c.device(shots=100).postprocessing(method="readout_mitigation").run()
+        """
         self._post_opts.update(dict(options))
         if "method" not in self._post_opts:
             self._post_opts["method"] = None
@@ -190,7 +228,26 @@ class Circuit:
 
     # ---- Lightweight helpers ----
     def gate_count(self, gate_list: Optional[Sequence[str]] = None) -> int:
-        """Count ops by name. If gate_list is provided, count only those (case-insensitive)."""
+        """Count the number of gates in the circuit.
+        
+        Args:
+            gate_list: Optional list of gate names to count. If provided, only
+                gates with names in this list are counted (case-insensitive).
+                If None, returns the total number of gates.
+                
+        Returns:
+            int: Number of gates matching the criteria.
+            
+        Examples:
+            >>> c = Circuit(2)
+            >>> c.h(0).cx(0,1).x(1)
+            >>> c.gate_count()  # Total gates
+            3
+            >>> c.gate_count(["h", "x"])  # Only H and X gates
+            2
+            >>> c.gate_count(["cnot", "cx"])  # CNOT gates (case-insensitive)
+            1
+        """
         if gate_list is None:
             return len(self.ops)
         names = {str(x).lower() for x in (gate_list if isinstance(gate_list, (list, tuple, set)) else [gate_list])}
@@ -201,7 +258,17 @@ class Circuit:
         return count
 
     def gate_summary(self) -> Dict[str, int]:
-        """Return a mapping of op name (lower-case) to frequency."""
+        """Return a summary of gate types and their frequencies.
+        
+        Returns:
+            Dict[str, int]: Mapping from gate name (lowercase) to count.
+            
+        Examples:
+            >>> c = Circuit(3)
+            >>> c.h(0).h(1).cx(0,1).cx(1,2).x(2)
+            >>> c.gate_summary()
+            {'h': 2, 'cx': 2, 'x': 1}
+        """
         summary: Dict[str, int] = {}
         for op in self.ops:
             k = str(op[0]).lower()
@@ -575,6 +642,22 @@ class Circuit:
 
     # ---- Builder-style ergonomic gate helpers (in-place; return self) ----
     def h(self, q: int):
+        """Apply Hadamard gate to qubit q.
+        
+        The Hadamard gate creates superposition by mapping |0⟩ → (|0⟩ + |1⟩)/√2
+        and |1⟩ → (|0⟩ - |1⟩)/√2. It's fundamental for quantum algorithms.
+        
+        Args:
+            q (int): Target qubit index (0-based).
+            
+        Returns:
+            Circuit: Self for method chaining.
+            
+        Examples:
+            >>> c = Circuit(2)
+            >>> c.h(0)  # Create superposition on qubit 0
+            >>> c.h(0).h(1)  # Chain operations
+        """
         self.ops.append(("h", int(q)))
         return self
 
@@ -582,6 +665,27 @@ class Circuit:
         return self.h(q)
 
     def rz(self, q: int, theta: Any):
+        """Apply RZ rotation gate around Z-axis to qubit q.
+        
+        The RZ gate implements a rotation by angle theta around the Z-axis:
+        RZ(θ) = exp(-iθZ/2) = [[e^(-iθ/2), 0], [0, e^(iθ/2)]]
+        
+        This gate only changes the relative phase between |0⟩ and |1⟩ states
+        without affecting computational basis probabilities.
+        
+        Args:
+            q (int): Target qubit index (0-based).
+            theta (Any): Rotation angle in radians. Can be a float, parameter, or expression.
+            
+        Returns:
+            Circuit: Self for method chaining.
+            
+        Examples:
+            >>> import numpy as np
+            >>> c = Circuit(1)
+            >>> c.rz(0, np.pi/4)  # π/4 rotation
+            >>> c.rz(0, 'theta')  # Parameterized rotation
+        """
         self.ops.append(("rz", int(q), theta))
         return self
 
@@ -596,6 +700,30 @@ class Circuit:
         return self.rx(q, theta)
 
     def cx(self, c: int, t: int):
+        """Apply controlled-X (CNOT) gate between control and target qubits.
+        
+        The CNOT gate flips the target qubit if and only if the control qubit is |1⟩:
+        CNOT|00⟩ = |00⟩, CNOT|01⟩ = |01⟩, CNOT|10⟩ = |11⟩, CNOT|11⟩ = |10⟩
+        
+        This is the fundamental two-qubit gate for creating entanglement and
+        implementing classical logic operations in quantum circuits.
+        
+        Args:
+            c (int): Control qubit index (0-based).
+            t (int): Target qubit index (0-based).
+            
+        Returns:
+            Circuit: Self for method chaining.
+            
+        Examples:
+            >>> # Create Bell state
+            >>> c = Circuit(2)
+            >>> c.h(0).cx(0, 1)  # |00⟩ + |11⟩
+            >>> 
+            >>> # Chain multiple CNOTs
+            >>> c = Circuit(3)
+            >>> c.cx(0, 1).cx(1, 2)  # Linear entanglement
+        """
         self.ops.append(("cx", int(c), int(t)))
         return self
 
@@ -609,6 +737,29 @@ class Circuit:
         return self.cx(c, t)
 
     def measure_z(self, q: int):
+        """Add Z-basis measurement instruction for qubit q.
+        
+        Measures the qubit in the computational basis {|0⟩, |1⟩}, collapsing
+        the quantum state and producing a classical bit outcome.
+        
+        Note: This adds a measurement instruction to the circuit but does not
+        immediately execute it. The measurement occurs during circuit execution.
+        
+        Args:
+            q (int): Target qubit index (0-based) to measure.
+            
+        Returns:
+            Circuit: Self for method chaining.
+            
+        Examples:
+            >>> c = Circuit(2)
+            >>> c.h(0).cx(0, 1)  # Create Bell state
+            >>> c.measure_z(0).measure_z(1)  # Measure both qubits
+            >>> 
+            >>> # Measure all qubits in a loop
+            >>> for i in range(c.num_qubits):
+            ...     c.measure_z(i)
+        """
         self.ops.append(("measure_z", int(q)))
         return self
 
@@ -730,11 +881,38 @@ class Circuit:
 
 @dataclass
 class Hamiltonian:
-    """IR for a Hamiltonian.
+    """Intermediate representation for a quantum Hamiltonian operator.
 
-    The `terms` field may contain a backend-specific structure, such as a
-    Pauli-sum, sparse representation, or dense matrix. The type is intentionally
-    loose at this stage and will be specialized by compiler stages or devices.
+    This class serves as a flexible container for representing quantum Hamiltonians
+    in TyxonQ's compilation pipeline. The Hamiltonian can be encoded in various
+    formats depending on the backend and compilation target.
+
+    Attributes:
+        terms (Any): Backend-specific representation of the Hamiltonian terms.
+            This may be:
+            - A Pauli operator sum for symbolic manipulation
+            - A sparse matrix representation for efficient storage
+            - A dense matrix for direct numerical computation
+            - A list of (coefficient, pauli_string) tuples
+            
+    The intentionally loose typing allows different compiler stages and devices
+    to specialize the representation as needed while maintaining a common interface.
+    
+    Examples:
+        >>> # Pauli string representation (commonly used)
+        >>> h = Hamiltonian()
+        >>> h.terms = [(0.5, [('Z', 0)]), (0.3, [('X', 0), ('X', 1)])]
+        
+        >>> # Dense matrix representation
+        >>> import numpy as np
+        >>> h = Hamiltonian()
+        >>> h.terms = np.array([[1, 0], [0, -1]])  # Pauli-Z matrix
+        
+    See Also:
+        tyxonq.libs.hamiltonian_encoding: Functions for converting between different
+            Hamiltonian representations (Jordan-Wigner, Bravyi-Kitaev, etc.).
+        tyxonq.applications.chem: Quantum chemistry applications that construct
+            molecular Hamiltonians.
     """
 
     terms: Any

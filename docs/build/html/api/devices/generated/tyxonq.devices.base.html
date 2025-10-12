@@ -1,0 +1,905 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>tyxonq.devices.base &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/devices/generated/tyxonq.devices.base';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">tyxonq.devices.base</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-tyxonq.devices.base">
+<span id="tyxonq-devices-base"></span><h1>tyxonq.devices.base<a class="headerlink" href="#module-tyxonq.devices.base" title="Link to this heading">#</a></h1>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.device_descriptor" title="tyxonq.devices.base.device_descriptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">device_descriptor</span></code></a>([name, provider, id, shots])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.enable_noise" title="tyxonq.devices.base.enable_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enable_noise</span></code></a>([enabled, config])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.expval" title="tyxonq.devices.base.expval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expval</span></code></a>(*[, provider, device, circuit, ...])</p></td>
+<td><p>Unified analytic expectation for simulator/local (shots==0 fast path).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.get_noise_config" title="tyxonq.devices.base.get_noise_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_noise_config</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.get_task_details" title="tyxonq.devices.base.get_task_details"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_task_details</span></code></a>(task, *[, wait, ...])</p></td>
+<td><p>Get task details with optional polling, and unify result format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.init" title="tyxonq.devices.base.init"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init</span></code></a>(*[, provider, device, token])</p></td>
+<td><p>Initialize default provider/device and optionally set token.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.is_noise_enabled" title="tyxonq.devices.base.is_noise_enabled"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_noise_enabled</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.list_all_devices" title="tyxonq.devices.base.list_all_devices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_all_devices</span></code></a>(*[, provider, token])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.remove_task" title="tyxonq.devices.base.remove_task"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_task</span></code></a>(task)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.resolve_driver" title="tyxonq.devices.base.resolve_driver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_driver</span></code></a>(provider, device)</p></td>
+<td><p>Resolve and return the appropriate device driver for a given provider.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.run" title="tyxonq.devices.base.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run</span></code></a>(*[, provider, device, circuit, source, ...])</p></td>
+<td><p>Unified device-level selector to execute circuits or sources.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.Device" title="tyxonq.devices.base.Device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Device</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Execution device protocol.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.DeviceRule" title="tyxonq.devices.base.DeviceRule"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeviceRule</span></code></a></p></td>
+<td><p>Declarative device capabilities description.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.devices.base.DeviceTask" title="tyxonq.devices.base.DeviceTask"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeviceTask</span></code></a>(provider, device, handle, ...)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tyxonq.devices.base.RunResult" title="tyxonq.devices.base.RunResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RunResult</span></code></a></p></td>
+<td><p>Structured run result returned by <cite>Device.run</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">DeviceTask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'str'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'str'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'Any'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#DeviceTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.DeviceTask" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.provider">
+<span class="sig-name descname"><span class="pre">provider</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.provider" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.device">
+<span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.device" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.handle">
+<span class="sig-name descname"><span class="pre">handle</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.handle" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.async_result">
+<span class="sig-name descname"><span class="pre">async_result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.async_result" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.get_result">
+<span class="sig-name descname"><span class="pre">get_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#DeviceTask.get_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.get_result" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.cancel">
+<span class="sig-name descname"><span class="pre">cancel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#DeviceTask.cancel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.cancel" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceTask.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_result</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.devices.base.DeviceTask.__init__" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceRule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">DeviceRule</span></span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#DeviceRule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.DeviceRule" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypedDict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></a></p>
+<p>Declarative device capabilities description.</p>
+<p>Keys are optional to keep forward compatibility. Concrete devices may
+expose additional metadata fields as needed.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceRule.native_gates">
+<span class="sig-name descname"><span class="pre">native_gates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.14)"><span class="pre">set</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tyxonq.devices.base.DeviceRule.native_gates" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceRule.max_qubits">
+<span class="sig-name descname"><span class="pre">max_qubits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceRule.max_qubits" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceRule.connectivity">
+<span class="sig-name descname"><span class="pre">connectivity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceRule.connectivity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceRule.supports_shots">
+<span class="sig-name descname"><span class="pre">supports_shots</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceRule.supports_shots" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.DeviceRule.supports_batch">
+<span class="sig-name descname"><span class="pre">supports_batch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></em><a class="headerlink" href="#tyxonq.devices.base.DeviceRule.supports_batch" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.devices.base.RunResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">RunResult</span></span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#RunResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.RunResult" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypedDict" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypedDict</span></code></a></p>
+<p>Structured run result returned by <cite>Device.run</cite>.</p>
+<p>Optional keys allow devices to report varying levels of detail while
+preserving a common contract for downstream processing.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.RunResult.samples">
+<span class="sig-name descname"><span class="pre">samples</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.devices.base.RunResult.samples" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.RunResult.expectations">
+<span class="sig-name descname"><span class="pre">expectations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tyxonq.devices.base.RunResult.expectations" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.RunResult.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#tyxonq.devices.base.RunResult.metadata" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.devices.base.Device">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">Device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#Device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.Device" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Execution device protocol.</p>
+<p>A device is responsible for running compiled circuits, sampling, and
+computing expectation values.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.Device.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#tyxonq.devices.base.Device.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.devices.base.Device.device_rule">
+<span class="sig-name descname"><span class="pre">device_rule</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#tyxonq.devices.base.DeviceRule" title="tyxonq.devices.base.DeviceRule"><span class="pre">DeviceRule</span></a></em><a class="headerlink" href="#tyxonq.devices.base.Device.device_rule" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.devices.base.Device.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#Device.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.Device.run" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.devices.base.Device.expval">
+<span class="sig-name descname"><span class="pre">expval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#Device.expval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.Device.expval" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.devices.base.Device.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.devices.base.Device.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.device_descriptor">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">device_descriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#device_descriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.device_descriptor" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.resolve_driver">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">resolve_driver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">provider</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#resolve_driver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.resolve_driver" title="Link to this definition">#</a></dt>
+<dd><p>Resolve and return the appropriate device driver for a given provider.</p>
+<p>This function provides a factory interface for accessing different quantum
+device drivers based on the provider and device specification. It abstracts
+the complexity of driver instantiation and enables uniform access to
+simulators, local devices, and cloud-based quantum hardware.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>provider</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – The quantum computing provider identifier.
+Supported providers:
+- “simulator” or “local”: Local quantum simulators
+- “tyxonq”: TyxonQ quantum hardware platform
+- “ibm”: IBM Quantum devices and simulators</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Specific device identifier within the provider.
+The device string format depends on the provider:
+- Simulator: “statevector”, “density_matrix”, “qasm_simulator”
+- TyxonQ: “homebrew_s2”, “homebrew_s1”, etc.
+- IBM: “ibm_brisbane”, “ibm_kyoto”, “simulator_mps”, etc.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A driver instance that implements the quantum device</dt><dd><p>interface for circuit execution, task management, and result retrieval.
+The driver provides methods such as:
+- run_circuit(): Execute quantum circuits
+- get_task_details(): Retrieve execution status
+- cancel_task(): Cancel running jobs
+- get_device_properties(): Hardware specifications</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>DeviceDriver</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If the specified provider is not supported or available.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ImportError" title="(in Python v3.14)"><strong>ImportError</strong></a> – If the required driver module cannot be imported
+    (e.g., missing dependencies for IBM Quantum).</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get local simulator driver</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sim_driver</span> <span class="o">=</span> <span class="n">resolve_driver</span><span class="p">(</span><span class="s2">&quot;simulator&quot;</span><span class="p">,</span> <span class="s2">&quot;statevector&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">sim_driver</span><span class="o">.</span><span class="n">run_circuit</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access TyxonQ hardware</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hw_driver</span> <span class="o">=</span> <span class="n">resolve_driver</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">,</span> <span class="s2">&quot;homebrew_s2&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">task</span> <span class="o">=</span> <span class="n">hw_driver</span><span class="o">.</span><span class="n">run_circuit</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">status</span> <span class="o">=</span> <span class="n">hw_driver</span><span class="o">.</span><span class="n">get_task_details</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Connect to IBM Quantum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ibm_driver</span> <span class="o">=</span> <span class="n">resolve_driver</span><span class="p">(</span><span class="s2">&quot;ibm&quot;</span><span class="p">,</span> <span class="s2">&quot;ibm_brisbane&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">properties</span> <span class="o">=</span> <span class="n">ibm_driver</span><span class="o">.</span><span class="n">get_device_properties</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device qubits: </span><span class="si">{</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;n_qubits&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Provider Details:</dt><dd><dl class="simple">
+<dt><strong>Simulator/Local Provider</strong>:</dt><dd><ul class="simple">
+<li><p>Provides high-performance local simulation</p></li>
+<li><p>Supports statevector, density matrix, and sampling methods</p></li>
+<li><p>No network connectivity required</p></li>
+<li><p>Ideal for algorithm development and testing</p></li>
+</ul>
+</dd>
+<dt><strong>TyxonQ Provider</strong>:</dt><dd><ul class="simple">
+<li><p>Access to TyxonQ quantum hardware platform</p></li>
+<li><p>Supports pulse-level control via TQASM</p></li>
+<li><p>Includes device-specific optimization flags</p></li>
+<li><p>Requires valid authentication tokens</p></li>
+</ul>
+</dd>
+<dt><strong>IBM Provider</strong>:</dt><dd><ul class="simple">
+<li><p>Integration with IBM Quantum Network</p></li>
+<li><p>Access to real quantum hardware and cloud simulators</p></li>
+<li><p>Requires IBM Quantum account and qiskit-ibm-provider</p></li>
+<li><p>Supports advanced device features and error mitigation</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Driver selection affects execution performance and capabilities</p></li>
+<li><p>Some providers require additional authentication setup</p></li>
+<li><p>Device availability may vary based on maintenance schedules</p></li>
+<li><p>Driver interfaces are standardized for cross-provider compatibility</p></li>
+</ul>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>tyxonq.devices.simulators: Local simulator implementations.
+tyxonq.devices.hardware: Hardware device drivers.
+tyxonq.cloud.api: High-level cloud execution interface.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.init">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.init" title="Link to this definition">#</a></dt>
+<dd><p>Initialize default provider/device and optionally set token.</p>
+<p>This is a light wrapper around hardware.config helpers.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.enable_noise">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">enable_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#enable_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.enable_noise" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.is_noise_enabled">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">is_noise_enabled</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#is_noise_enabled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.is_noise_enabled" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.get_noise_config">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">get_noise_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#get_noise_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.get_noise_config" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.run">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.run" title="Link to this definition">#</a></dt>
+<dd><p>Unified device-level selector to execute circuits or sources.</p>
+<p>Responsibilities:
+- Choose driver via provider/device defaults
+- If <cite>source</cite> provided, submit directly (no compilation here)
+- If <cite>circuit</cite> provided:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>simulator/local: call simulator driver run</p></li>
+<li><p>hardware: require caller to have compiled to <cite>source</cite></p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>Normalize return: single submission -&gt; single task; batch -&gt; list of tasks</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>task.async_result=False (simulator): get_results() returns final result immediately</p></li>
+<li><p>task.async_result=True (hardware): get_results(wait=True) polls until completion</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="#tyxonq.devices.base.DeviceTask" title="tyxonq.devices.base.DeviceTask">DeviceTask</a>] Unified task-handle wrapper</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.expval">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">expval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">circuit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">opts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#expval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.expval" title="Link to this definition">#</a></dt>
+<dd><p>Unified analytic expectation for simulator/local (shots==0 fast path).</p>
+<p>Routes to specific simulator driver which calls engine.expval.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.list_all_devices">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">list_all_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kws</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#list_all_devices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.list_all_devices" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.get_task_details">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">get_task_details</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#get_task_details"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.get_task_details" title="Link to this definition">#</a></dt>
+<dd><p>Get task details with optional polling, and unify result format.</p>
+<dl>
+<dt>Unified return format:</dt><dd><dl class="simple">
+<dt>{</dt><dd><p>‘result’: Dict[str, int],      # normalized counts like {‘00’: 51, ‘11’: 49}
+‘result_meta’: Dict[str, Any], # original driver payload</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.devices.base.remove_task">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.devices.base.</span></span><span class="sig-name descname"><span class="pre">remove_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/devices/base.html#remove_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.devices.base.remove_task" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask"><code class="docutils literal notranslate"><span class="pre">DeviceTask</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.provider"><code class="docutils literal notranslate"><span class="pre">DeviceTask.provider</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.device"><code class="docutils literal notranslate"><span class="pre">DeviceTask.device</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.handle"><code class="docutils literal notranslate"><span class="pre">DeviceTask.handle</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.async_result"><code class="docutils literal notranslate"><span class="pre">DeviceTask.async_result</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.get_result"><code class="docutils literal notranslate"><span class="pre">DeviceTask.get_result()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.cancel"><code class="docutils literal notranslate"><span class="pre">DeviceTask.cancel()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceTask.__init__"><code class="docutils literal notranslate"><span class="pre">DeviceTask.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceRule"><code class="docutils literal notranslate"><span class="pre">DeviceRule</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceRule.native_gates"><code class="docutils literal notranslate"><span class="pre">DeviceRule.native_gates</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceRule.max_qubits"><code class="docutils literal notranslate"><span class="pre">DeviceRule.max_qubits</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceRule.connectivity"><code class="docutils literal notranslate"><span class="pre">DeviceRule.connectivity</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceRule.supports_shots"><code class="docutils literal notranslate"><span class="pre">DeviceRule.supports_shots</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.DeviceRule.supports_batch"><code class="docutils literal notranslate"><span class="pre">DeviceRule.supports_batch</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.RunResult"><code class="docutils literal notranslate"><span class="pre">RunResult</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.RunResult.samples"><code class="docutils literal notranslate"><span class="pre">RunResult.samples</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.RunResult.expectations"><code class="docutils literal notranslate"><span class="pre">RunResult.expectations</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.RunResult.metadata"><code class="docutils literal notranslate"><span class="pre">RunResult.metadata</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.Device.name"><code class="docutils literal notranslate"><span class="pre">Device.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.Device.device_rule"><code class="docutils literal notranslate"><span class="pre">Device.device_rule</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.Device.run"><code class="docutils literal notranslate"><span class="pre">Device.run()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.Device.expval"><code class="docutils literal notranslate"><span class="pre">Device.expval()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.Device.__init__"><code class="docutils literal notranslate"><span class="pre">Device.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.device_descriptor"><code class="docutils literal notranslate"><span class="pre">device_descriptor()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.resolve_driver"><code class="docutils literal notranslate"><span class="pre">resolve_driver()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.enable_noise"><code class="docutils literal notranslate"><span class="pre">enable_noise()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.is_noise_enabled"><code class="docutils literal notranslate"><span class="pre">is_noise_enabled()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.get_noise_config"><code class="docutils literal notranslate"><span class="pre">get_noise_config()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.run"><code class="docutils literal notranslate"><span class="pre">run()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.expval"><code class="docutils literal notranslate"><span class="pre">expval()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.list_all_devices"><code class="docutils literal notranslate"><span class="pre">list_all_devices()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.get_task_details"><code class="docutils literal notranslate"><span class="pre">get_task_details()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.devices.base.remove_task"><code class="docutils literal notranslate"><span class="pre">remove_task()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/api/devices/generated/tyxonq.devices.base.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

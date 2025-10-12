@@ -1,0 +1,970 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Basic Examples &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/basic_examples';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Quantum Chemistry Examples" href="chemistry_examples.html" />
+    <link rel="prev" title="Examples" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Basic Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chemistry_examples.html">Quantum Chemistry Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_examples.html">Optimization Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud_examples.html">Cloud Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_examples.html">Advanced Examples</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Basic Examples</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="basic-examples">
+<h1>Basic Examples<a class="headerlink" href="#basic-examples" title="Link to this heading">#</a></h1>
+<p>This section provides fundamental usage examples of TyxonQ to help you get started quickly.</p>
+<nav class="contents local" id="examples-list">
+<p class="topic-title">Examples List</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#bell-state-creation" id="id5">Bell State Creation</a></p></li>
+<li><p><a class="reference internal" href="#ghz-state-generation" id="id6">GHZ State Generation</a></p></li>
+<li><p><a class="reference internal" href="#parameterized-circuits" id="id7">Parameterized Circuits</a></p></li>
+<li><p><a class="reference internal" href="#quantum-fourier-transform" id="id8">Quantum Fourier Transform</a></p></li>
+<li><p><a class="reference internal" href="#random-circuit-sampling" id="id9">Random Circuit Sampling</a></p></li>
+<li><p><a class="reference internal" href="#circuit-composition-example" id="id10">Circuit Composition Example</a></p></li>
+<li><p><a class="reference internal" href="#circuit-visualization-and-analysis" id="id11">Circuit Visualization and Analysis</a></p></li>
+<li><p><a class="reference internal" href="#performance-testing-example" id="id12">Performance Testing Example</a></p></li>
+<li><p><a class="reference internal" href="#complete-application-example" id="id13">Complete Application Example</a></p></li>
+<li><p><a class="reference internal" href="#advanced-circuit-patterns" id="id14">Advanced Circuit Patterns</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-circuit-with-barriers" id="id15">Example: Circuit with Barriers</a></p></li>
+<li><p><a class="reference internal" href="#example-conditional-operations" id="id16">Example: Conditional Operations</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tips-and-best-practices" id="id17">Tips and Best Practices</a></p></li>
+<li><p><a class="reference internal" href="#troubleshooting-common-issues" id="id18">Troubleshooting Common Issues</a></p></li>
+<li><p><a class="reference internal" href="#see-also" id="id19">See Also</a></p></li>
+<li><p><a class="reference internal" href="#next-steps" id="id20">Next Steps</a></p></li>
+</ul>
+</nav>
+<section id="bell-state-creation">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Bell State Creation</a><a class="headerlink" href="#bell-state-creation" title="Link to this heading">#</a></h2>
+<p>Create the simplest entangled state:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_bell_state</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create Bell state (|00⟩ + |11⟩)/√2&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>        <span class="c1"># Create superposition</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Create entanglement</span>
+
+    <span class="c1"># Add measurements</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="c1"># Execute circuit</span>
+<span class="n">bell_circuit</span> <span class="o">=</span> <span class="n">create_bell_state</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bell_circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Measurement results:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="c1"># Expected output: {&#39;00&#39;: ~500, &#39;11&#39;: ~500}</span>
+</pre></div>
+</div>
+<p><strong>Explanation</strong>:</p>
+<ul class="simple">
+<li><p>The Hadamard gate creates superposition on qubit 0</p></li>
+<li><p>CNOT entangles qubits 0 and 1</p></li>
+<li><p>Measurements collapse to either <a href="#id1"><span class="problematic" id="id2">|</span></a>00⟩ or <a href="#id3"><span class="problematic" id="id4">|</span></a>11⟩ with equal probability</p></li>
+</ul>
+</section>
+<section id="ghz-state-generation">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">GHZ State Generation</a><a class="headerlink" href="#ghz-state-generation" title="Link to this heading">#</a></h2>
+<p>Create multi-qubit GHZ states:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_ghz_state</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create n-qubit GHZ state&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Superposition on first qubit</span>
+
+    <span class="c1"># Entangle all qubits</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="c1"># Create 3-qubit GHZ state</span>
+<span class="n">ghz3</span> <span class="o">=</span> <span class="n">create_ghz_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Add measurements</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">ghz3</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">ghz3</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;GHZ state results:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+<span class="c1"># Expected output: {&#39;000&#39;: ~500, &#39;111&#39;: ~500}</span>
+</pre></div>
+</div>
+<p><strong>GHZ State Properties</strong>:</p>
+<ul class="simple">
+<li><p>Maximally entangled multi-qubit state</p></li>
+<li><p>Measurement outcomes are perfectly correlated</p></li>
+<li><p>Used in quantum communication and error correction</p></li>
+</ul>
+</section>
+<section id="parameterized-circuits">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Parameterized Circuits</a><a class="headerlink" href="#parameterized-circuits" title="Link to this heading">#</a></h2>
+<p>Build flexible circuits with parameterized gates:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parametrized_circuit</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parameterized quantum circuit&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Parameterized rotation gates</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Entangling gate</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># More parameterized gates</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="c1"># Use random parameters</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">parametrized_circuit</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using parameters: </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Use Cases</strong>:</p>
+<ul class="simple">
+<li><p>Variational quantum algorithms (VQE, QAOA)</p></li>
+<li><p>Quantum machine learning</p></li>
+<li><p>Circuit optimization and training</p></li>
+</ul>
+</section>
+<section id="quantum-fourier-transform">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Quantum Fourier Transform</a><a class="headerlink" href="#quantum-fourier-transform" title="Link to this heading">#</a></h2>
+<p>Implement simplified QFT algorithm:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">qft_circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantum Fourier Transform circuit&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">):</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="n">j</span><span class="p">))</span>
+            <span class="c1"># Simplified: using RZ gate instead of controlled phase gate</span>
+            <span class="n">circuit</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">angle</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="c1"># Create 3-qubit QFT</span>
+<span class="n">qft_3</span> <span class="o">=</span> <span class="n">qft_circuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;QFT circuit gate count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">qft_3</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Applications</strong>:</p>
+<ul class="simple">
+<li><p>Shor’s algorithm</p></li>
+<li><p>Quantum phase estimation</p></li>
+<li><p>Signal processing</p></li>
+</ul>
+</section>
+<section id="random-circuit-sampling">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Random Circuit Sampling</a><a class="headerlink" href="#random-circuit-sampling" title="Link to this heading">#</a></h2>
+<p>Generate and test random circuits:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">random_circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate random quantum circuit&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">)</span>
+    <span class="n">gates</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">depth</span><span class="p">):</span>
+        <span class="c1"># Random single-qubit gates</span>
+        <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">gates</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">gate</span> <span class="o">==</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span>
+                <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">gate</span> <span class="o">==</span> <span class="s1">&#39;x&#39;</span><span class="p">:</span>
+                <span class="n">circuit</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">gate</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                <span class="n">circuit</span><span class="o">.</span><span class="n">y</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">gate</span> <span class="o">==</span> <span class="s1">&#39;z&#39;</span><span class="p">:</span>
+                <span class="n">circuit</span><span class="o">.</span><span class="n">z</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+
+        <span class="c1"># Random two-qubit gates</span>
+        <span class="k">if</span> <span class="n">n_qubits</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="c1"># Generate random circuit</span>
+<span class="n">random_circ</span> <span class="o">=</span> <span class="n">random_circuit</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Random circuit gate count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">random_circ</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Use Cases</strong>:</p>
+<ul class="simple">
+<li><p>Quantum supremacy experiments</p></li>
+<li><p>Benchmarking quantum devices</p></li>
+<li><p>Testing circuit compilation</p></li>
+</ul>
+</section>
+<section id="circuit-composition-example">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">Circuit Composition Example</a><a class="headerlink" href="#circuit-composition-example" title="Link to this heading">#</a></h2>
+<p>Combine multiple circuits into more complex ones:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_complex_circuit</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compose multiple basic circuits&quot;&quot;&quot;</span>
+    <span class="c1"># Basic circuit 1: Bell state</span>
+    <span class="n">bell</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Basic circuit 2: Single-qubit rotation</span>
+    <span class="n">rotation</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="c1"># Compose circuits</span>
+    <span class="c1"># Apply rotation circuit to the second qubit of bell circuit</span>
+    <span class="n">combined</span> <span class="o">=</span> <span class="n">bell</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">rotation</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">combined</span>
+
+<span class="n">complex_circuit</span> <span class="o">=</span> <span class="n">create_complex_circuit</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Combined circuit gate count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">complex_circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Circuit summary: </span><span class="si">{</span><span class="n">complex_circuit</span><span class="o">.</span><span class="n">gate_summary</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Benefits</strong>:</p>
+<ul class="simple">
+<li><p>Modular circuit design</p></li>
+<li><p>Reusable circuit components</p></li>
+<li><p>Easier debugging and testing</p></li>
+</ul>
+</section>
+<section id="circuit-visualization-and-analysis">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Circuit Visualization and Analysis</a><a class="headerlink" href="#circuit-visualization-and-analysis" title="Link to this heading">#</a></h2>
+<p>Analyze circuit properties and results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">analyze_circuit</span><span class="p">(</span><span class="n">circuit</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analyze circuit properties&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Circuit Analysis:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Number of qubits: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Total gate count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Gate type statistics: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">gate_summary</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check for measurements</span>
+    <span class="n">has_measurement</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;measure&#39;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Contains measurements: </span><span class="si">{</span><span class="n">has_measurement</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="c1"># Analyze Bell state circuit</span>
+<span class="n">bell</span> <span class="o">=</span> <span class="n">create_bell_state</span><span class="p">()</span>
+<span class="n">analyze_circuit</span><span class="p">(</span><span class="n">bell</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Output Example</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Circuit Analysis:
+  Number of qubits: 2
+  Total gate count: 4
+  Gate type statistics: {&#39;H&#39;: 1, &#39;CNOT&#39;: 1, &#39;MEASURE_Z&#39;: 2}
+  Contains measurements: True
+</pre></div>
+</div>
+</section>
+<section id="performance-testing-example">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Performance Testing Example</a><a class="headerlink" href="#performance-testing-example" title="Link to this heading">#</a></h2>
+<p>Test performance across different devices:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">performance_test</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performance testing example&quot;&quot;&quot;</span>
+    <span class="c1"># Create test circuit</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">create_ghz_state</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="n">devices</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;statevector&#39;</span><span class="p">,</span> <span class="s1">&#39;density_matrix&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">devices</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">end_time</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start_time</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="s2">: Failed - </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Run performance test</span>
+<span class="n">performance_test</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Expected Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>statevector: 0.0234 seconds
+density_matrix: 0.1456 seconds
+</pre></div>
+</div>
+<p><strong>Insights</strong>:</p>
+<ul class="simple">
+<li><p>Statevector simulation is fastest for pure states</p></li>
+<li><p>Density matrix needed for mixed states and noise</p></li>
+<li><p>Scale testing helps choose appropriate backend</p></li>
+</ul>
+</section>
+<section id="complete-application-example">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Complete Application Example</a><a class="headerlink" href="#complete-application-example" title="Link to this heading">#</a></h2>
+<p>A comprehensive example combining multiple concepts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">complete_example</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complete TyxonQ application example&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Starting complete example...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 1. Create parameterized circuit</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">6</span><span class="p">]</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># Initialize superposition</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># Parameterized gates</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="c1"># Entangling operations</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Measurements</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># 2. Execute and analyze</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Circuit Information:&quot;</span><span class="p">)</span>
+    <span class="n">analyze_circuit</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+
+    <span class="c1"># 3. Execute on different devices</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Execution Results:&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Statevector results: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span><span class="p">,</span> <span class="n">result</span>
+
+<span class="c1"># Run complete example</span>
+<span class="n">final_circuit</span><span class="p">,</span> <span class="n">final_result</span> <span class="o">=</span> <span class="n">complete_example</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Expected Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Starting complete example...
+
+Circuit Information:
+  Number of qubits: 3
+  Total gate count: 11
+  Gate type statistics: {&#39;H&#39;: 3, &#39;RY&#39;: 3, &#39;CNOT&#39;: 2, &#39;MEASURE_Z&#39;: 3}
+  Contains measurements: True
+
+Execution Results:
+Statevector results: {&#39;000&#39;: 245, &#39;001&#39;: 123, &#39;010&#39;: 98, ...}
+</pre></div>
+</div>
+</section>
+<section id="advanced-circuit-patterns">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Advanced Circuit Patterns</a><a class="headerlink" href="#advanced-circuit-patterns" title="Link to this heading">#</a></h2>
+<section id="example-circuit-with-barriers">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Example: Circuit with Barriers</a><a class="headerlink" href="#example-circuit-with-barriers" title="Link to this heading">#</a></h3>
+<p>Use barriers to organize circuit execution:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">circuit_with_barriers</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Circuit using barriers for organization&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># Preparation layer</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>  <span class="c1"># Mark section boundary</span>
+
+    <span class="c1"># Entanglement layer</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+    <span class="c1"># Measurement layer</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="n">barrier_circuit</span> <span class="o">=</span> <span class="n">circuit_with_barriers</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Benefits of Barriers</strong>:</p>
+<ul class="simple">
+<li><p>Visual organization in circuit diagrams</p></li>
+<li><p>Prevent unwanted gate optimization across sections</p></li>
+<li><p>Document circuit structure</p></li>
+</ul>
+</section>
+<section id="example-conditional-operations">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Example: Conditional Operations</a><a class="headerlink" href="#example-conditional-operations" title="Link to this heading">#</a></h3>
+<p>Implement classical feedback based on measurements:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">conditional_circuit</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Circuit with conditional operations&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Prepare first qubit</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Conditional X gate on second qubit</span>
+    <span class="c1"># (requires circuit.conditional or if_measure methods)</span>
+    <span class="c1"># Simplified example:</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Would be conditional on measurement of qubit 0</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tips-and-best-practices">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Tips and Best Practices</a><a class="headerlink" href="#tips-and-best-practices" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Start Simple</strong>: Begin with small circuits and gradually increase complexity</p></li>
+<li><p><strong>Use Visualization</strong>: Analyze circuits before execution</p></li>
+<li><p><strong>Choose Right Device</strong>:</p>
+<ul class="simple">
+<li><p>Statevector: Fast, exact for pure states</p></li>
+<li><p>Density matrix: Handles noise and mixed states</p></li>
+<li><p>MPS: Efficient for low-entanglement circuits</p></li>
+</ul>
+</li>
+<li><p><strong>Monitor Performance</strong>: Test circuit scaling early</p></li>
+<li><p><strong>Modular Design</strong>: Break complex circuits into reusable components</p></li>
+</ol>
+</section>
+<section id="troubleshooting-common-issues">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Troubleshooting Common Issues</a><a class="headerlink" href="#troubleshooting-common-issues" title="Link to this heading">#</a></h2>
+<p><strong>Issue 1: Circuit too deep</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Use circuit compilation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">compile_circuit</span>
+
+<span class="n">deep_circuit</span> <span class="o">=</span> <span class="n">create_complex_circuit</span><span class="p">()</span>
+<span class="n">optimized</span> <span class="o">=</span> <span class="n">compile_circuit</span><span class="p">(</span><span class="n">deep_circuit</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">deep_circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimized gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">optimized</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Issue 2: Memory errors for large circuits</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Use MPS simulator for larger systems</span>
+<span class="n">large_circuit</span> <span class="o">=</span> <span class="n">create_ghz_state</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">large_circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;mps&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Issue 3: Slow execution</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Reduce shots for testing</span>
+<span class="n">test_circuit</span> <span class="o">=</span> <span class="n">random_circuit</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">quick_result</span> <span class="o">=</span> <span class="n">test_circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>  <span class="c1"># Fast testing</span>
+<span class="n">final_result</span> <span class="o">=</span> <span class="n">test_circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>  <span class="c1"># Production</span>
+</pre></div>
+</div>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../getting_started/first_circuit.html"><span class="doc">Your First Quantum Circuit</span></a> - First circuit tutorial</p></li>
+<li><p><a class="reference internal" href="chemistry_examples.html"><span class="doc">Quantum Chemistry Examples</span></a> - Quantum chemistry examples</p></li>
+<li><p><a class="reference internal" href="optimization_examples.html"><span class="doc">Optimization Examples</span></a> - Optimization algorithms</p></li>
+<li><p><a class="reference internal" href="../user_guide/core/index.html"><span class="doc">Core Module</span></a> - Core module guide</p></li>
+<li><p><a class="reference internal" href="../api/core/index.html"><span class="doc">Core API</span></a> - Core API reference</p></li>
+</ul>
+</section>
+<section id="next-steps">
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">Next Steps</a><a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>After mastering basic circuits:</p>
+<ol class="arabic simple">
+<li><p>Explore <a class="reference internal" href="chemistry_examples.html"><span class="doc">Quantum Chemistry Examples</span></a> for quantum chemistry applications</p></li>
+<li><p>Learn <a class="reference internal" href="optimization_examples.html"><span class="doc">Optimization Examples</span></a> for variational algorithms</p></li>
+<li><p>Try <a class="reference internal" href="cloud_examples.html"><span class="doc">Cloud Examples</span></a> for cloud execution</p></li>
+<li><p>Study <a class="reference internal" href="advanced_examples.html"><span class="doc">Advanced Examples</span></a> for complex applications</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="chemistry_examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Quantum Chemistry Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bell-state-creation">Bell State Creation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ghz-state-generation">GHZ State Generation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parameterized-circuits">Parameterized Circuits</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-fourier-transform">Quantum Fourier Transform</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#random-circuit-sampling">Random Circuit Sampling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#circuit-composition-example">Circuit Composition Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#circuit-visualization-and-analysis">Circuit Visualization and Analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-testing-example">Performance Testing Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-application-example">Complete Application Example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-circuit-patterns">Advanced Circuit Patterns</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-circuit-with-barriers">Example: Circuit with Barriers</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-conditional-operations">Example: Conditional Operations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tips-and-best-practices">Tips and Best Practices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting-common-issues">Troubleshooting Common Issues</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/basic_examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

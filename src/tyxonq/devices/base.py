@@ -115,6 +115,85 @@ def device_descriptor(
 
 
 def resolve_driver(provider: str, device: str):
+    """Resolve and return the appropriate device driver for a given provider.
+
+    This function provides a factory interface for accessing different quantum
+    device drivers based on the provider and device specification. It abstracts
+    the complexity of driver instantiation and enables uniform access to
+    simulators, local devices, and cloud-based quantum hardware.
+
+    Args:
+        provider (str): The quantum computing provider identifier.
+            Supported providers:
+            - "simulator" or "local": Local quantum simulators
+            - "tyxonq": TyxonQ quantum hardware platform
+            - "ibm": IBM Quantum devices and simulators
+            
+        device (str): Specific device identifier within the provider.
+            The device string format depends on the provider:
+            - Simulator: "statevector", "density_matrix", "qasm_simulator"
+            - TyxonQ: "homebrew_s2", "homebrew_s1", etc.
+            - IBM: "ibm_brisbane", "ibm_kyoto", "simulator_mps", etc.
+
+    Returns:
+        DeviceDriver: A driver instance that implements the quantum device
+            interface for circuit execution, task management, and result retrieval.
+            The driver provides methods such as:
+            - run_circuit(): Execute quantum circuits
+            - get_task_details(): Retrieve execution status
+            - cancel_task(): Cancel running jobs
+            - get_device_properties(): Hardware specifications
+
+    Raises:
+        ValueError: If the specified provider is not supported or available.
+        ImportError: If the required driver module cannot be imported
+            (e.g., missing dependencies for IBM Quantum).
+
+    Examples:
+        >>> # Get local simulator driver
+        >>> sim_driver = resolve_driver("simulator", "statevector")
+        >>> result = sim_driver.run_circuit(circuit, shots=1000)
+        
+        >>> # Access TyxonQ hardware
+        >>> hw_driver = resolve_driver("tyxonq", "homebrew_s2")
+        >>> task = hw_driver.run_circuit(circuit, shots=4096)
+        >>> status = hw_driver.get_task_details(task)
+        
+        >>> # Connect to IBM Quantum
+        >>> ibm_driver = resolve_driver("ibm", "ibm_brisbane")
+        >>> properties = ibm_driver.get_device_properties()
+        >>> print(f"Device qubits: {properties['n_qubits']}")
+
+    Provider Details:
+        **Simulator/Local Provider**:
+            - Provides high-performance local simulation
+            - Supports statevector, density matrix, and sampling methods
+            - No network connectivity required
+            - Ideal for algorithm development and testing
+        
+        **TyxonQ Provider**:
+            - Access to TyxonQ quantum hardware platform
+            - Supports pulse-level control via TQASM
+            - Includes device-specific optimization flags
+            - Requires valid authentication tokens
+        
+        **IBM Provider**:
+            - Integration with IBM Quantum Network
+            - Access to real quantum hardware and cloud simulators
+            - Requires IBM Quantum account and qiskit-ibm-provider
+            - Supports advanced device features and error mitigation
+
+    Notes:
+        - Driver selection affects execution performance and capabilities
+        - Some providers require additional authentication setup
+        - Device availability may vary based on maintenance schedules
+        - Driver interfaces are standardized for cross-provider compatibility
+        
+    See Also:
+        tyxonq.devices.simulators: Local simulator implementations.
+        tyxonq.devices.hardware: Hardware device drivers.
+        tyxonq.cloud.api: High-level cloud execution interface.
+    """
     if provider in ("simulator", "local"):
         from .simulators import driver as drv
 

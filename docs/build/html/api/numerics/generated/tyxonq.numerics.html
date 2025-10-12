@@ -1,0 +1,1503 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>tyxonq.numerics &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/numerics/generated/tyxonq.numerics';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="tyxonq.numerics.api" href="tyxonq.numerics.api.html" />
+    <link rel="prev" title="Numerics API" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../core/index.html">Core API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../compiler/index.html">Compiler API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../devices/index.html">Devices API</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">Numerics API</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">tyxonq.numerics</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../postprocessing/index.html">Postprocessing API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../applications/index.html">Applications API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../libs/index.html">Libs API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cloud/index.html">Cloud API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utils/index.html">Utils API</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Numerics API</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">tyxonq.numerics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-tyxonq.numerics">
+<span id="tyxonq-numerics"></span><h1>tyxonq.numerics<a class="headerlink" href="#module-tyxonq.numerics" title="Link to this heading">#</a></h1>
+<p>Numerics backends and vectorization utilities.</p>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tyxonq.numerics.NumericBackend" title="tyxonq.numerics.NumericBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NumericBackend</span></code></a>()</p></td>
+<td><p>Class-level proxy providing unified access to the current numerical backend.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tyxonq.numerics.</span></span><span class="sig-name descname"><span class="pre">ArrayBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></a></p>
+<p>Unified array/tensor backend protocol.</p>
+<p>Implementations should provide a cohesive set of array creation, basic
+arithmetic, and optional vectorization helpers. This protocol is purposely
+minimal at the skeleton stage and will be extended as features are
+migrated.</p>
+<dl class="simple">
+<dt>Required attributes and methods:</dt><dd><p>name: Backend name.
+array(data, dtype): Create an array.
+asarray(data): Convert to backend-native array.
+to_numpy(data): Convert to NumPy ndarray.
+matmul(a, b): Matrix multiplication.
+einsum(subscripts, <a href="#id1"><span class="problematic" id="id2">*</span></a>operands): Einstein summation.
+rng(seed): Random generator handle.
+normal(rng, shape, dtype): Normal distribution array.
+requires_grad(x, flag): Mark tensor for autodiff if supported.
+detach(x): Detach tensor from autodiff graph if supported.</p>
+</dd>
+<dt>Optional methods:</dt><dd><p>vmap(fn): Return a vectorized version of <cite>fn</cite> along the leading axis.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.name">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.complex64">
+<span class="sig-name descname"><span class="pre">complex64</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.complex64" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.complex128">
+<span class="sig-name descname"><span class="pre">complex128</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.complex128" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.float32">
+<span class="sig-name descname"><span class="pre">float32</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.float32" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.float64">
+<span class="sig-name descname"><span class="pre">float64</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.float64" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.int32">
+<span class="sig-name descname"><span class="pre">int32</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.int32" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.int64">
+<span class="sig-name descname"><span class="pre">int64</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.int64" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.bool">
+<span class="sig-name descname"><span class="pre">bool</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.bool" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.int">
+<span class="sig-name descname"><span class="pre">int</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a></em><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.int" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.array">
+<span class="sig-name descname"><span class="pre">array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.array" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.asarray">
+<span class="sig-name descname"><span class="pre">asarray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.asarray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.asarray" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.to_numpy">
+<span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.to_numpy" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.matmul">
+<span class="sig-name descname"><span class="pre">matmul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.matmul"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.matmul" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.einsum">
+<span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscripts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">operands</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.einsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.einsum" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.reshape">
+<span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.reshape" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.moveaxis">
+<span class="sig-name descname"><span class="pre">moveaxis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.moveaxis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.moveaxis" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.sum">
+<span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.sum" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.mean">
+<span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.mean" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.abs">
+<span class="sig-name descname"><span class="pre">abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.abs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.abs" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.real">
+<span class="sig-name descname"><span class="pre">real</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.real"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.real" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.conj">
+<span class="sig-name descname"><span class="pre">conj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.conj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.conj" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.diag">
+<span class="sig-name descname"><span class="pre">diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.diag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.diag" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.zeros">
+<span class="sig-name descname"><span class="pre">zeros</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.zeros" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.ones">
+<span class="sig-name descname"><span class="pre">ones</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.ones"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.ones" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.zeros_like">
+<span class="sig-name descname"><span class="pre">zeros_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.zeros_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.zeros_like" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.ones_like">
+<span class="sig-name descname"><span class="pre">ones_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.ones_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.ones_like" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.eye">
+<span class="sig-name descname"><span class="pre">eye</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.eye"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.eye" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.kron">
+<span class="sig-name descname"><span class="pre">kron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.kron"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.kron" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.square">
+<span class="sig-name descname"><span class="pre">square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.square" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.exp">
+<span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.exp" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.sin">
+<span class="sig-name descname"><span class="pre">sin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.sin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.sin" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.cos">
+<span class="sig-name descname"><span class="pre">cos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.cos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.cos" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.sqrt">
+<span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.sqrt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.sqrt" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.log" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.log2">
+<span class="sig-name descname"><span class="pre">log2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.log2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.log2" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.choice">
+<span class="sig-name descname"><span class="pre">choice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.choice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.choice" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.bincount">
+<span class="sig-name descname"><span class="pre">bincount</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minlength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.bincount"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.bincount" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.nonzero">
+<span class="sig-name descname"><span class="pre">nonzero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.nonzero"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.nonzero" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.svd">
+<span class="sig-name descname"><span class="pre">svd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.svd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.svd" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.rng">
+<span class="sig-name descname"><span class="pre">rng</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.rng"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.rng" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.normal">
+<span class="sig-name descname"><span class="pre">normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.normal" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.requires_grad">
+<span class="sig-name descname"><span class="pre">requires_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.requires_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.requires_grad" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#ArrayBackend.detach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.detach" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.ArrayBackend.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.numerics.ArrayBackend.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.numerics.vectorize_or_fallback">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.numerics.</span></span><span class="sig-name descname"><span class="pre">vectorize_or_fallback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_checks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#vectorize_or_fallback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.vectorize_or_fallback" title="Link to this definition">#</a></dt>
+<dd><p>Wrap a function with vectorization behavior and safe fallback.</p>
+<p>Behavior:
+- policy == “off”: return the original function.
+- If backend provides <cite>vmap</cite> and policy != “off”: try vectorized execution.</p>
+<blockquote>
+<div><p>On any exception, log (if available) and fallback to eager execution.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>If no <cite>vmap</cite> is provided: emulate vectorization by applying the function
+element-wise along the leading axis when the first positional argument is
+a sequence; otherwise run eagerly.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a><em>[</em><em>[</em><em>...</em><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>]</em>) – Function to wrap.</p></li>
+<li><p><strong>backend</strong> (<a class="reference internal" href="tyxonq.numerics.api.html#tyxonq.numerics.api.ArrayBackend" title="tyxonq.numerics.api.ArrayBackend"><em>ArrayBackend</em></a>) – Array backend instance implementing the protocol.</p></li>
+<li><p><strong>policy</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.14)"><em>Literal</em></a><em>[</em><em>'auto'</em><em>, </em><em>'force'</em><em>, </em><em>'off'</em><em>]</em>) – Vectorization policy (“auto” | “force” | “off”).</p></li>
+<li><p><strong>enable_checks</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Placeholder for future safety checks before vectorizing.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A callable that applies <cite>fn</cite> with the chosen vectorization strategy.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.14)"><em>Callable</em></a>[[…], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.numerics.get_backend">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.numerics.</span></span><span class="sig-name descname"><span class="pre">get_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/api.html#get_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.get_backend" title="Link to this definition">#</a></dt>
+<dd><p>Factory function that returns an ArrayBackend instance by canonical name.</p>
+<p>This function provides the primary interface for accessing TyxonQ’s numerical
+backends. It supports automatic backend selection, configuration-based defaults,
+and explicit backend specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Canonical name of the backend to retrieve.
+Supported values:
+- “numpy”: CPU-based NumPy backend (always available)
+- “pytorch”: PyTorch backend with GPU support (requires torch)
+- “cupynumeric”: CUDA-accelerated backend (requires cunumeric)
+- None: Use configured default or fallback to NumPy</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>An instance of the requested backend that provides</dt><dd><p>a unified array interface for numerical computations.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#tyxonq.numerics.ArrayBackend" title="tyxonq.numerics.ArrayBackend">ArrayBackend</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.14)"><strong>RuntimeError</strong></a> – If the requested backend is not available or its
+    dependencies are not installed.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Get the default backend (usually NumPy)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">arr</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Explicitly request NumPy backend</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">numpy_backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">numpy_backend</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Request PyTorch backend (if available)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">torch_backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="s2">&quot;pytorch&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">tensor</span> <span class="o">=</span> <span class="n">torch_backend</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PyTorch not available: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The function first checks for a globally configured backend instance</p></li>
+<li><p>If no explicit name is provided, it falls back to the configured name</p></li>
+<li><p>NumPy backend is used as the final fallback for all requests</p></li>
+<li><p>Backend availability is checked before instantiation</p></li>
+</ul>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>NumericBackend: Class-level proxy for accessing the current backend.
+set_backend: Function for configuring the global backend.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.numerics.set_backend">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.numerics.</span></span><span class="sig-name descname"><span class="pre">set_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_or_instance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/context.html#set_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.set_backend" title="Link to this definition">#</a></dt>
+<dd><p>Set the global/default backend by name or instance.</p>
+<p>Passing a string sets the backend name to be lazily resolved.
+Passing an instance pins the exact backend object to use.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tyxonq.numerics.use_backend">
+<span class="sig-prename descclassname"><span class="pre">tyxonq.numerics.</span></span><span class="sig-name descname"><span class="pre">use_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_or_instance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics/context.html#use_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.use_backend" title="Link to this definition">#</a></dt>
+<dd><p>Temporarily set the global backend within a context.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tyxonq.numerics.</span></span><span class="sig-name descname"><span class="pre">NumericBackend</span></span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class-level proxy providing unified access to the current numerical backend.</p>
+<p>This class serves as a convenient interface for accessing array operations
+without requiring explicit backend instantiation. All methods and properties
+are implemented as class-level operations that delegate to the currently
+configured backend.</p>
+<p>The NumericBackend provides a consistent API across different numerical
+libraries (NumPy, PyTorch, CuPy) while allowing runtime backend switching
+for performance optimization and hardware targeting.</p>
+<dl class="simple">
+<dt>Key Features:</dt><dd><ul class="simple">
+<li><p><strong>No instantiation required</strong>: All operations are class methods</p></li>
+<li><p><strong>Automatic backend delegation</strong>: Forwards calls to the active backend</p></li>
+<li><p><strong>Unified dtype access</strong>: Consistent data type properties across backends</p></li>
+<li><p><strong>Hardware acceleration</strong>: Supports CPU, GPU, and distributed computing</p></li>
+<li><p><strong>Automatic differentiation</strong>: Gradient computation when supported</p></li>
+</ul>
+</dd>
+<dt>Supported Backends:</dt><dd><ul class="simple">
+<li><p><strong>numpy</strong>: CPU-based computations with full NumPy compatibility</p></li>
+<li><p><strong>pytorch</strong>: GPU acceleration and automatic differentiation via PyTorch</p></li>
+<li><p><strong>cupynumeric</strong>: Distributed GPU computing via CuPy/Legate</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create arrays using the current backend</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">NumericBackend</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Perform operations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eigenvals</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">result</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access data types</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">complex_dtype</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">complex64</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">float_dtype</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">float32</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mathematical functions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp_result</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trig_result</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">NumericBackend</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Automatic differentiation (PyTorch backend)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x_grad</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">NumericBackend</span><span class="p">,</span> <span class="s1">&#39;value_and_grad&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">val</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">value_and_grad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">NumericBackend</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="p">))(</span><span class="n">x_grad</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Backend selection is controlled via <cite>get_backend()</cite> and configuration</p></li>
+<li><p>Not all backends support all operations (e.g., automatic differentiation)</p></li>
+<li><p>Performance characteristics vary significantly between backends</p></li>
+<li><p>Some operations may fall back gracefully when unsupported</p></li>
+</ul>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>get_backend: Factory function for explicit backend selection.
+set_backend: Configure the global default backend.
+ArrayBackend: Base interface implemented by all backends.</p>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.complex64">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">complex64</span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.complex64" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.complexfloating" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">complexfloating</span></code></a></p>
+<p>Complex number type composed of two single-precision floating-point
+numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Character code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'F'</span></code></p>
+</dd>
+<dt class="field-even">Canonical name<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.csingle</cite></p>
+</dd>
+<dt class="field-odd">Alias<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.singlecomplex</cite></p>
+</dd>
+<dt class="field-even">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.complex64</cite>: Complex number type composed of 2 32-bit-precision floating-point numbers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.complex128">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">complex128</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">real</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.complex128" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.complexfloating" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">complexfloating</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#complex" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">complex</span></code></a></p>
+<p>Complex number type composed of two double-precision floating-point
+numbers, compatible with Python <cite>complex</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Character code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'D'</span></code></p>
+</dd>
+<dt class="field-even">Canonical name<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.cdouble</cite></p>
+</dd>
+<dt class="field-odd">Alias<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.cfloat</cite></p>
+</dd>
+<dt class="field-even">Alias<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.complex_</cite></p>
+</dd>
+<dt class="field-odd">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.complex128</cite>: Complex number type composed of 2 64-bit-precision floating-point numbers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.float32">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">float32</span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.float32" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.floating" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">floating</span></code></a></p>
+<p>Single-precision floating-point number type, compatible with C <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Character code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'f'</span></code></p>
+</dd>
+<dt class="field-even">Canonical name<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.single</cite></p>
+</dd>
+<dt class="field-odd">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.float32</cite>: 32-bit-precision floating-point number type: sign bit, 8 bits exponent, 23 bits mantissa.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.float32.as_integer_ratio">
+<span class="sig-name descname"><span class="pre">as_integer_ratio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.float32.as_integer_ratio" title="Link to this definition">#</a></dt>
+<dd><p>Return a pair of integers, whose ratio is exactly equal to the original
+floating point number, and with a positive denominator.
+Raise <cite>OverflowError</cite> on infinities and a <cite>ValueError</cite> on NaNs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(10, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(0, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="o">-</span><span class="mf">.25</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(-1, 4)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.float32.is_integer">
+<span class="sig-name descname"><span class="pre">is_integer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.float32.is_integer" title="Link to this definition">#</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the floating point number is finite with integral
+value, and <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.22.</span></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">single</span><span class="p">(</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.float64">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">float64</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.float64" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.floating" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">floating</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p>
+<p>Double-precision floating-point number type, compatible with Python <cite>float</cite>
+and C <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Character code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'d'</span></code></p>
+</dd>
+<dt class="field-even">Canonical name<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.double</cite></p>
+</dd>
+<dt class="field-odd">Alias<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.float_</cite></p>
+</dd>
+<dt class="field-even">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.float64</cite>: 64-bit precision floating-point number type: sign bit, 11 bits exponent, 52 bits mantissa.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.float64.as_integer_ratio">
+<span class="sig-name descname"><span class="pre">as_integer_ratio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.float64.as_integer_ratio" title="Link to this definition">#</a></dt>
+<dd><p>Return a pair of integers, whose ratio is exactly equal to the original
+floating point number, and with a positive denominator.
+Raise <cite>OverflowError</cite> on infinities and a <cite>ValueError</cite> on NaNs.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(10, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(0, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="o">-</span><span class="mf">.25</span><span class="p">)</span><span class="o">.</span><span class="n">as_integer_ratio</span><span class="p">()</span>
+<span class="go">(-1, 4)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.float64.is_integer">
+<span class="sig-name descname"><span class="pre">is_integer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.float64.is_integer" title="Link to this definition">#</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the floating point number is finite with integral
+value, and <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 1.22.</span></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">(</span><span class="mf">3.2</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.int32">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">int32</span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.int32" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.signedinteger" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">signedinteger</span></code></a></p>
+<p>Signed integer type, compatible with C <code class="docutils literal notranslate"><span class="pre">int</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Character code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'i'</span></code></p>
+</dd>
+<dt class="field-even">Canonical name<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.intc</cite></p>
+</dd>
+<dt class="field-odd">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.int32</cite>: 32-bit signed integer (<code class="docutils literal notranslate"><span class="pre">-2_147_483_648</span></code> to <code class="docutils literal notranslate"><span class="pre">2_147_483_647</span></code>).</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.int32.bit_count">
+<span class="sig-name descname"><span class="pre">bit_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.int32.bit_count" title="Link to this definition">#</a></dt>
+<dd><p>Computes the number of 1-bits in the absolute value of the input.
+Analogous to the builtin <cite>int.bit_count</cite> or <code class="docutils literal notranslate"><span class="pre">popcount</span></code> in C++.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="mi">127</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="o">-</span><span class="mi">127</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.int64">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">int64</span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.int64" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://numpy.org/doc/stable/reference/arrays.scalars.html#numpy.signedinteger" title="(in NumPy v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">signedinteger</span></code></a></p>
+<p>Signed integer type, compatible with Python <cite>int</cite> and C <code class="docutils literal notranslate"><span class="pre">long</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Character code<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'l'</span></code></p>
+</dd>
+<dt class="field-even">Canonical name<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.int_</cite></p>
+</dd>
+<dt class="field-odd">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>numpy.int64</cite>: 64-bit signed integer (<code class="docutils literal notranslate"><span class="pre">-9_223_372_036_854_775_808</span></code> to <code class="docutils literal notranslate"><span class="pre">9_223_372_036_854_775_807</span></code>).</p>
+</dd>
+<dt class="field-even">Alias on this platform (Darwin arm64)<span class="colon">:</span></dt>
+<dd class="field-even"><p><cite>numpy.intp</cite>: Signed integer large enough to fit pointer, compatible with C <code class="docutils literal notranslate"><span class="pre">intptr_t</span></code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.int64.bit_count">
+<span class="sig-name descname"><span class="pre">bit_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.int64.bit_count" title="Link to this definition">#</a></dt>
+<dd><p>Computes the number of 1-bits in the absolute value of the input.
+Analogous to the builtin <cite>int.bit_count</cite> or <code class="docutils literal notranslate"><span class="pre">popcount</span></code> in C++.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="mi">127</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">(</span><span class="o">-</span><span class="mi">127</span><span class="p">)</span><span class="o">.</span><span class="n">bit_count</span><span class="p">()</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.bool">
+<span class="sig-name descname"><span class="pre">bool</span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.bool" title="Link to this definition">#</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">bool_</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.int">
+<span class="sig-name descname"><span class="pre">int</span></span><a class="headerlink" href="#tyxonq.numerics.NumericBackend.int" title="Link to this definition">#</a></dt>
+<dd><p>alias of <a class="reference internal" href="#tyxonq.numerics.NumericBackend.int64" title="numpy.int64"><code class="xref py py-class docutils literal notranslate"><span class="pre">int64</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.array">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.array" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.asarray">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">asarray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.asarray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.asarray" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.to_numpy">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_numpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.to_numpy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.to_numpy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.matmul">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">matmul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.matmul"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.matmul" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.einsum">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subscripts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">operands</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.einsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.einsum" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.reshape">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.reshape" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.moveaxis">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">moveaxis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.moveaxis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.moveaxis" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.sum">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.sum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.mean">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.mean" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.abs">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.abs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.abs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.real">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">real</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.real"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.real" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.conj">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">conj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.conj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.conj" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.diag">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.diag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.diag" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.zeros">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zeros</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.zeros" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.zeros_like">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zeros_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.zeros_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.zeros_like" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.ones_like">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ones_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.ones_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.ones_like" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.eye">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eye</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.eye"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.eye" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.kron">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kron</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.kron"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.kron" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.svd">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">svd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_matrices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.svd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.svd" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.exp">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.exp" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.sin">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.sin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.sin" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.cos">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.cos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.cos" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.sqrt">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.sqrt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.sqrt" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.rng">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rng</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.rng"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.rng" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.normal">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.normal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.requires_grad">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">requires_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.requires_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.requires_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.detach">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.detach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.detach" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.vmap">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.vmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.vmap" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.jit">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">jit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.jit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.jit" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tyxonq.numerics.NumericBackend.value_and_grad">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value_and_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argnums</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/tyxonq/numerics.html#NumericBackend.value_and_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tyxonq.numerics.NumericBackend.value_and_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<p class="rubric">Modules</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="tyxonq.numerics.api.html#module-tyxonq.numerics.api" title="tyxonq.numerics.api"><code class="xref py py-obj docutils literal notranslate"><span class="pre">api</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="tyxonq.numerics.context.html#module-tyxonq.numerics.context" title="tyxonq.numerics.context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">context</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="tyxonq.numerics.vectorization_checks.html#module-tyxonq.numerics.vectorization_checks" title="tyxonq.numerics.vectorization_checks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vectorization_checks</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Numerics API</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tyxonq.numerics.api.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">tyxonq.numerics.api</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend"><code class="docutils literal notranslate"><span class="pre">ArrayBackend</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.name"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.complex64"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.complex64</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.complex128"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.complex128</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.float32"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.float32</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.float64"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.float64</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.int32"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.int32</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.int64"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.int64</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.bool"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.bool</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.int"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.int</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.array"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.asarray"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.asarray()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.to_numpy"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.to_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.matmul"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.matmul()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.einsum"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.einsum()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.reshape"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.reshape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.moveaxis"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.moveaxis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.sum"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.sum()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.mean"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.abs"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.abs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.real"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.real()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.conj"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.conj()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.diag"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.diag()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.zeros"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.zeros()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.ones"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.ones()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.zeros_like"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.zeros_like()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.ones_like"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.ones_like()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.eye"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.eye()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.kron"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.kron()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.square"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.square()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.exp"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.exp()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.sin"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.sin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.cos"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.cos()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.sqrt"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.sqrt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.log"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.log()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.log2"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.log2()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.choice"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.choice()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.bincount"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.bincount()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.nonzero"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.nonzero()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.svd"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.svd()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.rng"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.rng()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.normal"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.normal()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.requires_grad"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.requires_grad()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.detach"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.detach()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.ArrayBackend.__init__"><code class="docutils literal notranslate"><span class="pre">ArrayBackend.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.vectorize_or_fallback"><code class="docutils literal notranslate"><span class="pre">vectorize_or_fallback()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.get_backend"><code class="docutils literal notranslate"><span class="pre">get_backend()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.set_backend"><code class="docutils literal notranslate"><span class="pre">set_backend()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.use_backend"><code class="docutils literal notranslate"><span class="pre">use_backend()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend"><code class="docutils literal notranslate"><span class="pre">NumericBackend</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.complex64"><code class="docutils literal notranslate"><span class="pre">NumericBackend.complex64</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.complex128"><code class="docutils literal notranslate"><span class="pre">NumericBackend.complex128</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.float32"><code class="docutils literal notranslate"><span class="pre">NumericBackend.float32</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.float32.as_integer_ratio"><code class="docutils literal notranslate"><span class="pre">NumericBackend.float32.as_integer_ratio()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.float32.is_integer"><code class="docutils literal notranslate"><span class="pre">NumericBackend.float32.is_integer()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.float64"><code class="docutils literal notranslate"><span class="pre">NumericBackend.float64</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.float64.as_integer_ratio"><code class="docutils literal notranslate"><span class="pre">NumericBackend.float64.as_integer_ratio()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.float64.is_integer"><code class="docutils literal notranslate"><span class="pre">NumericBackend.float64.is_integer()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.int32"><code class="docutils literal notranslate"><span class="pre">NumericBackend.int32</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.int32.bit_count"><code class="docutils literal notranslate"><span class="pre">NumericBackend.int32.bit_count()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.int64"><code class="docutils literal notranslate"><span class="pre">NumericBackend.int64</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.int64.bit_count"><code class="docutils literal notranslate"><span class="pre">NumericBackend.int64.bit_count()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.bool"><code class="docutils literal notranslate"><span class="pre">NumericBackend.bool</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.int"><code class="docutils literal notranslate"><span class="pre">NumericBackend.int</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.array"><code class="docutils literal notranslate"><span class="pre">NumericBackend.array()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.asarray"><code class="docutils literal notranslate"><span class="pre">NumericBackend.asarray()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.to_numpy"><code class="docutils literal notranslate"><span class="pre">NumericBackend.to_numpy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.matmul"><code class="docutils literal notranslate"><span class="pre">NumericBackend.matmul()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.einsum"><code class="docutils literal notranslate"><span class="pre">NumericBackend.einsum()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.reshape"><code class="docutils literal notranslate"><span class="pre">NumericBackend.reshape()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.moveaxis"><code class="docutils literal notranslate"><span class="pre">NumericBackend.moveaxis()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.sum"><code class="docutils literal notranslate"><span class="pre">NumericBackend.sum()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.mean"><code class="docutils literal notranslate"><span class="pre">NumericBackend.mean()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.abs"><code class="docutils literal notranslate"><span class="pre">NumericBackend.abs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.real"><code class="docutils literal notranslate"><span class="pre">NumericBackend.real()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.conj"><code class="docutils literal notranslate"><span class="pre">NumericBackend.conj()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.diag"><code class="docutils literal notranslate"><span class="pre">NumericBackend.diag()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.zeros"><code class="docutils literal notranslate"><span class="pre">NumericBackend.zeros()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.zeros_like"><code class="docutils literal notranslate"><span class="pre">NumericBackend.zeros_like()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.ones_like"><code class="docutils literal notranslate"><span class="pre">NumericBackend.ones_like()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.eye"><code class="docutils literal notranslate"><span class="pre">NumericBackend.eye()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.kron"><code class="docutils literal notranslate"><span class="pre">NumericBackend.kron()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.svd"><code class="docutils literal notranslate"><span class="pre">NumericBackend.svd()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.exp"><code class="docutils literal notranslate"><span class="pre">NumericBackend.exp()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.sin"><code class="docutils literal notranslate"><span class="pre">NumericBackend.sin()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.cos"><code class="docutils literal notranslate"><span class="pre">NumericBackend.cos()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.sqrt"><code class="docutils literal notranslate"><span class="pre">NumericBackend.sqrt()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.rng"><code class="docutils literal notranslate"><span class="pre">NumericBackend.rng()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.normal"><code class="docutils literal notranslate"><span class="pre">NumericBackend.normal()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.requires_grad"><code class="docutils literal notranslate"><span class="pre">NumericBackend.requires_grad()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.detach"><code class="docutils literal notranslate"><span class="pre">NumericBackend.detach()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.vmap"><code class="docutils literal notranslate"><span class="pre">NumericBackend.vmap()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.jit"><code class="docutils literal notranslate"><span class="pre">NumericBackend.jit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq.numerics.NumericBackend.value_and_grad"><code class="docutils literal notranslate"><span class="pre">NumericBackend.value_and_grad()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../../_sources/api/numerics/generated/tyxonq.numerics.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

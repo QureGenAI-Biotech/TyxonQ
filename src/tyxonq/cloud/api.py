@@ -81,6 +81,41 @@ def run(
     token: Optional[str] = None,
     **opts: Any,
 ):
+    """Execute quantum circuit(s) or source code on cloud devices.
+    
+    This is the main entry point for cloud execution in TyxonQ. It supports
+    both circuit objects and pre-compiled source code (OpenQASM, TQASM).
+    
+    Args:
+        provider: Cloud provider name ("tyxonq", "simulator", etc.). 
+            Uses global default if not specified.
+        device: Device name ("homebrew_s2", "statevector", etc.).
+            Uses global default if not specified.
+        circuit: Single Circuit object or list of Circuit objects to execute.
+            Mutually exclusive with source.
+        source: Pre-compiled source code (OpenQASM, TQASM) or list of sources.
+            Mutually exclusive with circuit.
+        shots: Number of measurement shots to execute.
+        token: Optional authentication token. Uses global token if not specified.
+        **opts: Additional options passed to the device driver.
+        
+    Returns:
+        For single submission: Task handle
+        For batch submission: List of task handles
+        
+    Examples:
+        >>> import tyxonq as tq
+        >>> from tyxonq.cloud import api
+        >>> 
+        >>> # Execute circuit on cloud hardware
+        >>> c = tq.Circuit(2).h(0).cx(0,1).measure_all()
+        >>> task = api.run(provider="tyxonq", device="homebrew_s2", circuit=c, shots=100)
+        >>> result = task.get_result(wait=True)
+        >>> 
+        >>> # Execute OpenQASM source
+        >>> qasm = "OPENQASM 2.0; qreg q[2]; h q[0]; cx q[0],q[1]; measure q;"
+        >>> task = api.run(provider="tyxonq", device="homebrew_s2", source=qasm, shots=100)
+    """
     # Delegate directly to devices.base.run for unified behavior
     from ..devices import base as device_base
 

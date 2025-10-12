@@ -16,8 +16,142 @@ from ..constants import DISCARD_EPS
 
 
 class UCCSD(UCC):
+    """Unitary Coupled Cluster Singles and Doubles (UCCSD) quantum algorithm.
+
+    UCCSD implements the quantum analog of classical Coupled Cluster Singles and Doubles
+    (CCSD) theory using a unitary ansatz suitable for quantum computers. The method combines
+    single and double excitation operators in an exponential form to approximate the
+    ground state wavefunction of molecular systems.
+
+    Mathematical Foundation:
+        The UCCSD ansatz is defined as:
+        |ψ⟩ = exp(T̂ - T̂†) |HF⟩
+        where T̂ = T̂₁ + T̂₂ includes:
+        - T̂₁: Single excitation operators (orbital → virtual transitions)
+        - T̂₂: Double excitation operators (pair excitations)
+
+    Key Features:
+        - **Variational optimization**: Parameters optimized to minimize energy expectation
+        - **Amplitude screening**: Automatically filters insignificant excitations
+        - **Flexible initialization**: Supports MP2, CCSD, or zero initial guesses
+        - **Active space support**: Reduces computational cost via orbital selection
+        - **Runtime adaptivity**: Supports both device and numeric execution
+        - **Chemical accuracy**: Provides systematic improvement over HF theory
+
+    Algorithm Workflow:
+        1. **Hartree-Fock calculation**: Obtain molecular orbitals and integrals
+        2. **Excitation generation**: Create single and double excitation operators
+        3. **Amplitude initialization**: Use MP2/CCSD for initial parameter guess
+        4. **Screening and sorting**: Filter excitations by amplitude significance
+        5. **Variational optimization**: Minimize energy via quantum circuit execution
+        6. **Convergence analysis**: Achieve chemical accuracy within tolerance
+
+    Args:
+        mol (Union[Mole, RHF], optional): PySCF molecule object or RHF calculation result.
+        init_method (str, optional): Initial amplitude guess method.
+            - "mp2": Møller-Plesset 2nd order perturbation theory (default)
+            - "ccsd": Classical coupled cluster singles and doubles
+            - "fe": Frozen natural orbitals
+            - "zeros": Zero initialization (disables screening)
+        active_space (Tuple[int, int], optional): Active space (n_electrons, n_orbitals)
+            for reduced computational cost.
+        active_orbital_indices (List[int], optional): Explicit orbital selection
+            (0-based indexing). If None, orbitals are selected by energy.
+        mo_coeff (ndarray, optional): Pre-computed molecular orbital coefficients.
+            If provided, skips RHF calculation.
+        pick_ex2 (bool, optional): Enable two-body excitation screening based on
+            amplitude significance. Default True.
+        epsilon (float, optional): Threshold for discarding small excitations.
+            Default 1e-12.
+        sort_ex2 (bool, optional): Sort excitations by amplitude magnitude for
+            systematic truncation. Default True.
+        mode (str, optional): Symmetry handling mode:
+            - "fermion": Fermionic representation (default)
+            - "qubit": Direct qubit representation
+        runtime (str, optional): Execution backend:
+            - "device": Quantum device execution (default)
+            - "numeric": Classical simulation
+        numeric_engine (str, optional): Numerical backend ("statevector", "pytorch", etc.).
+        run_fci (bool, optional): Compute exact FCI reference for benchmarking.
+            Default False.
+        classical_provider (str, optional): Provider for classical calculations.
+            Default "local".
+        classical_device (str, optional): Device for classical calculations.
+            Default "auto".
+        atom (object, optional): Direct molecular specification (alternative to mol).
+        basis (str, optional): Basis set for quantum chemistry. Default "sto-3g".
+        unit (str, optional): Coordinate units. Default "Angstrom".
+        charge (int, optional): Molecular charge. Default 0.
+        spin (int, optional): Molecular spin multiplicity. Default 0.
+
+    Attributes:
+        n_params (int): Total number of variational parameters.
+        ex_ops (List[Tuple]): Excitation operators as index tuples.
+        param_ids (List[int]): Parameter mapping for excitations.
+        init_guess (List[float]): Initial parameter guess from classical methods.
+        pick_ex2 (bool): Two-body excitation screening flag.
+        sort_ex2 (bool): Excitation sorting flag.
+        t2_discard_eps (float): Amplitude threshold for screening.
+
+    Examples:
+        >>> # Basic UCCSD calculation for H2
+        >>> from tyxonq.chem import UCCSD
+        >>> from tyxonq.chem.molecule import h2
+        >>> uccsd = UCCSD(h2)
+        >>> ground_state_energy = uccsd.kernel()
+        >>> print(f"UCCSD energy: {ground_state_energy:.8f} Hartree")
+        
+        >>> # Verify against exact results
+        >>> import numpy as np
+        >>> np.testing.assert_allclose(ground_state_energy, uccsd.e_fci, atol=1e-10)
+        
+        >>> # Active space calculation for larger molecules
+        >>> from pyscf import gto
+        >>> h2o = gto.M(atom='O 0 0 0; H 0 0 0.96; H 0.93 0 0.24', basis='sto-3g')
+        >>> uccsd_cas = UCCSD(h2o, active_space=(4, 4))  # 4 electrons in 4 orbitals
+        >>> cas_energy = uccsd_cas.kernel()
+        
+        >>> # Custom initialization and screening
+        >>> uccsd_custom = UCCSD(h2, init_method="ccsd", epsilon=1e-8)
+        >>> custom_energy = uccsd_custom.kernel()
+        
+        >>> # Direct molecular specification
+        >>> uccsd_direct = UCCSD(
+        ...     atom="H 0 0 0; H 0 0 0.74",
+        ...     basis="6-31g",
+        ...     runtime="device"
+        ... )
+        >>> direct_energy = uccsd_direct.kernel()
+        
+        >>> # Analyze excitation operators
+        >>> ex_ops, param_ids, init_params = uccsd.get_ex_ops()
+        >>> print(f"Number of excitations: {len(ex_ops)}")
+        >>> print(f"Excitation operators: {ex_ops[:3]}")
+        
+        >>> # Access reference energies
+        >>> print(f"HF energy: {uccsd.e_hf:.8f}")
+        >>> print(f"FCI energy: {uccsd.e_fci:.8f}")
+        >>> print(f"Correlation energy: {uccsd.e_uccsd - uccsd.e_hf:.8f}")
+
+    Performance Notes:
+        - Amplitude screening significantly reduces parameter count for large molecules
+        - Active space approximation enables treatment of systems with 10+ orbitals
+        - Device runtime supports both simulators and quantum hardware
+        - Classical reference calculations provide benchmarking and initialization
+        
+    Theoretical Background:
+        UCCSD provides a systematic improvement over Hartree-Fock theory by including
+        electron correlation effects through excitations from occupied to virtual orbitals.
+        The unitary formulation ensures the wavefunction remains normalized and is suitable
+        for implementation on quantum computers.
+        
+    See Also:
+        UCC: Base class for unitary coupled cluster methods.
+        HEA: Hardware-efficient ansatz alternative.
+        KUPCCGSD: k-UpCCGSD variant with generalized excitations.
+        PUCCD: Pair-unitary coupled cluster doubles.
+        tyxonq.chem.molecule: Predefined molecular systems.
     """
-    Run UCCSD calculation. For a comprehensive tutorial see :doc:`/tutorial_jupyter/ucc_functions`.
 
     Examples
     --------
@@ -29,7 +163,6 @@ class UCCSD(UCC):
     >>> np.testing.assert_allclose(e_ucc, uccsd.e_fci, atol=1e-10)
     >>> e_hf = uccsd.energy(np.zeros(uccsd.n_params))
     >>> np.testing.assert_allclose(e_hf, uccsd.e_hf, atol=1e-10)
-    """
 
     def __init__(
         self,

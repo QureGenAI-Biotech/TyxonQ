@@ -1,0 +1,1256 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Hamiltonian Encoding &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'libraries/hamiltonian_encoding/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Optimizer" href="../optimizer/index.html" />
+    <link rel="prev" title="Quantum Library" href="../quantum_library/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../circuits_library/index.html">Circuits Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantum_library/index.html">Quantum Library</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Hamiltonian Encoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimizer/index.html">Optimizer</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Libraries &amp; Components</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Hamiltonian Encoding</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="hamiltonian-encoding">
+<h1>Hamiltonian Encoding<a class="headerlink" href="#hamiltonian-encoding" title="Link to this heading">#</a></h1>
+<p>The Hamiltonian Encoding library provides essential tools for transforming fermionic operators into qubit operators and grouping Pauli terms for efficient measurement. These capabilities are fundamental for quantum chemistry applications, particularly in variational quantum eigensolvers (VQE) and quantum simulation workflows.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p></li>
+<li><p><a class="reference internal" href="#key-features" id="id3">Key Features</a></p></li>
+<li><p><a class="reference internal" href="#fermion-to-qubit-mappings" id="id4">Fermion-to-Qubit Mappings</a></p>
+<ul>
+<li><p><a class="reference internal" href="#theoretical-background" id="id5">Theoretical Background</a></p>
+<ul>
+<li><p><a class="reference internal" href="#fermion-operators" id="id6">Fermion Operators</a></p></li>
+<li><p><a class="reference internal" href="#qubit-operators" id="id7">Qubit Operators</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#jordan-wigner-transformation" id="id8">Jordan-Wigner Transformation</a></p></li>
+<li><p><a class="reference internal" href="#bravyi-kitaev-transformation" id="id9">Bravyi-Kitaev Transformation</a></p></li>
+<li><p><a class="reference internal" href="#parity-mapping-with-two-qubit-reduction" id="id10">Parity Mapping with Two-Qubit Reduction</a></p></li>
+<li><p><a class="reference internal" href="#binary-transformation" id="id11">Binary Transformation</a></p></li>
+<li><p><a class="reference internal" href="#api-reference-fop-to-qop" id="id12">API Reference: fop_to_qop</a></p></li>
+<li><p><a class="reference internal" href="#mapping-comparison" id="id13">Mapping Comparison</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#pauli-term-grouping" id="id14">Pauli Term Grouping</a></p>
+<ul>
+<li><p><a class="reference internal" href="#motivation" id="id15">Motivation</a></p></li>
+<li><p><a class="reference internal" href="#grouping-strategy" id="id16">Grouping Strategy</a></p></li>
+<li><p><a class="reference internal" href="#api-group-hamiltonian-pauli-terms" id="id17">API: group_hamiltonian_pauli_terms</a></p></li>
+<li><p><a class="reference internal" href="#practical-example-vqe-hamiltonian" id="id18">Practical Example: VQE Hamiltonian</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#shot-allocation-strategy" id="id19">Shot Allocation Strategy</a></p>
+<ul>
+<li><p><a class="reference internal" href="#uniform-allocation" id="id20">Uniform Allocation</a></p></li>
+<li><p><a class="reference internal" href="#weighted-by-coefficient" id="id21">Weighted by Coefficient</a></p></li>
+<li><p><a class="reference internal" href="#variance-weighted-allocation" id="id22">Variance-Weighted Allocation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#operator-encoding-and-i-o" id="id23">Operator Encoding and I/O</a></p>
+<ul>
+<li><p><a class="reference internal" href="#encoding-formats" id="id24">Encoding Formats</a></p></li>
+<li><p><a class="reference internal" href="#i-o-functions" id="id25">I/O Functions</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-topics" id="id26">Advanced Topics</a></p>
+<ul>
+<li><p><a class="reference internal" href="#gray-code-and-binary-encodings" id="id27">Gray Code and Binary Encodings</a></p></li>
+<li><p><a class="reference internal" href="#integration-with-quantum-chemistry-workflows" id="id28">Integration with Quantum Chemistry Workflows</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#see-also" id="id29">See Also</a></p></li>
+<li><p><a class="reference internal" href="#further-reading" id="id30">Further Reading</a></p></li>
+<li><p><a class="reference internal" href="#examples" id="id31">Examples</a></p>
+<ul>
+<li><p><a class="reference internal" href="#complete-example-h2-molecule-vqe" id="id32">Complete Example: H2 Molecule VQE</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Quantum chemistry problems are naturally expressed in terms of fermionic operators that describe electrons in molecular orbitals. To simulate these systems on quantum computers, we must:</p>
+<ol class="arabic simple">
+<li><p><strong>Transform</strong> fermionic operators to qubit operators (fermion-to-qubit mapping)</p></li>
+<li><p><strong>Encode</strong> molecular Hamiltonians as sums of Pauli operators</p></li>
+<li><p><strong>Group</strong> Pauli terms by measurement basis to minimize circuit executions</p></li>
+<li><p><strong>Allocate</strong> measurement shots efficiently across grouped terms</p></li>
+</ol>
+<p>TyxonQ’s Hamiltonian Encoding library provides comprehensive support for all these operations.</p>
+graph TD
+    A[Fermionic Hamiltonian] --&gt; B[Fermion-to-Qubit Mapping]
+    B --&gt; C[Qubit Hamiltonian]
+    C --&gt; D[Term Grouping]
+    D --&gt; E[Measurement Bases]
+    E --&gt; F[Shot Allocation]
+    F --&gt; G[Circuit Execution]
+
+    B1[Jordan-Wigner] --&gt; B
+    B2[Bravyi-Kitaev] --&gt; B
+    B3[Parity] --&gt; B
+    B4[Binary] --&gt; B</section>
+<section id="key-features">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Key Features</a><a class="headerlink" href="#key-features" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt>✨ <strong>Multiple Mapping Strategies</strong></dt><dd><p>Support for Jordan-Wigner, Bravyi-Kitaev, Parity, and Binary transformations</p>
+</dd>
+<dt>🔬 <strong>Qubit Reduction</strong></dt><dd><p>Two-qubit reduction for parity mapping, checksum encoding for binary mapping</p>
+</dd>
+<dt>📊 <strong>Efficient Grouping</strong></dt><dd><p>Intelligent grouping of Pauli terms to minimize measurement overhead</p>
+</dd>
+<dt>🎯 <strong>Optimized I/O</strong></dt><dd><p>Functions for reading and writing Pauli operators in compact formats</p>
+</dd>
+<dt>⚡ <strong>Integration</strong></dt><dd><p>Seamless integration with quantum chemistry algorithms and compilers</p>
+</dd>
+</dl>
+</section>
+<section id="fermion-to-qubit-mappings">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Fermion-to-Qubit Mappings</a><a class="headerlink" href="#fermion-to-qubit-mappings" title="Link to this heading">#</a></h2>
+<p>Fermionic operators describe particles that obey the Pauli exclusion principle (electrons). To simulate fermonic systems on quantum computers, we must map these operators to qubit operators. Different mapping strategies offer trade-offs between circuit depth, qubit count, and operator locality.</p>
+<section id="theoretical-background">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Theoretical Background</a><a class="headerlink" href="#theoretical-background" title="Link to this heading">#</a></h3>
+<section id="fermion-operators">
+<h4><a class="toc-backref" href="#id6" role="doc-backlink">Fermion Operators</a><a class="headerlink" href="#fermion-operators" title="Link to this heading">#</a></h4>
+<p>A fermionic system is described by creation (<span class="math notranslate nohighlight">\(a_p^\dagger\)</span>) and annihilation (<span class="math notranslate nohighlight">\(a_p\)</span>) operators that satisfy the anticommutation relations:</p>
+<div class="math notranslate nohighlight">
+\[\{a_p, a_q^\dagger\} = \delta_{pq}, \quad \{a_p, a_q\} = 0, \quad \{a_p^\dagger, a_q^\dagger\} = 0\]</div>
+<p>where <span class="math notranslate nohighlight">\(p, q\)</span> index spin-orbitals.</p>
+<p>A molecular Hamiltonian in second quantization takes the form:</p>
+<div class="math notranslate nohighlight">
+\[H = \sum_{pq} h_{pq} a_p^\dagger a_q + \frac{1}{2}\sum_{pqrs} h_{pqrs} a_p^\dagger a_q^\dagger a_r a_s\]</div>
+<p>where <span class="math notranslate nohighlight">\(h_{pq}\)</span> are one-electron integrals and <span class="math notranslate nohighlight">\(h_{pqrs}\)</span> are two-electron integrals.</p>
+</section>
+<section id="qubit-operators">
+<h4><a class="toc-backref" href="#id7" role="doc-backlink">Qubit Operators</a><a class="headerlink" href="#qubit-operators" title="Link to this heading">#</a></h4>
+<p>Qubit operators are expressed as sums of Pauli strings:</p>
+<div class="math notranslate nohighlight">
+\[H_{qubit} = \sum_i c_i P_i\]</div>
+<p>where <span class="math notranslate nohighlight">\(c_i\)</span> are coefficients and <span class="math notranslate nohighlight">\(P_i\)</span> are products of Pauli matrices <span class="math notranslate nohighlight">\(\{I, X, Y, Z\}\)</span>.</p>
+</section>
+</section>
+<section id="jordan-wigner-transformation">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Jordan-Wigner Transformation</a><a class="headerlink" href="#jordan-wigner-transformation" title="Link to this heading">#</a></h3>
+<p>The Jordan-Wigner (JW) transformation is the most straightforward fermion-to-qubit mapping, establishing a direct correspondence between spin-orbitals and qubits.</p>
+<p><strong>Mapping Rules</strong></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}a_p^\dagger &amp;= \left(\bigotimes_{j&lt;p} Z_j\right) \otimes \sigma_p^+ \\
+a_p &amp;= \left(\bigotimes_{j&lt;p} Z_j\right) \otimes \sigma_p^-\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\sigma^+ = (X - iY)/2\)</span> and <span class="math notranslate nohighlight">\(\sigma^- = (X + iY)/2\)</span>.</p>
+<p><strong>Properties</strong></p>
+<ul class="simple">
+<li><p><strong>Locality</strong>: Operators affecting orbitals <span class="math notranslate nohighlight">\(p\)</span> involve qubits <span class="math notranslate nohighlight">\(0\)</span> through <span class="math notranslate nohighlight">\(p\)</span></p></li>
+<li><p><strong>Qubit Count</strong>: Requires <span class="math notranslate nohighlight">\(n\)</span> qubits for <span class="math notranslate nohighlight">\(n\)</span> spin-orbitals</p></li>
+<li><p><strong>Circuit Depth</strong>: Linear in orbital index for general operators</p></li>
+<li><p><strong>Simplicity</strong>: Easiest to understand and implement</p></li>
+</ul>
+<p><strong>Usage in TyxonQ</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.hamiltonian_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">fop_to_qop</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openfermion</span><span class="w"> </span><span class="kn">import</span> <span class="n">FermionOperator</span>
+
+<span class="c1"># Create a fermionic operator: a_2^+ a_0</span>
+<span class="n">fop</span> <span class="o">=</span> <span class="n">FermionOperator</span><span class="p">(</span><span class="s1">&#39;2^ 0&#39;</span><span class="p">)</span>
+
+<span class="c1"># Map to qubits using Jordan-Wigner</span>
+<span class="n">qop</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span><span class="n">fop</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="s1">&#39;jordan-wigner&#39;</span><span class="p">,</span> <span class="n">n_sorb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">n_elec</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">qop</span><span class="p">)</span>
+<span class="c1"># Output shows the corresponding Pauli strings</span>
+</pre></div>
+</div>
+</section>
+<section id="bravyi-kitaev-transformation">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Bravyi-Kitaev Transformation</a><a class="headerlink" href="#bravyi-kitaev-transformation" title="Link to this heading">#</a></h3>
+<p>The Bravyi-Kitaev (BK) transformation achieves better locality than Jordan-Wigner by encoding occupation numbers and parity information more efficiently.</p>
+<p><strong>Key Idea</strong></p>
+<p>Instead of storing occupation information sequentially, BK uses a binary tree structure where:</p>
+<ul class="simple">
+<li><p>Some qubits store partial parity information</p></li>
+<li><p>Some qubits store occupation numbers</p></li>
+<li><p>This reduces operator support from <span class="math notranslate nohighlight">\(O(n)\)</span> to <span class="math notranslate nohighlight">\(O(\log n)\)</span> for some operators</p></li>
+</ul>
+<p><strong>Properties</strong></p>
+<ul class="simple">
+<li><p><strong>Locality</strong>: Improved compared to Jordan-Wigner</p></li>
+<li><p><strong>Qubit Count</strong>: Still <span class="math notranslate nohighlight">\(n\)</span> qubits for <span class="math notranslate nohighlight">\(n\)</span> spin-orbitals</p></li>
+<li><p><strong>Circuit Depth</strong>: Logarithmic scaling for certain operators</p></li>
+<li><p><strong>Complexity</strong>: More complex transformation logic</p></li>
+</ul>
+<p><strong>Usage</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Same fermionic operator as before</span>
+<span class="n">fop</span> <span class="o">=</span> <span class="n">FermionOperator</span><span class="p">(</span><span class="s1">&#39;2^ 0&#39;</span><span class="p">)</span>
+
+<span class="c1"># Map using Bravyi-Kitaev</span>
+<span class="n">qop_bk</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span><span class="n">fop</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="s1">&#39;bravyi-kitaev&#39;</span><span class="p">,</span> <span class="n">n_sorb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">n_elec</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># The resulting Pauli strings will be different from JW</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qop_bk</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="parity-mapping-with-two-qubit-reduction">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Parity Mapping with Two-Qubit Reduction</a><a class="headerlink" href="#parity-mapping-with-two-qubit-reduction" title="Link to this heading">#</a></h3>
+<p>The parity mapping exploits conservation of electron number and spin symmetries to reduce the qubit count.</p>
+<p><strong>Two-Qubit Reduction</strong></p>
+<p>When the total electron number <span class="math notranslate nohighlight">\(N\)</span> and spin <span class="math notranslate nohighlight">\(S_z\)</span> are conserved, two qubits can be eliminated:</p>
+<ol class="arabic simple">
+<li><p>One qubit encodes total electron parity</p></li>
+<li><p>One qubit encodes spin parity</p></li>
+</ol>
+<p>This reduces the qubit requirement from <span class="math notranslate nohighlight">\(n\)</span> to <span class="math notranslate nohighlight">\(n-2\)</span>.</p>
+<p><strong>Mathematical Foundation</strong></p>
+<p>For a system with <span class="math notranslate nohighlight">\((N_\alpha, N_\beta)\)</span> electrons, the parity mapping uses:</p>
+<div class="math notranslate nohighlight">
+\[P = \prod_{p} (1 - 2n_p)\]</div>
+<p>where <span class="math notranslate nohighlight">\(n_p = a_p^\dagger a_p\)</span> is the occupation number operator.</p>
+<p><strong>Implementation</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For a system with 4 spin-orbitals and 2 electrons</span>
+<span class="n">fop</span> <span class="o">=</span> <span class="n">FermionOperator</span><span class="p">(</span><span class="s1">&#39;1^ 0&#39;</span><span class="p">)</span>
+
+<span class="c1"># Parity mapping with two-qubit reduction</span>
+<span class="n">qop_parity</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span>
+    <span class="n">fop</span><span class="p">,</span>
+    <span class="n">mapping</span><span class="o">=</span><span class="s1">&#39;parity&#39;</span><span class="p">,</span>
+    <span class="n">n_sorb</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">n_elec</span><span class="o">=</span><span class="mi">2</span>  <span class="c1"># Can also specify (n_alpha, n_beta)</span>
+<span class="p">)</span>
+
+<span class="c1"># This will use 2 qubits instead of 4</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qop_parity</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Advantages</strong></p>
+<ul class="simple">
+<li><p><strong>Qubit Reduction</strong>: Saves two qubits, significant for NISQ devices</p></li>
+<li><p><strong>Natural Symmetries</strong>: Respects physical conservation laws</p></li>
+<li><p><strong>VQE Suitability</strong>: Well-suited for variational algorithms</p></li>
+</ul>
+<p><strong>Limitations</strong></p>
+<ul class="simple">
+<li><p><strong>Fixed Particle Number</strong>: Cannot represent superpositions of different particle numbers</p></li>
+<li><p><strong>Complexity</strong>: More complex to implement and debug</p></li>
+</ul>
+</section>
+<section id="binary-transformation">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Binary Transformation</a><a class="headerlink" href="#binary-transformation" title="Link to this heading">#</a></h3>
+<p>The binary transformation with checksum code offers an intermediate approach between standard mappings and aggressive reduction.</p>
+<p><strong>Checksum Encoding</strong></p>
+<p>The checksum code provides one-qubit reduction while maintaining important symmetry constraints:</p>
+<div class="math notranslate nohighlight">
+\[n_{qubits} = n_{spin-orbitals} - 1\]</div>
+<p><strong>When to Use</strong></p>
+<p>The binary transformation is useful when:</p>
+<ul class="simple">
+<li><p>Full two-qubit reduction (parity) is not applicable</p></li>
+<li><p>You want moderate qubit savings</p></li>
+<li><p>System size is modest (not too large for encoding overhead)</p></li>
+</ul>
+<p><strong>Usage</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fop</span> <span class="o">=</span> <span class="n">FermionOperator</span><span class="p">(</span><span class="s1">&#39;3^ 2^ 1 0&#39;</span><span class="p">)</span>
+
+<span class="c1"># Binary mapping with checksum</span>
+<span class="n">qop_binary</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span>
+    <span class="n">fop</span><span class="p">,</span>
+    <span class="n">mapping</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">,</span>
+    <span class="n">n_sorb</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+    <span class="n">n_elec</span><span class="o">=</span><span class="mi">4</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="api-reference-fop-to-qop">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">API Reference: fop_to_qop</a><a class="headerlink" href="#api-reference-fop-to-qop" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="fop_to_qop">
+<span class="sig-name descname"><span class="pre">fop_to_qop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sorb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_elec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fop_to_qop" title="Link to this definition">#</a></dt>
+<dd><p>Transform a fermionic operator to a qubit operator using the specified mapping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fop</strong> (<em>FermionOperator</em>) – Input fermionic operator (OpenFermion FermionOperator)</p></li>
+<li><p><strong>mapping</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Mapping strategy: “jordan-wigner”, “bravyi-kitaev”, “parity”, or “binary”</p></li>
+<li><p><strong>n_sorb</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of spin-orbitals in the system</p></li>
+<li><p><strong>n_elec</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a>) – Electron count as integer (total) or tuple (n_alpha, n_beta)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed qubit operator</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>QubitOperator</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.14)"><strong>ValueError</strong></a> – If mapping type is not supported</p>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openfermion</span><span class="w"> </span><span class="kn">import</span> <span class="n">FermionOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.hamiltonian_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">fop_to_qop</span>
+
+<span class="c1"># Molecular hydrogen with 4 spin-orbitals, 2 electrons</span>
+<span class="c1"># Create a simple excitation operator</span>
+<span class="n">fop</span> <span class="o">=</span> <span class="n">FermionOperator</span><span class="p">(</span><span class="s1">&#39;1^ 0&#39;</span><span class="p">)</span>
+
+<span class="c1"># Try different mappings</span>
+<span class="n">qop_jw</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span><span class="n">fop</span><span class="p">,</span> <span class="s1">&#39;jordan-wigner&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">qop_bk</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span><span class="n">fop</span><span class="p">,</span> <span class="s1">&#39;bravyi-kitaev&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">qop_parity</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span><span class="n">fop</span><span class="p">,</span> <span class="s1">&#39;parity&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Jordan-Wigner: </span><span class="si">{</span><span class="n">qop_jw</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bravyi-Kitaev: </span><span class="si">{</span><span class="n">qop_bk</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parity: </span><span class="si">{</span><span class="n">qop_parity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="mapping-comparison">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Mapping Comparison</a><a class="headerlink" href="#mapping-comparison" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Fermion-to-Qubit Mapping Comparison</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Property</p></th>
+<th class="head"><p>Jordan-Wigner</p></th>
+<th class="head"><p>Bravyi-Kitaev</p></th>
+<th class="head"><p>Parity</p></th>
+<th class="head"><p>Binary</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Qubits Required</p></td>
+<td><p><span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(n\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(n-2\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(n-1\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Operator Locality</p></td>
+<td><p><span class="math notranslate nohighlight">\(O(n)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(O(\log n)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(O(n)\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(O(n)\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Implementation Complexity</p></td>
+<td><p>Simple</p></td>
+<td><p>Moderate</p></td>
+<td><p>Moderate</p></td>
+<td><p>Moderate</p></td>
+</tr>
+<tr class="row-odd"><td><p>Best For</p></td>
+<td><p>General use</p></td>
+<td><p>Low-weight ops</p></td>
+<td><p>VQE, fixed <span class="math notranslate nohighlight">\(N\)</span></p></td>
+<td><p>Moderate savings</p></td>
+</tr>
+<tr class="row-even"><td><p>Circuit Depth</p></td>
+<td><p>High</p></td>
+<td><p>Lower</p></td>
+<td><p>High</p></td>
+<td><p>High</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Selection Guidelines</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Default Choice</strong>: Jordan-Wigner for its simplicity and broad applicability</p></li>
+<li><p><strong>Resource-Constrained</strong>: Parity mapping when qubits are limited</p></li>
+<li><p><strong>Deep Circuits</strong>: Bravyi-Kitaev when circuit depth is a bottleneck</p></li>
+<li><p><strong>Moderate Savings</strong>: Binary when partial reduction is acceptable</p></li>
+</ol>
+</section>
+</section>
+<section id="pauli-term-grouping">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Pauli Term Grouping</a><a class="headerlink" href="#pauli-term-grouping" title="Link to this heading">#</a></h2>
+<p>One of the most critical optimizations for variational algorithms is grouping Pauli terms that can be measured simultaneously. This dramatically reduces the number of required circuit executions.</p>
+<section id="motivation">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Motivation</a><a class="headerlink" href="#motivation" title="Link to this heading">#</a></h3>
+<p>A molecular Hamiltonian might contain thousands of Pauli terms:</p>
+<div class="math notranslate nohighlight">
+\[H = \sum_{i=1}^{N} c_i P_i\]</div>
+<p>where each <span class="math notranslate nohighlight">\(P_i\)</span> is a Pauli string. Naively, measuring this Hamiltonian requires <span class="math notranslate nohighlight">\(N\)</span> separate circuit executions. However, Pauli operators that commute and share a common eigenbasis can be measured simultaneously.</p>
+<p><strong>Example</strong>: For a 4-qubit system:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(Z_0 Z_1\)</span> and <span class="math notranslate nohighlight">\(Z_1 Z_2\)</span> <strong>can</strong> be measured together (both Z-basis on overlapping qubits)</p></li>
+<li><p><span class="math notranslate nohighlight">\(Z_0 Z_1\)</span> and <span class="math notranslate nohighlight">\(X_0 X_1\)</span> <strong>cannot</strong> be measured together (different bases)</p></li>
+</ul>
+</section>
+<section id="grouping-strategy">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Grouping Strategy</a><a class="headerlink" href="#grouping-strategy" title="Link to this heading">#</a></h3>
+<p>TyxonQ groups Pauli terms by their measurement basis:</p>
+<ol class="arabic simple">
+<li><p><strong>Extract Basis</strong>: Determine which single-qubit basis each qubit needs (X, Y, or Z)</p></li>
+<li><p><strong>Group by Pattern</strong>: Terms with the same basis pattern can be measured together</p></li>
+<li><p><strong>Separate Identity</strong>: Extract constant (identity) terms separately</p></li>
+</ol>
+<p><strong>Mathematical Foundation</strong></p>
+<p>Two Pauli strings <span class="math notranslate nohighlight">\(P_i\)</span> and <span class="math notranslate nohighlight">\(P_j\)</span> are in the same measurement group if:</p>
+<div class="math notranslate nohighlight">
+\[\forall k: \quad P_i^{(k)} \in \{I, \sigma\} \text{ and } P_j^{(k)} \in \{I, \sigma\} \Rightarrow \sigma \text{ is the same}\]</div>
+<p>where <span class="math notranslate nohighlight">\(P_i^{(k)}\)</span> denotes the Pauli operator on qubit <span class="math notranslate nohighlight">\(k\)</span>, and <span class="math notranslate nohighlight">\(\sigma \in \{X, Y, Z\}\)</span>.</p>
+</section>
+<section id="api-group-hamiltonian-pauli-terms">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">API: group_hamiltonian_pauli_terms</a><a class="headerlink" href="#api-group-hamiltonian-pauli-terms" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="group_hamiltonian_pauli_terms">
+<span class="sig-name descname"><span class="pre">group_hamiltonian_pauli_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hamiltonian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_qubits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#group_hamiltonian_pauli_terms" title="Link to this definition">#</a></dt>
+<dd><p>Group Pauli sum terms by their measurement basis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hamiltonian</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>List</em><em>[</em><em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – List of (coefficient, [(operator, qubit), …]) tuples</p></li>
+<li><p><strong>n_qubits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of qubits in the system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(identity_constant, grouped_terms)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a>, Dict]</p>
+</dd>
+</dl>
+<p>The grouped_terms dictionary maps measurement bases to lists of terms:</p>
+<ul class="simple">
+<li><p><strong>Key</strong>: Tuple of basis operators (e.g., (‘Z’, ‘Z’, ‘I’, ‘X’))</p></li>
+<li><p><strong>Value</strong>: List of (term_tuple, coefficient) pairs</p></li>
+</ul>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.hamiltonian_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">group_hamiltonian_pauli_terms</span>
+
+<span class="c1"># Define a Hamiltonian: 0.5*Z0Z1 + 0.3*Z1Z2 + 0.2*X0X1 + 0.1*I</span>
+<span class="n">hamiltonian</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]),</span>
+    <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+    <span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]),</span>
+    <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="p">[]),</span>  <span class="c1"># Identity term</span>
+<span class="p">]</span>
+
+<span class="c1"># Group terms</span>
+<span class="n">identity</span><span class="p">,</span> <span class="n">groups</span> <span class="o">=</span> <span class="n">group_hamiltonian_pauli_terms</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">,</span> <span class="n">n_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Identity constant: </span><span class="si">{</span><span class="n">identity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of measurement groups: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">basis</span><span class="p">,</span> <span class="n">terms</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Basis </span><span class="si">{</span><span class="n">basis</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span><span class="si">}</span><span class="s2"> terms&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Identity constant: 0.1
+Number of measurement groups: 2
+Basis (&#39;Z&#39;, &#39;Z&#39;, &#39;I&#39;): 1 terms
+Basis (&#39;Z&#39;, &#39;Z&#39;, &#39;Z&#39;): 1 terms
+Basis (&#39;X&#39;, &#39;X&#39;, &#39;I&#39;): 1 terms
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="practical-example-vqe-hamiltonian">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Practical Example: VQE Hamiltonian</a><a class="headerlink" href="#practical-example-vqe-hamiltonian" title="Link to this heading">#</a></h3>
+<p>Let’s see how grouping reduces measurements for a realistic VQE problem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.hamiltonian_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">group_hamiltonian_pauli_terms</span>
+
+<span class="c1"># Create H2 molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 0.74&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Get Hamiltonian in Pauli form (simplified example)</span>
+<span class="c1"># In practice, you&#39;d get this from molecular integrals</span>
+<span class="n">hamiltonian</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">get_hamiltonian_pauli_terms</span><span class="p">()</span>
+
+<span class="c1"># Group terms</span>
+<span class="n">identity</span><span class="p">,</span> <span class="n">groups</span> <span class="o">=</span> <span class="n">group_hamiltonian_pauli_terms</span><span class="p">(</span>
+    <span class="n">hamiltonian</span><span class="p">,</span>
+    <span class="n">n_qubits</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">n_qubits</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total terms: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Measurement groups: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reduction factor: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">x&quot;</span><span class="p">)</span>
+
+<span class="c1"># Distribution of group sizes</span>
+<span class="n">group_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)</span> <span class="k">for</span> <span class="n">terms</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average terms per group: </span><span class="si">{</span><span class="nb">sum</span><span class="p">(</span><span class="n">group_sizes</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">group_sizes</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For typical molecules, grouping can reduce measurements by 10-100x!</p>
+</section>
+</section>
+<section id="shot-allocation-strategy">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Shot Allocation Strategy</a><a class="headerlink" href="#shot-allocation-strategy" title="Link to this heading">#</a></h2>
+<p>After grouping Pauli terms, we must decide how to distribute a fixed shot budget across measurement groups. Different strategies optimize for different objectives.</p>
+<section id="uniform-allocation">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Uniform Allocation</a><a class="headerlink" href="#uniform-allocation" title="Link to this heading">#</a></h3>
+<p>The simplest strategy: divide shots equally among groups.</p>
+<div class="math notranslate nohighlight">
+\[n_{\text{shots}}^{(g)} = \frac{N_{\text{total}}}{|G|}\]</div>
+<p>where <span class="math notranslate nohighlight">\(G\)</span> is the set of measurement groups.</p>
+<p><strong>Pros</strong>: Simple, unbiased
+<strong>Cons</strong>: Ignores variance and coefficient magnitudes</p>
+</section>
+<section id="weighted-by-coefficient">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Weighted by Coefficient</a><a class="headerlink" href="#weighted-by-coefficient" title="Link to this heading">#</a></h3>
+<p>Allocate more shots to terms with larger coefficients:</p>
+<div class="math notranslate nohighlight">
+\[n_{\text{shots}}^{(g)} = N_{\text{total}} \cdot \frac{\sum_{i \in g} |c_i|}{\sum_{j} |c_j|}\]</div>
+<p><strong>Rationale</strong>: Terms with larger coefficients contribute more to the energy expectation value.</p>
+</section>
+<section id="variance-weighted-allocation">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Variance-Weighted Allocation</a><a class="headerlink" href="#variance-weighted-allocation" title="Link to this heading">#</a></h3>
+<p>The optimal strategy minimizes the variance of the energy estimator:</p>
+<div class="math notranslate nohighlight">
+\[n_{\text{shots}}^{(g)} \propto \sigma_g \cdot \sum_{i \in g} |c_i|\]</div>
+<p>where <span class="math notranslate nohighlight">\(\sigma_g\)</span> is the estimated measurement variance for group <span class="math notranslate nohighlight">\(g\)</span>.</p>
+<p>This is implemented in TyxonQ’s shot scheduler (see <span class="xref std std-doc">../../api/compiler/stages/scheduling</span>).</p>
+</section>
+</section>
+<section id="operator-encoding-and-i-o">
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">Operator Encoding and I/O</a><a class="headerlink" href="#operator-encoding-and-i-o" title="Link to this heading">#</a></h2>
+<p>TyxonQ provides utilities for encoding operators in different representations and efficient I/O.</p>
+<section id="encoding-formats">
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">Encoding Formats</a><a class="headerlink" href="#encoding-formats" title="Link to this heading">#</a></h3>
+<p><strong>OpenFermion Format</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openfermion</span><span class="w"> </span><span class="kn">import</span> <span class="n">QubitOperator</span>
+
+<span class="c1"># Create operator</span>
+<span class="n">op</span> <span class="o">=</span> <span class="n">QubitOperator</span><span class="p">(</span><span class="s1">&#39;X0 Y1 Z2&#39;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">+</span> <span class="n">QubitOperator</span><span class="p">(</span><span class="s1">&#39;Z0&#39;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>TyxonQ List Format</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Same operator as list of tuples</span>
+<span class="n">op_list</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Y&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]),</span>
+    <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Compact String Format</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compact string representation</span>
+<span class="n">op_str</span> <span class="o">=</span> <span class="s2">&quot;0.5*X0Y1Z2 + 0.3*Z0&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="i-o-functions">
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">I/O Functions</a><a class="headerlink" href="#i-o-functions" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="save_pauli_operator">
+<span class="sig-name descname"><span class="pre">save_pauli_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#save_pauli_operator" title="Link to this definition">#</a></dt>
+<dd><p>Save a Pauli operator to a file in compact format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operator</strong> – Pauli operator to save</p></li>
+<li><p><strong>filename</strong> – Output file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="load_pauli_operator">
+<span class="sig-name descname"><span class="pre">load_pauli_operator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#load_pauli_operator" title="Link to this definition">#</a></dt>
+<dd><p>Load a Pauli operator from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> – Input file path</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Loaded Pauli operator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.hamiltonian_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">save_pauli_operator</span><span class="p">,</span>
+    <span class="n">load_pauli_operator</span>
+<span class="p">)</span>
+
+<span class="c1"># Save a Hamiltonian</span>
+<span class="n">save_pauli_operator</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">,</span> <span class="s1">&#39;h2_hamiltonian.txt&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load it back</span>
+<span class="n">loaded_h</span> <span class="o">=</span> <span class="n">load_pauli_operator</span><span class="p">(</span><span class="s1">&#39;h2_hamiltonian.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is particularly useful for:</p>
+<ul class="simple">
+<li><p>Caching expensive Hamiltonian constructions</p></li>
+<li><p>Sharing Hamiltonians between simulations</p></li>
+<li><p>Archiving computational chemistry results</p></li>
+</ul>
+</section>
+</section>
+<section id="advanced-topics">
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Advanced Topics</a><a class="headerlink" href="#advanced-topics" title="Link to this heading">#</a></h2>
+<section id="gray-code-and-binary-encodings">
+<h3><a class="toc-backref" href="#id27" role="doc-backlink">Gray Code and Binary Encodings</a><a class="headerlink" href="#gray-code-and-binary-encodings" title="Link to this heading">#</a></h3>
+<p>For certain encoding schemes, Gray code or binary encodings provide additional optimizations:</p>
+<ul class="simple">
+<li><p><strong>Gray Code</strong>: Minimizes bit flips when traversing computational basis states</p></li>
+<li><p><strong>Binary Encoding</strong>: Compact representation for specific operator classes</p></li>
+</ul>
+<p>These are primarily used internally by the compiler but can be accessed for custom applications.</p>
+</section>
+<section id="integration-with-quantum-chemistry-workflows">
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">Integration with Quantum Chemistry Workflows</a><a class="headerlink" href="#integration-with-quantum-chemistry-workflows" title="Link to this heading">#</a></h3>
+<p>The Hamiltonian encoding library integrates seamlessly with TyxonQ’s quantum chemistry modules:</p>
+sequenceDiagram
+    participant User
+    participant Molecule
+    participant PySCF
+    participant Encoder
+    participant Compiler
+    participant Device
+
+    User-&gt;&gt;Molecule: Define molecule
+    Molecule-&gt;&gt;PySCF: Run HF calculation
+    PySCF--&gt;&gt;Molecule: Molecular orbitals, integrals
+    Molecule-&gt;&gt;Encoder: Get fermionic Hamiltonian
+    Encoder-&gt;&gt;Encoder: Apply fermion-to-qubit mapping
+    Encoder-&gt;&gt;Encoder: Group Pauli terms
+    Encoder--&gt;&gt;Compiler: Qubit Hamiltonian + groups
+    Compiler-&gt;&gt;Compiler: Allocate shots
+    Compiler-&gt;&gt;Device: Execute circuits
+    Device--&gt;&gt;User: Measurement results</section>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id29" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../circuits_library/index.html"><span class="doc">Circuits Library</span></a> - Circuit templates for Hamiltonian simulation</p></li>
+<li><p><a class="reference internal" href="../quantum_library/index.html"><span class="doc">Quantum Library</span></a> - Low-level quantum kernels</p></li>
+<li><p><a class="reference internal" href="../../user_guide/compiler/index.html"><span class="doc">Compiler Pipeline</span></a> - Compiler pipeline details</p></li>
+<li><p><a class="reference internal" href="../../quantum_chemistry/algorithms/index.html"><span class="doc">Quantum Chemistry Algorithms</span></a> - VQE and other algorithms</p></li>
+<li><p><span class="xref std std-doc">../../api/libs/hamiltonian_encoding</span> - Full API reference</p></li>
+</ul>
+</section>
+<section id="further-reading">
+<h2><a class="toc-backref" href="#id30" role="doc-backlink">Further Reading</a><a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<p><strong>Foundational Papers</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="jw1928" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>JW1928<span class="fn-bracket">]</span></span>
+<p>P. Jordan and E. Wigner, “Über das Paulische Äquivalenzverbot”,
+Zeitschrift für Physik, 47, 631 (1928)</p>
+</div>
+<div class="citation" id="bk2002" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>BK2002<span class="fn-bracket">]</span></span>
+<p>S. B. Bravyi and A. Y. Kitaev, “Fermionic Quantum Computation”,
+Annals of Physics, 298, 210 (2002)</p>
+</div>
+<div class="citation" id="parity2017" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Parity2017<span class="fn-bracket">]</span></span>
+<p>S. Bravyi, J. M. Gambetta, A. Mezzacapo, and K. Temme,
+“Tapering off qubits to simulate fermionic Hamiltonians”, arXiv:1701.08213 (2017)</p>
+</div>
+</div>
+<p><strong>Review Articles</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="review2020" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Review2020<span class="fn-bracket">]</span></span>
+<p>S. McArdle, S. Endo, A. Aspuru-Guzik, S. C. Benjamin, and X. Yuan,
+“Quantum computational chemistry”, Reviews of Modern Physics, 92, 015003 (2020)</p>
+</div>
+</div>
+<p><strong>TyxonQ Technical Documentation</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../technical_references/whitepaper.html"><span class="doc">Technical Whitepaper</span></a> - TyxonQ architecture and design</p></li>
+<li><p><a class="reference internal" href="../../technical_references/performance_optimization.html"><span class="doc">Performance Optimization</span></a> - Optimization strategies</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2><a class="toc-backref" href="#id31" role="doc-backlink">Examples</a><a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<section id="complete-example-h2-molecule-vqe">
+<h3><a class="toc-backref" href="#id32" role="doc-backlink">Complete Example: H2 Molecule VQE</a><a class="headerlink" href="#complete-example-h2-molecule-vqe" title="Link to this heading">#</a></h3>
+<p>This example demonstrates the full workflow from molecule definition to Hamiltonian grouping:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.hamiltonian_encoding</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">fop_to_qop</span><span class="p">,</span>
+    <span class="n">group_hamiltonian_pauli_terms</span>
+<span class="p">)</span>
+
+<span class="c1"># Step 1: Define molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 0.74&#39;</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;sto-3g&#39;</span><span class="p">,</span>
+    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">spin</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Step 2: Get molecular integrals and construct fermionic Hamiltonian</span>
+<span class="c1"># (This is typically done internally by VQE classes)</span>
+<span class="n">fop_h</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">get_fermionic_hamiltonian</span><span class="p">()</span>
+
+<span class="c1"># Step 3: Map to qubits</span>
+<span class="n">qop_h</span> <span class="o">=</span> <span class="n">fop_to_qop</span><span class="p">(</span>
+    <span class="n">fop_h</span><span class="p">,</span>
+    <span class="n">mapping</span><span class="o">=</span><span class="s1">&#39;parity&#39;</span><span class="p">,</span>  <span class="c1"># Use two-qubit reduction</span>
+    <span class="n">n_sorb</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">n_orbitals</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">n_elec</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">n_electrons</span>
+<span class="p">)</span>
+
+<span class="c1"># Step 4: Convert to list format for grouping</span>
+<span class="n">hamiltonian_list</span> <span class="o">=</span> <span class="n">qop_to_list</span><span class="p">(</span><span class="n">qop_h</span><span class="p">)</span>  <span class="c1"># Helper function</span>
+
+<span class="c1"># Step 5: Group Pauli terms</span>
+<span class="n">identity</span><span class="p">,</span> <span class="n">groups</span> <span class="o">=</span> <span class="n">group_hamiltonian_pauli_terms</span><span class="p">(</span>
+    <span class="n">hamiltonian_list</span><span class="p">,</span>
+    <span class="n">n_qubits</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">n_qubits</span>
+<span class="p">)</span>
+
+<span class="c1"># Step 6: Analyze grouping efficiency</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Identity contribution: </span><span class="si">{</span><span class="n">identity</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total Pauli terms: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hamiltonian_list</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Measurement groups: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compression ratio: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">hamiltonian_list</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">x&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 7: Create VQE circuit (simplified)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.algorithms</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+
+<span class="n">vqe</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="s1">&#39;parity&#39;</span><span class="p">)</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">vqe</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground state energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Ha&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This complete workflow showcases how Hamiltonian encoding enables efficient quantum chemistry simulations.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../quantum_library/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quantum Library</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../optimizer/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Optimizer</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-features">Key Features</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fermion-to-qubit-mappings">Fermion-to-Qubit Mappings</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#theoretical-background">Theoretical Background</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fermion-operators">Fermion Operators</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qubit-operators">Qubit Operators</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jordan-wigner-transformation">Jordan-Wigner Transformation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#bravyi-kitaev-transformation">Bravyi-Kitaev Transformation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parity-mapping-with-two-qubit-reduction">Parity Mapping with Two-Qubit Reduction</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-transformation">Binary Transformation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-reference-fop-to-qop">API Reference: fop_to_qop</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fop_to_qop"><code class="docutils literal notranslate"><span class="pre">fop_to_qop()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mapping-comparison">Mapping Comparison</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pauli-term-grouping">Pauli Term Grouping</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#motivation">Motivation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#grouping-strategy">Grouping Strategy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-group-hamiltonian-pauli-terms">API: group_hamiltonian_pauli_terms</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#group_hamiltonian_pauli_terms"><code class="docutils literal notranslate"><span class="pre">group_hamiltonian_pauli_terms()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-example-vqe-hamiltonian">Practical Example: VQE Hamiltonian</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#shot-allocation-strategy">Shot Allocation Strategy</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#uniform-allocation">Uniform Allocation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weighted-by-coefficient">Weighted by Coefficient</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#variance-weighted-allocation">Variance-Weighted Allocation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#operator-encoding-and-i-o">Operator Encoding and I/O</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#encoding-formats">Encoding Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#i-o-functions">I/O Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#save_pauli_operator"><code class="docutils literal notranslate"><span class="pre">save_pauli_operator()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#load_pauli_operator"><code class="docutils literal notranslate"><span class="pre">load_pauli_operator()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-topics">Advanced Topics</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gray-code-and-binary-encodings">Gray Code and Binary Encodings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-quantum-chemistry-workflows">Integration with Quantum Chemistry Workflows</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example-h2-molecule-vqe">Complete Example: H2 Molecule VQE</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/libraries/hamiltonian_encoding/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

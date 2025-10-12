@@ -20,7 +20,62 @@ class _classproperty(property):
 
 
 class NumericBackend:
-    """Class-level proxy to the current backend (no instantiation required)."""
+    """Class-level proxy providing unified access to the current numerical backend.
+
+    This class serves as a convenient interface for accessing array operations
+    without requiring explicit backend instantiation. All methods and properties
+    are implemented as class-level operations that delegate to the currently
+    configured backend.
+
+    The NumericBackend provides a consistent API across different numerical
+    libraries (NumPy, PyTorch, CuPy) while allowing runtime backend switching
+    for performance optimization and hardware targeting.
+
+    Key Features:
+        - **No instantiation required**: All operations are class methods
+        - **Automatic backend delegation**: Forwards calls to the active backend
+        - **Unified dtype access**: Consistent data type properties across backends
+        - **Hardware acceleration**: Supports CPU, GPU, and distributed computing
+        - **Automatic differentiation**: Gradient computation when supported
+
+    Supported Backends:
+        - **numpy**: CPU-based computations with full NumPy compatibility
+        - **pytorch**: GPU acceleration and automatic differentiation via PyTorch
+        - **cupynumeric**: Distributed GPU computing via CuPy/Legate
+
+    Examples:
+        >>> # Create arrays using the current backend
+        >>> x = NumericBackend.array([1, 2, 3])
+        >>> y = NumericBackend.zeros((2, 3), dtype=NumericBackend.complex128)
+        
+        >>> # Perform operations
+        >>> result = NumericBackend.matmul(x, y.T)
+        >>> eigenvals = NumericBackend.svd(result)[1]
+        
+        >>> # Access data types
+        >>> complex_dtype = NumericBackend.complex64
+        >>> float_dtype = NumericBackend.float32
+        
+        >>> # Mathematical functions
+        >>> exp_result = NumericBackend.exp(x)
+        >>> trig_result = NumericBackend.sin(NumericBackend.pi * x)
+        
+        >>> # Automatic differentiation (PyTorch backend)
+        >>> x_grad = NumericBackend.requires_grad(x, True)
+        >>> if hasattr(NumericBackend, 'value_and_grad'):
+        ...     val, grad = NumericBackend.value_and_grad(lambda t: NumericBackend.sum(t**2))(x_grad)
+
+    Notes:
+        - Backend selection is controlled via `get_backend()` and configuration
+        - Not all backends support all operations (e.g., automatic differentiation)
+        - Performance characteristics vary significantly between backends
+        - Some operations may fall back gracefully when unsupported
+        
+    See Also:
+        get_backend: Factory function for explicit backend selection.
+        set_backend: Configure the global default backend.
+        ArrayBackend: Base interface implemented by all backends.
+    """
 
     # Dtype constants
     @_classproperty

@@ -1,0 +1,1292 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Circuits Library &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'libraries/circuits_library/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Quantum Library" href="../quantum_library/index.html" />
+    <link rel="prev" title="Libraries &amp; Components" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Circuits Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantum_library/index.html">Quantum Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../hamiltonian_encoding/index.html">Hamiltonian Encoding</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimizer/index.html">Optimizer</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Libraries &amp; Components</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Circuits Library</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="circuits-library">
+<h1>Circuits Library<a class="headerlink" href="#circuits-library" title="Link to this heading">#</a></h1>
+<p>The Circuits Library provides pre-built, parameterized quantum circuit templates for common quantum algorithms and applications. These templates enable rapid prototyping and standardized implementation of variational quantum algorithms, combinatorial optimization, and time evolution simulations.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id5">Overview</a></p></li>
+<li><p><a class="reference internal" href="#available-templates" id="id6">Available Templates</a></p></li>
+<li><p><a class="reference internal" href="#vqe-ansatz-templates" id="id7">VQE Ansatz Templates</a></p>
+<ul>
+<li><p><a class="reference internal" href="#hardware-efficient-ansatz-hea" id="id8">Hardware-Efficient Ansatz (HEA)</a></p></li>
+<li><p><a class="reference internal" href="#chemically-inspired-ansatze" id="id9">Chemically-Inspired Ansatze</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#qaoa-for-combinatorial-optimization" id="id10">QAOA for Combinatorial Optimization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#theoretical-background" id="id11">Theoretical Background</a></p></li>
+<li><p><a class="reference internal" href="#qaoa-for-ising-models" id="id12">QAOA for Ising Models</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#ucc-circuit-templates" id="id13">UCC Circuit Templates</a></p>
+<ul>
+<li><p><a class="reference internal" href="#theoretical-foundation" id="id14">Theoretical Foundation</a></p></li>
+<li><p><a class="reference internal" href="#api-build-ucc-circuit" id="id15">API: build_ucc_circuit</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#trotter-circuit-templates" id="id16">Trotter Circuit Templates</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id1" id="id17">Theoretical Background</a></p></li>
+<li><p><a class="reference internal" href="#api-build-trotter-circuit" id="id18">API: build_trotter_circuit</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#variational-circuit-utilities" id="id19">Variational Circuit Utilities</a></p>
+<ul>
+<li><p><a class="reference internal" href="#pauli-evolution" id="id20">Pauli Evolution</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#best-practices" id="id21">Best Practices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#general-guidelines" id="id22">General Guidelines</a></p></li>
+<li><p><a class="reference internal" href="#circuit-selection-guide" id="id23">Circuit Selection Guide</a></p></li>
+<li><p><a class="reference internal" href="#performance-optimization" id="id24">Performance Optimization</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#see-also" id="id25">See Also</a></p></li>
+<li><p><a class="reference internal" href="#further-reading" id="id26">Further Reading</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Quantum algorithm development often requires implementing complex parameterized circuits with specific structures. The Circuits Library accelerates this process by providing:</p>
+<dl class="simple">
+<dt>✨ <strong>Pre-configured Templates</strong></dt><dd><p>Battle-tested circuit structures for VQE, QAOA, UCC, and more</p>
+</dd>
+<dt>🎯 <strong>Parameterization Support</strong></dt><dd><p>Flexible parameter handling for variational optimization</p>
+</dd>
+<dt>⚡ <strong>Optimized Construction</strong></dt><dd><p>Efficient circuit building with minimal overhead</p>
+</dd>
+<dt>🔧 <strong>Customization</strong></dt><dd><p>Extensible templates that can be modified for specific needs</p>
+</dd>
+<dt>🧬 <strong>Chemistry Integration</strong></dt><dd><p>Specialized templates for quantum chemistry applications</p>
+</dd>
+</dl>
+graph TD
+    A[Circuit Template] --&gt; B[VQE Ansatz]
+    A --&gt; C[QAOA Circuit]
+    A --&gt; D[UCC Circuit]
+    A --&gt; E[Trotter Circuit]
+    A --&gt; F[Variational Ansatz]
+
+    B --&gt; G[Optimization Algorithm]
+    C --&gt; G
+    D --&gt; H[Quantum Chemistry]
+    E --&gt; I[Time Evolution]
+    F --&gt; G</section>
+<section id="available-templates">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Available Templates</a><a class="headerlink" href="#available-templates" title="Link to this heading">#</a></h2>
+<p>The library includes five main categories of circuit templates:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Circuit Template Categories</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 35.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Template Type</p></th>
+<th class="head"><p>Primary Use Case</p></th>
+<th class="head"><p>Key Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>VQE Ansatze</p></td>
+<td><p>Ground state energy</p></td>
+<td><p>Hardware-efficient, chemically-inspired</p></td>
+</tr>
+<tr class="row-odd"><td><p>QAOA/Ising</p></td>
+<td><p>Combinatorial optimization</p></td>
+<td><p>MaxCut, graph problems, Ising models</p></td>
+</tr>
+<tr class="row-even"><td><p>UCC/UCCSD</p></td>
+<td><p>Quantum chemistry</p></td>
+<td><p>Fermionic excitations, chemical accuracy</p></td>
+</tr>
+<tr class="row-odd"><td><p>Trotter Circuits</p></td>
+<td><p>Time evolution</p></td>
+<td><p>Hamiltonian simulation, dynamics</p></td>
+</tr>
+<tr class="row-even"><td><p>Variational Templates</p></td>
+<td><p>General optimization</p></td>
+<td><p>Flexible, customizable structures</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="vqe-ansatz-templates">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">VQE Ansatz Templates</a><a class="headerlink" href="#vqe-ansatz-templates" title="Link to this heading">#</a></h2>
+<p>Variational Quantum Eigensolver (VQE) is one of the most important near-term quantum algorithms. The Circuits Library provides several ansatz templates optimized for different scenarios.</p>
+<section id="hardware-efficient-ansatz-hea">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Hardware-Efficient Ansatz (HEA)</a><a class="headerlink" href="#hardware-efficient-ansatz-hea" title="Link to this heading">#</a></h3>
+<p>The Hardware-Efficient Ansatz is designed to work well on near-term quantum devices with limited connectivity and gate fidelity.</p>
+<p><strong>Structure</strong></p>
+<p>A typical HEA consists of:</p>
+<ol class="arabic simple">
+<li><p><strong>Initial layer</strong>: Single-qubit rotations (usually RY gates)</p></li>
+<li><p><strong>Entangling layers</strong>: Two-qubit gates (CNOT chains)</p></li>
+<li><p><strong>Rotation layers</strong>: Additional single-qubit rotations</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_hea_circuit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Create a 4-qubit HEA with 3 layers</span>
+<span class="n">n_qubits</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">n_layers</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">n_params</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_layers</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">n_qubits</span>  <span class="c1"># RY gates</span>
+
+<span class="c1"># Random initial parameters</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+
+<span class="c1"># Build circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">build_hea_circuit</span><span class="p">(</span>
+    <span class="n">n_qubits</span><span class="o">=</span><span class="n">n_qubits</span><span class="p">,</span>
+    <span class="n">n_layers</span><span class="o">=</span><span class="n">n_layers</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+    <span class="n">entangler</span><span class="o">=</span><span class="s1">&#39;cx&#39;</span><span class="p">,</span>  <span class="c1"># Use CNOT for entanglement</span>
+    <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span>  <span class="c1"># Linear chain topology</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Circuit depth: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gate count: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Parameter Structure</strong></p>
+<p>For an HEA with <span class="math notranslate nohighlight">\(L\)</span> layers and <span class="math notranslate nohighlight">\(n\)</span> qubits:</p>
+<div class="math notranslate nohighlight">
+\[N_{params} = (L + 1) \times n\]</div>
+<p>Parameters are organized as:</p>
+<ul class="simple">
+<li><p>Layer 0: Initial RY rotations on all qubits</p></li>
+<li><p>Layers 1 to L: RY rotations after each entangling layer</p></li>
+</ul>
+<p><strong>Customization Options</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Different entangling gates</span>
+<span class="n">circuit_cz</span> <span class="o">=</span> <span class="n">build_hea_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">entangler</span><span class="o">=</span><span class="s1">&#39;cz&#39;</span><span class="p">)</span>    <span class="c1"># CZ gates</span>
+<span class="n">circuit_swap</span> <span class="o">=</span> <span class="n">build_hea_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">entangler</span><span class="o">=</span><span class="s1">&#39;swap&#39;</span><span class="p">)</span>  <span class="c1"># SWAP gates</span>
+
+<span class="c1"># Different entanglement topologies</span>
+<span class="n">circuit_full</span> <span class="o">=</span> <span class="n">build_hea_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">)</span>      <span class="c1"># All-to-all</span>
+<span class="n">circuit_circular</span> <span class="o">=</span> <span class="n">build_hea_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;circular&#39;</span><span class="p">)</span>  <span class="c1"># Ring</span>
+<span class="n">circuit_sca</span> <span class="o">=</span> <span class="n">build_hea_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">entanglement</span><span class="o">=</span><span class="s1">&#39;sca&#39;</span><span class="p">)</span>        <span class="c1"># Shifted circular</span>
+</pre></div>
+</div>
+<p><strong>When to Use HEA</strong></p>
+<ul class="simple">
+<li><p>✅ Hardware-limited environments (NISQ devices)</p></li>
+<li><p>✅ Unknown Hamiltonian structure</p></li>
+<li><p>✅ Rapid prototyping and testing</p></li>
+<li><p>❌ Requires chemical accuracy (use UCC instead)</p></li>
+<li><p>❌ Need physical interpretation of parameters</p></li>
+</ul>
+</section>
+<section id="chemically-inspired-ansatze">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Chemically-Inspired Ansatze</a><a class="headerlink" href="#chemically-inspired-ansatze" title="Link to this heading">#</a></h3>
+<p>For quantum chemistry problems, ansatze based on electronic structure theory often provide better performance.</p>
+<p>See <a class="reference internal" href="../../quantum_chemistry/algorithms/index.html"><span class="doc">Quantum Chemistry Algorithms</span></a> for detailed information on:</p>
+<ul class="simple">
+<li><p>UCCSD (Unitary Coupled Cluster Singles and Doubles)</p></li>
+<li><p>k-UpCCGSD (Unitary Paired Coupled Cluster)</p></li>
+<li><p>PUCCD (Pair Unitary Coupled Cluster Doubles)</p></li>
+</ul>
+</section>
+</section>
+<section id="qaoa-for-combinatorial-optimization">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">QAOA for Combinatorial Optimization</a><a class="headerlink" href="#qaoa-for-combinatorial-optimization" title="Link to this heading">#</a></h2>
+<p>The Quantum Approximate Optimization Algorithm (QAOA) is designed for solving combinatorial optimization problems on near-term quantum devices.</p>
+<section id="theoretical-background">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Theoretical Background</a><a class="headerlink" href="#theoretical-background" title="Link to this heading">#</a></h3>
+<p>QAOA approximates the ground state of a cost Hamiltonian <span class="math notranslate nohighlight">\(H_C\)</span> by applying alternating unitaries:</p>
+<div class="math notranslate nohighlight">
+\[|\psi(\boldsymbol{\gamma}, \boldsymbol{\beta})\rangle = U_M(\beta_p) U_C(\gamma_p) \cdots U_M(\beta_1) U_C(\gamma_1) |+\rangle^{\otimes n}\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(U_C(\gamma) = e^{-i\gamma H_C}\)</span> is the cost unitary</p></li>
+<li><p><span class="math notranslate nohighlight">\(U_M(\beta) = e^{-i\beta H_M}\)</span> is the mixer unitary</p></li>
+<li><p><span class="math notranslate nohighlight">\(|+\rangle = H|0\rangle\)</span> is the equal superposition state</p></li>
+<li><p><span class="math notranslate nohighlight">\(p\)</span> is the number of QAOA layers</p></li>
+</ul>
+</section>
+<section id="qaoa-for-ising-models">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">QAOA for Ising Models</a><a class="headerlink" href="#qaoa-for-ising-models" title="Link to this heading">#</a></h3>
+<p>The library provides specialized support for Ising-type Hamiltonians:</p>
+<div class="math notranslate nohighlight">
+\[H_C = \sum_i h_i Z_i + \sum_{i&lt;j} J_{ij} Z_i Z_j\]</div>
+<p><strong>API: qaoa_ising</strong></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="qaoa_ising">
+<span class="sig-name descname"><span class="pre">qaoa_ising</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_qubits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nlayers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pauli_z_terms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mixer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'X'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_coupling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#qaoa_ising" title="Link to this definition">#</a></dt>
+<dd><p>Build QAOA circuit for Ising model problems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_qubits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of qubits</p></li>
+<li><p><strong>nlayers</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of QAOA layers (p-value)</p></li>
+<li><p><strong>pauli_z_terms</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em><em>]</em>) – Z-basis Pauli terms (each as list of qubit indices)</p></li>
+<li><p><strong>weights</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Coefficients for each Pauli term</p></li>
+<li><p><strong>params</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Circuit parameters [γ₁, β₁, γ₂, β₂, …, γₚ, βₚ]</p></li>
+<li><p><strong>mixer</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Mixer type: ‘X’, ‘XY’, or ‘ZZ’</p></li>
+<li><p><strong>full_coupling</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Use all-to-all coupling for mixer</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>QAOA circuit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../api/core/generated/tyxonq.core.html#tyxonq.core.Circuit" title="tyxonq.core.Circuit">Circuit</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Example: MaxCut Problem</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library</span><span class="w"> </span><span class="kn">import</span> <span class="n">qaoa_ising</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Define MaxCut on a 4-node graph</span>
+<span class="c1"># Edges: (0,1), (1,2), (2,3), (3,0)</span>
+<span class="n">num_qubits</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">nlayers</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="c1"># Cost Hamiltonian: -0.5 * sum of Z_i Z_j for each edge</span>
+<span class="c1"># In Ising form: each edge contributes Z_i Z_j</span>
+<span class="n">pauli_z_terms</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># Z_0 Z_1</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="c1"># Z_1 Z_2</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># Z_2 Z_3</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="c1"># Z_3 Z_0</span>
+<span class="p">]</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># Coefficient for each edge</span>
+
+<span class="c1"># Initial parameters (to be optimized)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">nlayers</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span>
+
+<span class="c1"># Build QAOA circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">qaoa_ising</span><span class="p">(</span>
+    <span class="n">num_qubits</span><span class="o">=</span><span class="n">num_qubits</span><span class="p">,</span>
+    <span class="n">nlayers</span><span class="o">=</span><span class="n">nlayers</span><span class="p">,</span>
+    <span class="n">pauli_z_terms</span><span class="o">=</span><span class="n">pauli_z_terms</span><span class="p">,</span>
+    <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+    <span class="n">mixer</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span>  <span class="c1"># Standard X mixer</span>
+    <span class="n">full_coupling</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;QAOA circuit with </span><span class="si">{</span><span class="n">nlayers</span><span class="si">}</span><span class="s2"> layers&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameters: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Mixer Options</strong></p>
+<p>The mixer Hamiltonian can take different forms:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id3">
+<caption><span class="caption-text">QAOA Mixer Types</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 15.0%" />
+<col style="width: 35.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mixer</p></th>
+<th class="head"><p>Hamiltonian</p></th>
+<th class="head"><p>Use Case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘X’</p></td>
+<td><p><span class="math notranslate nohighlight">\(H_M = \sum_i X_i\)</span></p></td>
+<td><p>Standard QAOA, general problems</p></td>
+</tr>
+<tr class="row-odd"><td><p>‘XY’</p></td>
+<td><p><span class="math notranslate nohighlight">\(H_M = \sum_{\langle i,j \rangle} (X_i X_j + Y_i Y_j)\)</span></p></td>
+<td><p>Particle-conserving, constrained problems</p></td>
+</tr>
+<tr class="row-even"><td><p>‘ZZ’</p></td>
+<td><p><span class="math notranslate nohighlight">\(H_M = \sum_{\langle i,j \rangle} Z_i Z_j\)</span></p></td>
+<td><p>Alternative mixing for hard instances</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Parameter Optimization</strong></p>
+<p>QAOA parameters are typically optimized to minimize the cost function expectation value:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cost_function</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">qaoa_ising</span><span class="p">(</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">nlayers</span><span class="p">,</span> <span class="n">pauli_z_terms</span><span class="p">,</span>
+                        <span class="n">weights</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">mixer</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+    <span class="c1"># Compute expectation value of cost Hamiltonian</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">compute_energy</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">pauli_z_terms</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">energy</span>
+
+<span class="c1"># Optimize</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">cost_function</span><span class="p">,</span> <span class="n">initial_params</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">)</span>
+<span class="n">optimal_params</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
+<span class="n">optimal_energy</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span>
+</pre></div>
+</div>
+<p><strong>Performance Tips</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Layer Count</strong>: Start with p=1, increase if needed. Typically p=3-5 is sufficient.</p></li>
+<li><p><strong>Initialization</strong>: Initialize γ and β around π/4 for better convergence.</p></li>
+<li><p><strong>Mixer Selection</strong>: Use ‘XY’ mixer for problems with particle conservation.</p></li>
+<li><p><strong>Graph Structure</strong>: Exploit graph symmetries to reduce parameter space.</p></li>
+</ol>
+</section>
+</section>
+<section id="ucc-circuit-templates">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">UCC Circuit Templates</a><a class="headerlink" href="#ucc-circuit-templates" title="Link to this heading">#</a></h2>
+<p>Unitary Coupled Cluster (UCC) circuits are the gold standard for quantum chemistry simulations, providing a chemically-motivated ansatz that can systematically approach exact results.</p>
+<section id="theoretical-foundation">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Theoretical Foundation</a><a class="headerlink" href="#theoretical-foundation" title="Link to this heading">#</a></h3>
+<p>The UCC ansatz applies a unitary transformation to a reference state (typically Hartree-Fock):</p>
+<div class="math notranslate nohighlight">
+\[|\psi_{UCC}\rangle = e^{\hat{T} - \hat{T}^\dagger} |HF\rangle\]</div>
+<p>where <span class="math notranslate nohighlight">\(\hat{T}\)</span> is the cluster operator:</p>
+<div class="math notranslate nohighlight">
+\[\hat{T} = \hat{T}_1 + \hat{T}_2 + \cdots\]</div>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\hat{T}_1 = \sum_{ia} t_i^a a_a^\dagger a_i\)</span> (single excitations)</p></li>
+<li><p><span class="math notranslate nohighlight">\(\hat{T}_2 = \sum_{ijab} t_{ij}^{ab} a_a^\dagger a_b^\dagger a_j a_i\)</span> (double excitations)</p></li>
+</ul>
+<p>After fermion-to-qubit mapping, these become parameterized quantum circuits.</p>
+</section>
+<section id="api-build-ucc-circuit">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">API: build_ucc_circuit</a><a class="headerlink" href="#api-build-ucc-circuit" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="build_ucc_circuit">
+<span class="sig-name descname"><span class="pre">build_ucc_circuit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_qubits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_elec_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ex_ops</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fermion'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decompose_multicontrol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trotter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#build_ucc_circuit" title="Link to this definition">#</a></dt>
+<dd><p>Construct a UCC circuit from excitation operators.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Parameter values for excitations</p></li>
+<li><p><strong>n_qubits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of qubits</p></li>
+<li><p><strong>n_elec_s</strong> (<em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em>) – Electron count as (n_alpha, n_beta)</p></li>
+<li><p><strong>ex_ops</strong> (<em>Sequence</em><em>[</em><em>Tuple</em><em>]</em>) – Excitation operators (fermionic indices)</p></li>
+<li><p><strong>param_ids</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>] </em><em>| </em><em>None</em>) – Map operators to parameter indices</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – ‘fermion’, ‘qubit’, or ‘hcb’</p></li>
+<li><p><strong>init_state</strong> (<a class="reference internal" href="../../api/core/generated/tyxonq.core.html#tyxonq.core.Circuit" title="tyxonq.core.Circuit"><em>Circuit</em></a><em> | </em><em>None</em>) – Initial state circuit (default: HF state)</p></li>
+<li><p><strong>decompose_multicontrol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Decompose multi-controlled gates</p></li>
+<li><p><strong>trotter</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Use Trotterization instead of gate-level implementation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>UCC circuit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../api/core/generated/tyxonq.core.html#tyxonq.core.Circuit" title="tyxonq.core.Circuit">Circuit</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Example: UCCSD for H2</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_ucc_circuit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Define H2 molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; H 0 0 0.74&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;sto-3g&#39;</span><span class="p">)</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Get excitation operators for UCCSD</span>
+<span class="c1"># This is typically done automatically by UCCSD class</span>
+<span class="c1"># Here we show the manual process</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.algorithms</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">ex_ops</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">excitation_ops</span>
+<span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ex_ops</span><span class="p">)</span>
+
+<span class="c1"># Initial parameters (from MP2 or CCSD)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span>
+
+<span class="c1"># Build UCC circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">build_ucc_circuit</span><span class="p">(</span>
+    <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+    <span class="n">n_qubits</span><span class="o">=</span><span class="n">mol</span><span class="o">.</span><span class="n">n_qubits</span><span class="p">,</span>
+    <span class="n">n_elec_s</span><span class="o">=</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">n_electrons</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">n_electrons</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="n">ex_ops</span><span class="o">=</span><span class="n">ex_ops</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;fermion&#39;</span><span class="p">,</span>
+    <span class="n">trotter</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># Use gate-level implementation</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;UCCSD circuit for H2&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Qubits: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameters: </span><span class="si">{</span><span class="n">n_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Excitations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ex_ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Implementation Modes</strong></p>
+<p>The <cite>mode</cite> parameter controls how excitation operators are implemented:</p>
+<ul class="simple">
+<li><p><strong>‘fermion’</strong>: Full fermionic implementation with number-preserving gates</p></li>
+<li><p><strong>‘qubit’</strong>: Qubit-based implementation after Jordan-Wigner mapping</p></li>
+<li><p><strong>‘hcb’</strong>: Hardware-compatible basis (optimized for specific devices)</p></li>
+</ul>
+<p><strong>Trotterization</strong></p>
+<p>For large molecules, Trotterization can reduce circuit depth at the cost of accuracy:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Standard gate-level (deeper, more accurate)</span>
+<span class="n">circuit_gates</span> <span class="o">=</span> <span class="n">build_ucc_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">trotter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Trotterized (shallower, approximate)</span>
+<span class="n">circuit_trotter</span> <span class="o">=</span> <span class="n">build_ucc_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">trotter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>See Also</strong></p>
+<ul class="simple">
+<li><p><span class="xref std std-doc">../../quantum_chemistry/algorithms/uccsd</span> - Complete UCCSD algorithm documentation</p></li>
+<li><p><span class="xref std std-doc">../../quantum_chemistry/algorithms/kupccgsd</span> - k-UpCCGSD variant</p></li>
+<li><p><a class="reference internal" href="../hamiltonian_encoding/index.html"><span class="doc">Hamiltonian Encoding</span></a> - Fermion-to-qubit mappings</p></li>
+</ul>
+</section>
+</section>
+<section id="trotter-circuit-templates">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Trotter Circuit Templates</a><a class="headerlink" href="#trotter-circuit-templates" title="Link to this heading">#</a></h2>
+<p>Trotter-Suzuki decomposition enables time evolution simulation on quantum computers by breaking down the evolution operator into manageable pieces.</p>
+<section id="id1">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Theoretical Background</a><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>For a time-independent Hamiltonian <span class="math notranslate nohighlight">\(H = \sum_j w_j P_j\)</span> (sum of Pauli terms), the time evolution operator is:</p>
+<div class="math notranslate nohighlight">
+\[U(t) = e^{-iHt}\]</div>
+<p>The first-order Trotter-Suzuki decomposition approximates this as:</p>
+<div class="math notranslate nohighlight">
+\[U(t) \approx \left(\prod_j e^{-iw_j P_j \Delta t}\right)^{n}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta t = t/n\)</span> is the Trotter step size and <span class="math notranslate nohighlight">\(n\)</span> is the number of steps.</p>
+<p><strong>Trotter Error</strong></p>
+<p>The approximation error scales as:</p>
+<div class="math notranslate nohighlight">
+\[\|U(t) - U_{Trotter}(t)\| = O\left(\frac{t^2}{n}\right)\]</div>
+<p>Higher-order Trotter formulas can reduce this error at the cost of increased circuit depth.</p>
+</section>
+<section id="api-build-trotter-circuit">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">API: build_trotter_circuit</a><a class="headerlink" href="#api-build-trotter-circuit" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="build_trotter_circuit">
+<span class="sig-name descname"><span class="pre">build_trotter_circuit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pauli_terms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_qubits=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order='first'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#build_trotter_circuit" title="Link to this definition">#</a></dt>
+<dd><p>Construct a Trotterized time evolution circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pauli_terms</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>]</em><em>]</em>) – Pauli terms encoded as sequences of {0,1,2,3} for {I,X,Y,Z}</p></li>
+<li><p><strong>weights</strong> (<em>Sequence</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>] </em><em>| </em><em>None</em>) – Coefficients for each term (default: all 1.0)</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Total evolution time</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of Trotter steps</p></li>
+<li><p><strong>num_qubits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em> | </em><em>None</em>) – Number of qubits (inferred if not provided)</p></li>
+<li><p><strong>order</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Trotter order (‘first’ only currently supported)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Trotter evolution circuit</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../api/core/generated/tyxonq.core.html#tyxonq.core.Circuit" title="tyxonq.core.Circuit">Circuit</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Pauli Term Encoding</strong></p>
+<p>Pauli terms are encoded as integer sequences:</p>
+<ul class="simple">
+<li><p>0 = I (identity)</p></li>
+<li><p>1 = X</p></li>
+<li><p>2 = Y</p></li>
+<li><p>3 = Z</p></li>
+</ul>
+<p>Example: <span class="math notranslate nohighlight">\(X_0 Y_1 Z_2\)</span> on 3 qubits → <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code></p>
+<p><strong>Example: Heisenberg Model Evolution</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library</span><span class="w"> </span><span class="kn">import</span> <span class="n">build_trotter_circuit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># 1D Heisenberg chain: H = sum_i (X_i X_{i+1} + Y_i Y_{i+1} + Z_i Z_{i+1})</span>
+<span class="n">n_qubits</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="c1"># Define Pauli terms</span>
+<span class="n">pauli_terms</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="c1"># X_i X_{i+1}</span>
+    <span class="n">term_x</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_qubits</span>
+    <span class="n">term_x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>      <span class="c1"># X on qubit i</span>
+    <span class="n">term_x</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>    <span class="c1"># X on qubit i+1</span>
+    <span class="n">pauli_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term_x</span><span class="p">)</span>
+    <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="c1"># Y_i Y_{i+1}</span>
+    <span class="n">term_y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_qubits</span>
+    <span class="n">term_y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>      <span class="c1"># Y on qubit i</span>
+    <span class="n">term_y</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>    <span class="c1"># Y on qubit i+1</span>
+    <span class="n">pauli_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term_y</span><span class="p">)</span>
+    <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="c1"># Z_i Z_{i+1}</span>
+    <span class="n">term_z</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n_qubits</span>
+    <span class="n">term_z</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>      <span class="c1"># Z on qubit i</span>
+    <span class="n">term_z</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>    <span class="c1"># Z on qubit i+1</span>
+    <span class="n">pauli_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">term_z</span><span class="p">)</span>
+    <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="c1"># Time evolution parameters</span>
+<span class="n">evolution_time</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">trotter_steps</span> <span class="o">=</span> <span class="mi">10</span>
+
+<span class="c1"># Build circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">build_trotter_circuit</span><span class="p">(</span>
+    <span class="n">pauli_terms</span><span class="o">=</span><span class="n">pauli_terms</span><span class="p">,</span>
+    <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+    <span class="n">time</span><span class="o">=</span><span class="n">evolution_time</span><span class="p">,</span>
+    <span class="n">steps</span><span class="o">=</span><span class="n">trotter_steps</span><span class="p">,</span>
+    <span class="n">num_qubits</span><span class="o">=</span><span class="n">n_qubits</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Heisenberg evolution for t=</span><span class="si">{</span><span class="n">evolution_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trotter steps: </span><span class="si">{</span><span class="n">trotter_steps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Circuit depth: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total gates: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Choosing Trotter Parameters</strong></p>
+<p>The tradeoff between accuracy and circuit depth:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">Trotter Parameter Guidelines</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 30.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Effect of Increase</p></th>
+<th class="head"><p>Recommendation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Number of steps</p></td>
+<td><p>↑ Accuracy, ↑ Depth</p></td>
+<td><p>Start with n ~ 10, increase if needed</p></td>
+</tr>
+<tr class="row-odd"><td><p>Evolution time</p></td>
+<td><p>↑ Error (for fixed n)</p></td>
+<td><p>Keep <span class="math notranslate nohighlight">\(t \cdot \|H\| / n &lt; 1\)</span> for accuracy</p></td>
+</tr>
+<tr class="row-even"><td><p>Hamiltonian norm</p></td>
+<td><p>↑ Error sensitivity</p></td>
+<td><p>Normalize H or increase steps</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Advanced: Adaptive Trotterization</strong></p>
+<p>For time-dependent problems or when accuracy requirements vary:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">adaptive_trotter_circuit</span><span class="p">(</span><span class="n">pauli_terms</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span>
+                             <span class="n">error_threshold</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Automatically determine number of Trotter steps</span>
+<span class="sd">    based on error threshold.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Estimate required steps (simplified)</span>
+    <span class="n">H_norm</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">weights</span><span class="p">)</span>
+    <span class="n">min_steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">time</span> <span class="o">*</span> <span class="n">H_norm</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">error_threshold</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">build_trotter_circuit</span><span class="p">(</span>
+        <span class="n">pauli_terms</span><span class="o">=</span><span class="n">pauli_terms</span><span class="p">,</span>
+        <span class="n">weights</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+        <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">,</span>
+        <span class="n">steps</span><span class="o">=</span><span class="n">min_steps</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Applications</strong></p>
+<p>Trotter circuits are essential for:</p>
+<ul class="simple">
+<li><p>Quantum dynamics simulation</p></li>
+<li><p>Adiabatic state preparation</p></li>
+<li><p>Quantum annealing</p></li>
+<li><p>Time-dependent VQE</p></li>
+<li><p>Quantum walk implementations</p></li>
+</ul>
+</section>
+</section>
+<section id="variational-circuit-utilities">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Variational Circuit Utilities</a><a class="headerlink" href="#variational-circuit-utilities" title="Link to this heading">#</a></h2>
+<p>The library also provides utilities for constructing custom variational circuits.</p>
+<section id="pauli-evolution">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Pauli Evolution</a><a class="headerlink" href="#pauli-evolution" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="evolve_pauli_ops">
+<span class="sig-name descname"><span class="pre">evolve_pauli_ops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pauli_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#evolve_pauli_ops" title="Link to this definition">#</a></dt>
+<dd><p>Generate gates for <span class="math notranslate nohighlight">\(e^{-i\theta P}\)</span> where P is a Pauli string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pauli_string</strong> (<em>Tuple</em><em>[</em><em>Tuple</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>]</em><em>, </em><em>...</em><em>]</em>) – Pauli operators as (qubit, symbol) tuples</p></li>
+<li><p><strong>angle</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a>) – Evolution angle θ</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of gate operations</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[Tuple]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>This is used internally by both UCC and Trotter circuits but can also be used directly for custom circuits.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library.variational</span><span class="w"> </span><span class="kn">import</span> <span class="n">evolve_pauli_ops</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span>
+
+<span class="c1"># Evolve under X_0 Y_1 Z_2</span>
+<span class="n">pauli_string</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Y&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">))</span>
+<span class="n">angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span>
+
+<span class="n">ops</span> <span class="o">=</span> <span class="n">evolve_pauli_ops</span><span class="p">(</span><span class="n">pauli_string</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+
+<span class="c1"># Build circuit from ops</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">ops</span><span class="o">=</span><span class="n">ops</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<section id="general-guidelines">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">General Guidelines</a><a class="headerlink" href="#general-guidelines" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Start Simple</strong>: Begin with small circuits and gradually increase complexity</p></li>
+<li><p><strong>Parameter Initialization</strong>: Use physically-motivated initial values when possible</p></li>
+<li><p><strong>Circuit Verification</strong>: Always verify circuits produce expected behavior on simple cases</p></li>
+<li><p><strong>Performance Monitoring</strong>: Track circuit depth and gate count</p></li>
+</ol>
+</section>
+<section id="circuit-selection-guide">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Circuit Selection Guide</a><a class="headerlink" href="#circuit-selection-guide" title="Link to this heading">#</a></h3>
+graph TD
+    A[Circuit Selection] --&gt; B{Problem Type?}
+    B --&gt; |Optimization| C{Graph Structure?}
+    B --&gt; |Chemistry| D{Accuracy Needed?}
+    B --&gt; |Dynamics| E[Trotter]
+
+    C --&gt; |Regular| F[QAOA-Ising]
+    C --&gt; |General| G[VQE-HEA]
+
+    D --&gt; |High| H[UCC/UCCSD]
+    D --&gt; |Medium| I[HEA]
+
+    E --&gt; J{Time Scale?}
+    J --&gt; |Short| K[Few Steps]
+    J --&gt; |Long| L[Many Steps]<p><strong>Decision Tree</strong>:</p>
+<ul class="simple">
+<li><p><strong>Need chemical accuracy?</strong> → UCC/UCCSD</p></li>
+<li><p><strong>Graph optimization?</strong> → QAOA</p></li>
+<li><p><strong>Unknown structure?</strong> → HEA</p></li>
+<li><p><strong>Time evolution?</strong> → Trotter</p></li>
+<li><p><strong>Custom needs?</strong> → Compose from utilities</p></li>
+</ul>
+</section>
+<section id="performance-optimization">
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">Performance Optimization</a><a class="headerlink" href="#performance-optimization" title="Link to this heading">#</a></h3>
+<p><strong>Circuit Depth Reduction</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before: Deep UCC circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">build_ucc_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">trotter</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">depth_before</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
+
+<span class="c1"># After: Trotterized UCC (shallower)</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">build_ucc_circuit</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">trotter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">depth_after</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Depth reduction: </span><span class="si">{</span><span class="n">depth_before</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">depth_after</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Parameter Efficiency</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Screen small excitation amplitudes in UCC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.algorithms</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>  <span class="c1"># Screen amplitudes &lt; 0.001</span>
+<span class="c1"># This reduces the number of parameters</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../user_guide/core/index.html"><span class="doc">Core Module</span></a> - Circuit IR details</p></li>
+<li><p><a class="reference internal" href="../../user_guide/compiler/index.html"><span class="doc">Compiler Pipeline</span></a> - Circuit compilation and optimization</p></li>
+<li><p><a class="reference internal" href="../../quantum_chemistry/algorithms/index.html"><span class="doc">Quantum Chemistry Algorithms</span></a> - Chemistry algorithms using these circuits</p></li>
+<li><p><a class="reference internal" href="../../examples/optimization_examples.html"><span class="doc">Optimization Examples</span></a> - Practical optimization examples</p></li>
+<li><p><span class="xref std std-doc">../../api/libs/circuits_library</span> - Complete API reference</p></li>
+</ul>
+</section>
+<section id="further-reading">
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Further Reading</a><a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<p><strong>QAOA</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="farhi2014" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Farhi2014<span class="fn-bracket">]</span></span>
+<p>E. Farhi, J. Goldstone, and S. Gutmann,
+“A Quantum Approximate Optimization Algorithm”, arXiv:1411.4028 (2014)</p>
+</div>
+<div class="citation" id="zhou2020" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Zhou2020<span class="fn-bracket">]</span></span>
+<p>L. Zhou, S-T. Wang, S. Choi, H. Pichler, and M. D. Lukin,
+“Quantum Approximate Optimization Algorithm: Performance, Mechanism, and Implementation on Near-Term Devices”,
+Physical Review X, 10, 021067 (2020)</p>
+</div>
+</div>
+<p><strong>UCC Methods</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="romero2018" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Romero2018<span class="fn-bracket">]</span></span>
+<p>J. Romero, R. Babbush, J. R. McClean, et al.,
+“Strategies for quantum computing molecular energies using the unitary coupled cluster ansatz”,
+Quantum Science and Technology, 4, 014008 (2018)</p>
+</div>
+</div>
+<p><strong>Trotter Methods</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="lloyd1996" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Lloyd1996<span class="fn-bracket">]</span></span>
+<p>S. Lloyd,
+“Universal Quantum Simulators”, Science, 273, 1073 (1996)</p>
+</div>
+<div class="citation" id="campbell2019" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Campbell2019<span class="fn-bracket">]</span></span>
+<p>E. Campbell,
+“Random Compiler for Fast Hamiltonian Simulation”,
+Physical Review Letters, 123, 070503 (2019)</p>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Libraries &amp; Components</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../quantum_library/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Quantum Library</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-templates">Available Templates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vqe-ansatz-templates">VQE Ansatz Templates</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hardware-efficient-ansatz-hea">Hardware-Efficient Ansatz (HEA)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chemically-inspired-ansatze">Chemically-Inspired Ansatze</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#qaoa-for-combinatorial-optimization">QAOA for Combinatorial Optimization</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#theoretical-background">Theoretical Background</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qaoa-for-ising-models">QAOA for Ising Models</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#qaoa_ising"><code class="docutils literal notranslate"><span class="pre">qaoa_ising()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ucc-circuit-templates">UCC Circuit Templates</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#theoretical-foundation">Theoretical Foundation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-build-ucc-circuit">API: build_ucc_circuit</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build_ucc_circuit"><code class="docutils literal notranslate"><span class="pre">build_ucc_circuit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trotter-circuit-templates">Trotter Circuit Templates</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Theoretical Background</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-build-trotter-circuit">API: build_trotter_circuit</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#build_trotter_circuit"><code class="docutils literal notranslate"><span class="pre">build_trotter_circuit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variational-circuit-utilities">Variational Circuit Utilities</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pauli-evolution">Pauli Evolution</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#evolve_pauli_ops"><code class="docutils literal notranslate"><span class="pre">evolve_pauli_ops()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#general-guidelines">General Guidelines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#circuit-selection-guide">Circuit Selection Guide</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-optimization">Performance Optimization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/libraries/circuits_library/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

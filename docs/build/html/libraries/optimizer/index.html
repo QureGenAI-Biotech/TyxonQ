@@ -1,0 +1,1322 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optimizer &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'libraries/optimizer/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Cloud Services" href="../../cloud_services/index.html" />
+    <link rel="prev" title="Hamiltonian Encoding" href="../hamiltonian_encoding/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../circuits_library/index.html">Circuits Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantum_library/index.html">Quantum Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../hamiltonian_encoding/index.html">Hamiltonian Encoding</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Optimizer</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Libraries &amp; Components</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Optimizer</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="optimizer">
+<h1>Optimizer<a class="headerlink" href="#optimizer" title="Link to this heading">#</a></h1>
+<p>The Optimizer library provides specialized optimization algorithms and integration tools for variational quantum algorithms (VQAs). It features the SOAP optimizer—a lightweight, gradient-free method designed specifically for noisy quantum objective functions—and seamless interoperability with SciPy’s optimization ecosystem.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id7">Overview</a></p></li>
+<li><p><a class="reference internal" href="#library-architecture" id="id8">Library Architecture</a></p></li>
+<li><p><a class="reference internal" href="#soap-optimizer" id="id9">SOAP Optimizer</a></p>
+<ul>
+<li><p><a class="reference internal" href="#algorithmic-foundation" id="id10">Algorithmic Foundation</a></p></li>
+<li><p><a class="reference internal" href="#api-reference" id="id11">API Reference</a></p></li>
+<li><p><a class="reference internal" href="#usage-examples" id="id12">Usage Examples</a></p></li>
+<li><p><a class="reference internal" href="#performance-characteristics" id="id13">Performance Characteristics</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#scipy-integration-layer" id="id14">SciPy Integration Layer</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id1" id="id15">API Reference</a></p></li>
+<li><p><a class="reference internal" href="#id2" id="id16">Usage Examples</a></p></li>
+<li><p><a class="reference internal" href="#integration-workflow" id="id17">Integration Workflow</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#best-practices" id="id18">Best Practices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#choosing-an-optimizer" id="id19">Choosing an Optimizer</a></p></li>
+<li><p><a class="reference internal" href="#optimization-tips" id="id20">Optimization Tips</a></p></li>
+<li><p><a class="reference internal" href="#common-pitfalls" id="id21">Common Pitfalls</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#see-also" id="id22">See Also</a></p></li>
+<li><p><a class="reference internal" href="#further-reading" id="id23">Further Reading</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>Variational quantum algorithms like VQE and QAOA require classical optimization of noisy, expensive-to-evaluate objective functions. The Optimizer library addresses these challenges by providing:</p>
+<dl class="simple">
+<dt>🚀 <strong>SOAP Algorithm</strong></dt><dd><p>Sequential Optimization with Approximate Parabola—a custom optimizer for noisy VQE landscapes</p>
+</dd>
+<dt>🔧 <strong>SciPy Integration</strong></dt><dd><p>Wrapper utilities for seamless use of SciPy optimizers with TyxonQ energy functions</p>
+</dd>
+<dt>📊 <strong>Trajectory Tracking</strong></dt><dd><p>Built-in support for recording optimization history and convergence analysis</p>
+</dd>
+<dt>⚡ <strong>Minimal Dependencies</strong></dt><dd><p>Lightweight implementation with only NumPy and SciPy requirements</p>
+</dd>
+<dt>🎯 <strong>VQA-Optimized</strong></dt><dd><p>Designed for the specific challenges of quantum variational algorithms</p>
+</dd>
+</dl>
+graph TD
+    A[Optimizer Library] --&gt; B[SOAP]
+    A --&gt; C[Interop Layer]
+
+    B --&gt; D[Gradient-Free]
+    B --&gt; E[Noise-Tolerant]
+    B --&gt; F[Parabolic Fitting]
+
+    C --&gt; G[SciPy Wrapper]
+    C --&gt; H[Type Conversion]
+    C --&gt; I[Gradient Handling]
+
+    D --&gt; J[VQE Applications]
+    E --&gt; J
+    G --&gt; J</section>
+<section id="library-architecture">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Library Architecture</a><a class="headerlink" href="#library-architecture" title="Link to this heading">#</a></h2>
+<p>The optimizer library consists of two main components:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id3">
+<caption><span class="caption-text">Optimizer Components</span><a class="headerlink" href="#id3" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 40.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Key Features</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SOAP Optimizer</p></td>
+<td><p>Custom gradient-free optimization</p></td>
+<td><p>Parabolic fitting, direction management, noise tolerance</p></td>
+</tr>
+<tr class="row-odd"><td><p>Interop Layer</p></td>
+<td><p>SciPy integration</p></td>
+<td><p>Type safety, gradient wrapping, backend compatibility</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="soap-optimizer">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">SOAP Optimizer</a><a class="headerlink" href="#soap-optimizer" title="Link to this heading">#</a></h2>
+<p>Sequential Optimization with Approximate Parabola (SOAP) is a specialized optimizer for variational quantum algorithms.</p>
+<section id="algorithmic-foundation">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Algorithmic Foundation</a><a class="headerlink" href="#algorithmic-foundation" title="Link to this heading">#</a></h3>
+<p><strong>Core Principle</strong>: SOAP explores the parameter space along coordinate directions, fitting parabolas to estimate local curvature and determine optimal step sizes.</p>
+<p><strong>Key Algorithm Steps</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Direction Selection</strong>: Maintain a prioritized list of search directions</p></li>
+<li><p><strong>Parabolic Sampling</strong>: Evaluate objective at 3-4 points along each direction</p></li>
+<li><p><strong>Optimal Step</strong>: Fit parabola <span class="math notranslate nohighlight">\(f(x) \approx ax^2 + bx + c\)</span>, step to minimum at <span class="math notranslate nohighlight">\(x^* = -b/(2a)\)</span></p></li>
+<li><p><strong>Adaptive Directions</strong>: Periodically update directions based on optimization history</p></li>
+<li><p><strong>Convergence Check</strong>: Monitor moving average of recent improvements</p></li>
+</ol>
+flowchart TD
+    Start([Initialize x₀]) --&gt; InitDirs[&quot;Initialize direction list&lt;br/&gt;(sorted by |x₀|)&quot;]
+    InitDirs --&gt; Loop{&quot;nfev &lt; maxfev?&quot;}
+
+    Loop --&gt;|Yes| CheckDirs{&quot;Directions&lt;br/&gt;available?&quot;}
+    CheckDirs --&gt;|Yes| SelectDir[&quot;Select next&lt;br/&gt;direction&quot;]
+    CheckDirs --&gt;|No| RebuildDirs[&quot;Rebuild directions&lt;br/&gt;(average direction)&quot;]
+
+    RebuildDirs --&gt; CheckDirs
+
+    SelectDir --&gt; Sample3[&quot;Sample at -δ, 0, +δ&quot;]
+    Sample3 --&gt; CheckMin{&quot;Minimum&lt;br/&gt;at boundary?&quot;}
+
+    CheckMin --&gt;|Yes| Sample4[&quot;Extend to 4 points&lt;br/&gt;(-4δ or +4δ)&quot;]
+    CheckMin --&gt;|No| FitParabola
+
+    Sample4 --&gt; FitParabola[&quot;Fit parabola&lt;br/&gt;f(x) = ax² + bx + c&quot;]
+    FitParabola --&gt; ComputeStep[&quot;Compute step:&lt;br/&gt;x* = -b/(2a)&quot;]
+
+    ComputeStep --&gt; UpdateParams[&quot;Update parameters:&lt;br/&gt;x ← x - x*·direction&quot;]
+    UpdateParams --&gt; EvalNew[&quot;Evaluate f(x_new)&quot;]
+
+    EvalNew --&gt; Callback{&quot;Callback?&quot;}
+    Callback --&gt;|Yes| CallUser[&quot;callback(x_new)&quot;]
+    Callback --&gt;|No| CheckConv
+    CallUser --&gt; CheckConv
+
+    CheckConv{&quot;Converged?&lt;br/&gt;Δf &lt; atol&quot;}
+    CheckConv --&gt;|Yes| Return[&quot;Return OptimizeResult&quot;]
+    CheckConv --&gt;|No| Loop
+
+    Loop --&gt;|No| Return
+    Return --&gt; End([End])<p><strong>Convergence Criterion</strong>:</p>
+<p>SOAP monitors the moving average of energy improvements over the last <span class="math notranslate nohighlight">\(2n\)</span> iterations (where <span class="math notranslate nohighlight">\(n\)</span> is the parameter count). Convergence is declared when:</p>
+<div class="math notranslate nohighlight">
+\[\frac{1}{n}\sum_{i=k-2n}^{k-n} E_i - \frac{1}{n}\sum_{i=k-n}^{k} E_i &lt; \text{atol}\]</div>
+</section>
+<section id="api-reference">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">API Reference</a><a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="soap">
+<span class="sig-name descname"><span class="pre">soap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fun</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxfev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ret_traj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#soap" title="Link to this definition">#</a></dt>
+<dd><p>Sequential Optimization with Approximate Parabola.</p>
+<p>A SciPy-compatible gradient-free optimizer designed for noisy objective functions typical in variational quantum algorithms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fun</strong> (<em>Callable</em><em>[</em><em>[</em><em>np.ndarray</em><em>, </em><em>Any</em><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>]</em>) – Objective function to minimize. Signature: <code class="docutils literal notranslate"><span class="pre">f(x,</span> <span class="pre">*args)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></li>
+<li><p><strong>x0</strong> (<em>np.ndarray</em>) – Initial parameters</p></li>
+<li><p><strong>args</strong> (<em>Tuple</em><em>[</em><em>Any</em><em>, </em><em>...</em><em>]</em><em>, </em><em>optional</em>) – Additional arguments passed to <code class="docutils literal notranslate"><span class="pre">fun</span></code></p></li>
+<li><p><strong>u</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Initial step scale factor (default: 0.1)</p></li>
+<li><p><strong>maxfev</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Maximum number of function evaluations (default: 2000)</p></li>
+<li><p><strong>atol</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><em>float</em></a><em>, </em><em>optional</em>) – Absolute tolerance for convergence (default: 1e-3)</p></li>
+<li><p><strong>callback</strong> (<em>Callable</em><em>[</em><em>[</em><em>np.ndarray</em><em>]</em><em>, </em><em>None</em><em>]</em><em>, </em><em>optional</em>) – Called after each iteration with current parameters</p></li>
+<li><p><strong>ret_traj</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – If True, include full parameter trajectory in result</p></li>
+<li><p><strong>kwargs</strong> – Additional keyword arguments (ignored, for compatibility)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>Optimization result with fields:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code>: Optimal parameters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fun</span></code>: Optimal function value</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nit</span></code>: Number of iterations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nfev</span></code>: Number of function evaluations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fun_list</span></code>: Energy history (np.ndarray)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nfev_list</span></code>: Function evaluation counts at each iteration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trajectory</span></code>: Full parameter history (if <code class="docutils literal notranslate"><span class="pre">ret_traj=True</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">success</span></code>: Always True</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.OptimizeResult.html#scipy.optimize.OptimizeResult" title="(in SciPy v1.16.2)">scipy.optimize.OptimizeResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Hyperparameter Guide</strong>:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id4">
+<caption><span class="caption-text">SOAP Hyperparameters</span><a class="headerlink" href="#id4" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 15.0%" />
+<col style="width: 65.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Guidance</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">u</span></code></p></td>
+<td><p>0.1</p></td>
+<td><p>Initial step scale. Larger values for coarse landscapes, smaller for fine-tuning</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maxfev</span></code></p></td>
+<td><p>2000</p></td>
+<td><p>Budget for function evaluations. Increase for complex landscapes</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">atol</span></code></p></td>
+<td><p>1e-3</p></td>
+<td><p>Convergence tolerance. Tighten for higher accuracy, relax for noisy functions</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ret_traj</span></code></p></td>
+<td><p>False</p></td>
+<td><p>Enable for detailed convergence analysis (increases memory usage)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="usage-examples">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Usage Examples</a><a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h3>
+<p><strong>Example 1: Basic VQE Optimization</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">soap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Define a noisy energy function (simulating VQE)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">noisy_energy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">noise_level</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulated VQE energy landscape.&quot;&quot;&quot;</span>
+    <span class="c1"># True minimum at [π/4, π/4]</span>
+    <span class="n">true_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">true_energy</span> <span class="o">+</span> <span class="n">noise</span>
+
+<span class="c1"># Initial parameters</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+<span class="c1"># Run SOAP optimization</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span>
+    <span class="n">fun</span><span class="o">=</span><span class="n">noisy_energy</span><span class="p">,</span>
+    <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span>
+    <span class="n">u</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>           <span class="c1"># Moderate step size</span>
+    <span class="n">maxfev</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>      <span class="c1"># Function evaluation budget</span>
+    <span class="n">atol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>       <span class="c1"># Convergence threshold</span>
+    <span class="n">ret_traj</span><span class="o">=</span><span class="kc">True</span>    <span class="c1"># Track full trajectory</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal energy: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal params: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iterations: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">nit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Function evals: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">nfev</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot convergence</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nfev_list</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun_list</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Function Evaluations&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;SOAP Convergence&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Example 2: VQE with Callback Monitoring</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">soap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.circuits_library</span><span class="w"> </span><span class="kn">import</span> <span class="n">hardware_efficient</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Store optimization history</span>
+<span class="n">history</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;params&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;energies&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">vqe_energy</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute VQE energy (pseudo-code).&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">hardware_efficient</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="n">hamiltonian</span><span class="p">)</span>  <span class="c1"># Simulated</span>
+    <span class="k">return</span> <span class="n">energy</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">monitor_progress</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Callback to track progress.&quot;&quot;&quot;</span>
+    <span class="n">history</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">vqe_energy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">history</span><span class="p">[</span><span class="s1">&#39;energies&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iteration </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;energies&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">: E = </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Optimize with monitoring</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>  <span class="c1"># Small initial angles</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span>
+    <span class="n">fun</span><span class="o">=</span><span class="n">vqe_energy</span><span class="p">,</span>
+    <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span>
+    <span class="n">u</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">maxfev</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">atol</span><span class="o">=</span><span class="mf">5e-4</span><span class="p">,</span>
+    <span class="n">callback</span><span class="o">=</span><span class="n">monitor_progress</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Final ground state energy: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Example 3: Comparing with SciPy Optimizers</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">soap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">benchmark_function</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rosenbrock function (noisy).&quot;&quot;&quot;</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">params</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">noise</span>
+
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="c1"># SOAP</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">result_soap</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">benchmark_function</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+<span class="n">time_soap</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+
+<span class="c1"># SciPy COBYLA (gradient-free)</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">result_cobyla</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">benchmark_function</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="n">time_cobyla</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+
+<span class="c1"># Compare results</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Optimization Comparison ===&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SOAP:    E=</span><span class="si">{</span><span class="n">result_soap</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, t=</span><span class="si">{</span><span class="n">time_soap</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s, nfev=</span><span class="si">{</span><span class="n">result_soap</span><span class="o">.</span><span class="n">nfev</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;COBYLA:  E=</span><span class="si">{</span><span class="n">result_cobyla</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, t=</span><span class="si">{</span><span class="n">time_cobyla</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s, nfev=</span><span class="si">{</span><span class="n">result_cobyla</span><span class="o">.</span><span class="n">nfev</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-characteristics">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Performance Characteristics</a><a class="headerlink" href="#performance-characteristics" title="Link to this heading">#</a></h3>
+<p><strong>Strengths</strong>:</p>
+<ul class="simple">
+<li><p>✅ <strong>Noise Tolerance</strong>: Robust to measurement shot noise and statistical fluctuations</p></li>
+<li><p>✅ <strong>No Gradient Required</strong>: Suitable for non-differentiable or discrete objectives</p></li>
+<li><p>✅ <strong>Adaptive Directions</strong>: Automatically adjusts search directions based on landscape</p></li>
+<li><p>✅ <strong>Lightweight</strong>: Minimal memory footprint and computational overhead</p></li>
+</ul>
+<p><strong>Limitations</strong>:</p>
+<ul class="simple">
+<li><p>❌ <strong>Convergence Speed</strong>: Slower than gradient-based methods on smooth landscapes</p></li>
+<li><p>❌ <strong>Scaling</strong>: Efficiency decreases with high-dimensional parameter spaces (n &gt; 50)</p></li>
+<li><p>❌ <strong>Local Optima</strong>: Like most local optimizers, can get trapped in local minima</p></li>
+</ul>
+<p><strong>Typical Performance</strong>:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id5">
+<caption><span class="caption-text">SOAP Performance Benchmarks</span><a class="headerlink" href="#id5" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 45.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem Size</p></th>
+<th class="head"><p>Function Evals</p></th>
+<th class="head"><p>Typical Use Case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>4-8 params</p></td>
+<td><p>200-500</p></td>
+<td><p>Small VQE ansätze, QAOA p=1-2</p></td>
+</tr>
+<tr class="row-odd"><td><p>10-20 params</p></td>
+<td><p>500-1500</p></td>
+<td><p>Medium VQE, HEA depth 3-4</p></td>
+</tr>
+<tr class="row-even"><td><p>30-50 params</p></td>
+<td><p>1500-3000</p></td>
+<td><p>Large ansätze, deep circuits</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="scipy-integration-layer">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">SciPy Integration Layer</a><a class="headerlink" href="#scipy-integration-layer" title="Link to this heading">#</a></h2>
+<p>The interop layer provides seamless integration between TyxonQ energy functions and SciPy’s optimization ecosystem.</p>
+<section id="id1">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">API Reference</a><a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="scipy_opt_wrap">
+<span class="sig-name descname"><span class="pre">scipy_opt_wrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scipy_opt_wrap" title="Link to this definition">#</a></dt>
+<dd><p>Wrap a TyxonQ energy function for use with SciPy optimizers.</p>
+<p>This wrapper handles:</p>
+<ul class="simple">
+<li><p>Type conversion to NumPy float64</p></li>
+<li><p>Backend-agnostic array handling</p></li>
+<li><p>Gradient unpacking for gradient-based optimizers</p></li>
+<li><p>Return value standardization</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f</strong> (<em>Callable</em>) – <p>Energy function to wrap. Signature:</p>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">gradient=True</span></code>: <code class="docutils literal notranslate"><span class="pre">f(params,</span> <span class="pre">*args)</span> <span class="pre">-&gt;</span> <span class="pre">(value,</span> <span class="pre">grad)</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">gradient=False</span></code>: <code class="docutils literal notranslate"><span class="pre">f(params,</span> <span class="pre">*args)</span> <span class="pre">-&gt;</span> <span class="pre">value</span></code></p></li>
+</ul>
+</p></li>
+<li><p><strong>gradient</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether function returns gradients (default: True)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wrapped function compatible with SciPy optimizers</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Callable</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p><strong>Wrapped Function Behavior</strong>:</p>
+<ul class="simple">
+<li><p><strong>Input</strong>: Accepts NumPy arrays (converted to float64)</p></li>
+<li><p><strong>Output</strong>:</p>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">gradient=True</span></code>: Returns <code class="docutils literal notranslate"><span class="pre">(float,</span> <span class="pre">np.ndarray)</span></code> for value and gradient</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">gradient=False</span></code>: Returns <code class="docutils literal notranslate"><span class="pre">float</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>Backend Conversion</strong>: Automatically converts TyxonQ backend arrays to NumPy</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Usage Examples</a><a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p><strong>Example 1: Gradient-Free Optimization</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer.interop</span><span class="w"> </span><span class="kn">import</span> <span class="n">scipy_opt_wrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># TyxonQ energy function (no gradients)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vqe_energy_nograd</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute VQE energy using shot-based measurement.&quot;&quot;&quot;</span>
+    <span class="c1"># ... circuit construction and measurement ...</span>
+    <span class="k">return</span> <span class="n">energy</span>  <span class="c1"># Single value</span>
+
+<span class="c1"># Wrap for SciPy</span>
+<span class="n">wrapped</span> <span class="o">=</span> <span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">vqe_energy_nograd</span><span class="p">,</span> <span class="n">gradient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Use with SciPy&#39;s gradient-free methods</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">wrapped</span><span class="p">,</span>
+    <span class="n">x0</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">300</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimized energy: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal parameters: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Example 2: Gradient-Based Optimization</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer.interop</span><span class="w"> </span><span class="kn">import</span> <span class="n">scipy_opt_wrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.numerics</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_backend</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="n">backend</span> <span class="o">=</span> <span class="n">get_backend</span><span class="p">(</span><span class="s1">&#39;pytorch&#39;</span><span class="p">)</span>  <span class="c1"># Supports auto-diff</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">vqe_energy_with_grad</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute VQE energy and gradients.&quot;&quot;&quot;</span>
+    <span class="c1"># Convert to backend tensor</span>
+    <span class="n">params_tensor</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">params_tensor</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># ... circuit construction ...</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">compute_expectation</span><span class="p">(</span><span class="n">params_tensor</span><span class="p">)</span>
+
+    <span class="c1"># Compute gradients</span>
+    <span class="n">energy</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">params_tensor</span><span class="o">.</span><span class="n">grad</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">energy</span><span class="p">),</span> <span class="n">grad</span>
+
+<span class="c1"># Wrap for SciPy</span>
+<span class="n">wrapped</span> <span class="o">=</span> <span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">vqe_energy_with_grad</span><span class="p">,</span> <span class="n">gradient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Use with gradient-based methods</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.2</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">wrapped</span><span class="p">,</span>
+    <span class="n">x0</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span>
+    <span class="n">jac</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Tell SciPy we provide gradients</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimized energy: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Example 3: Integration with Parameter-Shift Rule</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer.interop</span><span class="w"> </span><span class="kn">import</span> <span class="n">scipy_opt_wrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parameter_shift_gradient</span><span class="p">(</span><span class="n">circuit_fn</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute gradients using parameter-shift rule.&quot;&quot;&quot;</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)):</span>
+        <span class="n">params_plus</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">params_minus</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">params_plus</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">shift</span>
+        <span class="n">params_minus</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="n">shift</span>
+
+        <span class="n">grad</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">circuit_fn</span><span class="p">(</span><span class="n">params_plus</span><span class="p">)</span> <span class="o">-</span> <span class="n">circuit_fn</span><span class="p">(</span><span class="n">params_minus</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">grad</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">vqe_with_param_shift</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VQE energy with parameter-shift gradients.&quot;&quot;&quot;</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">circuit_evaluate</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>  <span class="c1"># Your circuit function</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">parameter_shift_gradient</span><span class="p">(</span><span class="n">circuit_evaluate</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">energy</span><span class="p">,</span> <span class="n">grad</span>
+
+<span class="c1"># Wrap and optimize</span>
+<span class="n">wrapped</span> <span class="o">=</span> <span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">vqe_with_param_shift</span><span class="p">,</span> <span class="n">gradient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">wrapped</span><span class="p">,</span>
+    <span class="n">x0</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span>
+    <span class="n">jac</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Example 4: Multi-Method Comparison</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">soap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer.interop</span><span class="w"> </span><span class="kn">import</span> <span class="n">scipy_opt_wrap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Define energy function</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">energy_function</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="c1"># Simulated VQE energy</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">params</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>
+
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">methods_to_test</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;SOAP&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy_function</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">500</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">minimize</span><span class="p">(</span><span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">energy_function</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;Powell&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">minimize</span><span class="p">(</span><span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">energy_function</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Powell&#39;</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">&#39;Nelder-Mead&#39;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">minimize</span><span class="p">(</span><span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">energy_function</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;Nelder-Mead&#39;</span><span class="p">)),</span>
+<span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Optimizer Comparison ===&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">optimizer</span> <span class="ow">in</span> <span class="n">methods_to_test</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">optimizer</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">:</span><span class="s2">15s</span><span class="si">}</span><span class="s2">: E=</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">8.5f</span><span class="si">}</span><span class="s2">, nfev=</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">nfev</span><span class="si">:</span><span class="s2">4d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="integration-workflow">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Integration Workflow</a><a class="headerlink" href="#integration-workflow" title="Link to this heading">#</a></h3>
+sequenceDiagram
+    participant User
+    participant SciPy as SciPy Optimizer
+    participant Wrapper as scipy_opt_wrap
+    participant TyxonQ as TyxonQ Energy Function
+    participant Backend as Numeric Backend
+
+    User-&gt;&gt;SciPy: minimize(wrapped_fn, x0)
+    SciPy-&gt;&gt;Wrapper: Call with NumPy params
+    Wrapper-&gt;&gt;Wrapper: Convert to float64
+    Wrapper-&gt;&gt;TyxonQ: Forward to energy function
+    TyxonQ-&gt;&gt;Backend: Compute with backend arrays
+    Backend--&gt;&gt;TyxonQ: Return (energy, gradient)
+    TyxonQ--&gt;&gt;Wrapper: Return result
+    Wrapper-&gt;&gt;Wrapper: Convert backend arrays to NumPy
+    Wrapper--&gt;&gt;SciPy: Return (float, np.ndarray)
+    SciPy-&gt;&gt;SciPy: Update parameters
+
+    loop Until convergence
+        SciPy-&gt;&gt;Wrapper: Evaluate with new params
+        Wrapper-&gt;&gt;TyxonQ: Forward call
+        TyxonQ--&gt;&gt;Wrapper: Return energy/grad
+        Wrapper--&gt;&gt;SciPy: Return NumPy types
+    end
+
+    SciPy--&gt;&gt;User: Return OptimizeResult</section>
+</section>
+<section id="best-practices">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<section id="choosing-an-optimizer">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Choosing an Optimizer</a><a class="headerlink" href="#choosing-an-optimizer" title="Link to this heading">#</a></h3>
+<p><strong>Decision Tree</strong>:</p>
+graph TD
+    Start[Choose Optimizer] --&gt; HasGrad{&quot;Gradients&lt;br/&gt;available?&quot;}
+
+    HasGrad --&gt;|Yes| GradCost{&quot;Gradient&lt;br/&gt;cost?&quot;}
+    HasGrad --&gt;|No| NoiseLevel{&quot;Noise&lt;br/&gt;level?&quot;}
+
+    GradCost --&gt;|Cheap| UseLBFGS[&quot;L-BFGS-B&lt;br/&gt;(SciPy)&quot;]
+    GradCost --&gt;|Expensive| UseAdam[&quot;Adam&lt;br/&gt;(Custom)&quot;]
+
+    NoiseLevel --&gt;|High| UseSOAP[&quot;SOAP&lt;br/&gt;(Noise-tolerant)&quot;]
+    NoiseLevel --&gt;|Low| ParamCount{&quot;Param&lt;br/&gt;count?&quot;}
+
+    ParamCount --&gt;|&lt; 20| UseCOBYLA[&quot;COBYLA&lt;br/&gt;(SciPy)&quot;]
+    ParamCount --&gt;|≥ 20| UseSOAP2[&quot;SOAP or&lt;br/&gt;Powell&quot;]
+
+    UseLBFGS --&gt; ValidateConv[&quot;Validate Convergence&quot;]
+    UseAdam --&gt; ValidateConv
+    UseSOAP --&gt; ValidateConv
+    UseCOBYLA --&gt; ValidateConv
+    UseSOAP2 --&gt; ValidateConv<p><strong>Recommendation Matrix</strong>:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id6">
+<caption><span class="caption-text">Optimizer Selection Guide</span><a class="headerlink" href="#id6" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Scenario</p></th>
+<th class="head"><p>Gradients?</p></th>
+<th class="head"><p>Noise?</p></th>
+<th class="head"><p>Recommended</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Small VQE (n&lt;10)</p></td>
+<td><p>No</p></td>
+<td><p>Low</p></td>
+<td><p>COBYLA</p></td>
+</tr>
+<tr class="row-odd"><td><p>Small VQE (n&lt;10)</p></td>
+<td><p>No</p></td>
+<td><p>High</p></td>
+<td><p>SOAP</p></td>
+</tr>
+<tr class="row-even"><td><p>Large VQE (n&gt;20)</p></td>
+<td><p>No</p></td>
+<td><p>Any</p></td>
+<td><p>SOAP</p></td>
+</tr>
+<tr class="row-odd"><td><p>Any size</p></td>
+<td><p>Yes (cheap)</p></td>
+<td><p>Low</p></td>
+<td><p>L-BFGS-B</p></td>
+</tr>
+<tr class="row-even"><td><p>Any size</p></td>
+<td><p>Yes (param-shift)</p></td>
+<td><p>Medium</p></td>
+<td><p>Adam or SOAP</p></td>
+</tr>
+<tr class="row-odd"><td><p>QAOA</p></td>
+<td><p>No</p></td>
+<td><p>High</p></td>
+<td><p>SOAP</p></td>
+</tr>
+<tr class="row-even"><td><p>Chemistry VQE</p></td>
+<td><p>Yes (auto-diff)</p></td>
+<td><p>Low</p></td>
+<td><p>L-BFGS-B</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="optimization-tips">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Optimization Tips</a><a class="headerlink" href="#optimization-tips" title="Link to this heading">#</a></h3>
+<p><strong>1. Initialization Strategy</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Good: Small random initialization near identity</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span>
+
+<span class="c1"># Better: Zero initialization for symmetric Hamiltonians</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span>
+
+<span class="c1"># Best: Problem-specific heuristics</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">initialize_from_classical_solution</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>2. Hyperparameter Tuning</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Start with loose tolerance for exploration</span>
+<span class="n">result1</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+<span class="c1"># Refine with tighter tolerance</span>
+<span class="n">result2</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">result1</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>3. Convergence Monitoring</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">ret_traj</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Plot energy convergence</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">nfev_list</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">fun_list</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Function Evaluations&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Energy Convergence&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">fun_list</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy Gradient&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Convergence Rate&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>4. Multi-Start Strategy</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run multiple optimizations from different initializations</span>
+<span class="n">n_starts</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_starts</span><span class="p">):</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.2</span> <span class="o">-</span> <span class="mf">0.1</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="c1"># Select best result</span>
+<span class="n">best_result</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best energy from </span><span class="si">{</span><span class="n">n_starts</span><span class="si">}</span><span class="s2"> starts: </span><span class="si">{</span><span class="n">best_result</span><span class="o">.</span><span class="n">fun</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="common-pitfalls">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Common Pitfalls</a><a class="headerlink" href="#common-pitfalls" title="Link to this heading">#</a></h3>
+<p><strong>❌ Pitfall 1: Ignoring Noise</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># BAD: Using tight tolerance with noisy function</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">noisy_vqe</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>  <span class="c1"># Will never converge!</span>
+
+<span class="c1"># GOOD: Match tolerance to noise level</span>
+<span class="n">noise_std</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">noisy_vqe</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="n">noise_std</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>❌ Pitfall 2: Insufficient Budget</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># BAD: Too few evaluations for complex landscape</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>  <span class="c1"># Likely incomplete</span>
+
+<span class="c1"># GOOD: Generous budget, check convergence</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span><span class="n">energy</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">maxfev</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">nfev</span> <span class="o">&gt;=</span> <span class="mi">2000</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Reached maxfev, may not have converged&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>❌ Pitfall 3: Mismatched Wrapper</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># BAD: Wrong gradient flag</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">energy_with_grad</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">grad</span>
+
+<span class="n">wrapped</span> <span class="o">=</span> <span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">energy_with_grad</span><span class="p">,</span> <span class="n">gradient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># Wrong!</span>
+
+<span class="c1"># GOOD: Correct gradient flag</span>
+<span class="n">wrapped</span> <span class="o">=</span> <span class="n">scipy_opt_wrap</span><span class="p">(</span><span class="n">energy_with_grad</span><span class="p">,</span> <span class="n">gradient</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../circuits_library/index.html"><span class="doc">Circuits Library</span></a> - Circuit templates for VQE and QAOA</p></li>
+<li><p><a class="reference internal" href="../../user_guide/core/index.html"><span class="doc">Core Module</span></a> - Quantum circuits and gates</p></li>
+<li><p><a class="reference internal" href="../../tutorials/index.html"><span class="doc">Tutorials</span></a> - Tutorial: VQE optimization workflow</p></li>
+<li><p><a class="reference internal" href="../../examples/index.html"><span class="doc">Examples</span></a> - Complete VQE examples</p></li>
+<li><p><span class="xref std std-doc">../../api/libs/optimizer</span> - Complete API reference</p></li>
+</ul>
+</section>
+<section id="further-reading">
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">Further Reading</a><a class="headerlink" href="#further-reading" title="Link to this heading">#</a></h2>
+<p><strong>Variational Quantum Algorithms</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="peruzzo2014" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Peruzzo2014<span class="fn-bracket">]</span></span>
+<p>A. Peruzzo et al.,
+“A variational eigenvalue solver on a photonic quantum processor”,
+Nature Communications, 5, 4213 (2014)</p>
+</div>
+<div class="citation" id="mcclean2016" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>McClean2016<span class="fn-bracket">]</span></span>
+<p>J. R. McClean et al.,
+“The theory of variational hybrid quantum-classical algorithms”,
+New Journal of Physics, 18, 023023 (2016)</p>
+</div>
+</div>
+<p><strong>Optimization Methods</strong></p>
+<div role="list" class="citation-list">
+<div class="citation" id="spall1998" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Spall1998<span class="fn-bracket">]</span></span>
+<p>J. C. Spall,
+“Implementation of the simultaneous perturbation algorithm for stochastic optimization”,
+IEEE Transactions on Aerospace and Electronic Systems, 34, 817 (1998)</p>
+</div>
+<div class="citation" id="nelder1965" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Nelder1965<span class="fn-bracket">]</span></span>
+<p>J. A. Nelder and R. Mead,
+“A simplex method for function minimization”,
+The Computer Journal, 7, 308 (1965)</p>
+</div>
+<div class="citation" id="powell1964" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Powell1964<span class="fn-bracket">]</span></span>
+<p>M. J. D. Powell,
+“An efficient method for finding the minimum of a function”,
+The Computer Journal, 7, 155 (1964)</p>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../hamiltonian_encoding/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Hamiltonian Encoding</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../cloud_services/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Cloud Services</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#library-architecture">Library Architecture</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#soap-optimizer">SOAP Optimizer</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithmic-foundation">Algorithmic Foundation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#api-reference">API Reference</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#soap"><code class="docutils literal notranslate"><span class="pre">soap()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-examples">Usage Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-characteristics">Performance Characteristics</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scipy-integration-layer">SciPy Integration Layer</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">API Reference</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scipy_opt_wrap"><code class="docutils literal notranslate"><span class="pre">scipy_opt_wrap()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Usage Examples</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-workflow">Integration Workflow</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-an-optimizer">Choosing an Optimizer</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-tips">Optimization Tips</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-pitfalls">Common Pitfalls</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-reading">Further Reading</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/libraries/optimizer/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

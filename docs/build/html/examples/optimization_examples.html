@@ -1,0 +1,1165 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Optimization Examples &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/optimization_examples';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Cloud Examples" href="cloud_examples.html" />
+    <link rel="prev" title="Quantum Chemistry Examples" href="chemistry_examples.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="basic_examples.html">Basic Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chemistry_examples.html">Quantum Chemistry Examples</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Optimization Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud_examples.html">Cloud Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_examples.html">Advanced Examples</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Optimization Examples</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="optimization-examples">
+<h1>Optimization Examples<a class="headerlink" href="#optimization-examples" title="Link to this heading">#</a></h1>
+<p>This page provides comprehensive examples of variational optimization algorithms in TyxonQ,
+including VQE, QAOA, and custom optimization strategies.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#variational-quantum-eigensolver-vqe" id="id1">Variational Quantum Eigensolver (VQE)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-vqe-example" id="id2">Basic VQE Example</a></p></li>
+<li><p><a class="reference internal" href="#vqe-with-gradient-based-optimization" id="id3">VQE with Gradient-Based Optimization</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#quantum-approximate-optimization-algorithm-qaoa" id="id4">Quantum Approximate Optimization Algorithm (QAOA)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#max-cut-qaoa-example" id="id5">Max-Cut QAOA Example</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-optimization-techniques" id="id6">Advanced Optimization Techniques</a></p>
+<ul>
+<li><p><a class="reference internal" href="#soap-optimizer" id="id7">SOAP Optimizer</a></p></li>
+<li><p><a class="reference internal" href="#noisy-optimization-strategies" id="id8">Noisy Optimization Strategies</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#multi-objective-optimization" id="id9">Multi-Objective Optimization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-optimizing-energy-and-circuit-depth" id="id10">Example: Optimizing Energy and Circuit Depth</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-vqe-patterns" id="id11">Advanced VQE Patterns</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-vqe-with-multiple-observables" id="id12">Example: VQE with Multiple Observables</a></p></li>
+<li><p><a class="reference internal" href="#example-constrained-vqe" id="id13">Example: Constrained VQE</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#performance-optimization" id="id14">Performance Optimization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#parallel-vqe-evaluation" id="id15">Parallel VQE Evaluation</a></p></li>
+<li><p><a class="reference internal" href="#batched-gradient-computation" id="id16">Batched Gradient Computation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#troubleshooting-optimization" id="id17">Troubleshooting Optimization</a></p>
+<ul>
+<li><p><a class="reference internal" href="#diagnosing-convergence-issues" id="id18">Diagnosing Convergence Issues</a></p></li>
+<li><p><a class="reference internal" href="#common-issues-and-solutions" id="id19">Common Issues and Solutions</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#see-also" id="id20">See Also</a></p></li>
+<li><p><a class="reference internal" href="#next-steps" id="id21">Next Steps</a></p></li>
+</ul>
+</nav>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These examples demonstrate optimization techniques beyond quantum chemistry.
+For chemistry-specific examples, see <a class="reference internal" href="chemistry_examples.html"><span class="doc">Quantum Chemistry Examples</span></a>.</p>
+</div>
+<section id="variational-quantum-eigensolver-vqe">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Variational Quantum Eigensolver (VQE)</a><a class="headerlink" href="#variational-quantum-eigensolver-vqe" title="Link to this heading">#</a></h2>
+<p>VQE is the foundational variational algorithm for finding ground state energies.</p>
+<section id="basic-vqe-example">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">Basic VQE Example</a><a class="headerlink" href="#basic-vqe-example" title="Link to this heading">#</a></h3>
+<p>Implementing VQE from scratch:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+
+<span class="c1"># Define Hamiltonian: H = 0.5*Z0 + 0.3*Z1 - 0.7*X0*X1</span>
+<span class="n">hamiltonian</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]),</span>
+    <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]),</span>
+    <span class="p">(</span><span class="o">-</span><span class="mf">0.7</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="p">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_ansatz</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create parameterized ansatz circuit&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">)</span>
+
+    <span class="c1"># Initial layer</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># Entangling layer</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Second rotation layer</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">n_qubits</span> <span class="o">+</span> <span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">energy_expectation</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate energy expectation value&quot;&quot;&quot;</span>
+    <span class="n">n_qubits</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">create_ansatz</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">)</span>
+
+    <span class="n">energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">pauli_ops</span> <span class="ow">in</span> <span class="n">hamiltonian</span><span class="p">:</span>
+        <span class="c1"># Create measurement circuit for this term</span>
+        <span class="n">meas_circuit</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Apply basis rotations for Pauli measurements</span>
+        <span class="k">for</span> <span class="n">pauli</span><span class="p">,</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">pauli_ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pauli</span> <span class="o">==</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span>
+                <span class="n">meas_circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">pauli</span> <span class="o">==</span> <span class="s1">&#39;Y&#39;</span><span class="p">:</span>
+                <span class="n">meas_circuit</span><span class="o">.</span><span class="n">sdg</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+                <span class="n">meas_circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">qubit</span><span class="p">)</span>
+            <span class="c1"># Z measurements don&#39;t need rotation</span>
+
+        <span class="c1"># Add measurements</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+            <span class="n">meas_circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="c1"># Execute and compute expectation</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">meas_circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+        <span class="n">exp_val</span> <span class="o">=</span> <span class="n">compute_pauli_expectation</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">pauli_ops</span><span class="p">)</span>
+        <span class="n">energy</span> <span class="o">+=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">exp_val</span>
+
+    <span class="k">return</span> <span class="n">energy</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_pauli_expectation</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">pauli_ops</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute Pauli expectation from measurement counts&quot;&quot;&quot;</span>
+    <span class="n">total_shots</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">expectation</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">bitstring</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">parity</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">pauli</span><span class="p">,</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="n">pauli_ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">bitstring</span><span class="p">[</span><span class="n">qubit</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
+                <span class="n">parity</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">expectation</span> <span class="o">+=</span> <span class="n">parity</span> <span class="o">*</span> <span class="n">count</span>
+
+    <span class="k">return</span> <span class="n">expectation</span> <span class="o">/</span> <span class="n">total_shots</span>
+
+<span class="c1"># Optimize</span>
+<span class="n">n_params</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># 2 qubits × 2 layers</span>
+<span class="n">init_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n_params</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">energy_expectation</span><span class="p">,</span> <span class="n">init_params</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal energy: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimal parameters: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converged in </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">nfev</span><span class="si">}</span><span class="s2"> function evaluations&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Expected Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Optimal energy: -0.920000 Hartree
+Optimal parameters: [1.234, 2.567, 0.891, 3.012]
+Converged in 87 function evaluations
+</pre></div>
+</div>
+</section>
+<section id="vqe-with-gradient-based-optimization">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">VQE with Gradient-Based Optimization</a><a class="headerlink" href="#vqe-with-gradient-based-optimization" title="Link to this heading">#</a></h3>
+<p>Using parameter-shift rule for gradients:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">parameter_shift_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">param_idx</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute gradient using parameter shift rule&quot;&quot;&quot;</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Forward shift</span>
+    <span class="n">params_plus</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">params_plus</span><span class="p">[</span><span class="n">param_idx</span><span class="p">]</span> <span class="o">+=</span> <span class="n">shift</span>
+    <span class="n">energy_plus</span> <span class="o">=</span> <span class="n">energy_expectation</span><span class="p">(</span><span class="n">params_plus</span><span class="p">)</span>
+
+    <span class="c1"># Backward shift</span>
+    <span class="n">params_minus</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">params_minus</span><span class="p">[</span><span class="n">param_idx</span><span class="p">]</span> <span class="o">-=</span> <span class="n">shift</span>
+    <span class="n">energy_minus</span> <span class="o">=</span> <span class="n">energy_expectation</span><span class="p">(</span><span class="n">params_minus</span><span class="p">)</span>
+
+    <span class="c1"># Gradient</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="p">(</span><span class="n">energy_plus</span> <span class="o">-</span> <span class="n">energy_minus</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">grad</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">energy_and_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return both energy and gradient&quot;&quot;&quot;</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">energy_expectation</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="c1"># Compute gradient for all parameters</span>
+    <span class="n">gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">parameter_shift_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">))])</span>
+
+    <span class="k">return</span> <span class="n">energy</span><span class="p">,</span> <span class="n">gradient</span>
+
+<span class="c1"># Optimize with gradient</span>
+<span class="n">result_grad</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">fun</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">energy_and_gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">x0</span><span class="o">=</span><span class="n">init_params</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span>
+    <span class="n">jac</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">energy_and_gradient</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient-based optimization:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Final energy: </span><span class="si">{</span><span class="n">result_grad</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Iterations: </span><span class="si">{</span><span class="n">result_grad</span><span class="o">.</span><span class="n">nit</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Benefits of Gradient-Based Methods</strong>:</p>
+<ul class="simple">
+<li><p>Faster convergence for smooth landscapes</p></li>
+<li><p>More efficient parameter updates</p></li>
+<li><p>Better suited for high-dimensional problems</p></li>
+<li><p>Theoretical guarantees from parameter-shift rule</p></li>
+</ul>
+</section>
+</section>
+<section id="quantum-approximate-optimization-algorithm-qaoa">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Quantum Approximate Optimization Algorithm (QAOA)</a><a class="headerlink" href="#quantum-approximate-optimization-algorithm-qaoa" title="Link to this heading">#</a></h2>
+<p>QAOA solves combinatorial optimization problems.</p>
+<section id="max-cut-qaoa-example">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Max-Cut QAOA Example</a><a class="headerlink" href="#max-cut-qaoa-example" title="Link to this heading">#</a></h3>
+<p>Solving Max-Cut problem on a simple graph:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">create_qaoa_circuit</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">,</span> <span class="n">graph_edges</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create QAOA circuit with p layers</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        params: [gamma_1, ..., gamma_p, beta_1, ..., beta_p]</span>
+<span class="sd">        n_qubits: Number of qubits (nodes in graph)</span>
+<span class="sd">        graph_edges: List of edges [(i,j), ...]</span>
+<span class="sd">        p: Number of QAOA layers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">)</span>
+
+    <span class="c1"># Initial superposition</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># QAOA layers</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">p</span> <span class="o">+</span> <span class="n">layer</span><span class="p">]</span>
+
+        <span class="c1"># Problem Hamiltonian: phase separation</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">graph_edges</span><span class="p">:</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">edge</span>
+            <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+            <span class="n">circuit</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+            <span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+        <span class="c1"># Mixer Hamiltonian</span>
+        <span class="k">for</span> <span class="n">qubit</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+            <span class="n">circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">qubit</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">circuit</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">maxcut_cost</span><span class="p">(</span><span class="n">bitstring</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate Max-Cut cost for a bitstring&quot;&quot;&quot;</span>
+    <span class="n">cost</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">bitstring</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">bitstring</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+            <span class="n">cost</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">cost</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">qaoa_expectation</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute expectation value for QAOA&quot;&quot;&quot;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">create_qaoa_circuit</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_qubits</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+    <span class="c1"># Add measurements</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">):</span>
+        <span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="c1"># Execute</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+
+    <span class="c1"># Compute average cost</span>
+    <span class="n">avg_cost</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">bitstring</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">cost</span> <span class="o">=</span> <span class="n">maxcut_cost</span><span class="p">(</span><span class="n">bitstring</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+        <span class="n">avg_cost</span> <span class="o">+=</span> <span class="n">cost</span> <span class="o">*</span> <span class="n">count</span>
+
+    <span class="n">avg_cost</span> <span class="o">/=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="o">-</span><span class="n">avg_cost</span>  <span class="c1"># Negative for minimization</span>
+
+<span class="c1"># Define graph (triangle)</span>
+<span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+<span class="n">n_nodes</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">p_layers</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="c1"># Optimize</span>
+<span class="n">n_params</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">p_layers</span>
+<span class="n">init_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n_params</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">qaoa_expectation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">p_layers</span><span class="p">),</span>
+    <span class="n">init_params</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;QAOA Max-Cut Solution:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Optimal cost: </span><span class="si">{</span><span class="o">-</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Max possible: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Parameters: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Analyzing Results</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get best bitstring from optimized circuit</span>
+<span class="n">optimal_circuit</span> <span class="o">=</span> <span class="n">create_qaoa_circuit</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">p_layers</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nodes</span><span class="p">):</span>
+    <span class="n">optimal_circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+<span class="n">final_result</span> <span class="o">=</span> <span class="n">optimal_circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">5000</span><span class="p">)</span>
+<span class="n">best_bitstring</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">final_result</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">final_result</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+<span class="n">best_cost</span> <span class="o">=</span> <span class="n">maxcut_cost</span><span class="p">(</span><span class="n">best_bitstring</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Best bitstring: </span><span class="si">{</span><span class="n">best_bitstring</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best cost: </span><span class="si">{</span><span class="n">best_cost</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Partition: Set A = </span><span class="si">{</span><span class="p">[</span><span class="n">i</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">enumerate</span><span class="p">(</span><span class="n">best_bitstring</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">==</span><span class="s1">&#39;0&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;           Set B = </span><span class="si">{</span><span class="p">[</span><span class="n">i</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="nb">enumerate</span><span class="p">(</span><span class="n">best_bitstring</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">b</span><span class="o">==</span><span class="s1">&#39;1&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-optimization-techniques">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Advanced Optimization Techniques</a><a class="headerlink" href="#advanced-optimization-techniques" title="Link to this heading">#</a></h2>
+<section id="soap-optimizer">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">SOAP Optimizer</a><a class="headerlink" href="#soap-optimizer" title="Link to this heading">#</a></h3>
+<p>TyxonQ’s Sequential Optimization with Approximate Parabola (SOAP) optimizer:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.libs.optimizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">soap</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Define objective function</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">objective</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Your optimization objective&quot;&quot;&quot;</span>
+    <span class="c1"># Example: Rosenbrock function</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">params</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">100</span><span class="o">*</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="c1"># Initial guess</span>
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+
+<span class="c1"># Run SOAP optimization</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">soap</span><span class="p">(</span>
+    <span class="n">fun</span><span class="o">=</span><span class="n">objective</span><span class="p">,</span>
+    <span class="n">x0</span><span class="o">=</span><span class="n">x0</span><span class="p">,</span>
+    <span class="n">maxfev</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>  <span class="c1"># Maximum function evaluations</span>
+    <span class="n">u</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>       <span class="c1"># Update scale parameter</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SOAP Optimization Results:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Optimal point: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Optimal value: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;fun&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Function evaluations: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;nfev&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>When to Use SOAP</strong>:</p>
+<ul class="simple">
+<li><p>Gradient-free optimization needed</p></li>
+<li><p>Noisy objective functions</p></li>
+<li><p>Limited function evaluations budget</p></li>
+<li><p>Non-smooth optimization landscapes</p></li>
+</ul>
+</section>
+<section id="noisy-optimization-strategies">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Noisy Optimization Strategies</a><a class="headerlink" href="#noisy-optimization-strategies" title="Link to this heading">#</a></h3>
+<p>Handling shot noise in quantum optimization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">noisy_vqe_optimization</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VQE with shot noise mitigation strategies&quot;&quot;&quot;</span>
+
+    <span class="c1"># Strategy 1: Adaptive shot allocation</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">adaptive_shots_energy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">base_shots</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Increase shots near convergence&quot;&quot;&quot;</span>
+        <span class="c1"># Simple heuristic: more shots for smaller gradients</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">energy_expectation_with_shots</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">base_shots</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">energy</span>
+
+    <span class="c1"># Strategy 2: Gradient averaging</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">averaged_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Average gradient over multiple evaluations&quot;&quot;&quot;</span>
+        <span class="n">gradients</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_samples</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">grad</span> <span class="o">=</span> <span class="n">energy_and_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">gradients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gradients</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Strategy 3: Robust optimization with SPSA</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">differential_evolution</span>
+
+    <span class="n">bounds</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)]</span> <span class="o">*</span> <span class="n">n_params</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">differential_evolution</span><span class="p">(</span>
+        <span class="n">energy_expectation</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="p">,</span>
+        <span class="n">strategy</span><span class="o">=</span><span class="s1">&#39;best1bin&#39;</span><span class="p">,</span>
+        <span class="n">maxiter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">popsize</span><span class="o">=</span><span class="mi">10</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+<span class="c1"># Run noisy optimization</span>
+<span class="n">noisy_result</span> <span class="o">=</span> <span class="n">noisy_vqe_optimization</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Noisy optimization result: </span><span class="si">{</span><span class="n">noisy_result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Noise Mitigation Tips</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Start with few shots</strong>: Use 100-500 shots for initial exploration</p></li>
+<li><p><strong>Increase near convergence</strong>: Use 5000+ shots for final refinement</p></li>
+<li><p><strong>Use gradient-free methods</strong>: COBYLA, SPSA work better with noise</p></li>
+<li><p><strong>Average measurements</strong>: Multiple runs reduce variance</p></li>
+<li><p><strong>Error mitigation</strong>: Apply readout error correction</p></li>
+</ol>
+</section>
+</section>
+<section id="multi-objective-optimization">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Multi-Objective Optimization</a><a class="headerlink" href="#multi-objective-optimization" title="Link to this heading">#</a></h2>
+<section id="example-optimizing-energy-and-circuit-depth">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Example: Optimizing Energy and Circuit Depth</a><a class="headerlink" href="#example-optimizing-energy-and-circuit-depth" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">multi_objective_vqe</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">depth_weight</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimize both energy and circuit depth&quot;&quot;&quot;</span>
+
+    <span class="c1"># Primary objective: energy</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">energy_expectation</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="c1"># Secondary objective: circuit complexity</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">create_ansatz</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">n_qubits</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">circuit_cost</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span> <span class="o">*</span> <span class="n">depth_weight</span>
+
+    <span class="c1"># Combined objective</span>
+    <span class="n">total_cost</span> <span class="o">=</span> <span class="n">energy</span> <span class="o">+</span> <span class="n">circuit_cost</span>
+    <span class="k">return</span> <span class="n">total_cost</span>
+
+<span class="c1"># Optimize with trade-off</span>
+<span class="n">result_multi</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">multi_objective_vqe</span><span class="p">,</span>
+    <span class="n">init_params</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">150</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multi-objective optimization:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Total cost: </span><span class="si">{</span><span class="n">result_multi</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Pure energy: </span><span class="si">{</span><span class="n">energy_expectation</span><span class="p">(</span><span class="n">result_multi</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-vqe-patterns">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Advanced VQE Patterns</a><a class="headerlink" href="#advanced-vqe-patterns" title="Link to this heading">#</a></h2>
+<section id="example-vqe-with-multiple-observables">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Example: VQE with Multiple Observables</a><a class="headerlink" href="#example-vqe-with-multiple-observables" title="Link to this heading">#</a></h3>
+<p>Optimizing multiple Hamiltonians simultaneously:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">multi_hamiltonian_vqe</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">hamiltonians</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VQE for multiple Hamiltonians with weighted sum&quot;&quot;&quot;</span>
+    <span class="n">total_energy</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">hamiltonian</span><span class="p">,</span> <span class="n">weight</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">hamiltonians</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">compute_hamiltonian_energy</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">hamiltonian</span><span class="p">)</span>
+        <span class="n">total_energy</span> <span class="o">+=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">energy</span>
+
+    <span class="k">return</span> <span class="n">total_energy</span>
+
+<span class="c1"># Define multiple targets</span>
+<span class="n">h1</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])]</span>
+<span class="n">h2</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">1.0</span><span class="p">,</span> <span class="p">[(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])]</span>
+<span class="n">hamiltonians</span> <span class="o">=</span> <span class="p">[</span><span class="n">h1</span><span class="p">,</span> <span class="n">h2</span><span class="p">]</span>
+<span class="n">weights</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">multi_hamiltonian_vqe</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">hamiltonians</span><span class="p">,</span> <span class="n">weights</span><span class="p">),</span>
+    <span class="n">init_params</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="example-constrained-vqe">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Example: Constrained VQE</a><a class="headerlink" href="#example-constrained-vqe" title="Link to this heading">#</a></h3>
+<p>VQE with parameter constraints:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span><span class="p">,</span> <span class="n">Bounds</span>
+
+<span class="c1"># Define parameter bounds</span>
+<span class="n">bounds</span> <span class="o">=</span> <span class="n">Bounds</span><span class="p">(</span>
+    <span class="n">lb</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>           <span class="c1"># Lower bounds</span>
+    <span class="n">ub</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">]</span>  <span class="c1"># Upper bounds</span>
+<span class="p">)</span>
+
+<span class="c1"># Constrained optimization</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">energy_expectation</span><span class="p">,</span>
+    <span class="n">init_params</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span>
+    <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Constrained optimization:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Energy: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Parameters within bounds: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="performance-optimization">
+<h2><a class="toc-backref" href="#id14" role="doc-backlink">Performance Optimization</a><a class="headerlink" href="#performance-optimization" title="Link to this heading">#</a></h2>
+<section id="parallel-vqe-evaluation">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Parallel VQE Evaluation</a><a class="headerlink" href="#parallel-vqe-evaluation" title="Link to this heading">#</a></h3>
+<p>Evaluate multiple parameter sets in parallel:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parallel_vqe_search</span><span class="p">(</span><span class="n">n_random_starts</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try multiple random initializations in parallel&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_single_optimization</span><span class="p">(</span><span class="n">seed</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n_params</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">energy_expectation</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c1"># Parallel execution</span>
+    <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">run_single_optimization</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_random_starts</span><span class="p">)]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">]</span>
+
+    <span class="c1"># Find best result</span>
+    <span class="n">best_result</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">fun</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parallel search results:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Best energy: </span><span class="si">{</span><span class="n">best_result</span><span class="o">.</span><span class="n">fun</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Tried </span><span class="si">{</span><span class="n">n_random_starts</span><span class="si">}</span><span class="s2"> initializations&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">best_result</span>
+
+<span class="n">best</span> <span class="o">=</span> <span class="n">parallel_vqe_search</span><span class="p">(</span><span class="n">n_random_starts</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="batched-gradient-computation">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Batched Gradient Computation</a><a class="headerlink" href="#batched-gradient-computation" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">batched_parameter_shift</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute gradients in batches for efficiency&quot;&quot;&quot;</span>
+    <span class="n">n_params</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">gradients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_params</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_params</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="n">batch_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">n_params</span><span class="p">)</span>
+
+        <span class="c1"># Compute batch of gradients</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">batch_end</span><span class="p">):</span>
+            <span class="n">gradients</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">parameter_shift_gradient</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gradients</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting-optimization">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Troubleshooting Optimization</a><a class="headerlink" href="#troubleshooting-optimization" title="Link to this heading">#</a></h2>
+<section id="diagnosing-convergence-issues">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Diagnosing Convergence Issues</a><a class="headerlink" href="#diagnosing-convergence-issues" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">diagnose_optimization</span><span class="p">(</span><span class="n">params_history</span><span class="p">,</span> <span class="n">energy_history</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Analyze optimization trajectory&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+    <span class="c1"># Plot energy convergence</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">energy_history</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Energy Convergence&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Plot parameter evolution</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">params_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">params_history</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">params_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">params_array</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;θ</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Parameter Value&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Parameter Evolution&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;optimization_diagnosis.png&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Check for common issues</span>
+    <span class="n">energy_range</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">energy_history</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">energy_history</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">energy_range</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;⚠️  Warning: Very small energy changes - possible plateau&quot;</span><span class="p">)</span>
+
+    <span class="n">param_changes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">params_array</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">param_changes</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">:])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;⚠️  Warning: Parameters not changing - possible convergence or stuck&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="common-issues-and-solutions">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Common Issues and Solutions</a><a class="headerlink" href="#common-issues-and-solutions" title="Link to this heading">#</a></h3>
+<p><strong>Issue 1: Optimizer stuck in local minimum</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Multiple random starts</span>
+<span class="n">best_energy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+<span class="n">best_params</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">n_params</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">energy_expectation</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;COBYLA&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span> <span class="o">&lt;</span> <span class="n">best_energy</span><span class="p">:</span>
+        <span class="n">best_energy</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fun</span>
+        <span class="n">best_params</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span>
+</pre></div>
+</div>
+<p><strong>Issue 2: Slow convergence</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Use better optimizer or increase tolerance</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+    <span class="n">energy_expectation</span><span class="p">,</span>
+    <span class="n">init_params</span><span class="p">,</span>
+    <span class="n">method</span><span class="o">=</span><span class="s1">&#39;L-BFGS-B&#39;</span><span class="p">,</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+        <span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="mf">1e-9</span><span class="p">,</span>  <span class="c1"># Tighter tolerance</span>
+        <span class="s1">&#39;gtol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Issue 3: High shot noise</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Adaptive shot allocation</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">energy_adaptive_shots</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">min_shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">max_shots</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+    <span class="c1"># Start with few shots</span>
+    <span class="n">shots</span> <span class="o">=</span> <span class="n">min_shots</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">energy_expectation_with_shots</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">shots</span><span class="p">)</span>
+
+    <span class="c1"># Increase shots near convergence</span>
+    <span class="k">if</span> <span class="n">iteration</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">:</span>  <span class="c1"># Near end of optimization</span>
+        <span class="n">shots</span> <span class="o">=</span> <span class="n">max_shots</span>
+        <span class="n">energy</span> <span class="o">=</span> <span class="n">energy_expectation_with_shots</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">shots</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">energy</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id20" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="chemistry_examples.html"><span class="doc">Quantum Chemistry Examples</span></a> - Quantum chemistry optimization (VQE, UCCSD)</p></li>
+<li><p><a class="reference internal" href="../quantum_chemistry/algorithms/index.html"><span class="doc">Quantum Chemistry Algorithms</span></a> - Chemistry algorithms</p></li>
+<li><p><a class="reference internal" href="../libraries/optimizer/index.html"><span class="doc">Optimizer</span></a> - Optimizer library reference</p></li>
+<li><p><a class="reference internal" href="../user_guide/advanced/index.html"><span class="doc">Advanced Topics</span></a> - Advanced optimization techniques</p></li>
+</ul>
+</section>
+<section id="next-steps">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Next Steps</a><a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>After mastering optimization:</p>
+<ol class="arabic simple">
+<li><p>Try <a class="reference internal" href="chemistry_examples.html"><span class="doc">Quantum Chemistry Examples</span></a> for real molecular problems</p></li>
+<li><p>Explore <a class="reference internal" href="cloud_examples.html"><span class="doc">Cloud Examples</span></a> for hardware execution</p></li>
+<li><p>Study <a class="reference internal" href="advanced_examples.html"><span class="doc">Advanced Examples</span></a> for hybrid algorithms</p></li>
+<li><p>Check <a class="reference internal" href="../tutorials/intermediate/index.html"><span class="doc">Intermediate Tutorials</span></a> for detailed tutorials</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="chemistry_examples.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quantum Chemistry Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="cloud_examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Cloud Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#variational-quantum-eigensolver-vqe">Variational Quantum Eigensolver (VQE)</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-vqe-example">Basic VQE Example</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vqe-with-gradient-based-optimization">VQE with Gradient-Based Optimization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-approximate-optimization-algorithm-qaoa">Quantum Approximate Optimization Algorithm (QAOA)</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#max-cut-qaoa-example">Max-Cut QAOA Example</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-optimization-techniques">Advanced Optimization Techniques</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#soap-optimizer">SOAP Optimizer</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#noisy-optimization-strategies">Noisy Optimization Strategies</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-objective-optimization">Multi-Objective Optimization</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-optimizing-energy-and-circuit-depth">Example: Optimizing Energy and Circuit Depth</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-vqe-patterns">Advanced VQE Patterns</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-vqe-with-multiple-observables">Example: VQE with Multiple Observables</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-constrained-vqe">Example: Constrained VQE</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-optimization">Performance Optimization</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#parallel-vqe-evaluation">Parallel VQE Evaluation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#batched-gradient-computation">Batched Gradient Computation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting-optimization">Troubleshooting Optimization</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diagnosing-convergence-issues">Diagnosing Convergence Issues</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-issues-and-solutions">Common Issues and Solutions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/optimization_examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

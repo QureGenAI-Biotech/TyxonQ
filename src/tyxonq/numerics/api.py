@@ -158,12 +158,53 @@ def vectorize_or_fallback(
 
 
 def get_backend(name: str | None) -> ArrayBackend:
-    """Factory returning an ArrayBackend by canonical name.
+    """Factory function that returns an ArrayBackend instance by canonical name.
 
-    Supported:
-        - 'numpy'
-        - 'pytorch' (requires torch)
-        - 'cupynumeric' (requires cunumeric)
+    This function provides the primary interface for accessing TyxonQ's numerical
+    backends. It supports automatic backend selection, configuration-based defaults,
+    and explicit backend specification.
+
+    Args:
+        name (str | None): Canonical name of the backend to retrieve.
+            Supported values:
+            - "numpy": CPU-based NumPy backend (always available)
+            - "pytorch": PyTorch backend with GPU support (requires torch)
+            - "cupynumeric": CUDA-accelerated backend (requires cunumeric)
+            - None: Use configured default or fallback to NumPy
+
+    Returns:
+        ArrayBackend: An instance of the requested backend that provides
+            a unified array interface for numerical computations.
+
+    Raises:
+        RuntimeError: If the requested backend is not available or its
+            dependencies are not installed.
+
+    Examples:
+        >>> # Get the default backend (usually NumPy)
+        >>> backend = get_backend(None)
+        >>> arr = backend.array([1, 2, 3])
+        
+        >>> # Explicitly request NumPy backend
+        >>> numpy_backend = get_backend("numpy")
+        >>> x = numpy_backend.zeros((2, 3))
+        
+        >>> # Request PyTorch backend (if available)
+        >>> try:
+        ...     torch_backend = get_backend("pytorch")
+        ...     tensor = torch_backend.array([1.0, 2.0])
+        ... except RuntimeError as e:
+        ...     print(f"PyTorch not available: {e}")
+        
+    Notes:
+        - The function first checks for a globally configured backend instance
+        - If no explicit name is provided, it falls back to the configured name
+        - NumPy backend is used as the final fallback for all requests
+        - Backend availability is checked before instantiation
+        
+    See Also:
+        NumericBackend: Class-level proxy for accessing the current backend.
+        set_backend: Function for configuring the global backend.
     """
 
     # If no explicit name is provided, try global configuration first

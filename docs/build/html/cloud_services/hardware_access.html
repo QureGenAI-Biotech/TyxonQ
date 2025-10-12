@@ -1,0 +1,1191 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Hardware Access &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'cloud_services/hardware_access';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Examples" href="../examples/index.html" />
+    <link rel="prev" title="API Reference" href="api_reference.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="device_management.html">Device Management</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="task_submission.html">Task Submission</a></li>
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+
+
+
+
+
+
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Hardware Access</a></li>
+
+
+
+
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Cloud Services</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Hardware Access</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="hardware-access">
+<h1>Hardware Access<a class="headerlink" href="#hardware-access" title="Link to this heading">#</a></h1>
+<section id="id1">
+<h2>Hardware Access<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>Complete guide to accessing <strong>Homebrew_S2</strong> quantum processor, including gate-level and <strong>pulse-level programming</strong>.</p>
+</section>
+</section>
+<section id="homebrew-s2-overview">
+<h1>Homebrew_S2 Overview<a class="headerlink" href="#homebrew-s2-overview" title="Link to this heading">#</a></h1>
+<p><strong>Homebrew_S2</strong> is TyxonQ’s <strong>13-qubit superconducting quantum processor</strong>, designed and operated by QureGenAI for NISQ-era research and applications.</p>
+<p><strong>Key Features</strong>:</p>
+<ul class="simple">
+<li><p><strong>13 superconducting transmon qubits</strong></p></li>
+<li><p><strong>Two programming models</strong>:</p>
+<ul>
+<li><p><strong>Gate-level</strong>: Standard quantum circuit model (OpenQASM 2.0)</p></li>
+<li><p><strong>Pulse-level</strong>: Direct microwave pulse control (TQASM 0.2)</p></li>
+</ul>
+</li>
+<li><p><strong>Cloud API</strong>: REST API with Bearer token authentication</p></li>
+<li><p><strong>Optimization flags</strong>: Qubit mapping, gate decomposition, initial mapping</p></li>
+</ul>
+<p><strong>Base URL</strong>: <code class="docutils literal notranslate"><span class="pre">https://api.tyxonq.com/qau-cloud/tyxonq/</span></code></p>
+<p><strong>API Version</strong>: v1</p>
+<p><strong>Full endpoint format</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>https://api.tyxonq.com/qau-cloud/tyxonq/api/v1/{command}
+</pre></div>
+</div>
+<p><strong>Authentication</strong>: Bearer token (format: <code class="docutils literal notranslate"><span class="pre">username;priority</span></code>)</p>
+<p>Query real-time device specifications:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.devices.hardware.tyxonq.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_properties</span>
+
+<span class="n">props</span> <span class="o">=</span> <span class="n">list_properties</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">YOUR_API_KEY</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">props</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device ID: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Name: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Qubits: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;qubits&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Queue: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;queue&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="n">device</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Response Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Homebrew S2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;qubits&quot;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span>
+        <span class="s2">&quot;queue&quot;</span><span class="p">:</span> <span class="s2">&quot;quregenai.lab&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;online&quot;</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="gate-level-programming">
+<h1>Gate-Level Programming<a class="headerlink" href="#gate-level-programming" title="Link to this heading">#</a></h1>
+<p>Gate-level programming uses the standard quantum circuit abstraction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+
+<span class="c1"># Configure authentication</span>
+<span class="n">API_KEY</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s2">&quot;Input your TyxonQ API_KEY: &quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create quantum circuit</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Submit to Homebrew_S2 with optimization</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span><span class="p">,</span>  <span class="c1"># Full optimization (1+2+4)</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">enable_qos_initial_mapping</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Get results</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Measurement counts:&quot;</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Homebrew_S2 supports <strong>additive optimization flags</strong>:</p>
+<p><strong>Available Flags</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">o=1</span></code>: <strong>Qubit mapping</strong> - Map logical to physical qubits</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=2</span></code>: <strong>Gate decomposition</strong> - Decompose to native gates</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=4</span></code>: <strong>Initial mapping</strong> - Optimize initial qubit layout</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=7</span></code>: <strong>All optimizations</strong> (1+2+4)</p></li>
+</ul>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="c1"># Qubit mapping only</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=1&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Qubit mapping + gate decomposition (1+2=3)</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=3&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># All optimizations (1+2+4=7)</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Using kwargs</strong> (alternative):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>       <span class="c1"># o=1</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># o=2</span>
+    <span class="n">enable_qos_initial_mapping</span><span class="o">=</span><span class="kc">True</span>      <span class="c1"># o=4</span>
+<span class="p">)</span>
+<span class="c1"># Equivalent to device=&quot;homebrew_s2?o=7&quot;</span>
+</pre></div>
+</div>
+<p>Submit pre-compiled OpenQASM code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+
+<span class="n">qasm_code</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">OPENQASM 2.0;</span>
+<span class="s2">include &quot;qelib1.inc&quot;;</span>
+<span class="s2">qreg q[2];</span>
+<span class="s2">creg c[2];</span>
+<span class="s2">h q[0];</span>
+<span class="s2">cx q[0],q[1];</span>
+<span class="s2">measure q[0] -&gt; c[0];</span>
+<span class="s2">measure q[1] -&gt; c[1];</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.devices.hardware.tyxonq.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">submit_task</span>
+
+<span class="n">tasks</span> <span class="o">=</span> <span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;tyxonq::homebrew_s2?o=7&quot;</span><span class="p">,</span>
+    <span class="n">source</span><span class="o">=</span><span class="n">qasm_code</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;OPENQASM&quot;</span><span class="p">,</span>
+    <span class="n">token</span><span class="o">=</span><span class="n">YOUR_API_KEY</span>
+<span class="p">)</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Result:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Gate-level jobs return measurement counts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;00&quot;</span><span class="p">:</span> <span class="mi">47</span><span class="p">,</span>
+        <span class="s2">&quot;01&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;10&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;11&quot;</span><span class="p">:</span> <span class="mi">50</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;result_meta&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;tyxonq::homebrew_s2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;raw&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;task&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;JOB_ID&gt;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;device&quot;</span><span class="p">:</span> <span class="s2">&quot;homebrew_s2?o=7&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;qubits&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="s2">&quot;state&quot;</span><span class="p">:</span> <span class="s2">&quot;completed&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;shots&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+                <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;00&quot;</span><span class="p">:</span> <span class="mi">47</span><span class="p">,</span> <span class="s2">&quot;01&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;10&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;11&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">},</span>
+                <span class="s2">&quot;ts&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;pending&quot;</span><span class="p">:</span> <span class="mi">1754275502265270</span><span class="p">,</span>
+                    <span class="s2">&quot;scheduled&quot;</span><span class="p">:</span> <span class="mi">1754275502260031</span><span class="p">,</span>
+                    <span class="s2">&quot;completed&quot;</span><span class="p">:</span> <span class="mi">1754275505649825</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;runDur&quot;</span><span class="p">:</span> <span class="mi">2532053</span><span class="p">,</span>
+                <span class="s2">&quot;atChip&quot;</span><span class="p">:</span> <span class="mi">1754275446369691</span><span class="p">,</span>
+                <span class="s2">&quot;durChip&quot;</span><span class="p">:</span> <span class="mi">120185</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="pulse-level-programming">
+<h1>Pulse-Level Programming<a class="headerlink" href="#pulse-level-programming" title="Link to this heading">#</a></h1>
+<p><strong>Pulse-level control</strong> allows direct programming of microwave pulses sent to qubits, enabling:</p>
+<ul class="simple">
+<li><p><strong>Custom gate implementations</strong></p></li>
+<li><p><strong>Pulse shape optimization</strong></p></li>
+<li><p><strong>Quantum control experiments</strong> (Rabi, Ramsey, DRAG)</p></li>
+<li><p><strong>Calibration and characterization</strong></p></li>
+</ul>
+<p>TyxonQ implements pulse-level control through <strong>TQASM 0.2</strong> format, a domain-specific language for pulse programming.</p>
+<p><strong>Key Concepts</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">defcal</span></code>: Define calibration program (custom gate)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">frame</span></code>: Microwave control channel</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">newframe</span></code>: Create frame on target qubit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">play</span></code>: Execute waveform on frame</p></li>
+<li><p><strong>Waveforms</strong>: Parametric pulse shapes</p></li>
+</ul>
+<p><strong>BNF Grammar</strong>:</p>
+<div class="highlight-bnf notranslate"><div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nc">pulse</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">defcal</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nc">defcal</span><span class="p">&gt;</span> <span class="o">::=</span> &quot;defcal&quot; <span class="p">&lt;</span><span class="nc">id</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nc">idlist</span><span class="p">&gt;</span> { <span class="p">&lt;</span><span class="nc">calgrammar</span><span class="p">&gt;</span> }
+
+<span class="p">&lt;</span><span class="nc">calgrammar</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">calstatement</span><span class="p">&gt;</span>
+               | <span class="p">&lt;</span><span class="nc">calgrammar</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nc">calstatement</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nc">calstatement</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">framedecl</span><span class="p">&gt;</span>
+                | <span class="p">&lt;</span><span class="nc">waveformplay</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="nc">framedecl</span><span class="p">&gt;</span> <span class="o">::=</span> &quot;frame&quot; <span class="p">&lt;</span><span class="nc">id</span><span class="p">&gt;</span> &quot;=&quot; &quot;newframe&quot; (<span class="p">&lt;</span><span class="nc">idlist</span><span class="p">&gt;</span>);
+
+<span class="p">&lt;</span><span class="nc">waveformplay</span><span class="p">&gt;</span> <span class="o">::=</span> &quot;play&quot; (<span class="p">&lt;</span><span class="nc">id</span><span class="p">&gt;</span>, <span class="p">&lt;</span><span class="nc">waveform</span><span class="p">&gt;</span>);
+
+<span class="p">&lt;</span><span class="nc">waveform</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">id</span><span class="p">&gt;</span> (<span class="p">&lt;</span><span class="nc">explist</span><span class="p">&gt;</span>)
+</pre></div>
+</div>
+<p><strong>Example TQASM 0.2 Code</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TQASM 0.2;
+QREG q[1];
+
+defcal rabi_test q[0] {
+    frame drive_frame = newframe(q[0]);
+    play(drive_frame, cosine_drag(50, 0.2, 0.0, 0.0));
+}
+
+rabi_test q[0];
+MEASZ q[0];
+</pre></div>
+</div>
+<p>Homebrew_S2 supports the following parametric waveforms:</p>
+<p><strong>1. CosineDrag</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Pulse length (int, 0 &lt; duration &lt; 10000)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude (real, <a href="#id2"><span class="problematic" id="id3">|amp|</span></a> ≤ 2)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code>: Width parameter (real)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code>: DRAG coefficient (real)</p></li>
+</ul>
+<p><strong>Mathematical Form</strong>:</p>
+<div class="math notranslate nohighlight">
+\[f(x) = A \cdot \left[\cos\left(\frac{\pi x}{T}\right) + \beta \frac{dC}{dx}\right]\]</div>
+<p>where <span class="math notranslate nohighlight">\(C(x) = \cos(\pi x / T)\)</span>, <span class="math notranslate nohighlight">\(0 \le x &lt; T\)</span></p>
+<p><strong>2. Gaussian</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Pulse length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code>: Standard deviation</p></li>
+</ul>
+<p><strong>Mathematical Form</strong>:</p>
+<div class="math notranslate nohighlight">
+\[f(x) = A \cdot \exp\left(-\frac{(x - \mu)^2}{2\sigma^2}\right), \quad 0 \le x &lt; T\]</div>
+<p><strong>3. Sine</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">Sine</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">phase</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Pulse length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude (<a href="#id4"><span class="problematic" id="id5">|amp|</span></a> ≤ 2)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phase</span></code>: Phase in radians</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code>: Frequency (reciprocal of sampling period)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">angle</span></code>: Complex phase factor in radians</p></li>
+</ul>
+<p><strong>Mathematical Form</strong>:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}f(x) = A \sin(2\pi \cdot \text{freq} \cdot x + \text{phase}), \quad 0 \le x &lt; T\\A = \text{amp} \cdot e^{i \cdot \text{angle}}\end{aligned}\end{align} \]</div>
+<p><strong>4. Flattop</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">Flattop</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Flat-top Gaussian envelope</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Total pulse length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code>: Rise/fall width</p></li>
+</ul>
+<p><strong>5. Constant</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Constant amplitude pulse</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Pulse length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude</p></li>
+</ul>
+<p><strong>6. GaussianSquare</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">GaussianSquare</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Gaussian edges with flat middle</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Total duration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code>: Edge width</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">width</span></code>: Flat region width</p></li>
+</ul>
+<p><strong>7. Cosine</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">Cosine</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">phase</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Pure cosine wave</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Pulse length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">freq</span></code>: Frequency</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">phase</span></code>: Phase offset</p></li>
+</ul>
+<p><strong>8. Drag</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">waveforms</span><span class="o">.</span><span class="n">Drag</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="n">amp</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>DRAG pulse (derivative removal by adiabatic gate)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">duration</span></code>: Pulse length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amp</span></code>: Amplitude</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code>: Width</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code>: DRAG coefficient</p></li>
+</ul>
+<p>TyxonQ provides <code class="docutils literal notranslate"><span class="pre">DefcalBuilder</span></code> for constructing pulse programs:</p>
+<p><strong>Step 1</strong>: Create Circuit in Pulse Mode</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Param</span><span class="p">,</span> <span class="n">waveforms</span>
+
+<span class="n">qc</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>  <span class="c1"># Enable pulse mode</span>
+</pre></div>
+</div>
+<p><strong>Step 2</strong>: Define Calibration</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create parameter for target qubit</span>
+<span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+
+<span class="c1"># Start calibration builder</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;my_gate&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Step 3</strong>: Add Frames and Waveforms</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create microwave frame</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+<span class="c1"># Play waveform on frame</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p><strong>Step 4</strong>: Build and Apply</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Finalize calibration</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Add calibration call to circuit</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;my_gate&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Step 5</strong>: Generate TQASM</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tqasm_code</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">to_tqasm</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tqasm_code</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Complete example of pulse-level Rabi experiment:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Param</span><span class="p">,</span> <span class="n">waveforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+
+<span class="c1"># Configure API</span>
+<span class="n">API_KEY</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s2">&quot;Input your TyxonQ API_KEY: &quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create pulse circuit</span>
+<span class="n">qc</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>
+
+<span class="c1"># Define parametric calibration</span>
+<span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;rabi_test&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Add calibration call</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;rabi_test&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">])</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># View generated TQASM 0.2</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generated TQASM 0.2 Code:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">qc</span><span class="o">.</span><span class="n">to_tqasm</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+
+<span class="c1"># Submit to hardware (NO optimization for pulse-level)</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">qc</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Keep pulse-level</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">False</span>        <span class="c1"># No mapping</span>
+<span class="p">)</span>
+
+<span class="c1"># Get results</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rabi oscillation result:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Generated TQASM</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TQASM 0.2;
+QREG q[1];
+
+defcal rabi_test q[0] {
+    frame drive_frame = newframe(q[0]);
+    play(drive_frame, cosine_drag(50, 0.2, 0.0, 0.0));
+}
+
+rabi_test q[0];
+MEASZ q[0];
+</pre></div>
+</div>
+<p>Scan pulse duration for Rabi oscillations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Param</span><span class="p">,</span> <span class="n">waveforms</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">create_rabi_circuit</span><span class="p">(</span><span class="n">duration</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create Rabi circuit with specific pulse duration.&quot;&quot;&quot;</span>
+    <span class="n">qc</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>
+
+    <span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;rabi&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="n">duration</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+    <span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;rabi&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">])</span>
+    <span class="n">qc</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">qc</span>
+
+<span class="c1"># Sweep pulse duration</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">duration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">10</span><span class="p">):</span>
+    <span class="n">qc</span> <span class="o">=</span> <span class="n">create_rabi_circuit</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+
+    <span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+        <span class="n">circuit</span><span class="o">=</span><span class="n">qc</span><span class="p">,</span>
+        <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+        <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">duration</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;result&quot;</span><span class="p">]))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duration </span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;result&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>  <span class="c1"># Wait between submissions</span>
+
+<span class="c1"># Analyze oscillation</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="n">durations</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+<span class="n">excited_probs</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">durations</span><span class="p">,</span> <span class="n">excited_probs</span><span class="p">,</span> <span class="s1">&#39;o-&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Pulse Duration&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;P(|1⟩)&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Rabi Oscillation&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Multiple Frames</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qc</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>
+
+<span class="n">param0</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+<span class="n">param1</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[1]&quot;</span><span class="p">)</span>
+
+<span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;two_qubit_gate&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param0</span><span class="p">,</span> <span class="n">param1</span><span class="p">])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame_0&quot;</span><span class="p">,</span> <span class="n">param0</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame_1&quot;</span><span class="p">,</span> <span class="n">param1</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame_0&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame_1&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;two_qubit_gate&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">,</span> <span class="s1">&#39;q[1]&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>Complex Waveform Sequences</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;complex_gate&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+<span class="c1"># Sequence of pulses</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices">
+<h1>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h1>
+<p><strong>1. Use Hardware Optimization</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Always use optimization for gate-level</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span>  <span class="c1"># Full optimization</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>2. Respect Qubit Connectivity</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check coupling map before designing circuits</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.devices.hardware.tyxonq.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_properties</span>
+
+<span class="n">props</span> <span class="o">=</span> <span class="n">list_properties</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">YOUR_API_KEY</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available qubits: </span><span class="si">{</span><span class="n">props</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;qubits&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>3. Validate Shot Count</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use appropriate shots for precision</span>
+<span class="c1"># Quick test: 100-500</span>
+<span class="c1"># Standard: 1000-4000</span>
+<span class="c1"># High precision: 10000+</span>
+
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span><span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>1. Disable Optimization</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># CRITICAL: Disable gate decomposition for pulse-level</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">pulse_circuit</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>2. Validate Waveform Parameters</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check parameter constraints:</span>
+<span class="c1"># - duration: 0 &lt; duration &lt; 10000</span>
+<span class="c1"># - amp: |amp| ≤ 2</span>
+<span class="c1"># - All parameters must be numeric</span>
+
+<span class="n">waveform</span> <span class="o">=</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span>
+    <span class="n">duration</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>   <span class="c1"># Valid</span>
+    <span class="n">amp</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>       <span class="c1"># Valid (|0.2| ≤ 2)</span>
+    <span class="n">sigma</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">beta</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>3. Start with Simple Waveforms</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Begin with basic waveforms</span>
+<span class="n">simple_pulse</span> <span class="o">=</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Constant</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+<span class="c1"># Progress to complex shapes</span>
+<span class="n">drag_pulse</span> <span class="o">=</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Drag</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>4. Use Appropriate Durations</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Typical durations:</span>
+<span class="c1"># - Single-qubit gates: 20-100 ns</span>
+<span class="c1"># - Two-qubit gates: 200-500 ns</span>
+<span class="c1"># - Calibration: 10-1000 ns</span>
+
+<span class="n">rabi_waveform</span> <span class="o">=</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># 50 ns</span>
+</pre></div>
+</div>
+</section>
+<section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h1>
+<p><strong>Circuit Too Deep</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: Circuit depth exceeds limits</span>
+<span class="c1"># Solution: Use full optimization</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span>  <span class="c1"># Reduces depth</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Gate Not Supported</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: Gate not in native set</span>
+<span class="c1"># Solution: Let optimization decompose automatically</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=2&quot;</span>  <span class="c1"># Enables gate decomposition</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Waveform Parameter Error</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: Invalid parameter</span>
+<span class="c1"># Solution: Check constraints</span>
+
+<span class="c1"># BAD: duration out of range</span>
+<span class="c1"># waveform = waveforms.Gaussian(20000, 0.1, 5)  # duration &gt; 10000</span>
+
+<span class="c1"># GOOD: valid duration</span>
+<span class="n">waveform</span> <span class="o">=</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># 0 &lt; 100 &lt; 10000</span>
+</pre></div>
+</div>
+<p><strong>TQASM Syntax Error</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Always validate generated TQASM</span>
+<span class="n">tqasm_code</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">to_tqasm</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">tqasm_code</span><span class="p">)</span>  <span class="c1"># Check for syntax</span>
+
+<span class="c1"># Common issues:</span>
+<span class="c1"># - Missing semicolons</span>
+<span class="c1"># - Incorrect parameter types</span>
+<span class="c1"># - Invalid frame names</span>
+</pre></div>
+</div>
+<p><strong>Optimization Conflict</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Error: Pulse code optimized away</span>
+<span class="c1"># Solution: DISABLE optimization</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">pulse_circuit</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>  <span class="c1"># No ?o= parameter</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h1>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h1>
+<ul class="simple">
+<li><p>📖 Read <a class="reference internal" href="getting_started.html"><span class="doc">Getting Started</span></a> for basic cloud access</p></li>
+<li><p>📖 Read <a class="reference internal" href="device_management.html"><span class="doc">Device Management</span></a> for optimization flags reference</p></li>
+<li><p>📖 Read <a class="reference internal" href="task_submission.html"><span class="doc">Task Submission</span></a> for advanced job management</p></li>
+<li><p>📖 Read <a class="reference internal" href="api_reference.html"><span class="doc">API Reference</span></a> for complete API documentation</p></li>
+<li><p>📖 <strong>Pulse documentation</strong>: <code class="docutils literal notranslate"><span class="pre">docs/pulse_support_en.md</span></code> (detailed TQASM 0.2 specification)</p></li>
+</ul>
+<p><strong>External Resources</strong>:</p>
+<ul class="simple">
+<li><p><strong>TyxonQ Cloud Portal</strong>: <a class="reference external" href="https://www.tyxonq.com/">https://www.tyxonq.com/</a></p></li>
+<li><p><strong>API Documentation</strong>: <code class="docutils literal notranslate"><span class="pre">docs/tyxonq_cloud_api.md</span></code></p></li>
+<li><p><strong>Pulse Specification</strong>: <code class="docutils literal notranslate"><span class="pre">docs/pulse_support_en.md</span></code></p></li>
+</ul>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="api_reference.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">API Reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../examples/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Hardware Access</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Hardware Access</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#homebrew-s2-overview">Homebrew_S2 Overview</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#gate-level-programming">Gate-Level Programming</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pulse-level-programming">Pulse-Level Programming</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/cloud_services/hardware_access.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

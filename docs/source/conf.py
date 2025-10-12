@@ -71,13 +71,10 @@ html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
     "logo": {
         "text": "TyxonQ Documentation",
-        "image_light": "_static/images/logo_light.png",
-        "image_dark": "_static/images/logo_dark.png",
     },
     "navbar_start": ["navbar-logo"],
-    "navbar_center": ["navbar-nav"],
-    "navbar_end": ["navbar-icon-links", "theme-switcher"],
-    "navbar_persistent": ["search-button"],
+    "navbar_center": [],
+    "navbar_end": ["navbar-icon-links", "theme-switcher", "search-button"],
     "icon_links": [
         {
             "name": "GitHub",
@@ -93,13 +90,17 @@ html_theme_options = {
         },
     ],
     "show_toc_level": 2,
-    "navigation_depth": 4,
+    "navigation_depth": 2,
     "show_nav_level": 1,
     "navigation_with_keys": True,
-    "collapse_navigation": False,
+    "collapse_navigation": True,
     "show_prev_next": True,
     "footer_items": ["copyright", "sphinx-version"],
     "announcement": None,
+    "use_edit_page_button": False,
+    "show_version_warning_banner": False,
+    "primary_sidebar_end": ["indices.html"],
+    "secondary_sidebar_items": ["page-toc", "edit-this-page", "sourcelink"],
 }
 
 html_context = {
@@ -125,11 +126,11 @@ html_js_files = []
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/images/logo.png"
+# html_logo = "_static/images/logo.png"  # Logo file doesn't exist yet
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs. This file should be a Windows icon file (.ico) being 16x16 or 32x32 pixels large.
-html_favicon = "_static/images/favicon.ico"
+# html_favicon = "_static/images/favicon.ico"  # Favicon doesn't exist yet
 
 # If true, links to the reST sources are added to the pages.
 html_show_sourcelink = True

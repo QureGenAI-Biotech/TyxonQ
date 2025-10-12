@@ -1,0 +1,1577 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tyxonq.core.ir.circuit &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/tyxonq/core/ir/circuit';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../../../tyxonq.html" class="nav-link">tyxonq</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">tyxonq.core.ir.circuit</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for tyxonq.core.ir.circuit</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">overload</span><span class="p">,</span> <span class="n">Literal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...compiler.api</span><span class="w"> </span><span class="kn">import</span> <span class="nb">compile</span> <span class="k">as</span> <span class="n">compile_api</span>  <span class="c1"># lazy import to avoid hard deps</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="c1"># ---- Global defaults for chainable stages (configurable via top-level API) ----</span>
+<span class="n">_GLOBAL_COMPILE_DEFAULTS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_GLOBAL_DEVICE_DEFAULTS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_GLOBAL_POSTPROC_DEFAULTS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="set_global_compile_defaults">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.set_global_compile_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_global_compile_defaults</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">_GLOBAL_COMPILE_DEFAULTS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_GLOBAL_COMPILE_DEFAULTS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_global_compile_defaults">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.get_global_compile_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_global_compile_defaults</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_GLOBAL_COMPILE_DEFAULTS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="set_global_device_defaults">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.set_global_device_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_global_device_defaults</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">_GLOBAL_DEVICE_DEFAULTS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_GLOBAL_DEVICE_DEFAULTS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_global_device_defaults">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.get_global_device_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_global_device_defaults</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_GLOBAL_DEVICE_DEFAULTS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="set_global_postprocessing_defaults">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.set_global_postprocessing_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_global_postprocessing_defaults</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">_GLOBAL_POSTPROC_DEFAULTS</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+    <span class="k">if</span> <span class="s2">&quot;method&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_GLOBAL_POSTPROC_DEFAULTS</span><span class="p">:</span>
+        <span class="n">_GLOBAL_POSTPROC_DEFAULTS</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_GLOBAL_POSTPROC_DEFAULTS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_global_postprocessing_defaults">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.get_global_postprocessing_defaults">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_global_postprocessing_defaults</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_GLOBAL_POSTPROC_DEFAULTS</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;method&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+        <span class="n">base</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">base</span></div>
+
+
+<div class="viewcode-block" id="Circuit">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Circuit</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Minimal intermediate representation (IR) for a quantum circuit.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        num_qubits: Number of qubits in the circuit.</span>
+<span class="sd">        ops: A sequence of operation descriptors. The concrete type is left</span>
+<span class="sd">            open for backends/compilers to interpret (e.g., gate tuples, IR</span>
+<span class="sd">            node objects). Keeping this generic allows the IR to evolve while</span>
+<span class="sd">            tests exercise the structural contract.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">num_qubits</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">instructions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Circuit.__init__">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ops</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">instructions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="c1"># Compile-stage defaults (visible, with defaults)</span>
+                 <span class="n">compile_engine</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+                 <span class="n">compile_output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ir&quot;</span><span class="p">,</span>
+                 <span class="n">compile_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;simulator::statevector&quot;</span><span class="p">,</span>
+                 <span class="n">compile_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="c1"># Device-stage defaults</span>
+                 <span class="n">device_provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;simulator&quot;</span><span class="p">,</span>
+                 <span class="n">device_device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;statevector&quot;</span><span class="p">,</span>
+                 <span class="n">device_shots</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+                 <span class="n">device_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="c1"># Result handling: whether to fetch final result (None=auto)</span>
+                 <span class="n">wait_async_result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                 <span class="c1"># Postprocessing defaults</span>
+                 <span class="n">postprocessing_method</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">postprocessing_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="c1"># Draw defaults</span>
+                 <span class="n">draw_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="c1"># Optional pre-compiled or provider-native source</span>
+                 <span class="n">source</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a Circuit.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            num_qubits: Number of qubits in the circuit.</span>
+<span class="sd">            ops: List of operations. Defaults to empty list if not provided.</span>
+<span class="sd">            metadata: Circuit metadata. Defaults to empty dict if not provided.</span>
+<span class="sd">            instructions: List of instructions. Defaults to empty list if not provided.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">=</span> <span class="n">num_qubits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span> <span class="o">=</span> <span class="n">ops</span> <span class="k">if</span> <span class="n">ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">metadata</span> <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span> <span class="o">=</span> <span class="n">instructions</span> <span class="k">if</span> <span class="n">instructions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="c1"># Chainable stage options seeded from global defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compile_opts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_global_compile_defaults</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_global_device_defaults</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_global_postprocessing_defaults</span><span class="p">()</span>
+        <span class="c1"># Visible defaults applied (constructor-specified overrides)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compile_engine</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">compile_engine</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compile_output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">compile_output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compile_target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">compile_target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">compile_options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_compile_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">compile_options</span><span class="p">))</span>
+        <span class="c1"># Device defaults</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;provider&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">device_provider</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">device_device</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;shots&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">device_shots</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">device_options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">device_options</span><span class="p">))</span>
+        <span class="c1"># Result handling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wait_async_result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">wait_async_result</span>
+        <span class="c1"># Postprocessing defaults</span>
+        <span class="k">if</span> <span class="n">postprocessing_options</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">postprocessing_options</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s2">&quot;method&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">postprocessing_method</span>
+
+        <span class="c1"># Optional direct-execution source (e.g., QASM string or provider object)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="c1"># Draw defaults (e.g., &quot;text&quot;, &quot;mpl&quot;, &quot;latex&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_draw_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">draw_output</span><span class="p">)</span> <span class="k">if</span> <span class="n">draw_output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="c1"># Ensure structural validation runs even with custom __init__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span></div>
+
+
+    <span class="c1"># Context manager support for simple builder-style usage in tests</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># Do not suppress exceptions</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Builder compatibility: expose .circuit() to return self</span>
+<div class="viewcode-block" id="Circuit.circuit">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.circuit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">circuit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_qubits must be non-negative&quot;</span><span class="p">)</span>
+        <span class="c1"># Lightweight structural validation: ints used as qubit indices are in range</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;op must be a tuple or list&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">op</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;op cannot be empty&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;op name must be a string&quot;</span><span class="p">)</span>
+            <span class="c1"># Validate any int-like argument as qubit index</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">arg</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">arg</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;qubit index out of range in op&quot;</span><span class="p">)</span>
+        <span class="c1"># Validate instructions</span>
+        <span class="k">for</span> <span class="n">inst</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">inst</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;instruction must be (name, (indices,)) tuple&quot;</span><span class="p">)</span>
+            <span class="n">iname</span><span class="p">,</span> <span class="n">idxs</span> <span class="o">=</span> <span class="n">inst</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iname</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;instruction name must be a string&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">idxs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;instruction indices must be a tuple&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">q</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;instruction qubit index out of range&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Circuit.with_metadata">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.with_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Circuit with merged metadata (shallow merge).&quot;&quot;&quot;</span>
+        <span class="n">new_meta</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+        <span class="n">new_meta</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">new_meta</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ---- Chainable configuration stages ----</span>
+<div class="viewcode-block" id="Circuit.device">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.device">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure device execution options for the circuit.</span>
+<span class="sd">        </span>
+<span class="sd">        This method sets device-related parameters that will be used when the circuit</span>
+<span class="sd">        is executed. It supports chainable configuration.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            **options: Device configuration options. Common options include:</span>
+<span class="sd">                provider (str): Execution provider (&quot;simulator&quot;, &quot;tyxonq&quot;, etc.)</span>
+<span class="sd">                device (str): Specific device name (&quot;statevector&quot;, &quot;homebrew_s2&quot;, etc.)</span>
+<span class="sd">                shots (int): Number of measurement shots</span>
+<span class="sd">                </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Circuit: The same circuit instance with updated device options.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).cx(0,1)</span>
+<span class="sd">            &gt;&gt;&gt; configured = c.device(provider=&quot;simulator&quot;, device=&quot;statevector&quot;, shots=1000)</span>
+<span class="sd">            &gt;&gt;&gt; # Chain with execution:</span>
+<span class="sd">            &gt;&gt;&gt; result = c.device(shots=100).run()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.postprocessing">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.postprocessing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">postprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure postprocessing options for measurement results.</span>
+<span class="sd">        </span>
+<span class="sd">        This method sets postprocessing parameters that will be applied to</span>
+<span class="sd">        measurement results after circuit execution.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            **options: Postprocessing configuration options. Common options include:</span>
+<span class="sd">                method (str): Postprocessing method (&quot;readout_mitigation&quot;, etc.)</span>
+<span class="sd">                </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Circuit: The same circuit instance with updated postprocessing options.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).cx(0,1).measure_all()</span>
+<span class="sd">            &gt;&gt;&gt; configured = c.postprocessing(method=&quot;readout_mitigation&quot;)</span>
+<span class="sd">            &gt;&gt;&gt; # Chain with device and execution:</span>
+<span class="sd">            &gt;&gt;&gt; result = c.device(shots=100).postprocessing(method=&quot;readout_mitigation&quot;).run()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s2">&quot;method&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="c1"># ---- Lightweight helpers ----</span>
+<div class="viewcode-block" id="Circuit.gate_count">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.gate_count">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gate_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gate_list</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Count the number of gates in the circuit.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            gate_list: Optional list of gate names to count. If provided, only</span>
+<span class="sd">                gates with names in this list are counted (case-insensitive).</span>
+<span class="sd">                If None, returns the total number of gates.</span>
+<span class="sd">                </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            int: Number of gates matching the criteria.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).cx(0,1).x(1)</span>
+<span class="sd">            &gt;&gt;&gt; c.gate_count()  # Total gates</span>
+<span class="sd">            3</span>
+<span class="sd">            &gt;&gt;&gt; c.gate_count([&quot;h&quot;, &quot;x&quot;])  # Only H and X gates</span>
+<span class="sd">            2</span>
+<span class="sd">            &gt;&gt;&gt; c.gate_count([&quot;cnot&quot;, &quot;cx&quot;])  # CNOT gates (case-insensitive)</span>
+<span class="sd">            1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gate_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">gate_list</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gate_list</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">set</span><span class="p">))</span> <span class="k">else</span> <span class="p">[</span><span class="n">gate_list</span><span class="p">])}</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">count</span></div>
+
+
+<div class="viewcode-block" id="Circuit.gate_summary">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.gate_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gate_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a summary of gate types and their frequencies.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict[str, int]: Mapping from gate name (lowercase) to count.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(3)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).h(1).cx(0,1).cx(1,2).x(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.gate_summary()</span>
+<span class="sd">            {&#39;h&#39;: 2, &#39;cx&#39;: 2, &#39;x&#39;: 1}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">summary</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">summary</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+
+    <span class="c1"># ---- Analysis helpers (lightweight, backend-agnostic) ----</span>
+<div class="viewcode-block" id="Circuit.count_flop">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.count_flop">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">count_flop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a heuristic FLOP estimate for statevector simulation.</span>
+
+<span class="sd">        This avoids tensor network dependencies. The estimate is coarse:</span>
+<span class="sd">        - 1q gate ~ O(2^n)</span>
+<span class="sd">        - 2q gate ~ O(2^(n+1))</span>
+<span class="sd">        - other gates ignored</span>
+<span class="sd">        Returns None if n is not available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">flop</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;rx&quot;</span><span class="p">,</span> <span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="s2">&quot;rz&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;sdg&quot;</span><span class="p">):</span>
+                <span class="n">flop</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">n</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="s2">&quot;cy&quot;</span><span class="p">,</span> <span class="s2">&quot;cnot&quot;</span><span class="p">,</span> <span class="s2">&quot;rxx&quot;</span><span class="p">,</span> <span class="s2">&quot;rzz&quot;</span><span class="p">):</span>
+                <span class="n">flop</span> <span class="o">+=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">flop</span></div>
+
+
+<div class="viewcode-block" id="Circuit.get_circuit_summary">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.get_circuit_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_circuit_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover - optional pandas</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a dict summarizing the circuit if pandas is available.</span>
+
+<span class="sd">        Columns: #qubits, #gates, #CNOT, #multicontrol, depth (if qiskit available), #FLOP (heuristic).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">n_qubits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span>
+        <span class="n">n_gates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span>
+        <span class="n">n_cnot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gate_count</span><span class="p">([</span><span class="s2">&quot;cnot&quot;</span><span class="p">,</span> <span class="s2">&quot;cx&quot;</span><span class="p">])</span>
+        <span class="n">n_mc</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span> <span class="k">if</span> <span class="s2">&quot;multicontrol&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">...compiler.compile_engine.qiskit.dialect</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_qiskit</span>  <span class="c1"># type: ignore</span>
+            <span class="n">qc</span> <span class="o">=</span> <span class="n">to_qiskit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_measures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">depth</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">depth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">flop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">count_flop</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;#qubits&quot;</span><span class="p">:</span> <span class="n">n_qubits</span><span class="p">,</span> <span class="s2">&quot;#gates&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">n_gates</span><span class="p">],</span> <span class="s2">&quot;#CNOT&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">n_cnot</span><span class="p">],</span> <span class="s2">&quot;#multicontrol&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">n_mc</span><span class="p">],</span> <span class="s2">&quot;depth&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">depth</span><span class="p">],</span> <span class="s2">&quot;#FLOP&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">flop</span><span class="p">]}</span></div>
+
+
+<div class="viewcode-block" id="Circuit.extended">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.extended">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extended</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extra_ops</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Circuit with ops extended by extra_ops (no mutation).&quot;&quot;&quot;</span>
+        <span class="n">new_ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">extra_ops</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Circuit</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">ops</span><span class="o">=</span><span class="n">new_ops</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">),</span> <span class="n">instructions</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Circuit.compose">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.compose">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append another Circuit&#39;s ops. If `indices` given, remap other&#39;s qubits by indices[i].&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">indices</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">num_qubits</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;compose requires equal num_qubits when indices is None&quot;</span><span class="p">)</span>
+            <span class="n">mapped_ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># indices maps other&#39;s logical i -&gt; self physical indices[i]</span>
+            <span class="n">idx_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">_map_op</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+                <span class="n">mapped</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">idx_list</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;compose indices out of range for other circuit&quot;</span><span class="p">)</span>
+                        <span class="n">mapped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">idx_list</span><span class="p">[</span><span class="n">a</span><span class="p">]))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">mapped</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">mapped</span><span class="p">)</span>
+            <span class="n">mapped_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">_map_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">ops</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">extended</span><span class="p">(</span><span class="n">mapped_ops</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.remap_qubits">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.remap_qubits">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remap_qubits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">new_num_qubits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Circuit with qubit indices remapped according to `mapping`.</span>
+
+<span class="sd">        All int arguments in ops are treated as qubit indices and must be present in mapping.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_remap_op</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;qubit </span><span class="si">{</span><span class="n">a</span><span class="si">}</span><span class="s2"> missing in mapping&quot;</span><span class="p">)</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">a</span><span class="p">]))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="n">nn</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">new_num_qubits</span><span class="p">)</span> <span class="k">if</span> <span class="n">new_num_qubits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span>
+        <span class="k">return</span> <span class="n">Circuit</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="n">nn</span><span class="p">,</span> <span class="n">ops</span><span class="o">=</span><span class="p">[</span><span class="n">_remap_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">],</span> <span class="n">metadata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">),</span> <span class="n">instructions</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Circuit.positional_logical_mapping">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.positional_logical_mapping">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">positional_logical_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return positional-&gt;logical mapping from explicit instructions or measure_z ops.&quot;&quot;&quot;</span>
+        <span class="c1"># Prefer explicit instructions if present</span>
+        <span class="n">measures</span> <span class="o">=</span> <span class="p">[</span><span class="n">idxs</span> <span class="k">for</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">idxs</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;measure&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">measures</span><span class="p">:</span>
+            <span class="n">pos_to_logical</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">pos</span><span class="p">,</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">measures</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">idxs</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">pos_to_logical</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">pos_to_logical</span> <span class="ow">or</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span>
+        <span class="c1"># Fallback to scanning measure_z ops</span>
+        <span class="n">pos_to_logical</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">op</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;measure_z&quot;</span><span class="p">:</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">pos_to_logical</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">q</span>
+                <span class="n">pos</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">pos_to_logical</span> <span class="ow">or</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="Circuit.inverse">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.inverse">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a unitary inverse circuit for supported ops (h, cx, rz).</span>
+
+<span class="sd">        Non-unitary ops like measure/reset/barrier are skipped unless strict=True (then error).</span>
+<span class="sd">        Unknown ops raise if strict=True, else skipped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inv_ops</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;h&quot;</span><span class="p">:</span>
+                <span class="n">inv_ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;cx&quot;</span><span class="p">:</span>
+                <span class="n">inv_ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;rz&quot;</span><span class="p">:</span>
+                <span class="n">inv_ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;rz&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="n">op</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+            <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;measure_z&quot;</span><span class="p">,</span> <span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="s2">&quot;barrier&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;non-unitary op not invertible: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;inverse not implemented for op: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+        <span class="k">return</span> <span class="n">Circuit</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">,</span> <span class="n">ops</span><span class="o">=</span><span class="n">inv_ops</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">),</span> <span class="n">instructions</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">))</span></div>
+
+
+    <span class="c1"># ---- JSON IO (provider-agnostic, minimal) ----</span>
+<div class="viewcode-block" id="Circuit.to_json_obj">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.to_json_obj">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_json_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;num_qubits&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">),</span>
+            <span class="s2">&quot;ops&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="p">),</span>
+            <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">),</span>
+            <span class="s2">&quot;instructions&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="n">n</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">idxs</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">idxs</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">],</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Circuit.to_json_str">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.to_json_str">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_json_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_json_obj</span><span class="p">(),</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">)</span></div>
+
+
+
+    <span class="c1"># ---- Provider adapters (thin convenience wrappers) ----</span>
+<div class="viewcode-block" id="Circuit.to_openqasm">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.to_openqasm">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_openqasm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serialize this IR circuit to OpenQASM 2 using the compiler facade.</span>
+
+<span class="sd">        Delegates to compiler API (provider=&#39;qiskit&#39;, output=&#39;qasm2&#39;).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">compile_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;qiskit&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;qasm2&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">r</span><span class="p">[</span><span class="s2">&quot;circuit&quot;</span><span class="p">]</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+
+<div class="viewcode-block" id="Circuit.compile">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.compile">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compile</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">compile_engine</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delegate to compiler.api.compile or act as chainable setter when no args.</span>
+
+<span class="sd">        - Chainable模式：若 provider/output/target/options 全为 None，则返回 self（不触发编译）。</span>
+<span class="sd">        - 编译模式：转发到 compiler.api.compile，options 与已记录的 _compile_opts 合并。</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Chainable: no explicit args means only marking intent</span>
+        <span class="k">if</span> <span class="n">compile_engine</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">options</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="c1"># If a direct source is present, skip compilation entirely</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="c1"># Delegate to compiler facade exactly following its contract</span>
+        <span class="n">prov</span> <span class="o">=</span> <span class="n">compile_engine</span> <span class="ow">or</span> <span class="s2">&quot;default&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">output</span> <span class="ow">or</span> <span class="s2">&quot;ir&quot;</span>
+        <span class="n">merged_opts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_opts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">options</span><span class="p">:</span>
+            <span class="n">merged_opts</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="c1"># compiler/api.compile 现在只接受 (circuit, compile_engine, output, options)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">compile_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compile_engine</span><span class="o">=</span><span class="n">prov</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="n">out</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">merged_opts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">[</span><span class="s2">&quot;circuit&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Circuit.run">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shots</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="n">wait_async_result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;执行电路：</span>
+<span class="sd">        - 若构造时提供了 source，则直接按 source 提交给设备层；</span>
+<span class="sd">        - 否则，先按 compile_engine/output/target 进行编译，再根据产物类型提交。</span>
+<span class="sd">        注意：不在此处补测量或发出告警；该逻辑归属编译阶段。</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">...devices</span><span class="w"> </span><span class="kn">import</span> <span class="n">base</span> <span class="k">as</span> <span class="n">device_base</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.hardware</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">hwcfg</span>
+
+        <span class="c1"># Merge device options with call-time overrides and extract reserved keys</span>
+        <span class="n">dev_opts</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_device_opts</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">}</span>
+        <span class="n">dev_provider</span> <span class="o">=</span> <span class="n">dev_opts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;provider&quot;</span><span class="p">,</span> <span class="n">provider</span><span class="p">)</span>
+        <span class="n">dev_device</span> <span class="o">=</span> <span class="n">dev_opts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="n">dev_shots</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">dev_opts</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;shots&quot;</span><span class="p">,</span> <span class="n">shots</span><span class="p">))</span>
+
+        <span class="c1"># If pre-compiled/native source exists, submit directly</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tasks</span> <span class="o">=</span> <span class="n">device_base</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">provider</span><span class="o">=</span><span class="n">dev_provider</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">dev_device</span><span class="p">,</span>
+                <span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">,</span>
+                <span class="n">shots</span><span class="o">=</span><span class="n">dev_shots</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">dev_opts</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Compile first using current defaults</span>
+            <span class="n">compiled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+                <span class="n">compile_engine</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_engine</span><span class="p">,</span>
+                <span class="n">output</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_output</span><span class="p">,</span>
+                <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_target</span><span class="p">,</span>
+                <span class="n">options</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_opts</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># For hardware providers, ensure we submit provider-native source (e.g., qasm2)</span>
+            <span class="n">prov_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">dev_provider</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dev_provider</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">dev_provider</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="c1"># is_hw = prov_norm not in (&quot;simulator&quot;, &quot;local&quot;, &quot;&quot;)</span>
+            <span class="n">is_tyxonq_hw</span> <span class="o">=</span> <span class="n">prov_norm</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">source_to_submit</span> <span class="o">=</span> <span class="n">compiled</span>
+            <span class="k">elif</span> <span class="n">is_tyxonq_hw</span><span class="p">:</span>
+                <span class="c1"># Auto-compile to qasm2 for hardware submission via qiskit provider</span>
+                <span class="n">qiskit_opts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compile_opts</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">qiskit_opts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;basis_gates&quot;</span><span class="p">):</span>
+                    <span class="n">qiskit_opts</span><span class="p">[</span><span class="s2">&quot;basis_gates&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;rz&quot;</span><span class="p">,</span> <span class="s2">&quot;rx&quot;</span><span class="p">,</span> <span class="s2">&quot;cz&quot;</span><span class="p">]</span>
+                <span class="n">qasm_res</span> <span class="o">=</span> <span class="n">compile_api</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compile_engine</span><span class="o">=</span><span class="s2">&quot;qiskit&quot;</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="s2">&quot;qasm2&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">qiskit_opts</span><span class="p">)</span>
+                <span class="n">source_to_submit</span> <span class="o">=</span> <span class="n">qasm_res</span><span class="p">[</span><span class="s2">&quot;circuit&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">source_to_submit</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">source_to_submit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tasks</span> <span class="o">=</span> <span class="n">device_base</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">dev_provider</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">dev_device</span><span class="p">,</span>
+                    <span class="n">source</span><span class="o">=</span><span class="n">source_to_submit</span><span class="p">,</span>
+                    <span class="n">shots</span><span class="o">=</span><span class="n">dev_shots</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">dev_opts</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Submit IR directly (simulator/local)</span>
+                <span class="n">tasks</span> <span class="o">=</span> <span class="n">device_base</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                    <span class="n">provider</span><span class="o">=</span><span class="n">dev_provider</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">dev_device</span><span class="p">,</span>
+                    <span class="n">circuit</span><span class="o">=</span><span class="n">compiled</span><span class="p">,</span>
+                    <span class="n">shots</span><span class="o">=</span><span class="n">dev_shots</span><span class="p">,</span>
+                    <span class="o">**</span><span class="n">dev_opts</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># unified_list = tasks if isinstance(tasks, list) else [tasks]</span>
+        <span class="n">unified_result_list</span><span class="o">=</span><span class="p">[]</span>
+        <span class="c1"># Normalize to list of unified payloads</span>
+        <span class="k">if</span> <span class="n">wait_async_result</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+                <span class="n">task_result</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">unified_result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_result</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+                <span class="n">task_result</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">unified_result_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_result</span><span class="p">)</span>
+
+    
+        <span class="c1"># Fetch final results where needed and attach postprocessing</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">...postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_postprocessing</span>  <span class="c1"># 延迟导入，保持解耦</span>
+        <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rr</span> <span class="ow">in</span> <span class="n">unified_result_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rr</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">has_payload</span> <span class="o">=</span> <span class="p">(</span><span class="n">rr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">rr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;counts&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">rr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;expectations&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">has_payload</span><span class="p">:</span>
+                    <span class="n">post</span> <span class="o">=</span> <span class="n">apply_postprocessing</span><span class="p">(</span><span class="n">rr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_post_opts</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{})</span>
+                    <span class="n">rr</span><span class="p">[</span><span class="s2">&quot;postprocessing&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">post</span>
+                    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rr</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">error_result</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;result&#39;</span><span class="p">:{},</span>
+                        <span class="s1">&#39;result_meta&#39;</span><span class="p">:</span> <span class="n">rr</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;result_meta&#39;</span><span class="p">,</span> <span class="p">{}),</span>
+                        <span class="s1">&#39;postprocessing&#39;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="kc">None</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error_result</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;result is not a dict&#39;</span><span class="p">,</span><span class="n">rr</span><span class="p">)</span>
+             
+        <span class="k">return</span> <span class="n">results</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tasks</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+    <span class="c1"># ---- Task helpers for cloud.api thin wrappers ----</span>
+<div class="viewcode-block" id="Circuit.get_task_details">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.get_task_details">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_task_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">poll_interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span> <span class="n">poll_interval</span><span class="o">=</span><span class="n">poll_interval</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="Circuit.get_result">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.get_result">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">poll_interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span><span class="p">)</span><span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="n">task</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span> <span class="n">poll_interval</span><span class="o">=</span><span class="n">poll_interval</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.cancel">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.cancel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">dev</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Task handle missing device information&quot;</span><span class="p">)</span>
+        <span class="n">dev_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+        <span class="n">prov</span> <span class="o">=</span> <span class="p">(</span><span class="n">dev_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="s2">&quot;::&quot;</span> <span class="ow">in</span> <span class="n">dev_str</span> <span class="k">else</span> <span class="s2">&quot;simulator&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_driver</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.hardware</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">hwcfg</span>
+
+        <span class="n">tok</span> <span class="o">=</span> <span class="n">hwcfg</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">prov</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">dev_str</span><span class="p">)</span>
+        <span class="n">drv</span> <span class="o">=</span> <span class="n">resolve_driver</span><span class="p">(</span><span class="n">prov</span><span class="p">,</span> <span class="n">dev_str</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">drv</span><span class="p">,</span> <span class="s2">&quot;remove_task&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">drv</span><span class="o">.</span><span class="n">remove_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">tok</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;cancel not supported for this provider/task type&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.submit_task">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.submit_task">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submit_task</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">shots</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="n">compiler</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;qiskit&quot;</span><span class="p">,</span>
+        <span class="n">auto_compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="c1"># Submit is an alias of run with identical semantics</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">provider</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="n">shots</span><span class="p">,</span> <span class="n">compiler</span><span class="o">=</span><span class="n">compiler</span><span class="p">,</span> <span class="n">auto_compile</span><span class="o">=</span><span class="n">auto_compile</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span></div>
+
+
+    <span class="c1"># Note: builder-style gate helpers have been moved to `CircuitBuilder`.</span>
+
+    <span class="c1"># Instruction helpers</span>
+<div class="viewcode-block" id="Circuit.add_measure">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.add_measure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_measure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="n">new_inst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">:</span>
+            <span class="n">new_inst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;measure&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">),)))</span>
+        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">new_inst</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.add_reset">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.add_reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="n">new_inst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">:</span>
+            <span class="n">new_inst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">),)))</span>
+        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">new_inst</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.add_barrier">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.add_barrier">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_barrier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">qubits</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="n">new_inst</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instructions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">qubits</span><span class="p">:</span>
+            <span class="n">new_inst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">qubits</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_inst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;barrier&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_qubits</span><span class="p">))))</span>
+        <span class="k">return</span> <span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instructions</span><span class="o">=</span><span class="n">new_inst</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ---- Builder-style ergonomic gate helpers (in-place; return self) ----</span>
+<div class="viewcode-block" id="Circuit.h">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.h">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">h</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply Hadamard gate to qubit q.</span>
+<span class="sd">        </span>
+<span class="sd">        The Hadamard gate creates superposition by mapping |0⟩ → (|0⟩ + |1⟩)/√2</span>
+<span class="sd">        and |1⟩ → (|0⟩ - |1⟩)/√2. It&#39;s fundamental for quantum algorithms.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            q (int): Target qubit index (0-based).</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Circuit: Self for method chaining.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0)  # Create superposition on qubit 0</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).h(1)  # Chain operations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.H">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.H">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">H</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">q</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.rz">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.rz">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply RZ rotation gate around Z-axis to qubit q.</span>
+<span class="sd">        </span>
+<span class="sd">        The RZ gate implements a rotation by angle theta around the Z-axis:</span>
+<span class="sd">        RZ(θ) = exp(-iθZ/2) = [[e^(-iθ/2), 0], [0, e^(iθ/2)]]</span>
+<span class="sd">        </span>
+<span class="sd">        This gate only changes the relative phase between |0⟩ and |1⟩ states</span>
+<span class="sd">        without affecting computational basis probabilities.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            q (int): Target qubit index (0-based).</span>
+<span class="sd">            theta (Any): Rotation angle in radians. Can be a float, parameter, or expression.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Circuit: Self for method chaining.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(1)</span>
+<span class="sd">            &gt;&gt;&gt; c.rz(0, np.pi/4)  # π/4 rotation</span>
+<span class="sd">            &gt;&gt;&gt; c.rz(0, &#39;theta&#39;)  # Parameterized rotation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;rz&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">),</span> <span class="n">theta</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.RZ">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.RZ">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RZ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rz</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.rx">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.rx">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;rx&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">),</span> <span class="n">theta</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.RX">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.RX">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RX</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.cx">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.cx">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply controlled-X (CNOT) gate between control and target qubits.</span>
+<span class="sd">        </span>
+<span class="sd">        The CNOT gate flips the target qubit if and only if the control qubit is |1⟩:</span>
+<span class="sd">        CNOT|00⟩ = |00⟩, CNOT|01⟩ = |01⟩, CNOT|10⟩ = |11⟩, CNOT|11⟩ = |10⟩</span>
+<span class="sd">        </span>
+<span class="sd">        This is the fundamental two-qubit gate for creating entanglement and</span>
+<span class="sd">        implementing classical logic operations in quantum circuits.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            c (int): Control qubit index (0-based).</span>
+<span class="sd">            t (int): Target qubit index (0-based).</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Circuit: Self for method chaining.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; # Create Bell state</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).cx(0, 1)  # |00⟩ + |11⟩</span>
+<span class="sd">            &gt;&gt;&gt; </span>
+<span class="sd">            &gt;&gt;&gt; # Chain multiple CNOTs</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(3)</span>
+<span class="sd">            &gt;&gt;&gt; c.cx(0, 1).cx(1, 2)  # Linear entanglement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;cx&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.CX">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.CX">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CX</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.cnot">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.cnot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cnot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.CNOT">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.CNOT">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CNOT</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.measure_z">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.measure_z">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">measure_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add Z-basis measurement instruction for qubit q.</span>
+<span class="sd">        </span>
+<span class="sd">        Measures the qubit in the computational basis {|0⟩, |1⟩}, collapsing</span>
+<span class="sd">        the quantum state and producing a classical bit outcome.</span>
+<span class="sd">        </span>
+<span class="sd">        Note: This adds a measurement instruction to the circuit but does not</span>
+<span class="sd">        immediately execute it. The measurement occurs during circuit execution.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            q (int): Target qubit index (0-based) to measure.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Circuit: Self for method chaining.</span>
+<span class="sd">            </span>
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; c = Circuit(2)</span>
+<span class="sd">            &gt;&gt;&gt; c.h(0).cx(0, 1)  # Create Bell state</span>
+<span class="sd">            &gt;&gt;&gt; c.measure_z(0).measure_z(1)  # Measure both qubits</span>
+<span class="sd">            &gt;&gt;&gt; </span>
+<span class="sd">            &gt;&gt;&gt; # Measure all qubits in a loop</span>
+<span class="sd">            &gt;&gt;&gt; for i in range(c.num_qubits):</span>
+<span class="sd">            ...     c.measure_z(i)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;measure_z&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.MEASURE_Z">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.MEASURE_Z">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">MEASURE_Z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="n">q</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.reset">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Warning: reset operation is typically not supported by hardware in logical circuits.</span>
+<span class="sd">        This is a simulation-only operation that projects qubit to |0⟩ state.&quot;&quot;&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;reset operation is typically not supported by hardware in logical circuits. &quot;</span>
+                    <span class="s2">&quot;This is a simulation-only operation that projects qubit to |0⟩ state.&quot;</span><span class="p">,</span> 
+                    <span class="ne">UserWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;reset&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.RESET">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.RESET">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RESET</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">q</span><span class="p">)</span></div>
+
+    
+    <span class="c1"># --- Additional common gates to preserve legacy examples ---</span>
+<div class="viewcode-block" id="Circuit.x">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.x">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.X">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.X">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">X</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">(</span><span class="n">q</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.y">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.y">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.Y">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.Y">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">Y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">(</span><span class="n">q</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.ry">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.ry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;ry&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">q</span><span class="p">),</span> <span class="n">theta</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.RY">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.RY">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.cz">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.cz">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;cz&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.CZ">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.CZ">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CZ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cz</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.cy">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.cy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;cy&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.CY">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.CY">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">CY</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cy</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.rxx">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.rxx">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rxx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;rxx&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">theta</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.RXX">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.RXX">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RXX</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rxx</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.rzz">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.rzz">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rzz</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot;rzz&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">theta</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Circuit.RZZ">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.RZZ">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RZZ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">theta</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rzz</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span></div>
+
+    
+    <span class="c1"># --- draw() typing overloads to improve IDE/linter navigation ---</span>
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;mpl&quot;</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;latex&quot;</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+
+    <span class="c1"># --- Draw via Qiskit provider: compile IR→QuantumCircuit and delegate draw ---</span>
+<div class="viewcode-block" id="Circuit.draw">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.draw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render the circuit using Qiskit if available.</span>
+
+<span class="sd">        Behavior:</span>
+<span class="sd">        - Convert IR → Qiskit QuantumCircuit directly (no intermediate qasm2 dump),</span>
+<span class="sd">          auto-adding measurements if none present.</span>
+<span class="sd">        - Delegate all args/kwargs to `QuantumCircuit.draw`.</span>
+<span class="sd">        - If Qiskit is not installed, return a minimal textual `gate_summary()` string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">...compiler.compile_engine.qiskit.dialect</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_qiskit</span>  <span class="c1"># type: ignore</span>
+
+            <span class="n">qc</span> <span class="o">=</span> <span class="n">to_qiskit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">add_measures</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># Resolve default output: prefer per-circuit _draw_output, else &#39;text&#39;</span>
+            <span class="k">if</span> <span class="s2">&quot;output&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draw_output</span> <span class="ow">or</span> <span class="s2">&quot;text&quot;</span>
+            <span class="k">return</span> <span class="n">qc</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gate_summary</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="Circuit.from_json_obj">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.from_json_obj">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_json_obj</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="n">inst_raw</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;instructions&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">inst</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">idxs</span> <span class="ow">in</span> <span class="n">inst_raw</span><span class="p">:</span>
+            <span class="n">inst</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">idxs</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">num_qubits</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;num_qubits&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">ops</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ops&quot;</span><span class="p">,</span> <span class="p">[])),</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">,</span> <span class="p">{})),</span>
+            <span class="n">instructions</span><span class="o">=</span><span class="n">inst</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Circuit.from_json_str">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Circuit.from_json_str">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_json_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Circuit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_json_obj</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Hamiltonian">
+<a class="viewcode-back" href="../../../../api/core/index.html#tyxonq.core.Hamiltonian">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hamiltonian</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate representation for a quantum Hamiltonian operator.</span>
+
+<span class="sd">    This class serves as a flexible container for representing quantum Hamiltonians</span>
+<span class="sd">    in TyxonQ&#39;s compilation pipeline. The Hamiltonian can be encoded in various</span>
+<span class="sd">    formats depending on the backend and compilation target.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        terms (Any): Backend-specific representation of the Hamiltonian terms.</span>
+<span class="sd">            This may be:</span>
+<span class="sd">            - A Pauli operator sum for symbolic manipulation</span>
+<span class="sd">            - A sparse matrix representation for efficient storage</span>
+<span class="sd">            - A dense matrix for direct numerical computation</span>
+<span class="sd">            - A list of (coefficient, pauli_string) tuples</span>
+<span class="sd">            </span>
+<span class="sd">    The intentionally loose typing allows different compiler stages and devices</span>
+<span class="sd">    to specialize the representation as needed while maintaining a common interface.</span>
+<span class="sd">    </span>
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; # Pauli string representation (commonly used)</span>
+<span class="sd">        &gt;&gt;&gt; h = Hamiltonian()</span>
+<span class="sd">        &gt;&gt;&gt; h.terms = [(0.5, [(&#39;Z&#39;, 0)]), (0.3, [(&#39;X&#39;, 0), (&#39;X&#39;, 1)])]</span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; # Dense matrix representation</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; h = Hamiltonian()</span>
+<span class="sd">        &gt;&gt;&gt; h.terms = np.array([[1, 0], [0, -1]])  # Pauli-Z matrix</span>
+<span class="sd">        </span>
+<span class="sd">    See Also:</span>
+<span class="sd">        tyxonq.libs.hamiltonian_encoding: Functions for converting between different</span>
+<span class="sd">            Hamiltonian representations (Jordan-Wigner, Bravyi-Kitaev, etc.).</span>
+<span class="sd">        tyxonq.applications.chem: Quantum chemistry applications that construct</span>
+<span class="sd">            molecular Hamiltonians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">terms</span><span class="p">:</span> <span class="n">Any</span></div>
+
+
+
+<span class="c1"># ---- Module-level task helpers (for cloud.api thin delegation) ----</span>
+<div class="viewcode-block" id="get_task_details">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.get_task_details">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_task_details</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">prettify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">dev</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># simulator inline task may still provide results()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">&quot;results&quot;</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Task handle missing device information&quot;</span><span class="p">)</span>
+    <span class="n">dev_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+    <span class="n">prov</span> <span class="o">=</span> <span class="p">(</span><span class="n">dev_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="s2">&quot;::&quot;</span> <span class="ow">in</span> <span class="n">dev_str</span> <span class="k">else</span> <span class="s2">&quot;simulator&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_driver</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.hardware</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">hwcfg</span>
+
+    <span class="n">tok</span> <span class="o">=</span> <span class="n">hwcfg</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">prov</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">dev_str</span><span class="p">)</span>
+    <span class="n">drv</span> <span class="o">=</span> <span class="n">resolve_driver</span><span class="p">(</span><span class="n">prov</span><span class="p">,</span> <span class="n">dev_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">drv</span><span class="o">.</span><span class="n">get_task_details</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">tok</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cancel_task">
+<a class="viewcode-back" href="../../../../api/core/generated/tyxonq.core.ir.circuit.html#tyxonq.core.cancel_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cancel_task</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="n">dev</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dev</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Task handle missing device information&quot;</span><span class="p">)</span>
+    <span class="n">dev_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+    <span class="n">prov</span> <span class="o">=</span> <span class="p">(</span><span class="n">dev_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;::&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="s2">&quot;::&quot;</span> <span class="ow">in</span> <span class="n">dev_str</span> <span class="k">else</span> <span class="s2">&quot;simulator&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_driver</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">...devices.hardware</span><span class="w"> </span><span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">hwcfg</span>
+
+    <span class="n">tok</span> <span class="o">=</span> <span class="n">hwcfg</span><span class="o">.</span><span class="n">get_token</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">prov</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">dev_str</span><span class="p">)</span>
+    <span class="n">drv</span> <span class="o">=</span> <span class="n">resolve_driver</span><span class="p">(</span><span class="n">prov</span><span class="p">,</span> <span class="n">dev_str</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">drv</span><span class="p">,</span> <span class="s2">&quot;remove_task&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">drv</span><span class="o">.</span><span class="n">remove_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">tok</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;cancel not supported for this provider/task type&quot;</span><span class="p">)</span></div>
+
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

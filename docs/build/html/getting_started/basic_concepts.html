@@ -1,0 +1,826 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Basic Concepts &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting_started/basic_concepts';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="User Guide" href="../user_guide/index.html" />
+    <link rel="prev" title="Your First Quantum Chemistry Calculation" href="first_chemistry.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_circuit.html">Your First Quantum Circuit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_chemistry.html">Your First Quantum Chemistry Calculation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Basic Concepts</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Getting Started</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Basic Concepts</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="basic-concepts">
+<h1>Basic Concepts<a class="headerlink" href="#basic-concepts" title="Link to this heading">#</a></h1>
+<p>Welcome to the fundamental concepts of quantum computing and the TyxonQ framework! This page introduces core quantum computing principles and TyxonQ’s architectural design.</p>
+<nav class="contents local" id="table-of-contents">
+<p class="topic-title">Table of Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#quantum-computing-fundamentals" id="id3">Quantum Computing Fundamentals</a></p>
+<ul>
+<li><p><a class="reference internal" href="#qubits" id="id4">Qubits</a></p></li>
+<li><p><a class="reference internal" href="#quantum-superposition" id="id5">Quantum Superposition</a></p></li>
+<li><p><a class="reference internal" href="#quantum-entanglement" id="id6">Quantum Entanglement</a></p></li>
+<li><p><a class="reference internal" href="#quantum-measurement" id="id7">Quantum Measurement</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#tyxonq-core-architecture" id="id8">TyxonQ Core Architecture</a></p>
+<ul>
+<li><p><a class="reference internal" href="#architectural-overview" id="id9">Architectural Overview</a></p></li>
+<li><p><a class="reference internal" href="#intermediate-representation-ir" id="id10">Intermediate Representation (IR)</a></p></li>
+<li><p><a class="reference internal" href="#compilation-pipeline" id="id11">Compilation Pipeline</a></p></li>
+<li><p><a class="reference internal" href="#device-abstraction" id="id12">Device Abstraction</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#execution-model" id="id13">Execution Model</a></p>
+<ul>
+<li><p><a class="reference internal" href="#fluent-api" id="id14">Fluent API</a></p></li>
+<li><p><a class="reference internal" href="#the-concept-of-shots" id="id15">The Concept of Shots</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#numerics-backend-system" id="id16">Numerics Backend System</a></p></li>
+<li><p><a class="reference internal" href="#next-steps" id="id17">Next Steps</a></p></li>
+<li><p><a class="reference internal" href="#concept-comparison-table" id="id18">Concept Comparison Table</a></p></li>
+</ul>
+</nav>
+<section id="quantum-computing-fundamentals">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Quantum Computing Fundamentals</a><a class="headerlink" href="#quantum-computing-fundamentals" title="Link to this heading">#</a></h2>
+<section id="qubits">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Qubits</a><a class="headerlink" href="#qubits" title="Link to this heading">#</a></h3>
+<p>A quantum bit, or <strong>qubit</strong>, is the fundamental unit of quantum information, analogous to a classical bit. Unlike classical bits which exist in definite states of 0 or 1, qubits can exist in superposition states.</p>
+<p><strong>Mathematical Representation</strong></p>
+<p>The state of a single qubit can be represented as:</p>
+<div class="math notranslate nohighlight">
+\[|\psi\rangle = \alpha|0\rangle + \beta|1\rangle\]</div>
+<p>where <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> are complex amplitudes satisfying the normalization condition <span class="math notranslate nohighlight">\(|\alpha|^2 + |\beta|^2 = 1\)</span>. The squared magnitudes <span class="math notranslate nohighlight">\(|\alpha|^2\)</span> and <span class="math notranslate nohighlight">\(|\beta|^2\)</span> represent the probabilities of measuring the qubit in states <span class="math notranslate nohighlight">\(|0\rangle\)</span> and <span class="math notranslate nohighlight">\(|1\rangle\)</span>, respectively.</p>
+<p><strong>Representation in TyxonQ</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="c1"># Create a single-qubit circuit</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># View the initial state |0⟩</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial state:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">statevector</span><span class="p">)</span>
+<span class="c1"># Output: [1.+0.j, 0.+0.j]</span>
+</pre></div>
+</div>
+</section>
+<section id="quantum-superposition">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Quantum Superposition</a><a class="headerlink" href="#quantum-superposition" title="Link to this heading">#</a></h3>
+<p>Quantum superposition allows qubits to exist simultaneously in multiple classical states, which is the source of quantum computational power. This fundamentally quantum property enables quantum parallelism.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a superposition state</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Apply Hadamard gate</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Superposition state:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">statevector</span><span class="p">)</span>
+<span class="c1"># Output: [0.707+0.j, 0.707+0.j] (approximately 1/√2)</span>
+</pre></div>
+</div>
+<p>The Hadamard gate creates an equal superposition, transforming <span class="math notranslate nohighlight">\(|0\rangle\)</span> into <span class="math notranslate nohighlight">\((|0\rangle + |1\rangle)/\sqrt{2}\)</span>. When measured, this state has a 50% probability of yielding 0 or 1.</p>
+</section>
+<section id="quantum-entanglement">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Quantum Entanglement</a><a class="headerlink" href="#quantum-entanglement" title="Link to this heading">#</a></h3>
+<p>Quantum entanglement is a non-classical correlation between multiple qubits that cannot be explained by classical probability theory. Entangled qubits exhibit correlations that persist regardless of the distance separating them.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a Bell state (maximally entangled state)</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bell state:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">statevector</span><span class="p">)</span>
+<span class="c1"># Output: [0.707+0.j, 0.+0.j, 0.+0.j, 0.707+0.j]</span>
+<span class="c1"># Represents (|00⟩ + |11⟩)/√2</span>
+</pre></div>
+</div>
+<p>This Bell state demonstrates perfect correlation: measuring the first qubit immediately determines the second qubit’s state, even though each individual qubit is in a completely mixed state.</p>
+</section>
+<section id="quantum-measurement">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Quantum Measurement</a><a class="headerlink" href="#quantum-measurement" title="Link to this heading">#</a></h3>
+<p>Measurement is the process of extracting classical information from a quantum state. Unlike classical observation, quantum measurement fundamentally disturbs the system, causing the quantum state to collapse into a definite eigenstate of the measured observable.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Measure a Bell state</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Measurement results:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">counts</span><span class="p">)</span>
+<span class="c1"># Expect approximately 50% &#39;00&#39; and 50% &#39;11&#39;</span>
+</pre></div>
+</div>
+<p>The measurement collapses the entangled state into either <span class="math notranslate nohighlight">\(|00\rangle\)</span> or <span class="math notranslate nohighlight">\(|11\rangle\)</span> with equal probability, never <span class="math notranslate nohighlight">\(|01\rangle\)</span> or <span class="math notranslate nohighlight">\(|10\rangle\)</span>, demonstrating the quantum correlation.</p>
+</section>
+</section>
+<section id="tyxonq-core-architecture">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">TyxonQ Core Architecture</a><a class="headerlink" href="#tyxonq-core-architecture" title="Link to this heading">#</a></h2>
+<section id="architectural-overview">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Architectural Overview</a><a class="headerlink" href="#architectural-overview" title="Link to this heading">#</a></h3>
+<p>TyxonQ employs a layered architecture design, providing complete abstraction from high-level algorithms to low-level hardware:</p>
+graph TD
+    A[Application Layer] --&gt; B[Compiler Layer]
+    B --&gt; C[Device Abstraction Layer]
+    C --&gt; D[Numerics Backend Layer]
+    D --&gt; E[Hardware/Simulators]
+
+    A1[Quantum Chemistry] --&gt; A
+    A2[Optimization Algorithms] --&gt; A
+    A3[Machine Learning] --&gt; A
+
+    B1[Decomposition] --&gt; B
+    B2[Rewriting] --&gt; B
+    B3[Optimization] --&gt; B
+
+    C1[Simulators] --&gt; C
+    C2[Hardware Drivers] --&gt; C
+
+    D1[NumPy] --&gt; D
+    D2[PyTorch] --&gt; D
+    D3[CuPy] --&gt; D</section>
+<section id="intermediate-representation-ir">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Intermediate Representation (IR)</a><a class="headerlink" href="#intermediate-representation-ir" title="Link to this heading">#</a></h3>
+<p>TyxonQ uses an intermediate representation to uniformly handle quantum circuits. The IR serves as a stable contract between different framework components, enabling:</p>
+<ul class="simple">
+<li><p><strong>Portability</strong>: Circuits can be compiled for different backends</p></li>
+<li><p><strong>Optimization</strong>: Compiler passes can transform the IR</p></li>
+<li><p><strong>Introspection</strong>: Circuit structure can be analyzed programmatically</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Circuit intermediate representation</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Inspect IR structure</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of qubits: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">num_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Operations: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Instruction sequence: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">instructions</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The IR maintains the logical structure of quantum operations while being independent of the eventual execution backend.</p>
+</section>
+<section id="compilation-pipeline">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Compilation Pipeline</a><a class="headerlink" href="#compilation-pipeline" title="Link to this heading">#</a></h3>
+<p>TyxonQ’s compiler transforms high-level circuits into device-executable forms through a multi-stage pipeline:</p>
+graph LR
+    A[Source Circuit] --&gt; B[Decomposition Stage]
+    B --&gt; C[Rewriting Stage]
+    C --&gt; D[Simplification Stage]
+    D --&gt; E[Scheduling Stage]
+    E --&gt; F[Target Code]<p>Each stage has a specific purpose:</p>
+<ul class="simple">
+<li><p><strong>Decomposition</strong>: Breaks down high-level gates into device-native gates</p></li>
+<li><p><strong>Rewriting</strong>: Applies circuit transformations and optimizations</p></li>
+<li><p><strong>Simplification</strong>: Removes redundant gates and merges operations</p></li>
+<li><p><strong>Scheduling</strong>: Allocates measurement resources and organizes execution</p></li>
+</ul>
+</section>
+<section id="device-abstraction">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Device Abstraction</a><a class="headerlink" href="#device-abstraction" title="Link to this heading">#</a></h3>
+<p>TyxonQ provides a unified device interface supporting multiple execution backends:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Device Type Comparison</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Device Type</p></th>
+<th class="head"><p>Use Cases</p></th>
+<th class="head"><p>Advantages</p></th>
+<th class="head"><p>Limitations</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>statevector</p></td>
+<td><p>Small-scale exact simulation</p></td>
+<td><p>Fully exact</p></td>
+<td><p>Exponential memory growth</p></td>
+</tr>
+<tr class="row-odd"><td><p>density_matrix</p></td>
+<td><p>Noise simulation</p></td>
+<td><p>Supports mixed states</p></td>
+<td><p>Higher memory requirements</p></td>
+</tr>
+<tr class="row-even"><td><p>mps</p></td>
+<td><p>Large-scale approximate simulation</p></td>
+<td><p>Linear memory scaling</p></td>
+<td><p>Best for low-entanglement systems</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>This abstraction allows you to write quantum programs once and execute them on different backends by simply changing the device specification.</p>
+</section>
+</section>
+<section id="execution-model">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Execution Model</a><a class="headerlink" href="#execution-model" title="Link to this heading">#</a></h2>
+<section id="fluent-api">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Fluent API</a><a class="headerlink" href="#fluent-api" title="Link to this heading">#</a></h3>
+<p>TyxonQ supports method chaining, providing a concise programming interface that reads naturally:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Complete fluent execution</span>
+<span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>           <span class="c1"># Build circuit</span>
+    <span class="o">.</span><span class="n">compile</span><span class="p">()</span>                  <span class="c1"># Compile and optimize</span>
+    <span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span>      <span class="c1"># Device configuration</span>
+    <span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>            <span class="c1"># Execute</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This fluent style enables expressive quantum programs while maintaining clarity. Each method returns the appropriate object for the next operation in the chain.</p>
+</section>
+<section id="the-concept-of-shots">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">The Concept of Shots</a><a class="headerlink" href="#the-concept-of-shots" title="Link to this heading">#</a></h3>
+<p>“Shots” represents the number of times a circuit is executed to statistically sample measurement outcomes. More shots provide more accurate estimates of probabilities at the cost of increased runtime.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Impact of different shot counts</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Few shots - results may be unstable</span>
+<span class="n">result_10</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Many shots - results more stable</span>
+<span class="n">result_1000</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;10 measurements:&quot;</span><span class="p">,</span> <span class="n">result_10</span><span class="o">.</span><span class="n">counts</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1000 measurements:&quot;</span><span class="p">,</span> <span class="n">result_1000</span><span class="o">.</span><span class="n">counts</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For a circuit creating perfect superposition, 10 shots might give 3:7 (30%:70%), while 1000 shots will be closer to 500:500 (50%:50%). The relationship follows standard statistical sampling theory.</p>
+</section>
+</section>
+<section id="numerics-backend-system">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Numerics Backend System</a><a class="headerlink" href="#numerics-backend-system" title="Link to this heading">#</a></h2>
+<p>TyxonQ supports multiple numerical computation backends, allowing users to select based on their needs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># NumPy backend (default)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s1">&#39;numpy&#39;</span><span class="p">)</span>
+<span class="n">result_numpy</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="c1"># PyTorch backend (supports automatic differentiation)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s1">&#39;pytorch&#39;</span><span class="p">)</span>
+<span class="n">result_torch</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="c1"># CuPy backend (GPU acceleration)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s1">&#39;cupy&#39;</span><span class="p">)</span>
+<span class="n">result_gpu</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Backend Selection Guidelines:</p>
+<ul class="simple">
+<li><p><strong>NumPy</strong>: Best for CPU-only systems, good performance for moderate-sized circuits</p></li>
+<li><p><strong>PyTorch</strong>: Required for gradient-based optimization with automatic differentiation</p></li>
+<li><p><strong>CuPy</strong>: Optimal for large circuits on GPU-enabled systems</p></li>
+</ul>
+<p>The backend abstraction ensures your quantum programs work identically across all backends.</p>
+</section>
+<section id="next-steps">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Next Steps</a><a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>Now that you understand the basic concepts, continue your learning journey:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="first_circuit.html"><span class="doc">Your First Quantum Circuit</span></a> - Create your first quantum circuit in depth</p></li>
+<li><p><a class="reference internal" href="first_chemistry.html"><span class="doc">Your First Quantum Chemistry Calculation</span></a> - Introduction to quantum chemistry applications</p></li>
+<li><p><a class="reference internal" href="../user_guide/core/index.html"><span class="doc">Core Module</span></a> - Deep dive into core modules</p></li>
+<li><p><a class="reference internal" href="../examples/basic_examples.html"><span class="doc">Basic Examples</span></a> - Explore more examples</p></li>
+<li><p><a class="reference internal" href="../tutorials/beginner/index.html"><span class="doc">Beginner Tutorials</span></a> - Step-by-step beginner tutorials</p></li>
+</ul>
+</section>
+<section id="concept-comparison-table">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Concept Comparison Table</a><a class="headerlink" href="#concept-comparison-table" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Classical vs Quantum Computing</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 35.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Concept</p></th>
+<th class="head"><p>Classical Computing</p></th>
+<th class="head"><p>Quantum Computing</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Information Unit</p></td>
+<td><p>Bit (0 or 1)</p></td>
+<td><p>Qubit (superposition state)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Logic Gates</p></td>
+<td><p>Boolean gates (AND, OR, NOT)</p></td>
+<td><p>Quantum gates (H, CNOT, RX, etc.)</p></td>
+</tr>
+<tr class="row-even"><td><p>Parallelism</p></td>
+<td><p>Spatial parallelism (multiprocessor)</p></td>
+<td><p>Quantum parallelism (superposition)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Correlation</p></td>
+<td><p>Classical correlation</p></td>
+<td><p>Quantum entanglement</p></td>
+</tr>
+<tr class="row-even"><td><p>Information Extraction</p></td>
+<td><p>Direct readout</p></td>
+<td><p>Quantum measurement (probabilistic)</p></td>
+</tr>
+<tr class="row-odd"><td><p>State Evolution</p></td>
+<td><p>Deterministic transitions</p></td>
+<td><p>Unitary evolution</p></td>
+</tr>
+<tr class="row-even"><td><p>Computational Model</p></td>
+<td><p>Turing machine</p></td>
+<td><p>Quantum circuit model</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Understanding these fundamental differences is key to leveraging quantum computing’s unique capabilities.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="first_chemistry.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Your First Quantum Chemistry Calculation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../user_guide/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">User Guide</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-computing-fundamentals">Quantum Computing Fundamentals</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qubits">Qubits</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-superposition">Quantum Superposition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-entanglement">Quantum Entanglement</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-measurement">Quantum Measurement</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tyxonq-core-architecture">TyxonQ Core Architecture</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#architectural-overview">Architectural Overview</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#intermediate-representation-ir">Intermediate Representation (IR)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compilation-pipeline">Compilation Pipeline</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-abstraction">Device Abstraction</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-model">Execution Model</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fluent-api">Fluent API</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-concept-of-shots">The Concept of Shots</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#numerics-backend-system">Numerics Backend System</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concept-comparison-table">Concept Comparison Table</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/getting_started/basic_concepts.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

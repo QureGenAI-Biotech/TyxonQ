@@ -1,0 +1,1246 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Contributing &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/contributing';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Architecture Overview" href="architecture_overview.html" />
+    <link rel="prev" title="Developer Guide" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Core Development</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html">Testing Guidelines</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extension Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html">Extending TyxonQ</a></li>
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html">Custom Devices</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html">Numeric Engines</a></li>
+
+
+
+
+
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Developer Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Contributing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">#</a></h1>
+<p>Thank you for your interest in contributing to TyxonQ! This guide will help you get started with contributing
+to our quantum computing framework.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#getting-started" id="id1">Getting Started</a></p>
+<ul>
+<li><p><a class="reference internal" href="#types-of-contributions" id="id2">Types of Contributions</a></p></li>
+<li><p><a class="reference internal" href="#where-to-start" id="id3">Where to Start</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#development-environment-setup" id="id4">Development Environment Setup</a></p>
+<ul>
+<li><p><a class="reference internal" href="#prerequisites" id="id5">Prerequisites</a></p></li>
+<li><p><a class="reference internal" href="#cloning-the-repository" id="id6">Cloning the Repository</a></p></li>
+<li><p><a class="reference internal" href="#setting-up-development-environment" id="id7">Setting Up Development Environment</a></p></li>
+<li><p><a class="reference internal" href="#verifying-installation" id="id8">Verifying Installation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#development-workflow" id="id9">Development Workflow</a></p>
+<ul>
+<li><p><a class="reference internal" href="#fork-and-branch-strategy" id="id10">Fork and Branch Strategy</a></p></li>
+<li><p><a class="reference internal" href="#making-changes" id="id11">Making Changes</a></p></li>
+<li><p><a class="reference internal" href="#commit-guidelines" id="id12">Commit Guidelines</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#code-quality-standards" id="id13">Code Quality Standards</a></p>
+<ul>
+<li><p><a class="reference internal" href="#code-style" id="id14">Code Style</a></p></li>
+<li><p><a class="reference internal" href="#documentation-standards" id="id15">Documentation Standards</a></p></li>
+<li><p><a class="reference internal" href="#testing-requirements" id="id16">Testing Requirements</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#submitting-contributions" id="id17">Submitting Contributions</a></p>
+<ul>
+<li><p><a class="reference internal" href="#pull-request-process" id="id18">Pull Request Process</a></p></li>
+<li><p><a class="reference internal" href="#pull-request-template" id="id19">Pull Request Template</a></p></li>
+<li><p><a class="reference internal" href="#review-process" id="id20">Review Process</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#community-guidelines" id="id21">Community Guidelines</a></p>
+<ul>
+<li><p><a class="reference internal" href="#code-of-conduct" id="id22">Code of Conduct</a></p></li>
+<li><p><a class="reference internal" href="#communication-channels" id="id23">Communication Channels</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#recognition-and-credits" id="id24">Recognition and Credits</a></p>
+<ul>
+<li><p><a class="reference internal" href="#contributor-recognition" id="id25">Contributor Recognition</a></p></li>
+<li><p><a class="reference internal" href="#maintainer-path" id="id26">Maintainer Path</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#special-projects" id="id27">Special Projects</a></p>
+<ul>
+<li><p><a class="reference internal" href="#google-summer-of-code" id="id28">Google Summer of Code</a></p></li>
+<li><p><a class="reference internal" href="#hackathons-and-contests" id="id29">Hackathons and Contests</a></p></li>
+<li><p><a class="reference internal" href="#research-collaborations" id="id30">Research Collaborations</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#troubleshooting" id="id31">Troubleshooting</a></p>
+<ul>
+<li><p><a class="reference internal" href="#common-issues" id="id32">Common Issues</a></p></li>
+<li><p><a class="reference internal" href="#getting-help" id="id33">Getting Help</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#next-steps" id="id34">Next Steps</a></p></li>
+</ul>
+</nav>
+<section id="getting-started">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Getting Started</a><a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h2>
+<section id="types-of-contributions">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">Types of Contributions</a><a class="headerlink" href="#types-of-contributions" title="Link to this heading">#</a></h3>
+<p>We welcome all types of contributions:</p>
+<p>🐛 <strong>Bug Reports</strong>: Help us identify and fix issues
+✨ <strong>Feature Requests</strong>: Suggest new functionality
+📝 <strong>Documentation</strong>: Improve guides, examples, and API docs
+🔧 <strong>Code Contributions</strong>: Implement features and fix bugs
+🧪 <strong>Testing</strong>: Add tests and improve coverage
+📊 <strong>Performance</strong>: Optimize algorithms and implementations
+🎨 <strong>Examples</strong>: Create tutorials and demonstrations</p>
+</section>
+<section id="where-to-start">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Where to Start</a><a class="headerlink" href="#where-to-start" title="Link to this heading">#</a></h3>
+<p><strong>New contributors should</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Read this guide</strong> completely</p></li>
+<li><p><strong>Browse existing issues</strong> with labels:</p>
+<ul class="simple">
+<li><p><cite>good first issue</cite>: Perfect for newcomers</p></li>
+<li><p><cite>help wanted</cite>: Community contributions needed</p></li>
+<li><p><cite>documentation</cite>: Documentation improvements</p></li>
+<li><p><cite>bug</cite>: Bug fixes</p></li>
+</ul>
+</li>
+<li><p><strong>Join our community</strong>:</p>
+<ul class="simple">
+<li><p>GitHub Discussions for questions</p></li>
+<li><p>Issue comments for specific topics</p></li>
+<li><p>Developer meetings (monthly)</p></li>
+</ul>
+</li>
+<li><p><strong>Start small</strong>: Begin with documentation or simple bug fixes</p></li>
+</ol>
+</section>
+</section>
+<section id="development-environment-setup">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Development Environment Setup</a><a class="headerlink" href="#development-environment-setup" title="Link to this heading">#</a></h2>
+<section id="prerequisites">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Prerequisites</a><a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h3>
+<p><strong>Required software</strong>:</p>
+<ul class="simple">
+<li><p><strong>Python 3.8+</strong>: Latest Python version recommended</p></li>
+<li><p><strong>Git</strong>: For version control</p></li>
+<li><p><strong>GitHub account</strong>: For submitting contributions</p></li>
+</ul>
+<p><strong>Optional but recommended</strong>:</p>
+<ul class="simple">
+<li><p><strong>VS Code</strong>: With Python and Git extensions</p></li>
+<li><p><strong>Docker</strong>: For consistent development environment</p></li>
+</ul>
+</section>
+<section id="cloning-the-repository">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Cloning the Repository</a><a class="headerlink" href="#cloning-the-repository" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone your fork</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/YOUR_USERNAME/TyxonQ.git
+<span class="nb">cd</span><span class="w"> </span>TyxonQ
+
+<span class="c1"># Add upstream remote</span>
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>https://github.com/TyxonQ/TyxonQ.git
+
+<span class="c1"># Verify remotes</span>
+git<span class="w"> </span>remote<span class="w"> </span>-v
+</pre></div>
+</div>
+</section>
+<section id="setting-up-development-environment">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Setting Up Development Environment</a><a class="headerlink" href="#setting-up-development-environment" title="Link to this heading">#</a></h3>
+<p><strong>Option 1: Virtual Environment (Recommended)</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create virtual environment</span>
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>tyxonq-dev
+
+<span class="c1"># Activate (Linux/Mac)</span>
+<span class="nb">source</span><span class="w"> </span>tyxonq-dev/bin/activate
+
+<span class="c1"># Activate (Windows)</span>
+tyxonq-dev<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
+
+<span class="c1"># Install in development mode</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+
+<span class="c1"># Install development dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
+</pre></div>
+</div>
+<p><strong>Option 2: Conda Environment</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create conda environment</span>
+conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>tyxonq-dev<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.9
+conda<span class="w"> </span>activate<span class="w"> </span>tyxonq-dev
+
+<span class="c1"># Install dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-dev.txt
+</pre></div>
+</div>
+<p><strong>Option 3: Docker Development</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build development container</span>
+docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>tyxonq-dev<span class="w"> </span>-f<span class="w"> </span>Dockerfile.dev<span class="w"> </span>.
+
+<span class="c1"># Run development container</span>
+docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>:/workspace<span class="w"> </span>tyxonq-dev
+</pre></div>
+</div>
+</section>
+<section id="verifying-installation">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Verifying Installation</a><a class="headerlink" href="#verifying-installation" title="Link to this heading">#</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run tests to verify setup</span>
+pytest<span class="w"> </span>tests/unit/
+
+<span class="c1"># Run simple import test</span>
+python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import tyxonq; print(&#39;TyxonQ imported successfully!&#39;)&quot;</span>
+
+<span class="c1"># Check development tools</span>
+black<span class="w"> </span>--version
+flake8<span class="w"> </span>--version
+mypy<span class="w"> </span>--version
+</pre></div>
+</div>
+</section>
+</section>
+<section id="development-workflow">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Development Workflow</a><a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h2>
+<section id="fork-and-branch-strategy">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Fork and Branch Strategy</a><a class="headerlink" href="#fork-and-branch-strategy" title="Link to this heading">#</a></h3>
+<p><strong>Our branching model</strong>:</p>
+<ul class="simple">
+<li><p><cite>main</cite>: Stable release branch</p></li>
+<li><p><cite>develop</cite>: Development integration branch</p></li>
+<li><p><cite>feature/*</cite>: Feature development branches</p></li>
+<li><p><cite>bugfix/*</cite>: Bug fix branches</p></li>
+<li><p><cite>hotfix/*</cite>: Critical fixes for releases</p></li>
+</ul>
+<p><strong>Creating a feature branch</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Update your fork</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream
+git<span class="w"> </span>checkout<span class="w"> </span>main
+git<span class="w"> </span>merge<span class="w"> </span>upstream/main
+
+<span class="c1"># Create feature branch</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feature/your-feature-name
+
+<span class="c1"># Or for bug fixes</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>bugfix/issue-123-description
+</pre></div>
+</div>
+</section>
+<section id="making-changes">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Making Changes</a><a class="headerlink" href="#making-changes" title="Link to this heading">#</a></h3>
+<p><strong>Development best practices</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Write tests first</strong> (TDD approach)</p></li>
+<li><p><strong>Make small, focused commits</strong></p></li>
+<li><p><strong>Follow code style guidelines</strong></p></li>
+<li><p><strong>Update documentation</strong></p></li>
+<li><p><strong>Add examples if needed</strong></p></li>
+</ol>
+<p><strong>Example development cycle</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Write failing test</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;def test_my_feature(): assert False&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>tests/test_my_feature.py
+pytest<span class="w"> </span>tests/test_my_feature.py<span class="w">  </span><span class="c1"># Should fail</span>
+
+<span class="c1"># 2. Implement feature</span>
+<span class="c1"># Edit src/tyxonq/...</span>
+
+<span class="c1"># 3. Make test pass</span>
+pytest<span class="w"> </span>tests/test_my_feature.py<span class="w">  </span><span class="c1"># Should pass</span>
+
+<span class="c1"># 4. Run all tests</span>
+pytest
+
+<span class="c1"># 5. Check code style</span>
+black<span class="w"> </span>src/<span class="w"> </span>tests/
+flake8<span class="w"> </span>src/<span class="w"> </span>tests/
+mypy<span class="w"> </span>src/
+</pre></div>
+</div>
+</section>
+<section id="commit-guidelines">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Commit Guidelines</a><a class="headerlink" href="#commit-guidelines" title="Link to this heading">#</a></h3>
+<p><strong>Commit message format</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>type(scope): brief description
+
+Longer description if needed.
+
+Fixes #123
+</pre></div>
+</div>
+<p><strong>Commit types</strong>:</p>
+<ul class="simple">
+<li><p><cite>feat</cite>: New feature</p></li>
+<li><p><cite>fix</cite>: Bug fix</p></li>
+<li><p><cite>docs</cite>: Documentation changes</p></li>
+<li><p><cite>style</cite>: Code style changes (formatting, etc.)</p></li>
+<li><p><cite>refactor</cite>: Code refactoring</p></li>
+<li><p><cite>test</cite>: Adding or updating tests</p></li>
+<li><p><cite>perf</cite>: Performance improvements</p></li>
+<li><p><cite>chore</cite>: Build process, dependencies, etc.</p></li>
+</ul>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat(core): add RXX gate implementation</span>
+
+<span class="s2">Implements the RXX two-qubit gate with parameter support.</span>
+<span class="s2">Includes tests and documentation.</span>
+
+<span class="s2">Fixes #456&quot;</span>
+
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;fix(devices): resolve simulator memory leak</span>
+
+<span class="s2">Fixed memory not being properly released after simulation.</span>
+
+<span class="s2">Fixes #789&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="code-quality-standards">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Code Quality Standards</a><a class="headerlink" href="#code-quality-standards" title="Link to this heading">#</a></h2>
+<section id="code-style">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Code Style</a><a class="headerlink" href="#code-style" title="Link to this heading">#</a></h3>
+<p><strong>We use automated code formatting</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Format all code</span>
+black<span class="w"> </span>src/<span class="w"> </span>tests/<span class="w"> </span>examples/
+
+<span class="c1"># Check style</span>
+flake8<span class="w"> </span>src/<span class="w"> </span>tests/
+
+<span class="c1"># Type checking</span>
+mypy<span class="w"> </span>src/
+</pre></div>
+</div>
+<p><strong>Style configuration</strong>:</p>
+<ul class="simple">
+<li><p><strong>Line length</strong>: 100 characters</p></li>
+<li><p><strong>Indentation</strong>: 4 spaces</p></li>
+<li><p><strong>Quotes</strong>: Double quotes preferred</p></li>
+<li><p><strong>Imports</strong>: isort for import sorting</p></li>
+</ul>
+</section>
+<section id="documentation-standards">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Documentation Standards</a><a class="headerlink" href="#documentation-standards" title="Link to this heading">#</a></h3>
+<p><strong>All public APIs must have docstrings</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">quantum_gate</span><span class="p">(</span><span class="n">qubit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Circuit</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Apply a parameterized quantum gate.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        qubit: Target qubit index (0-based)</span>
+<span class="sd">        angle: Rotation angle in radians</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Updated circuit with gate applied</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If qubit index is invalid</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; circuit = Circuit(2)</span>
+<span class="sd">        &gt;&gt;&gt; circuit = quantum_gate(circuit, 0, np.pi/2)</span>
+<span class="sd">        &gt;&gt;&gt; print(len(circuit.ops))</span>
+<span class="sd">        1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Implementation here</span>
+    <span class="k">pass</span>
+</pre></div>
+</div>
+<p><strong>Documentation checklist</strong>:</p>
+<ul class="simple">
+<li><p>✅ <strong>Args</strong>: All parameters documented</p></li>
+<li><p>✅ <strong>Returns</strong>: Return value described</p></li>
+<li><p>✅ <strong>Raises</strong>: Exceptions documented</p></li>
+<li><p>✅ <strong>Examples</strong>: Working code examples</p></li>
+<li><p>✅ <strong>Type hints</strong>: Full type annotations</p></li>
+</ul>
+</section>
+<section id="testing-requirements">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Testing Requirements</a><a class="headerlink" href="#testing-requirements" title="Link to this heading">#</a></h3>
+<p><strong>Test coverage expectations</strong>:</p>
+<ul class="simple">
+<li><p><strong>New features</strong>: 100% test coverage</p></li>
+<li><p><strong>Bug fixes</strong>: Test reproducing the bug</p></li>
+<li><p><strong>Edge cases</strong>: Boundary conditions tested</p></li>
+<li><p><strong>Error conditions</strong>: Exception handling tested</p></li>
+</ul>
+<p><strong>Test structure</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TestQuantumGate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test suite for quantum gate functionality.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_valid_input</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test gate with valid parameters.&quot;&quot;&quot;</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">quantum_gate</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_invalid_qubit_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test error handling for invalid qubit.&quot;&quot;&quot;</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">&quot;Invalid qubit index&quot;</span><span class="p">):</span>
+            <span class="n">quantum_gate</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s2">&quot;angle&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">test_various_angles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Test gate with different angles.&quot;&quot;&quot;</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">quantum_gate</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="c1"># Add specific assertions</span>
+</pre></div>
+</div>
+<p><strong>Running tests</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run all tests</span>
+pytest
+
+<span class="c1"># Run with coverage</span>
+pytest<span class="w"> </span>--cov<span class="o">=</span>src/tyxonq<span class="w"> </span>--cov-report<span class="o">=</span>html
+
+<span class="c1"># Run specific test file</span>
+pytest<span class="w"> </span>tests/test_core.py
+
+<span class="c1"># Run with verbose output</span>
+pytest<span class="w"> </span>-v
+
+<span class="c1"># Run only failed tests</span>
+pytest<span class="w"> </span>--lf
+</pre></div>
+</div>
+</section>
+</section>
+<section id="submitting-contributions">
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Submitting Contributions</a><a class="headerlink" href="#submitting-contributions" title="Link to this heading">#</a></h2>
+<section id="pull-request-process">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Pull Request Process</a><a class="headerlink" href="#pull-request-process" title="Link to this heading">#</a></h3>
+<p><strong>Before submitting</strong>:</p>
+<ol class="arabic">
+<li><p><strong>Update your branch</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>fetch<span class="w"> </span>upstream
+git<span class="w"> </span>rebase<span class="w"> </span>upstream/main
+</pre></div>
+</div>
+</li>
+<li><p><strong>Run full test suite</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest
+black<span class="w"> </span>--check<span class="w"> </span>src/<span class="w"> </span>tests/
+flake8<span class="w"> </span>src/<span class="w"> </span>tests/
+mypy<span class="w"> </span>src/
+</pre></div>
+</div>
+</li>
+<li><p><strong>Update documentation</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>docs/
+make<span class="w"> </span>html
+<span class="c1"># Check for warnings</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="pull-request-template">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Pull Request Template</a><a class="headerlink" href="#pull-request-template" title="Link to this heading">#</a></h3>
+<p><strong>Use this template for your PR description</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>## Description
+Brief description of changes and motivation.
+
+## Type of Change
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] Documentation update
+
+## Testing
+- [ ] Tests pass locally
+- [ ] Added tests for new functionality
+- [ ] Updated existing tests as needed
+
+## Documentation
+- [ ] Updated docstrings
+- [ ] Updated user documentation
+- [ ] Added examples if applicable
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Changes are backward compatible (or breaking changes documented)
+- [ ] Related issues referenced
+
+## Related Issues
+Fixes #123
+Closes #456
+</pre></div>
+</div>
+</section>
+<section id="review-process">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Review Process</a><a class="headerlink" href="#review-process" title="Link to this heading">#</a></h3>
+<p><strong>What to expect</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Automated checks</strong>: CI/CD pipeline runs tests</p></li>
+<li><p><strong>Code review</strong>: Maintainers review your changes</p></li>
+<li><p><strong>Feedback incorporation</strong>: Address review comments</p></li>
+<li><p><strong>Approval</strong>: At least one maintainer approval required</p></li>
+<li><p><strong>Merge</strong>: Changes integrated into main branch</p></li>
+</ol>
+<p><strong>Review criteria</strong>:</p>
+<ul class="simple">
+<li><p>✅ <strong>Functionality</strong>: Code works as intended</p></li>
+<li><p>✅ <strong>Quality</strong>: Follows coding standards</p></li>
+<li><p>✅ <strong>Tests</strong>: Adequate test coverage</p></li>
+<li><p>✅ <strong>Documentation</strong>: Properly documented</p></li>
+<li><p>✅ <strong>Performance</strong>: No significant performance regression</p></li>
+<li><p>✅ <strong>Compatibility</strong>: Maintains backward compatibility</p></li>
+</ul>
+</section>
+</section>
+<section id="community-guidelines">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Community Guidelines</a><a class="headerlink" href="#community-guidelines" title="Link to this heading">#</a></h2>
+<section id="code-of-conduct">
+<h3><a class="toc-backref" href="#id22" role="doc-backlink">Code of Conduct</a><a class="headerlink" href="#code-of-conduct" title="Link to this heading">#</a></h3>
+<p><strong>Our community values</strong>:</p>
+<ul class="simple">
+<li><p><strong>Respect</strong>: Treat everyone with kindness and respect</p></li>
+<li><p><strong>Inclusivity</strong>: Welcome contributors from all backgrounds</p></li>
+<li><p><strong>Constructiveness</strong>: Provide helpful, actionable feedback</p></li>
+<li><p><strong>Patience</strong>: Help newcomers learn and grow</p></li>
+<li><p><strong>Collaboration</strong>: Work together toward shared goals</p></li>
+</ul>
+<p><strong>Unacceptable behavior</strong>:</p>
+<ul class="simple">
+<li><p>Harassment or discrimination</p></li>
+<li><p>Insulting or derogatory comments</p></li>
+<li><p>Public or private harassment</p></li>
+<li><p>Publishing private information</p></li>
+<li><p>Trolling or inflammatory comments</p></li>
+</ul>
+</section>
+<section id="communication-channels">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Communication Channels</a><a class="headerlink" href="#communication-channels" title="Link to this heading">#</a></h3>
+<p><strong>GitHub Discussions</strong>: General questions and design discussions
+<strong>GitHub Issues</strong>: Bug reports and specific feature requests
+<strong>Pull Request Comments</strong>: Code review and implementation discussion
+<strong>Developer Meetings</strong>: Monthly video calls (open to all)</p>
+<p><strong>Response expectations</strong>:</p>
+<ul class="simple">
+<li><p><strong>Maintainers</strong>: Respond within 2-3 business days</p></li>
+<li><p><strong>Community</strong>: Help each other promptly</p></li>
+<li><p><strong>Critical issues</strong>: Same-day response for security/blocking issues</p></li>
+</ul>
+</section>
+</section>
+<section id="recognition-and-credits">
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Recognition and Credits</a><a class="headerlink" href="#recognition-and-credits" title="Link to this heading">#</a></h2>
+<section id="contributor-recognition">
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">Contributor Recognition</a><a class="headerlink" href="#contributor-recognition" title="Link to this heading">#</a></h3>
+<p><strong>How we recognize contributions</strong>:</p>
+<ul class="simple">
+<li><p><strong>Contributors file</strong>: All contributors listed</p></li>
+<li><p><strong>Release notes</strong>: Major contributions highlighted</p></li>
+<li><p><strong>GitHub profile</strong>: Contribution activity visible</p></li>
+<li><p><strong>Community shoutouts</strong>: Recognition in discussions and meetings</p></li>
+<li><p><strong>Conference opportunities</strong>: Speaking opportunities for major contributors</p></li>
+</ul>
+</section>
+<section id="maintainer-path">
+<h3><a class="toc-backref" href="#id26" role="doc-backlink">Maintainer Path</a><a class="headerlink" href="#maintainer-path" title="Link to this heading">#</a></h3>
+<p><strong>Becoming a core maintainer</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Regular contributions</strong>: Consistent, high-quality contributions</p></li>
+<li><p><strong>Community involvement</strong>: Active in discussions and reviews</p></li>
+<li><p><strong>Domain expertise</strong>: Deep knowledge in specific areas</p></li>
+<li><p><strong>Mentorship</strong>: Help onboard new contributors</p></li>
+<li><p><strong>Invitation</strong>: Current maintainers invite promising contributors</p></li>
+</ol>
+<p><strong>Maintainer responsibilities</strong>:</p>
+<ul class="simple">
+<li><p>Code review and approval</p></li>
+<li><p>Issue triage and labeling</p></li>
+<li><p>Release management</p></li>
+<li><p>Community leadership</p></li>
+<li><p>Technical decision making</p></li>
+</ul>
+</section>
+</section>
+<section id="special-projects">
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">Special Projects</a><a class="headerlink" href="#special-projects" title="Link to this heading">#</a></h2>
+<section id="google-summer-of-code">
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">Google Summer of Code</a><a class="headerlink" href="#google-summer-of-code" title="Link to this heading">#</a></h3>
+<p><strong>TyxonQ participates in GSoC</strong>:</p>
+<ul class="simple">
+<li><p><strong>Project ideas</strong>: Listed on our wiki</p></li>
+<li><p><strong>Mentor support</strong>: Experienced contributors guide students</p></li>
+<li><p><strong>Timeline</strong>: Follow GSoC schedule</p></li>
+<li><p><strong>Requirements</strong>: University student eligibility</p></li>
+</ul>
+</section>
+<section id="hackathons-and-contests">
+<h3><a class="toc-backref" href="#id29" role="doc-backlink">Hackathons and Contests</a><a class="headerlink" href="#hackathons-and-contests" title="Link to this heading">#</a></h3>
+<p><strong>Regular community events</strong>:</p>
+<ul class="simple">
+<li><p><strong>Monthly challenges</strong>: Algorithm implementation contests</p></li>
+<li><p><strong>Documentation sprints</strong>: Focused documentation improvement</p></li>
+<li><p><strong>Bug bounties</strong>: Rewards for finding and fixing critical issues</p></li>
+<li><p><strong>Conference hackathons</strong>: TyxonQ tracks at quantum computing conferences</p></li>
+</ul>
+</section>
+<section id="research-collaborations">
+<h3><a class="toc-backref" href="#id30" role="doc-backlink">Research Collaborations</a><a class="headerlink" href="#research-collaborations" title="Link to this heading">#</a></h3>
+<p><strong>Academic partnerships</strong>:</p>
+<ul class="simple">
+<li><p><strong>Paper implementations</strong>: Help researchers implement quantum algorithms</p></li>
+<li><p><strong>Benchmarking</strong>: Comparative studies and performance analysis</p></li>
+<li><p><strong>Grant applications</strong>: Collaborate on research funding</p></li>
+<li><p><strong>Publications</strong>: Co-authorship opportunities for significant contributions</p></li>
+</ul>
+</section>
+</section>
+<section id="troubleshooting">
+<h2><a class="toc-backref" href="#id31" role="doc-backlink">Troubleshooting</a><a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<section id="common-issues">
+<h3><a class="toc-backref" href="#id32" role="doc-backlink">Common Issues</a><a class="headerlink" href="#common-issues" title="Link to this heading">#</a></h3>
+<p><strong>Development environment problems</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Issue: Import errors after installation</span>
+<span class="c1"># Solution: Reinstall in development mode</span>
+pip<span class="w"> </span>uninstall<span class="w"> </span>tyxonq
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+
+<span class="c1"># Issue: Tests failing with permission errors</span>
+<span class="c1"># Solution: Check file permissions</span>
+chmod<span class="w"> </span>+x<span class="w"> </span>scripts/run_tests.sh
+
+<span class="c1"># Issue: Black formatting conflicts</span>
+<span class="c1"># Solution: Use exact same version</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="nv">black</span><span class="o">==</span><span class="m">22</span>.3.0
+</pre></div>
+</div>
+<p><strong>Git workflow issues</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Issue: Merge conflicts</span>
+<span class="c1"># Solution: Rebase your branch</span>
+git<span class="w"> </span>fetch<span class="w"> </span>upstream
+git<span class="w"> </span>rebase<span class="w"> </span>upstream/main
+<span class="c1"># Resolve conflicts manually, then:</span>
+git<span class="w"> </span>rebase<span class="w"> </span>--continue
+
+<span class="c1"># Issue: Accidentally committed to main</span>
+<span class="c1"># Solution: Move commits to feature branch</span>
+git<span class="w"> </span>branch<span class="w"> </span>feature/my-changes
+git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span>upstream/main
+git<span class="w"> </span>checkout<span class="w"> </span>feature/my-changes
+</pre></div>
+</div>
+</section>
+<section id="getting-help">
+<h3><a class="toc-backref" href="#id33" role="doc-backlink">Getting Help</a><a class="headerlink" href="#getting-help" title="Link to this heading">#</a></h3>
+<p><strong>If you’re stuck</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Check existing issues</strong>: Someone might have faced the same problem</p></li>
+<li><p><strong>Search discussions</strong>: Look for similar questions</p></li>
+<li><p><strong>Ask in discussions</strong>: Post your question with context</p></li>
+<li><p><strong>Join developer meetings</strong>: Get real-time help</p></li>
+<li><p><strong>Contact maintainers</strong>: For complex technical issues</p></li>
+</ol>
+<p><strong>When asking for help, include</strong>:</p>
+<ul class="simple">
+<li><p>Operating system and Python version</p></li>
+<li><p>TyxonQ version</p></li>
+<li><p>Complete error messages</p></li>
+<li><p>Steps to reproduce the issue</p></li>
+<li><p>What you’ve already tried</p></li>
+</ul>
+</section>
+</section>
+<section id="next-steps">
+<h2><a class="toc-backref" href="#id34" role="doc-backlink">Next Steps</a><a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p><strong>Ready to contribute?</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Set up your development environment</strong></p></li>
+<li><p><strong>Find a good first issue</strong> on GitHub</p></li>
+<li><p><strong>Read the relevant documentation</strong>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="architecture_overview.html"><span class="doc">Architecture Overview</span></a> - Understand the codebase</p></li>
+<li><p><a class="reference internal" href="testing_guidelines.html"><span class="doc">Testing Guidelines</span></a> - Learn our testing practices</p></li>
+<li><p><a class="reference internal" href="extending_tyxonq.html"><span class="doc">Extending TyxonQ</span></a> - For feature development</p></li>
+</ul>
+</li>
+<li><p><strong>Start coding and have fun!</strong></p></li>
+</ol>
+<p><strong>Thank you for contributing to TyxonQ!</strong> 🚀✨</p>
+<p>Your contributions help make quantum computing accessible to everyone.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Developer Guide</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="architecture_overview.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Architecture Overview</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started">Getting Started</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#types-of-contributions">Types of Contributions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-to-start">Where to Start</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-environment-setup">Development Environment Setup</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cloning-the-repository">Cloning the Repository</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#setting-up-development-environment">Setting Up Development Environment</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#verifying-installation">Verifying Installation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-workflow">Development Workflow</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fork-and-branch-strategy">Fork and Branch Strategy</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#making-changes">Making Changes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#commit-guidelines">Commit Guidelines</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-quality-standards">Code Quality Standards</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-style">Code Style</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-standards">Documentation Standards</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-requirements">Testing Requirements</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submitting-contributions">Submitting Contributions</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-request-process">Pull Request Process</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pull-request-template">Pull Request Template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#review-process">Review Process</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#community-guidelines">Community Guidelines</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-of-conduct">Code of Conduct</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#communication-channels">Communication Channels</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recognition-and-credits">Recognition and Credits</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#contributor-recognition">Contributor Recognition</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#maintainer-path">Maintainer Path</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#special-projects">Special Projects</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#google-summer-of-code">Google Summer of Code</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hackathons-and-contests">Hackathons and Contests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#research-collaborations">Research Collaborations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-issues">Common Issues</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developer_guide/contributing.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

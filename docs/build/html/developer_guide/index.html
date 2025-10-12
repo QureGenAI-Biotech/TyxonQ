@@ -1,0 +1,1026 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Developer Guide &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'developer_guide/index';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Contributing" href="contributing.html" />
+    <link rel="prev" title="tyxonq.utils" href="../api/utils/generated/tyxonq.utils.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Core Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html">Testing Guidelines</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extension Development</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html">Extending TyxonQ</a></li>
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html">Custom Devices</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html">Numeric Engines</a></li>
+
+
+
+
+
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Developer Guide</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="developer-guide">
+<h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Link to this heading">#</a></h1>
+<p>Welcome to the TyxonQ Developer Guide! This comprehensive resource will help you contribute to TyxonQ,
+extend its functionality, and build custom components.</p>
+<nav class="contents local" id="developer-resources">
+<p class="topic-title">Developer Resources</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id1">Overview</a></p></li>
+<li><p><a class="reference internal" href="#quick-start-for-contributors" id="id2">Quick Start for Contributors</a></p></li>
+<li><p><a class="reference internal" href="#extension-development" id="id3">Extension Development</a></p></li>
+<li><p><a class="reference internal" href="#developer-documentation" id="id4">Developer Documentation</a></p></li>
+<li><p><a class="reference internal" href="#development-areas" id="id5">Development Areas</a></p>
+<ul>
+<li><p><a class="reference internal" href="#core-components" id="id6">Core Components</a></p></li>
+<li><p><a class="reference internal" href="#libraries-and-tools" id="id7">Libraries and Tools</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#community" id="id8">Community</a></p>
+<ul>
+<li><p><a class="reference internal" href="#communication-channels" id="id9">Communication Channels</a></p></li>
+<li><p><a class="reference internal" href="#contribution-recognition" id="id10">Contribution Recognition</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#code-of-conduct" id="id11">Code of Conduct</a></p></li>
+<li><p><a class="reference internal" href="#development-workflow" id="id12">Development Workflow</a></p>
+<ul>
+<li><p><a class="reference internal" href="#typical-development-process" id="id13">Typical Development Process</a></p></li>
+<li><p><a class="reference internal" href="#release-process" id="id14">Release Process</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#getting-help" id="id15">Getting Help</a></p>
+<ul>
+<li><p><a class="reference internal" href="#developer-support" id="id16">Developer Support</a></p></li>
+<li><p><a class="reference internal" href="#mentorship-program" id="id17">Mentorship Program</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#technical-resources" id="id18">Technical Resources</a></p>
+<ul>
+<li><p><a class="reference internal" href="#development-tools" id="id19">Development Tools</a></p></li>
+<li><p><a class="reference internal" href="#performance-profiling" id="id20">Performance Profiling</a></p></li>
+<li><p><a class="reference internal" href="#documentation-standards" id="id21">Documentation Standards</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#next-steps" id="id22">Next Steps</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>TyxonQ is designed to be <strong>extensible</strong> and <strong>community-driven</strong>. Whether you want to:</p>
+<p>🤝 <strong>Contribute</strong> to the core project
+🔧 <strong>Extend</strong> TyxonQ with new features
+🎛️ <strong>Create</strong> custom devices and backends
+🧪 <strong>Develop</strong> plugins and extensions
+🧪 <strong>Test</strong> and validate changes</p>
+<p>This guide provides everything you need to get started.</p>
+</section>
+<section id="quick-start-for-contributors">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Quick Start for Contributors</a><a class="headerlink" href="#quick-start-for-contributors" title="Link to this heading">#</a></h2>
+<p><strong>Ready to contribute?</strong> Follow these steps:</p>
+<ol class="arabic simple">
+<li><p><strong>Read</strong> <a class="reference internal" href="contributing.html"><span class="doc">Contributing</span></a> - Contribution guidelines and workflow</p></li>
+<li><p><strong>Understand</strong> <a class="reference internal" href="architecture_overview.html"><span class="doc">Architecture Overview</span></a> - System design and structure</p></li>
+<li><p><strong>Set up</strong> development environment (see Contributing guide)</p></li>
+<li><p><strong>Choose</strong> an area to contribute:</p>
+<ul class="simple">
+<li><p>🐛 <strong>Bug fixes</strong>: Check GitHub issues</p></li>
+<li><p>✨ <strong>New features</strong>: See roadmap and feature requests</p></li>
+<li><p>📚 <strong>Documentation</strong>: Always needs improvement</p></li>
+<li><p>🧪 <strong>Testing</strong>: Add tests and benchmarks</p></li>
+</ul>
+</li>
+<li><p><strong>Follow</strong> <a class="reference internal" href="testing_guidelines.html"><span class="doc">Testing Guidelines</span></a> - Ensure code quality</p></li>
+<li><p><strong>Submit</strong> pull request with clear description</p></li>
+</ol>
+</section>
+<section id="extension-development">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Extension Development</a><a class="headerlink" href="#extension-development" title="Link to this heading">#</a></h2>
+<p><strong>Want to extend TyxonQ?</strong> We support multiple extension points:</p>
+<dl class="simple">
+<dt>🎛️ <strong>Custom Devices</strong> (<a class="reference internal" href="custom_devices.html"><span class="doc">Custom Devices</span></a>)</dt><dd><p>Add support for new quantum hardware or simulators</p>
+</dd>
+<dt>🏗️ <strong>Custom Backends</strong> (<a class="reference internal" href="custom_backends.html"><span class="doc">Numeric Engines</span></a>)</dt><dd><p>Implement new numerical computation backends</p>
+</dd>
+<dt>🔧 <strong>Core Extensions</strong> (<a class="reference internal" href="extending_tyxonq.html"><span class="doc">Extending TyxonQ</span></a>)</dt><dd><p>Add new algorithms, gates, or core functionality</p>
+</dd>
+</dl>
+</section>
+<section id="developer-documentation">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Developer Documentation</a><a class="headerlink" href="#developer-documentation" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Core Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#development-environment-setup">Development Environment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#development-workflow">Development Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#code-quality-standards">Code Quality Standards</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#submitting-contributions">Submitting Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#community-guidelines">Community Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#recognition-and-credits">Recognition and Credits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#special-projects">Special Projects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html">Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#core-workflow">Core Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#system-architecture">System Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#key-architectural-innovations">Key Architectural Innovations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#stable-ir-intermediate-representation">Stable IR (Intermediate Representation)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#chain-api-design">Chain API Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#compiler-pipeline">Compiler Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#device-abstraction">Device Abstraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#simulation-engines">Simulation Engines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#statevector-engine">Statevector Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#density-matrix-engine">Density Matrix Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#matrix-product-state-engine">Matrix Product State Engine</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#numeric-backend-system">Numeric Backend System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#dual-path-execution-model">Dual-Path Execution Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#device-path">Device Path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#numeric-path">Numeric Path</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#quantum-chemistry-stack">Quantum Chemistry Stack</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#runtimes">Runtimes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#postprocessing">Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#libraries">Libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#circuit-library">Circuit Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#quantum-library">Quantum Library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture_overview.html#hamiltonian-encoding">Hamiltonian Encoding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#cloud-integration">Cloud Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#directory-structure">Directory Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#performance-characteristics">Performance Characteristics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architecture_overview.html#configuration">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html">Testing Guidelines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#testing-philosophy">Testing Philosophy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#tyxonq-testing-approach">TyxonQ Testing Approach</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#unit-testing">Unit Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#core-circuit-testing">Core Circuit Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#engine-testing">Engine Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#numeric-backend-testing">Numeric Backend Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#quantum-chemistry-testing">Quantum Chemistry Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#integration-testing">Integration Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#workflow-testing">Workflow Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#performance-testing">Performance Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#benchmarking">Benchmarking</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#test-utilities">Test Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#helper-functions">Helper Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#id1">Testing Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#test-organization">Test Organization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#continuous-integration">Continuous Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#test-configuration">Test Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#id2">Unit Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#test-framework-setup">Test Framework Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#quantum-specific-testing">Quantum-Specific Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#mocking-and-test-doubles">Mocking and Test Doubles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#id3">Integration Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#component-integration">Component Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#end-to-end-testing">End-to-End Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#id4">Workflow Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#id5">Performance Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#id6">Benchmarking</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#id7">Continuous Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#id8">Test Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#id9">Test Organization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing_guidelines.html#directory-structure">Directory Structure</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing_guidelines.html#id10">Best Practices</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Extension Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html">Extending TyxonQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#plugin-system-overview">Plugin System Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#plugin-architecture">Plugin Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#base-plugin-interface">Base Plugin Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#plugin-discovery">Plugin Discovery</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#component-registry">Component Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#creating-custom-devices">Creating Custom Devices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#device-interface">Device Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#hardware-device-example">Hardware Device Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#custom-optimization-algorithms">Custom Optimization Algorithms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#optimizer-interface">Optimizer Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#advanced-optimizer-example">Advanced Optimizer Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#custom-gates-and-operations">Custom Gates and Operations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#gate-interface">Gate Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#parameterized-gate-example">Parameterized Gate Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#compiler-extensions">Compiler Extensions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#custom-compiler-pass">Custom Compiler Pass</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#transpiler-extensions">Transpiler Extensions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#application-extensions">Application Extensions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#custom-application-domain">Custom Application Domain</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#plugin-registration">Plugin Registration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#complete-plugin-example">Complete Plugin Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#plugin-distribution">Plugin Distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#testing-extensions">Testing Extensions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#testing-custom-components">Testing Custom Components</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending_tyxonq.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#design-guidelines">Design Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#performance-considerations">Performance Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending_tyxonq.html#security-considerations">Security Considerations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html">Custom Devices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html#device-architecture-overview">Device Architecture Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html#base-device-interface">Base Device Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html#custom-simulator-example">Custom Simulator Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html#hardware-device-integration">Hardware Device Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html#device-testing-framework">Device Testing Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_devices.html#best-practices">Best Practices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom_devices.html#performance-optimization">Performance Optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_devices.html#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_devices.html#testing-guidelines">Testing Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html">Numeric Engines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#engine-architecture">Engine Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#available-engines">Available Engines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom_backends.html#statevector-engine">Statevector Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_backends.html#density-matrix-engine">Density Matrix Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom_backends.html#matrix-product-state-engine">Matrix Product State Engine</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#numeric-backend-system">Numeric Backend System</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="custom_backends.html#backend-features">Backend Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#engine-implementation">Engine Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#execution-flow">Execution Flow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#performance-considerations">Performance Considerations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="custom_backends.html#best-practices">Best Practices</a></li>
+</ul>
+</div>
+</section>
+<section id="development-areas">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Development Areas</a><a class="headerlink" href="#development-areas" title="Link to this heading">#</a></h2>
+<section id="core-components">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Core Components</a><a class="headerlink" href="#core-components" title="Link to this heading">#</a></h3>
+<p><strong>High-impact areas for contribution</strong>:</p>
+<ul class="simple">
+<li><p><strong>Circuit IR</strong> (<cite>src/tyxonq/core/</cite>): Quantum circuit representation</p></li>
+<li><p><strong>Compiler</strong> (<cite>src/tyxonq/compiler/</cite>): Circuit optimization and compilation</p></li>
+<li><p><strong>Devices</strong> (<cite>src/tyxonq/devices/</cite>): Device abstraction and management</p></li>
+<li><p><strong>Numerics</strong> (<cite>src/tyxonq/numerics/</cite>): Numerical simulation backends</p></li>
+<li><p><strong>Applications</strong> (<cite>src/tyxonq/applications/</cite>): Domain-specific algorithms</p></li>
+</ul>
+</section>
+<section id="libraries-and-tools">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Libraries and Tools</a><a class="headerlink" href="#libraries-and-tools" title="Link to this heading">#</a></h3>
+<p><strong>Specialized contribution areas</strong>:</p>
+<ul class="simple">
+<li><p><strong>Quantum Library</strong> (<cite>src/tyxonq/libs/quantum_library/</cite>): Gate implementations</p></li>
+<li><p><strong>Circuit Library</strong> (<cite>src/tyxonq/libs/circuits_library/</cite>): Circuit templates</p></li>
+<li><p><strong>Optimizer</strong> (<cite>src/tyxonq/libs/optimizer/</cite>): Optimization algorithms</p></li>
+<li><p><strong>Postprocessing</strong> (<cite>src/tyxonq/postprocessing/</cite>): Error mitigation</p></li>
+<li><p><strong>Cloud Integration</strong> (<cite>src/tyxonq/cloud/</cite>): Cloud platform support</p></li>
+</ul>
+</section>
+</section>
+<section id="community">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Community</a><a class="headerlink" href="#community" title="Link to this heading">#</a></h2>
+<section id="communication-channels">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Communication Channels</a><a class="headerlink" href="#communication-channels" title="Link to this heading">#</a></h3>
+<p>📢 <strong>GitHub Discussions</strong>: Design discussions and Q&amp;A
+🐛 <strong>GitHub Issues</strong>: Bug reports and feature requests
+📧 <strong>Mailing List</strong>: Development announcements
+💬 <strong>Slack/Discord</strong>: Real-time developer chat</p>
+</section>
+<section id="contribution-recognition">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Contribution Recognition</a><a class="headerlink" href="#contribution-recognition" title="Link to this heading">#</a></h3>
+<p><strong>We value all contributions</strong>:</p>
+<ul class="simple">
+<li><p>🏆 <strong>Hall of Fame</strong>: Top contributors recognized</p></li>
+<li><p>📝 <strong>Changelog</strong>: All contributions documented</p></li>
+<li><p>🎖️ <strong>Badges</strong>: Contribution badges and achievements</p></li>
+<li><p>🗳️ <strong>Voting Rights</strong>: Core contributors get say in roadmap</p></li>
+</ul>
+</section>
+</section>
+<section id="code-of-conduct">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Code of Conduct</a><a class="headerlink" href="#code-of-conduct" title="Link to this heading">#</a></h2>
+<p><strong>Our Community Standards</strong>:</p>
+<p>✅ <strong>Be respectful</strong>: Treat everyone with kindness and respect
+✅ <strong>Be inclusive</strong>: Welcome people of all backgrounds
+✅ <strong>Be constructive</strong>: Provide helpful feedback and suggestions
+✅ <strong>Be patient</strong>: Help newcomers learn and grow
+✅ <strong>Be collaborative</strong>: Work together toward common goals</p>
+<p>❌ <strong>Zero tolerance</strong> for harassment, discrimination, or toxicity</p>
+</section>
+<section id="development-workflow">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Development Workflow</a><a class="headerlink" href="#development-workflow" title="Link to this heading">#</a></h2>
+<section id="typical-development-process">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Typical Development Process</a><a class="headerlink" href="#typical-development-process" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Issue/Feature Discussion</strong>
+- Create or comment on GitHub issue
+- Discuss approach and design
+- Get feedback from maintainers</p></li>
+<li><p><strong>Development</strong>
+- Fork repository
+- Create feature branch
+- Implement changes
+- Write tests
+- Update documentation</p></li>
+<li><p><strong>Review Process</strong>
+- Submit pull request
+- Code review by maintainers
+- Address feedback
+- Continuous integration passes</p></li>
+<li><p><strong>Integration</strong>
+- Approval by maintainers
+- Merge to main branch
+- Release in next version</p></li>
+</ol>
+</section>
+<section id="release-process">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Release Process</a><a class="headerlink" href="#release-process" title="Link to this heading">#</a></h3>
+<p><strong>TyxonQ follows semantic versioning</strong>:</p>
+<ul class="simple">
+<li><p><strong>Major</strong> (X.0.0): Breaking changes</p></li>
+<li><p><strong>Minor</strong> (0.X.0): New features, backward compatible</p></li>
+<li><p><strong>Patch</strong> (0.0.X): Bug fixes</p></li>
+</ul>
+<p><strong>Release Schedule</strong>:
+- 🚀 <strong>Major releases</strong>: Every 6-12 months
+- ✨ <strong>Minor releases</strong>: Every 2-3 months
+- 🐛 <strong>Patch releases</strong>: As needed for critical fixes</p>
+</section>
+</section>
+<section id="getting-help">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Getting Help</a><a class="headerlink" href="#getting-help" title="Link to this heading">#</a></h2>
+<section id="developer-support">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Developer Support</a><a class="headerlink" href="#developer-support" title="Link to this heading">#</a></h3>
+<p><strong>Need help with development?</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Read the docs</strong>: Start with this guide and API reference</p></li>
+<li><p><strong>Search issues</strong>: Check if your question was already answered</p></li>
+<li><p><strong>Ask the community</strong>: Post in GitHub Discussions</p></li>
+<li><p><strong>Contact maintainers</strong>: For complex architectural questions</p></li>
+</ol>
+<p><strong>Response Times</strong>:
+- 🟢 <strong>Bug reports</strong>: 1-2 business days
+- 🟡 <strong>Feature requests</strong>: 3-5 business days
+- 🔵 <strong>General questions</strong>: 1-3 business days</p>
+</section>
+<section id="mentorship-program">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Mentorship Program</a><a class="headerlink" href="#mentorship-program" title="Link to this heading">#</a></h3>
+<p><strong>New contributor mentorship</strong>:</p>
+<ul class="simple">
+<li><p>🎓 <strong>Onboarding</strong>: Guided first contribution</p></li>
+<li><p>👥 <strong>Pairing</strong>: Work with experienced developers</p></li>
+<li><p>📈 <strong>Growth path</strong>: Clear progression for regular contributors</p></li>
+<li><p>🎯 <strong>Projects</strong>: Curated list of good first issues</p></li>
+</ul>
+</section>
+</section>
+<section id="technical-resources">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Technical Resources</a><a class="headerlink" href="#technical-resources" title="Link to this heading">#</a></h2>
+<section id="development-tools">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Development Tools</a><a class="headerlink" href="#development-tools" title="Link to this heading">#</a></h3>
+<p><strong>Recommended setup</strong>:</p>
+<ul class="simple">
+<li><p><strong>IDE</strong>: VS Code with Python extension</p></li>
+<li><p><strong>Linting</strong>: Black, flake8, mypy</p></li>
+<li><p><strong>Testing</strong>: pytest, coverage</p></li>
+<li><p><strong>Documentation</strong>: Sphinx, RST</p></li>
+<li><p><strong>Version Control</strong>: Git with conventional commits</p></li>
+</ul>
+</section>
+<section id="performance-profiling">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Performance Profiling</a><a class="headerlink" href="#performance-profiling" title="Link to this heading">#</a></h3>
+<p><strong>Optimization tools</strong>:</p>
+<ul class="simple">
+<li><p><strong>Profiling</strong>: cProfile, line_profiler</p></li>
+<li><p><strong>Memory</strong>: memory_profiler, pympler</p></li>
+<li><p><strong>Benchmarking</strong>: pytest-benchmark</p></li>
+<li><p><strong>Quantum metrics</strong>: Gate count, circuit depth, fidelity</p></li>
+</ul>
+</section>
+<section id="documentation-standards">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Documentation Standards</a><a class="headerlink" href="#documentation-standards" title="Link to this heading">#</a></h3>
+<p><strong>Documentation requirements</strong>:</p>
+<ul class="simple">
+<li><p>✅ <strong>Docstrings</strong>: All public functions and classes</p></li>
+<li><p>✅ <strong>Type hints</strong>: Full type annotations</p></li>
+<li><p>✅ <strong>Examples</strong>: Working code examples</p></li>
+<li><p>✅ <strong>Tests</strong>: Comprehensive test coverage</p></li>
+<li><p>✅ <strong>Changelog</strong>: Document all changes</p></li>
+</ul>
+</section>
+</section>
+<section id="next-steps">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Next Steps</a><a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p><strong>Ready to get started?</strong></p>
+<ol class="arabic simple">
+<li><p><strong>New Contributors</strong>: Start with <a class="reference internal" href="contributing.html"><span class="doc">Contributing</span></a></p></li>
+<li><p><strong>Architecture Overview</strong>: Read <a class="reference internal" href="architecture_overview.html"><span class="doc">Architecture Overview</span></a></p></li>
+<li><p><strong>Pick Your Area</strong>: Choose from the development areas above</p></li>
+<li><p><strong>Join Community</strong>: Introduce yourself in GitHub Discussions</p></li>
+</ol>
+<ul class="simple">
+<li><p><strong>Advanced Development</strong>:</p></li>
+<li><p><strong>Custom Extensions</strong>: <a class="reference internal" href="extending_tyxonq.html"><span class="doc">Extending TyxonQ</span></a></p></li>
+<li><p><strong>Device Development</strong>: <a class="reference internal" href="custom_devices.html"><span class="doc">Custom Devices</span></a></p></li>
+<li><p><strong>Backend Development</strong>: <a class="reference internal" href="custom_backends.html"><span class="doc">Numeric Engines</span></a></p></li>
+</ul>
+<p>—</p>
+<p><strong>Welcome to the TyxonQ developer community!</strong> 🚀🔧✨</p>
+<p>We’re excited to see what you’ll build with us.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../api/utils/generated/tyxonq.utils.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">tyxonq.utils</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="contributing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Contributing</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-for-contributors">Quick Start for Contributors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#extension-development">Extension Development</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developer-documentation">Developer Documentation</a><ul class="visible nav section-nav flex-column">
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-areas">Development Areas</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#core-components">Core Components</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#libraries-and-tools">Libraries and Tools</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#community">Community</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#communication-channels">Communication Channels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#contribution-recognition">Contribution Recognition</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-of-conduct">Code of Conduct</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development-workflow">Development Workflow</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-development-process">Typical Development Process</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#release-process">Release Process</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-help">Getting Help</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#developer-support">Developer Support</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mentorship-program">Mentorship Program</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#technical-resources">Technical Resources</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#development-tools">Development Tools</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-profiling">Performance Profiling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-standards">Documentation Standards</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developer_guide/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,1052 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Molecule Module &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'quantum_chemistry/molecule/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Runtime Systems for Quantum Chemistry" href="../runtimes/index.html" />
+    <link rel="prev" title="Quantum Chemistry Algorithms" href="../algorithms/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../fundamentals/index.html">Quantum Chemistry Fundamentals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../algorithms/index.html">Quantum Chemistry Algorithms</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Molecule Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../runtimes/index.html">Runtime Systems for Quantum Chemistry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../aidd/index.html">AI-Driven Drug Discovery (AIDD)</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Quantum Chemistry</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Molecule Module</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="molecule-module">
+<h1>Molecule Module<a class="headerlink" href="#molecule-module" title="Link to this heading">#</a></h1>
+<p>The Molecule module provides a comprehensive interface for defining molecular systems, computing molecular properties, and integrating with quantum chemistry algorithms.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id2">Overview</a></p></li>
+<li><p><a class="reference internal" href="#creating-molecules" id="id3">Creating Molecules</a></p>
+<ul>
+<li><p><a class="reference internal" href="#from-atomic-coordinates" id="id4">From Atomic Coordinates</a></p></li>
+<li><p><a class="reference internal" href="#predefined-molecules" id="id5">Predefined Molecules</a></p></li>
+<li><p><a class="reference internal" href="#with-charge-and-spin" id="id6">With Charge and Spin</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#basis-sets" id="id7">Basis Sets</a></p>
+<ul>
+<li><p><a class="reference internal" href="#common-basis-sets" id="id8">Common Basis Sets</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#molecular-properties" id="id9">Molecular Properties</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-properties" id="id10">Basic Properties</a></p></li>
+<li><p><a class="reference internal" href="#energies-and-reference-calculations" id="id11">Energies and Reference Calculations</a></p></li>
+<li><p><a class="reference internal" href="#orbital-information" id="id12">Orbital Information</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#hamiltonian-generation" id="id13">Hamiltonian Generation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#qubit-hamiltonians" id="id14">Qubit Hamiltonians</a></p></li>
+<li><p><a class="reference internal" href="#active-space-approximation" id="id15">Active Space Approximation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#integration-with-algorithms" id="id16">Integration with Algorithms</a></p>
+<ul>
+<li><p><a class="reference internal" href="#direct-usage-with-vqe" id="id17">Direct Usage with VQE</a></p></li>
+<li><p><a class="reference internal" href="#potential-energy-surfaces" id="id18">Potential Energy Surfaces</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-topics" id="id19">Advanced Topics</a></p>
+<ul>
+<li><p><a class="reference internal" href="#custom-integrals" id="id20">Custom Integrals</a></p></li>
+<li><p><a class="reference internal" href="#cloud-execution" id="id21">Cloud Execution</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#common-workflows" id="id22">Common Workflows</a></p>
+<ul>
+<li><p><a class="reference internal" href="#quick-energy-calculation" id="id23">Quick Energy Calculation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#error-handling" id="id24">Error Handling</a></p></li>
+<li><p><a class="reference internal" href="#related-resources" id="id25">Related Resources</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>TyxonQ’s Molecule class is built on top of PySCF (Python-based Simulations of Chemistry Framework), providing:</p>
+<dl class="simple">
+<dt>🧪 <strong>Molecular Definition</strong></dt><dd><p>Flexible ways to define molecular geometry and electronic structure</p>
+</dd>
+<dt>⚛️ <strong>Quantum Properties</strong></dt><dd><p>Automatic calculation of Hartree-Fock, MP2, and other reference energies</p>
+</dd>
+<dt>🔧 <strong>Hamiltonian Generation</strong></dt><dd><p>Convert molecular systems into qubit Hamiltonians for quantum algorithms</p>
+</dd>
+<dt>🔄 <strong>PySCF Integration</strong></dt><dd><p>Seamless integration with PySCF’s extensive capabilities</p>
+</dd>
+</dl>
+</section>
+<section id="creating-molecules">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Creating Molecules</a><a class="headerlink" href="#creating-molecules" title="Link to this heading">#</a></h2>
+<section id="from-atomic-coordinates">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">From Atomic Coordinates</a><a class="headerlink" href="#from-atomic-coordinates" title="Link to this heading">#</a></h3>
+<p>The most straightforward way to define a molecule is by specifying atomic symbols and coordinates:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+
+<span class="c1"># Water molecule (H2O)</span>
+<span class="n">h2o</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.586</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.586</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+    <span class="p">],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span>
+    <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;Angstrom&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Hydrogen molecule (H2)</span>
+<span class="n">h2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]</span>
+    <span class="p">],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31g&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Coordinate Units</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Angstrom&quot;</span></code>: Default, convenient for molecular structures</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Bohr&quot;</span></code>: Atomic units, used in quantum chemistry calculations</p></li>
+</ul>
+</section>
+<section id="predefined-molecules">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Predefined Molecules</a><a class="headerlink" href="#predefined-molecules" title="Link to this heading">#</a></h3>
+<p>TyxonQ provides common molecules for quick testing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.molecule</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">h2</span><span class="p">,</span> <span class="n">h2o</span><span class="p">,</span> <span class="n">nh3</span><span class="p">,</span> <span class="n">ch4</span><span class="p">,</span>
+    <span class="n">h_chain</span><span class="p">,</span> <span class="n">h_ring</span><span class="p">,</span> <span class="n">water</span>
+<span class="p">)</span>
+
+<span class="c1"># Use predefined H2 molecule</span>
+<span class="n">my_h2</span> <span class="o">=</span> <span class="n">h2</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HF energy: </span><span class="si">{</span><span class="n">my_h2</span><span class="o">.</span><span class="n">hf_energy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create hydrogen chain with custom bond length</span>
+<span class="n">h4_chain</span> <span class="o">=</span> <span class="n">h_chain</span><span class="p">(</span><span class="n">n_h</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">bond_distance</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+<span class="c1"># Create water with custom geometry</span>
+<span class="n">custom_water</span> <span class="o">=</span> <span class="n">water</span><span class="p">(</span><span class="n">bond_length</span><span class="o">=</span><span class="mf">0.96</span><span class="p">,</span> <span class="n">bond_angle</span><span class="o">=</span><span class="mf">104.5</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Available Predefined Molecules</strong>:</p>
+<ul class="simple">
+<li><p><strong>Diatomics</strong>: <code class="docutils literal notranslate"><span class="pre">h2</span></code>, <code class="docutils literal notranslate"><span class="pre">n2</span></code>, <code class="docutils literal notranslate"><span class="pre">co</span></code>, <code class="docutils literal notranslate"><span class="pre">lih</span></code></p></li>
+<li><p><strong>Polyatomics</strong>: <code class="docutils literal notranslate"><span class="pre">h2o</span></code>, <code class="docutils literal notranslate"><span class="pre">nh3</span></code>, <code class="docutils literal notranslate"><span class="pre">ch4</span></code>, <code class="docutils literal notranslate"><span class="pre">bh3</span></code>, <code class="docutils literal notranslate"><span class="pre">hcn</span></code></p></li>
+<li><p><strong>Clusters</strong>: <code class="docutils literal notranslate"><span class="pre">h_chain</span></code>, <code class="docutils literal notranslate"><span class="pre">h_ring</span></code>, <code class="docutils literal notranslate"><span class="pre">h_square</span></code>, <code class="docutils literal notranslate"><span class="pre">h_cube</span></code></p></li>
+</ul>
+</section>
+<section id="with-charge-and-spin">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">With Charge and Spin</a><a class="headerlink" href="#with-charge-and-spin" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># H3+ ion (charge = +1)</span>
+<span class="n">h3_plus</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.6</span><span class="p">]]</span>
+    <span class="p">],</span>
+    <span class="n">charge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>  <span class="c1"># Singlet</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Oxygen atom (triplet state)</span>
+<span class="n">o_atom</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]],</span>
+    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">spin</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Triplet (2 unpaired electrons)</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31g&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="basis-sets">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Basis Sets</a><a class="headerlink" href="#basis-sets" title="Link to this heading">#</a></h2>
+<section id="common-basis-sets">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Common Basis Sets</a><a class="headerlink" href="#common-basis-sets" title="Link to this heading">#</a></h3>
+<p>TyxonQ supports all PySCF basis sets:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Recommended Basis Sets</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 30.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Basis Set</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Speed</p></th>
+<th class="head"><p>Use Case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sto-3g</span></code></p></td>
+<td><p>Minimal</p></td>
+<td><p>Very Fast</p></td>
+<td><p>Quick testing, qualitative results</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">3-21g</span></code></p></td>
+<td><p>Small split-valence</p></td>
+<td><p>Fast</p></td>
+<td><p>Preliminary calculations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">6-31g</span></code></p></td>
+<td><p>Split-valence</p></td>
+<td><p>Medium</p></td>
+<td><p>General purpose</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">6-31g*</span></code></p></td>
+<td><p>Polarized</p></td>
+<td><p>Medium</p></td>
+<td><p>Better accuracy</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cc-pvdz</span></code></p></td>
+<td><p>Correlation-consistent</p></td>
+<td><p>Slow</p></td>
+<td><p>High accuracy</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cc-pvtz</span></code></p></td>
+<td><p>Correlation-consistent</p></td>
+<td><p>Very Slow</p></td>
+<td><p>Production calculations</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Minimal basis - fastest</span>
+<span class="n">mol_minimal</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">)</span>
+
+<span class="c1"># Polarized basis - better accuracy</span>
+<span class="n">mol_polarized</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31g*&quot;</span><span class="p">)</span>
+
+<span class="c1"># Correlation-consistent - high accuracy</span>
+<span class="n">mol_ccpvdz</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="molecular-properties">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Molecular Properties</a><a class="headerlink" href="#molecular-properties" title="Link to this heading">#</a></h2>
+<section id="basic-properties">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Basic Properties</a><a class="headerlink" href="#basic-properties" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">h2o</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.586</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.586</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+    <span class="p">],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Basic electronic properties</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of electrons: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">n_electrons</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of orbitals: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">n_orbitals</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of spin orbitals: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">n_spin_orbitals</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of qubits required: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">n_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Molecular symmetry</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Point group: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">symmetry</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Nuclear repulsion energy: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">nuclear_repulsion</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="energies-and-reference-calculations">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Energies and Reference Calculations</a><a class="headerlink" href="#energies-and-reference-calculations" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Hartree-Fock energy (automatically computed)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HF energy: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">hf_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># MP2 correlation energy</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MP2 energy: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">mp2_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MP2 correlation: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">mp2_energy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">h2o</span><span class="o">.</span><span class="n">hf_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># CCSD energy (if available)</span>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">h2o</span><span class="p">,</span> <span class="s1">&#39;ccsd_energy&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CCSD energy: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">ccsd_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># FCI energy (exact within basis set)</span>
+<span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">h2o</span><span class="p">,</span> <span class="s1">&#39;fci_energy&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FCI energy: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">fci_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="orbital-information">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Orbital Information</a><a class="headerlink" href="#orbital-information" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Molecular orbital coefficients</span>
+<span class="n">mo_coeffs</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">mo_coefficients</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MO coefficient shape: </span><span class="si">{</span><span class="n">mo_coeffs</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Orbital energies</span>
+<span class="n">mo_energies</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">mo_energies</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HOMO energy: </span><span class="si">{</span><span class="n">mo_energies</span><span class="p">[</span><span class="n">h2o</span><span class="o">.</span><span class="n">n_electrons</span><span class="o">//</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;LUMO energy: </span><span class="si">{</span><span class="n">mo_energies</span><span class="p">[</span><span class="n">h2o</span><span class="o">.</span><span class="n">n_electrons</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># HOMO-LUMO gap</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HOMO-LUMO gap: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">homo_lumo_gap</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HOMO-LUMO gap: </span><span class="si">{</span><span class="n">h2o</span><span class="o">.</span><span class="n">homo_lumo_gap</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">27.2114</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> eV&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="hamiltonian-generation">
+<h2><a class="toc-backref" href="#id13" role="doc-backlink">Hamiltonian Generation</a><a class="headerlink" href="#hamiltonian-generation" title="Link to this heading">#</a></h2>
+<section id="qubit-hamiltonians">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Qubit Hamiltonians</a><a class="headerlink" href="#qubit-hamiltonians" title="Link to this heading">#</a></h3>
+<p>Convert molecular Hamiltonian to qubit operators for quantum algorithms:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Jordan-Wigner mapping</span>
+<span class="n">ham_jw</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">get_hamiltonian</span><span class="p">(</span><span class="n">mapping</span><span class="o">=</span><span class="s2">&quot;jordan_wigner&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;JW Hamiltonian terms: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ham_jw</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Bravyi-Kitaev mapping</span>
+<span class="n">ham_bk</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">get_hamiltonian</span><span class="p">(</span><span class="n">mapping</span><span class="o">=</span><span class="s2">&quot;bravyi_kitaev&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BK Hamiltonian terms: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ham_bk</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Parity mapping (reduces qubits by 2)</span>
+<span class="n">ham_parity</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">get_hamiltonian</span><span class="p">(</span><span class="n">mapping</span><span class="o">=</span><span class="s2">&quot;parity&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parity Hamiltonian terms: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ham_parity</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Examine Hamiltonian terms</span>
+<span class="k">for</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">pauli_string</span> <span class="ow">in</span> <span class="n">ham_jw</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">coeff</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> * </span><span class="si">{</span><span class="n">pauli_string</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Mapping Comparison</strong>:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mapping</p></th>
+<th class="head"><p>Qubits</p></th>
+<th class="head"><p>Gate Count</p></th>
+<th class="head"><p>Best For</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Jordan-Wigner</p></td>
+<td><p>2N</p></td>
+<td><p>Medium</p></td>
+<td><p>General purpose, intuitive</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bravyi-Kitaev</p></td>
+<td><p>2N</p></td>
+<td><p>Lower</p></td>
+<td><p>Circuit optimization</p></td>
+</tr>
+<tr class="row-even"><td><p>Parity</p></td>
+<td><p>2N-2</p></td>
+<td><p>Lowest</p></td>
+<td><p>Qubit-limited systems</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="active-space-approximation">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Active Space Approximation</a><a class="headerlink" href="#active-space-approximation" title="Link to this heading">#</a></h3>
+<p>For large molecules, use active space to reduce computational cost:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Large molecule example</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+
+<span class="n">benzene</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.398</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.210</span><span class="p">,</span> <span class="mf">0.699</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.210</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.699</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.398</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.210</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.699</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.210</span><span class="p">,</span> <span class="mf">0.699</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="c1"># ... hydrogens</span>
+    <span class="p">],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Use UCCSD with active space</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span>
+    <span class="n">molecule</span><span class="o">=</span><span class="n">benzene</span><span class="p">,</span>
+    <span class="n">active_space</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>  <span class="c1"># 6 electrons in 6 orbitals</span>
+    <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="integration-with-algorithms">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Integration with Algorithms</a><a class="headerlink" href="#integration-with-algorithms" title="Link to this heading">#</a></h2>
+<section id="direct-usage-with-vqe">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Direct Usage with VQE</a><a class="headerlink" href="#direct-usage-with-vqe" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">HEA</span><span class="p">,</span> <span class="n">UCCSD</span>
+
+<span class="c1"># Define molecule</span>
+<span class="n">h2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Use with HEA</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">h2</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+<span class="n">e_hea</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c1"># Use with UCCSD</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">h2</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+<span class="n">e_uccsd</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HF energy:    </span><span class="si">{</span><span class="n">h2</span><span class="o">.</span><span class="n">hf_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HEA energy:   </span><span class="si">{</span><span class="n">e_hea</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;UCCSD energy: </span><span class="si">{</span><span class="n">e_uccsd</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="potential-energy-surfaces">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Potential Energy Surfaces</a><a class="headerlink" href="#potential-energy-surfaces" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># Scan H2 dissociation curve</span>
+<span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="n">energies</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">distances</span><span class="p">:</span>
+    <span class="n">h2</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+        <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">]]],</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31g&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Use VQE to compute energy</span>
+    <span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">h2</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+    <span class="n">energy</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+    <span class="n">energies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+
+<span class="c1"># Plot potential energy curve</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">energies</span><span class="p">,</span> <span class="s1">&#39;o-&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;H-H Distance (Angstrom)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy (Hartree)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;H2 Potential Energy Curve (VQE)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-topics">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Advanced Topics</a><a class="headerlink" href="#advanced-topics" title="Link to this heading">#</a></h2>
+<section id="custom-integrals">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Custom Integrals</a><a class="headerlink" href="#custom-integrals" title="Link to this heading">#</a></h3>
+<p>For advanced users, you can work directly with molecular integrals:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Access one-electron integrals</span>
+<span class="n">int1e</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">int1e</span>  <span class="c1"># Kinetic + nuclear attraction</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;One-electron integral shape: </span><span class="si">{</span><span class="n">int1e</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access two-electron integrals</span>
+<span class="n">int2e</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">int2e</span>  <span class="c1"># Electron-electron repulsion</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two-electron integral shape: </span><span class="si">{</span><span class="n">int2e</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Core energy (nuclear repulsion)</span>
+<span class="n">e_core</span> <span class="o">=</span> <span class="n">h2o</span><span class="o">.</span><span class="n">e_core</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Core energy: </span><span class="si">{</span><span class="n">e_core</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="cloud-execution">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Cloud Execution</a><a class="headerlink" href="#cloud-execution" title="Link to this heading">#</a></h3>
+<p>For large molecules or expensive basis sets, use cloud HF/MP2 calculations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Local execution (default)</span>
+<span class="n">mol_local</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvdz&quot;</span><span class="p">,</span>
+    <span class="n">classical_provider</span><span class="o">=</span><span class="s2">&quot;local&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Cloud execution for heavy calculations</span>
+<span class="n">large_mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="n">large_molecular_structure</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;cc-pvtz&quot;</span><span class="p">,</span>
+    <span class="n">classical_provider</span><span class="o">=</span><span class="s2">&quot;cloud&quot;</span><span class="p">,</span>  <span class="c1"># Use cloud resources</span>
+    <span class="n">classical_device</span><span class="o">=</span><span class="s2">&quot;hf_server&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="common-workflows">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Common Workflows</a><a class="headerlink" href="#common-workflows" title="Link to this heading">#</a></h2>
+<section id="quick-energy-calculation">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Quick Energy Calculation</a><a class="headerlink" href="#quick-energy-calculation" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span><span class="p">,</span> <span class="n">UCCSD</span>
+
+<span class="c1"># Step 1: Define molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atoms</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">[</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.586</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]],</span>
+        <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.757</span><span class="p">,</span> <span class="mf">0.586</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]</span>
+    <span class="p">],</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;6-31g&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Step 2: Check HF baseline</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HF energy: </span><span class="si">{</span><span class="n">mol</span><span class="o">.</span><span class="n">hf_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># Step 3: Run VQE-UCCSD</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">,</span> <span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+<span class="n">vqe_energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c1"># Step 4: Compare results</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;VQE energy: </span><span class="si">{</span><span class="n">vqe_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Correlation energy: </span><span class="si">{</span><span class="n">vqe_energy</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">mol</span><span class="o">.</span><span class="n">hf_energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="error-handling">
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Error Handling</a><a class="headerlink" href="#error-handling" title="Link to this heading">#</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Invalid geometry (atoms too close)</span>
+    <span class="n">bad_mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+        <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">]]],</span>  <span class="c1"># Too close!</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Invalid basis set</span>
+    <span class="n">bad_basis</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+        <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span>
+        <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;invalid-basis&quot;</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Basis set error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># Invalid charge/spin combination</span>
+    <span class="n">bad_spin</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+        <span class="n">atoms</span><span class="o">=</span><span class="p">[[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.74</span><span class="p">]]],</span>
+        <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">spin</span><span class="o">=</span><span class="mi">1</span>  <span class="c1"># Odd spin with even electrons!</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Spin error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="related-resources">
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">Related Resources</a><a class="headerlink" href="#related-resources" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../fundamentals/index.html"><span class="doc">Quantum Chemistry Fundamentals</span></a> - Quantum Chemistry Fundamentals</p></li>
+<li><p><a class="reference internal" href="../algorithms/index.html"><span class="doc">Quantum Chemistry Algorithms</span></a> - Quantum Chemistry Algorithms</p></li>
+<li><p><a class="reference internal" href="../../api/applications/index.html"><span class="doc">Applications API</span></a> - Molecule API Reference</p></li>
+<li><p><a class="reference internal" href="../../examples/chemistry_examples.html"><span class="doc">Quantum Chemistry Examples</span></a> - Practical Examples</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../algorithms/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quantum Chemistry Algorithms</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../runtimes/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Runtime Systems for Quantum Chemistry</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-molecules">Creating Molecules</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-atomic-coordinates">From Atomic Coordinates</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#predefined-molecules">Predefined Molecules</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-charge-and-spin">With Charge and Spin</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basis-sets">Basis Sets</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-basis-sets">Common Basis Sets</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#molecular-properties">Molecular Properties</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-properties">Basic Properties</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#energies-and-reference-calculations">Energies and Reference Calculations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orbital-information">Orbital Information</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hamiltonian-generation">Hamiltonian Generation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#qubit-hamiltonians">Qubit Hamiltonians</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#active-space-approximation">Active Space Approximation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#integration-with-algorithms">Integration with Algorithms</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#direct-usage-with-vqe">Direct Usage with VQE</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#potential-energy-surfaces">Potential Energy Surfaces</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-topics">Advanced Topics</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#custom-integrals">Custom Integrals</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cloud-execution">Cloud Execution</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common-workflows">Common Workflows</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-energy-calculation">Quick Energy Calculation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-resources">Related Resources</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/quantum_chemistry/molecule/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

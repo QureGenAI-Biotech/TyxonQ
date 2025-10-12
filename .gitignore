@@ -203,3 +203,7 @@ examples/data
 
 examples/circuit.json
 examples/qml_param_v2.npy
+
+#read the docs
+build_log.txt
+!docs/build/html/

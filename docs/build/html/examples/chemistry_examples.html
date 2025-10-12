@@ -1,0 +1,1145 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quantum Chemistry Examples &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/chemistry_examples';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimization Examples" href="optimization_examples.html" />
+    <link rel="prev" title="Basic Examples" href="basic_examples.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="basic_examples.html">Basic Examples</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quantum Chemistry Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization_examples.html">Optimization Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloud_examples.html">Cloud Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_examples.html">Advanced Examples</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Quantum Chemistry Examples</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="quantum-chemistry-examples">
+<h1>Quantum Chemistry Examples<a class="headerlink" href="#quantum-chemistry-examples" title="Link to this heading">#</a></h1>
+<p>This page provides practical, executable examples for quantum chemistry calculations using TyxonQ.
+Each example includes complete code, explanations, and expected outputs.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#getting-started" id="id2">Getting Started</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-1-your-first-molecule-h2-ground-state" id="id3">Example 1: Your First Molecule - H₂ Ground State</a></p></li>
+<li><p><a class="reference internal" href="#example-2-using-hardware-efficient-ansatz-hea" id="id4">Example 2: Using Hardware Efficient Ansatz (HEA)</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#molecule-construction" id="id5">Molecule Construction</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-3-different-ways-to-define-molecules" id="id6">Example 3: Different Ways to Define Molecules</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#algorithm-comparison" id="id7">Algorithm Comparison</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-4-comparing-different-ansatze" id="id8">Example 4: Comparing Different Ansatze</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#active-space-calculations" id="id9">Active Space Calculations</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-5-using-active-space-for-larger-molecules" id="id10">Example 5: Using Active Space for Larger Molecules</a></p></li>
+<li><p><a class="reference internal" href="#example-6-custom-orbital-selection" id="id11">Example 6: Custom Orbital Selection</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-features" id="id12">Advanced Features</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-7-energy-and-gradient-calculation" id="id13">Example 7: Energy and Gradient Calculation</a></p></li>
+<li><p><a class="reference internal" href="#example-8-accessing-quantum-circuit" id="id14">Example 8: Accessing Quantum Circuit</a></p></li>
+<li><p><a class="reference internal" href="#example-9-reduced-density-matrices" id="id15">Example 9: Reduced Density Matrices</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#optimization-control" id="id16">Optimization Control</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-10-custom-optimization-settings" id="id17">Example 10: Custom Optimization Settings</a></p></li>
+<li><p><a class="reference internal" href="#example-11-different-initialization-methods" id="id18">Example 11: Different Initialization Methods</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#practical-applications" id="id19">Practical Applications</a></p>
+<ul>
+<li><p><a class="reference internal" href="#example-12-potential-energy-surface-scan" id="id20">Example 12: Potential Energy Surface Scan</a></p></li>
+<li><p><a class="reference internal" href="#example-13-molecular-property-calculation" id="id21">Example 13: Molecular Property Calculation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#troubleshooting" id="id22">Troubleshooting</a></p>
+<ul>
+<li><p><a class="reference internal" href="#common-issues-and-solutions" id="id23">Common Issues and Solutions</a></p></li>
+<li><p><a class="reference internal" href="#performance-tips" id="id24">Performance Tips</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#see-also" id="id25">See Also</a></p></li>
+<li><p><a class="reference internal" href="#next-steps" id="id26">Next Steps</a></p></li>
+</ul>
+</nav>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All examples are tested and can be run directly. Make sure TyxonQ is properly installed.</p>
+</div>
+<section id="getting-started">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Getting Started</a><a class="headerlink" href="#getting-started" title="Link to this heading">#</a></h2>
+<section id="example-1-your-first-molecule-h2-ground-state">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Example 1: Your First Molecule - H₂ Ground State</a><a class="headerlink" href="#example-1-your-first-molecule-h2-ground-state" title="Link to this heading">#</a></h3>
+<p>This is the simplest quantum chemistry calculation - finding the ground state energy of hydrogen molecule.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+
+<span class="c1"># Define H2 molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">H 0.0 0.0 0.0</span>
+<span class="s1">H 0.0 0.0 0.74</span>
+<span class="s1">&#39;&#39;&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto-3g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Run UCCSD calculation</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">)</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground state energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HF energy:  </span><span class="si">{</span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_hf</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FCI energy: </span><span class="si">{</span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_fci</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Expected Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Ground state energy: -1.13727498 Hartree
+HF energy:  -1.11671398 Hartree
+FCI energy: -1.13727498 Hartree
+</pre></div>
+</div>
+<p><strong>Explanation</strong>:</p>
+<ul class="simple">
+<li><p>UCCSD provides chemical accuracy for small molecules</p></li>
+<li><p>The energy is lower than Hartree-Fock (HF), capturing electron correlation</p></li>
+<li><p>For H₂ with minimal basis, UCCSD achieves FCI (exact) accuracy</p></li>
+</ul>
+</section>
+<section id="example-2-using-hardware-efficient-ansatz-hea">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Example 2: Using Hardware Efficient Ansatz (HEA)</a><a class="headerlink" href="#example-2-using-hardware-efficient-ansatz-hea" title="Link to this heading">#</a></h3>
+<p>HEA is optimized for near-term quantum devices with shallow circuit depth.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">HEA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+
+<span class="c1"># Define molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;H 0 0 0; H 0 0 0.74&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto-3g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Create HEA with 3 layers</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Optimize with COBYLA method</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;COBYLA&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Optimized energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of parameters: </span><span class="si">{</span><span class="n">hea</span><span class="o">.</span><span class="n">n_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Circuit depth: ~</span><span class="si">{</span><span class="mi">3</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">hea</span><span class="o">.</span><span class="n">n_qubits</span><span class="si">}</span><span class="s2"> gates&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Key Features of HEA</strong>:</p>
+<ul class="simple">
+<li><p>Shallow circuit: suitable for NISQ devices</p></li>
+<li><p>Fewer parameters: <code class="docutils literal notranslate"><span class="pre">(layers</span> <span class="pre">+</span> <span class="pre">1)</span> <span class="pre">×</span> <span class="pre">n_qubits</span></code></p></li>
+<li><p>Fast optimization: COBYLA works well for noisy gradients</p></li>
+</ul>
+</section>
+</section>
+<section id="molecule-construction">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Molecule Construction</a><a class="headerlink" href="#molecule-construction" title="Link to this heading">#</a></h2>
+<section id="example-3-different-ways-to-define-molecules">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Example 3: Different Ways to Define Molecules</a><a class="headerlink" href="#example-3-different-ways-to-define-molecules" title="Link to this heading">#</a></h3>
+<p><strong>Method 1: Using PySCF Mole Object</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">O 0.0 0.0 0.0</span>
+<span class="s1">H 0.0 0.757 0.587</span>
+<span class="s1">H 0.0 -0.757 0.587</span>
+<span class="s1">&#39;&#39;&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;6-31g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Method 2: Direct Parameters</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">HEA</span>
+
+<span class="c1"># Pass atom specification directly</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span>
+    <span class="n">atom</span><span class="o">=</span><span class="s2">&quot;H 0 0 0; H 0 0 0.74&quot;</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span>
+    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">spin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">layers</span><span class="o">=</span><span class="mi">2</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Method 3: Using Pre-built Molecules</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If you have predefined molecule configurations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+
+<span class="c1"># LiH molecule</span>
+<span class="n">mol_lih</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol_lih</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;Li 0 0 0; H 0 0 1.6&#39;</span>
+<span class="n">mol_lih</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto-3g&#39;</span>
+<span class="n">mol_lih</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="algorithm-comparison">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Algorithm Comparison</a><a class="headerlink" href="#algorithm-comparison" title="Link to this heading">#</a></h2>
+<section id="example-4-comparing-different-ansatze">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Example 4: Comparing Different Ansatze</a><a class="headerlink" href="#example-4-comparing-different-ansatze" title="Link to this heading">#</a></h3>
+<p>Let’s compare UCCSD, HEA, and PUCCD on the same molecule.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span><span class="p">,</span> <span class="n">HEA</span><span class="p">,</span> <span class="n">PUCCD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="c1"># Define LiH molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;Li 0 0 0; H 0 0 1.6&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto-3g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># UCCSD - High accuracy</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== UCCSD ===&quot;</span><span class="p">)</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">)</span>
+<span class="n">e_uccsd</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">t_uccsd</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy: </span><span class="si">{</span><span class="n">e_uccsd</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameters: </span><span class="si">{</span><span class="n">uccsd</span><span class="o">.</span><span class="n">n_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time: </span><span class="si">{</span><span class="n">t_uccsd</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+<span class="c1"># HEA - Hardware efficient</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== HEA ===&quot;</span><span class="p">)</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">e_hea</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">t_hea</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy: </span><span class="si">{</span><span class="n">e_hea</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameters: </span><span class="si">{</span><span class="n">hea</span><span class="o">.</span><span class="n">n_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time: </span><span class="si">{</span><span class="n">t_hea</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+<span class="c1"># PUCCD - Paired electrons</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== PUCCD ===&quot;</span><span class="p">)</span>
+<span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="n">puccd</span> <span class="o">=</span> <span class="n">PUCCD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">)</span>
+<span class="n">e_puccd</span> <span class="o">=</span> <span class="n">puccd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">t_puccd</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy: </span><span class="si">{</span><span class="n">e_puccd</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameters: </span><span class="si">{</span><span class="n">puccd</span><span class="o">.</span><span class="n">n_params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time: </span><span class="si">{</span><span class="n">t_puccd</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+<span class="c1"># Comparison</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=== Comparison ===&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FCI reference: </span><span class="si">{</span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_fci</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;UCCSD error: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">e_uccsd</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_fci</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> mHartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HEA error:   </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">e_hea</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_fci</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> mHartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PUCCD error: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">e_puccd</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_fci</span><span class="p">)</span><span class="o">*</span><span class="mi">1000</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> mHartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Expected Results</strong>:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">Algorithm Comparison for LiH</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Algorithm</p></th>
+<th class="head"><p>Energy (Hartree)</p></th>
+<th class="head"><p>Parameters</p></th>
+<th class="head"><p>Error (mH)</p></th>
+<th class="head"><p>Best For</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>UCCSD</p></td>
+<td><p>-7.8823</p></td>
+<td><p>~20</p></td>
+<td><p>&lt;0.1</p></td>
+<td><p>Chemical accuracy</p></td>
+</tr>
+<tr class="row-odd"><td><p>HEA</p></td>
+<td><p>-7.8815</p></td>
+<td><p>~24</p></td>
+<td><p>~0.8</p></td>
+<td><p>NISQ devices</p></td>
+</tr>
+<tr class="row-even"><td><p>PUCCD</p></td>
+<td><p>-7.8820</p></td>
+<td><p>~10</p></td>
+<td><p>~0.3</p></td>
+<td><p>Paired systems</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="active-space-calculations">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">Active Space Calculations</a><a class="headerlink" href="#active-space-calculations" title="Link to this heading">#</a></h2>
+<section id="example-5-using-active-space-for-larger-molecules">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Example 5: Using Active Space for Larger Molecules</a><a class="headerlink" href="#example-5-using-active-space-for-larger-molecules" title="Link to this heading">#</a></h3>
+<p>For larger molecules, use active space to reduce computational cost.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+
+<span class="c1"># Define water molecule with larger basis</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">O 0.0 0.0 0.0</span>
+<span class="s1">H 0.0 0.757 0.587</span>
+<span class="s1">H 0.0 -0.757 0.587</span>
+<span class="s1">&#39;&#39;&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;6-31g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Use active space: 4 electrons in 4 orbitals</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span>
+    <span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span>
+    <span class="n">active_space</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>  <span class="c1"># (n_electrons, n_orbitals)</span>
+    <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span>
+<span class="p">)</span>
+
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Active space energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of qubits: </span><span class="si">{</span><span class="n">uccsd</span><span class="o">.</span><span class="n">n_qubits</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Full space would need: </span><span class="si">{</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="si">}</span><span class="s2"> qubits&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Active Space Selection Tips</strong>:</p>
+<ul class="simple">
+<li><p>Include frontier orbitals (HOMO/LUMO)</p></li>
+<li><p>For bond breaking: include bonding and antibonding orbitals</p></li>
+<li><p>Balance: larger space = more accurate, more expensive</p></li>
+<li><p>Common choices: (2,2), (4,4), (6,6) for small molecules</p></li>
+</ul>
+</section>
+<section id="example-6-custom-orbital-selection">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Example 6: Custom Orbital Selection</a><a class="headerlink" href="#example-6-custom-orbital-selection" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;N 0 0 0; N 0 0 1.1&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;cc-pvdz&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Select specific orbitals (0-based indexing)</span>
+<span class="c1"># For N2: select π and π* orbitals</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span>
+    <span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span>
+    <span class="n">active_space</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+    <span class="n">active_orbital_indices</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">],</span>  <span class="c1"># Manually select orbitals</span>
+    <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span>
+<span class="p">)</span>
+
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Custom active space energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-features">
+<h2><a class="toc-backref" href="#id12" role="doc-backlink">Advanced Features</a><a class="headerlink" href="#advanced-features" title="Link to this heading">#</a></h2>
+<section id="example-7-energy-and-gradient-calculation">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Example 7: Energy and Gradient Calculation</a><a class="headerlink" href="#example-7-energy-and-gradient-calculation" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">HEA</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Create HEA instance</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;H 0 0 0; H 0 0 0.74&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Random parameters</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">hea</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span>
+
+<span class="c1"># Calculate energy only</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">energy</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># Calculate energy and gradient simultaneously</span>
+<span class="n">energy</span><span class="p">,</span> <span class="n">gradient</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">energy_and_grad</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient norm: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Gradient: </span><span class="si">{</span><span class="n">gradient</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Use Cases</strong>:</p>
+<ul class="simple">
+<li><p>Custom optimizers requiring gradients</p></li>
+<li><p>Analyzing parameter landscape</p></li>
+<li><p>Implementing advanced optimization algorithms</p></li>
+</ul>
+</section>
+<section id="example-8-accessing-quantum-circuit">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Example 8: Accessing Quantum Circuit</a><a class="headerlink" href="#example-8-accessing-quantum-circuit" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Create UCCSD instance</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;H 0 0 0; H 0 0 0.74&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get the parameterized circuit</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">uccsd</span><span class="o">.</span><span class="n">n_params</span><span class="p">)</span>  <span class="c1"># Start from HF state</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">get_circuit</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of qubits: </span><span class="si">{</span><span class="n">circuit</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Circuit operations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">circuit</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Visualize circuit (if you want)</span>
+<span class="c1"># print(circuit)</span>
+</pre></div>
+</div>
+</section>
+<section id="example-9-reduced-density-matrices">
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Example 9: Reduced Density Matrices</a><a class="headerlink" href="#example-9-reduced-density-matrices" title="Link to this heading">#</a></h3>
+<p>Access 1- and 2-electron reduced density matrices (RDMs).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Run UCCSD calculation</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;H 0 0 0; H 0 0 0.74&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">)</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c1"># Get optimized parameters</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">params</span>
+
+<span class="c1"># Calculate 1-RDM</span>
+<span class="n">rdm1</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1-electron RDM shape:&quot;</span><span class="p">,</span> <span class="n">rdm1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1-RDM:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">rdm1</span><span class="p">)</span>
+
+<span class="c1"># Calculate 2-RDM</span>
+<span class="n">rdm2</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">make_rdm2</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">2-electron RDM shape:&quot;</span><span class="p">,</span> <span class="n">rdm2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="c1"># Verify electron number from RDM1</span>
+<span class="n">n_elec_from_rdm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">rdm1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Electrons from RDM1: </span><span class="si">{</span><span class="n">n_elec_from_rdm</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected electrons: </span><span class="si">{</span><span class="n">uccsd</span><span class="o">.</span><span class="n">n_elec</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Applications of RDMs</strong>:</p>
+<ul class="simple">
+<li><p>Calculate molecular properties (dipole moment, etc.)</p></li>
+<li><p>Analyze electron correlation</p></li>
+<li><p>Interface with other quantum chemistry tools</p></li>
+<li><p>Verify calculation correctness</p></li>
+</ul>
+</section>
+</section>
+<section id="optimization-control">
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Optimization Control</a><a class="headerlink" href="#optimization-control" title="Link to this heading">#</a></h2>
+<section id="example-10-custom-optimization-settings">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Example 10: Custom Optimization Settings</a><a class="headerlink" href="#example-10-custom-optimization-settings" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">HEA</span>
+
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;Li 0 0 0; H 0 0 1.6&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Set custom scipy optimization options</span>
+<span class="n">hea</span><span class="o">.</span><span class="n">scipy_minimize_options</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+    <span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="mf">1e-8</span><span class="p">,</span>
+    <span class="s1">&#39;gtol&#39;</span><span class="p">:</span> <span class="mf">1e-6</span>
+<span class="p">}</span>
+
+<span class="c1"># Run with specific optimizer</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access optimization results</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converged: </span><span class="si">{</span><span class="n">hea</span><span class="o">.</span><span class="n">opt_res</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iterations: </span><span class="si">{</span><span class="n">hea</span><span class="o">.</span><span class="n">opt_res</span><span class="p">[</span><span class="s1">&#39;nit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Message: </span><span class="si">{</span><span class="n">hea</span><span class="o">.</span><span class="n">opt_res</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="example-11-different-initialization-methods">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Example 11: Different Initialization Methods</a><a class="headerlink" href="#example-11-different-initialization-methods" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+
+<span class="n">mol_config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;atom&quot;</span><span class="p">:</span> <span class="s2">&quot;H 0 0 0; H 0 0 0.74&quot;</span><span class="p">,</span> <span class="s2">&quot;basis&quot;</span><span class="p">:</span> <span class="s2">&quot;sto-3g&quot;</span><span class="p">}</span>
+
+<span class="c1"># Method 1: MP2 initialization (default, recommended)</span>
+<span class="n">uccsd_mp2</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="o">**</span><span class="n">mol_config</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">)</span>
+<span class="n">e_mp2</span> <span class="o">=</span> <span class="n">uccsd_mp2</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c1"># Method 2: CCSD initialization (more accurate initial guess)</span>
+<span class="n">uccsd_ccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="o">**</span><span class="n">mol_config</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;ccsd&quot;</span><span class="p">)</span>
+<span class="n">e_ccsd</span> <span class="o">=</span> <span class="n">uccsd_ccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c1"># Method 3: Zero initialization (start from HF state)</span>
+<span class="n">uccsd_zeros</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="o">**</span><span class="n">mol_config</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;zeros&quot;</span><span class="p">)</span>
+<span class="n">e_zeros</span> <span class="o">=</span> <span class="n">uccsd_zeros</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initialization comparison:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;MP2 init:   </span><span class="si">{</span><span class="n">e_mp2</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree, </span><span class="si">{</span><span class="n">uccsd_mp2</span><span class="o">.</span><span class="n">opt_res</span><span class="p">[</span><span class="s1">&#39;nit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> iterations&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CCSD init:  </span><span class="si">{</span><span class="n">e_ccsd</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree, </span><span class="si">{</span><span class="n">uccsd_ccsd</span><span class="o">.</span><span class="n">opt_res</span><span class="p">[</span><span class="s1">&#39;nit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> iterations&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Zero init:  </span><span class="si">{</span><span class="n">e_zeros</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree, </span><span class="si">{</span><span class="n">uccsd_zeros</span><span class="o">.</span><span class="n">opt_res</span><span class="p">[</span><span class="s1">&#39;nit&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> iterations&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Recommendation</strong>: Use <code class="docutils literal notranslate"><span class="pre">&quot;mp2&quot;</span></code> for most cases - good balance of accuracy and speed.</p>
+</section>
+</section>
+<section id="practical-applications">
+<h2><a class="toc-backref" href="#id19" role="doc-backlink">Practical Applications</a><a class="headerlink" href="#practical-applications" title="Link to this heading">#</a></h2>
+<section id="example-12-potential-energy-surface-scan">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Example 12: Potential Energy Surface Scan</a><a class="headerlink" href="#example-12-potential-energy-surface-scan" title="Link to this heading">#</a></h3>
+<p>Calculate energy at different bond lengths (dissociation curve).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+<span class="c1"># Scan H2 bond lengths</span>
+<span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="n">energies_uccsd</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">energies_hf</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">distances</span><span class="p">:</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;H 0 0 0; H 0 0 </span><span class="si">{</span><span class="n">d</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto-3g&#39;</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+    <span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+    <span class="n">energies_uccsd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">energies_hf</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">uccsd</span><span class="o">.</span><span class="n">e_hf</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;d = </span><span class="si">{</span><span class="n">d</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> Å: E = </span><span class="si">{</span><span class="n">e</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+
+<span class="c1"># Plot results</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">energies_hf</span><span class="p">,</span> <span class="s1">&#39;o-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Hartree-Fock&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">energies_uccsd</span><span class="p">,</span> <span class="s1">&#39;s-&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;UCCSD&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;H-H Distance (Å)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Energy (Hartree)&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;H₂ Potential Energy Surface&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;h2_pes.png&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="example-13-molecular-property-calculation">
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Example 13: Molecular Property Calculation</a><a class="headerlink" href="#example-13-molecular-property-calculation" title="Link to this heading">#</a></h3>
+<p>Calculate dipole moment from RDMs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Water molecule</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">O 0.0 0.0 0.0</span>
+<span class="s1">H 0.0 0.757 0.587</span>
+<span class="s1">H 0.0 -0.757 0.587</span>
+<span class="s1">&#39;&#39;&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s1">&#39;sto-3g&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Run UCCSD</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="n">mol</span><span class="p">,</span> <span class="n">active_space</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c1"># Get 1-RDM</span>
+<span class="n">rdm1</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">(</span><span class="n">uccsd</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+
+<span class="c1"># Calculate dipole moment (requires molecular orbital integrals)</span>
+<span class="c1"># This is a simplified example</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground state energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.8f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;1-RDM trace (electron number): </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">rdm1</span><span class="p">)</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Troubleshooting</a><a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<section id="common-issues-and-solutions">
+<h3><a class="toc-backref" href="#id23" role="doc-backlink">Common Issues and Solutions</a><a class="headerlink" href="#common-issues-and-solutions" title="Link to this heading">#</a></h3>
+<p><strong>Issue 1: Optimization doesn’t converge</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Increase max iterations and try different optimizer</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">hea</span><span class="o">.</span><span class="n">scipy_minimize_options</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">}</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">hea</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;COBYLA&quot;</span><span class="p">)</span>  <span class="c1"># Try COBYLA for noisy landscapes</span>
+</pre></div>
+</div>
+<p><strong>Issue 2: Out of memory for large molecules</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Use active space reduction</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span>
+    <span class="n">atom</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span>
+    <span class="n">active_space</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>  <span class="c1"># Reduce from full space</span>
+    <span class="n">init_method</span><span class="o">=</span><span class="s2">&quot;mp2&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Issue 3: Energy higher than expected</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solution: Increase ansatz expressivity</span>
+<span class="c1"># For HEA: increase layers</span>
+<span class="n">hea</span> <span class="o">=</span> <span class="n">HEA</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># More layers</span>
+
+<span class="c1"># Or switch to more accurate ansatz</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">)</span>  <span class="c1"># Higher accuracy</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-tips">
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">Performance Tips</a><a class="headerlink" href="#performance-tips" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Start small</strong>: Test with minimal basis (sto-3g) before using larger basis sets</p></li>
+<li><p><strong>Use MP2 init</strong>: Provides good starting point for optimization</p></li>
+<li><p><strong>Active space</strong>: Essential for molecules &gt;4 atoms</p></li>
+<li><p><strong>Algorithm choice</strong>:</p>
+<ul class="simple">
+<li><p>Quick testing: HEA with 2-3 layers</p></li>
+<li><p>Chemical accuracy: UCCSD</p></li>
+<li><p>Paired systems: PUCCD</p></li>
+</ul>
+</li>
+<li><p><strong>Optimization</strong>: COBYLA for quick results, L-BFGS-B for accuracy</p></li>
+</ol>
+</section>
+</section>
+<section id="see-also">
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">See Also</a><a class="headerlink" href="#see-also" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../quantum_chemistry/algorithms/index.html"><span class="doc">Quantum Chemistry Algorithms</span></a> - Algorithm theory and details</p></li>
+<li><p><a class="reference internal" href="../quantum_chemistry/molecule/index.html"><span class="doc">Molecule Module</span></a> - Molecule construction</p></li>
+<li><p><a class="reference internal" href="../quantum_chemistry/runtimes/index.html"><span class="doc">Runtime Systems for Quantum Chemistry</span></a> - Runtime systems and devices</p></li>
+<li><p><a class="reference internal" href="../api/applications/index.html"><span class="doc">Applications API</span></a> - Complete API reference</p></li>
+<li><p><a class="reference internal" href="../tutorials/beginner/index.html"><span class="doc">Beginner Tutorials</span></a> - Step-by-step tutorials</p></li>
+</ul>
+</section>
+<section id="next-steps">
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Next Steps</a><a class="headerlink" href="#next-steps" title="Link to this heading">#</a></h2>
+<p>After mastering these examples:</p>
+<ol class="arabic simple">
+<li><p>Explore <a class="reference internal" href="optimization_examples.html"><span class="doc">Optimization Examples</span></a> for VQE and other optimization tasks</p></li>
+<li><p>Try <a class="reference internal" href="cloud_examples.html"><span class="doc">Cloud Examples</span></a> to run on real quantum hardware</p></li>
+<li><p>Check <a class="reference internal" href="advanced_examples.html"><span class="doc">Advanced Examples</span></a> for complex applications</p></li>
+<li><p>Read <a class="reference internal" href="../quantum_chemistry/aidd/index.html"><span class="doc">AI-Driven Drug Discovery (AIDD)</span></a> for drug discovery applications</p></li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>All code examples are available in the TyxonQ repository under <code class="docutils literal notranslate"><span class="pre">examples/quantum_chemistry/</span></code>.
+You can download and run them directly!</p>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="basic_examples.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Basic Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="optimization_examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Optimization Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-started">Getting Started</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1-your-first-molecule-h2-ground-state">Example 1: Your First Molecule - H₂ Ground State</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2-using-hardware-efficient-ansatz-hea">Example 2: Using Hardware Efficient Ansatz (HEA)</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#molecule-construction">Molecule Construction</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-3-different-ways-to-define-molecules">Example 3: Different Ways to Define Molecules</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithm-comparison">Algorithm Comparison</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-4-comparing-different-ansatze">Example 4: Comparing Different Ansatze</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#active-space-calculations">Active Space Calculations</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-5-using-active-space-for-larger-molecules">Example 5: Using Active Space for Larger Molecules</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-6-custom-orbital-selection">Example 6: Custom Orbital Selection</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-features">Advanced Features</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-7-energy-and-gradient-calculation">Example 7: Energy and Gradient Calculation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-8-accessing-quantum-circuit">Example 8: Accessing Quantum Circuit</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-9-reduced-density-matrices">Example 9: Reduced Density Matrices</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-control">Optimization Control</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-10-custom-optimization-settings">Example 10: Custom Optimization Settings</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-11-different-initialization-methods">Example 11: Different Initialization Methods</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#practical-applications">Practical Applications</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-12-potential-energy-surface-scan">Example 12: Potential Energy Surface Scan</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-13-molecular-property-calculation">Example 13: Molecular Property Calculation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-issues-and-solutions">Common Issues and Solutions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#see-also">See Also</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#next-steps">Next Steps</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/chemistry_examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

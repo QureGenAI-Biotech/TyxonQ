@@ -1,0 +1,823 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Postprocessing &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=38b66d78"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/postprocessing/index';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Advanced Topics" href="../advanced/index.html" />
+    <link rel="prev" title="Numerics Backend" href="../numerics/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../core/index.html">Core Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compiler/index.html">Compiler Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../devices/index.html">Device Abstraction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../numerics/index.html">Numerics Backend</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Postprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced/index.html">Advanced Topics</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="../../genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="../../py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Postprocessing</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="postprocessing">
+<h1>Postprocessing<a class="headerlink" href="#postprocessing" title="Link to this heading">#</a></h1>
+<p>The Postprocessing module provides tools for analyzing measurement results, including expectation value calculation, error mitigation, classical shadows, and metrics analysis.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#overview" id="id1">Overview</a></p></li>
+<li><p><a class="reference internal" href="#expectation-value-calculation" id="id2">Expectation Value Calculation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-usage" id="id3">Basic Usage</a></p></li>
+<li><p><a class="reference internal" href="#pauli-observable-expectations" id="id4">Pauli Observable Expectations</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#error-mitigation" id="id5">Error Mitigation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#readout-error-mitigation" id="id6">Readout Error Mitigation</a></p></li>
+<li><p><a class="reference internal" href="#noise-adaptive-processing" id="id7">Noise-Adaptive Processing</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#classical-shadows" id="id8">Classical Shadows</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-workflow" id="id9">Basic Workflow</a></p></li>
+<li><p><a class="reference internal" href="#advantages" id="id10">Advantages</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#metrics-and-analysis" id="id11">Metrics and Analysis</a></p>
+<ul>
+<li><p><a class="reference internal" href="#fidelity-calculation" id="id12">Fidelity Calculation</a></p></li>
+<li><p><a class="reference internal" href="#entropy-measures" id="id13">Entropy Measures</a></p></li>
+<li><p><a class="reference internal" href="#count-statistics" id="id14">Count Statistics</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-techniques" id="id15">Advanced Techniques</a></p>
+<ul>
+<li><p><a class="reference internal" href="#zero-noise-extrapolation" id="id16">Zero-Noise Extrapolation</a></p></li>
+<li><p><a class="reference internal" href="#probabilistic-error-cancellation" id="id17">Probabilistic Error Cancellation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#best-practices" id="id18">Best Practices</a></p>
+<ul>
+<li><p><a class="reference internal" href="#error-mitigation-guidelines" id="id19">Error Mitigation Guidelines</a></p></li>
+<li><p><a class="reference internal" href="#performance-tips" id="id20">Performance Tips</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#related-resources" id="id21">Related Resources</a></p></li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>TyxonQ postprocessing capabilities include:</p>
+<ul class="simple">
+<li><p><strong>Expectation Values</strong>: Convert measurement counts to expectation values</p></li>
+<li><p><strong>Error Mitigation</strong>: Readout error correction and noise mitigation</p></li>
+<li><p><strong>Classical Shadows</strong>: Scalable quantum state tomography</p></li>
+<li><p><strong>Metrics and Analysis</strong>: Fidelity, entropy, and other quantum metrics</p></li>
+<li><p><strong>Noise Simulation</strong>: Classical noise modeling on count data</p></li>
+</ul>
+</section>
+<section id="expectation-value-calculation">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Expectation Value Calculation</a><a class="headerlink" href="#expectation-value-calculation" title="Link to this heading">#</a></h2>
+<section id="basic-usage">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Basic Usage</a><a class="headerlink" href="#basic-usage" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">counts_to_expval</span>
+
+<span class="c1"># Run circuit and get counts</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="c1"># Calculate expectation value</span>
+<span class="n">expval</span> <span class="o">=</span> <span class="n">counts_to_expval</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expectation value: </span><span class="si">{</span><span class="n">expval</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="pauli-observable-expectations">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Pauli Observable Expectations</a><a class="headerlink" href="#pauli-observable-expectations" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">pauli_expval</span>
+
+<span class="c1"># Define Pauli observable (e.g., Z0*Z1)</span>
+<span class="n">observable</span> <span class="o">=</span> <span class="s2">&quot;ZZ&quot;</span>
+
+<span class="c1"># Calculate expectation</span>
+<span class="n">expval</span> <span class="o">=</span> <span class="n">pauli_expval</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">observable</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="n">observable</span><span class="si">}</span><span class="s2">&gt;: </span><span class="si">{</span><span class="n">expval</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="error-mitigation">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Error Mitigation</a><a class="headerlink" href="#error-mitigation" title="Link to this heading">#</a></h2>
+<section id="readout-error-mitigation">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Readout Error Mitigation</a><a class="headerlink" href="#readout-error-mitigation" title="Link to this heading">#</a></h3>
+<p><strong>Purpose</strong>: Correct systematic errors in qubit readout</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReadoutMitigator</span>
+
+<span class="c1"># Create calibration circuits</span>
+<span class="n">mitigator</span> <span class="o">=</span> <span class="n">ReadoutMitigator</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Run calibration</span>
+<span class="n">calibration_results</span> <span class="o">=</span> <span class="n">mitigator</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s1">&#39;statevector&#39;</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="c1"># Apply mitigation to measurement results</span>
+<span class="n">raw_counts</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">mitigated_counts</span> <span class="o">=</span> <span class="n">mitigator</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">raw_counts</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Raw counts: </span><span class="si">{</span><span class="n">raw_counts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mitigated counts: </span><span class="si">{</span><span class="n">mitigated_counts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>How it works</strong>:</p>
+graph LR
+    A[Calibration Circuits] --&gt; B[Measure Error Matrix]
+    B --&gt; C[Construct Inverse Matrix]
+    D[Raw Counts] --&gt; E[Apply Inverse Matrix]
+    C --&gt; E
+    E --&gt; F[Corrected Counts]</section>
+<section id="noise-adaptive-processing">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Noise-Adaptive Processing</a><a class="headerlink" href="#noise-adaptive-processing" title="Link to this heading">#</a></h3>
+<p>Apply noise models to count data for what-if analysis:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">apply_bitflip_counts</span><span class="p">,</span> <span class="n">apply_depolarizing_counts</span>
+
+<span class="c1"># Simulate bit-flip noise</span>
+<span class="n">noisy_counts_bitflip</span> <span class="o">=</span> <span class="n">apply_bitflip_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">p_flip</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="c1"># Simulate depolarizing noise</span>
+<span class="n">noisy_counts_depol</span> <span class="o">=</span> <span class="n">apply_depolarizing_counts</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">p_depol</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original: </span><span class="si">{</span><span class="n">counts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;With bit-flip: </span><span class="si">{</span><span class="n">noisy_counts_bitflip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;With depolarizing: </span><span class="si">{</span><span class="n">noisy_counts_depol</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="classical-shadows">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Classical Shadows</a><a class="headerlink" href="#classical-shadows" title="Link to this heading">#</a></h2>
+<p><strong>Purpose</strong>: Efficient quantum state property estimation without full tomography</p>
+<section id="basic-workflow">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Basic Workflow</a><a class="headerlink" href="#basic-workflow" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_pauli_basis</span><span class="p">,</span> <span class="n">estimate_expectation_pauli_product</span>
+
+<span class="c1"># Generate random measurement bases</span>
+<span class="n">num_shots</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">bases</span> <span class="o">=</span> <span class="n">random_pauli_basis</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_shots</span><span class="o">=</span><span class="n">num_shots</span><span class="p">)</span>
+
+<span class="c1"># Measure circuit in random bases</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">basis</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+    <span class="c1"># Apply basis rotation and measure</span>
+    <span class="n">measured_circuit</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">rotate_to_basis</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">measured_circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+<span class="c1"># Estimate expectation of target observable</span>
+<span class="n">target_observable</span> <span class="o">=</span> <span class="s2">&quot;ZZI&quot;</span>  <span class="c1"># Z_0 * Z_1 * I_2</span>
+<span class="n">expval_estimate</span> <span class="o">=</span> <span class="n">estimate_expectation_pauli_product</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">target_observable</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated &lt;</span><span class="si">{</span><span class="n">target_observable</span><span class="si">}</span><span class="s2">&gt;: </span><span class="si">{</span><span class="n">expval_estimate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="advantages">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Advantages</a><a class="headerlink" href="#advantages" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Scalability</strong>: Works for large systems</p></li>
+<li><p><strong>Sample efficiency</strong>: Fewer measurements for low-weight observables</p></li>
+<li><p><strong>Unbiased</strong>: Provides unbiased estimates</p></li>
+<li><p><strong>Flexible</strong>: Can estimate many observables from same data</p></li>
+</ul>
+</section>
+</section>
+<section id="metrics-and-analysis">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Metrics and Analysis</a><a class="headerlink" href="#metrics-and-analysis" title="Link to this heading">#</a></h2>
+<section id="fidelity-calculation">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Fidelity Calculation</a><a class="headerlink" href="#fidelity-calculation" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">state_fidelity</span>
+
+<span class="c1"># Calculate fidelity between two states</span>
+<span class="n">state1</span> <span class="o">=</span> <span class="n">circuit1</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">state2</span> <span class="o">=</span> <span class="n">circuit2</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;statevector&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">fidelity</span> <span class="o">=</span> <span class="n">state_fidelity</span><span class="p">(</span><span class="n">state1</span><span class="p">,</span> <span class="n">state2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fidelity: </span><span class="si">{</span><span class="n">fidelity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="entropy-measures">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Entropy Measures</a><a class="headerlink" href="#entropy-measures" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">von_neumann_entropy</span>
+
+<span class="c1"># Calculate von Neumann entropy</span>
+<span class="n">density_matrix</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;density_matrix&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">entropy</span> <span class="o">=</span> <span class="n">von_neumann_entropy</span><span class="p">(</span><span class="n">density_matrix</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Entropy: </span><span class="si">{</span><span class="n">entropy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="count-statistics">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Count Statistics</a><a class="headerlink" href="#count-statistics" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">counts_statistics</span>
+
+<span class="n">counts</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">counts_statistics</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total shots: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;total_shots&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unique outcomes: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;num_outcomes&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Most probable: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;most_probable&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Entropy: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;shannon_entropy&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-techniques">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Advanced Techniques</a><a class="headerlink" href="#advanced-techniques" title="Link to this heading">#</a></h2>
+<section id="zero-noise-extrapolation">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Zero-Noise Extrapolation</a><a class="headerlink" href="#zero-noise-extrapolation" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">zero_noise_extrapolation</span>
+
+<span class="c1"># Run at different noise levels</span>
+<span class="n">noise_levels</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">]</span>
+<span class="n">expvals</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">noise</span> <span class="ow">in</span> <span class="n">noise_levels</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span>
+        <span class="s1">&#39;density_matrix&#39;</span><span class="p">,</span>
+        <span class="n">noise_model</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;depolarizing&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="n">noise</span><span class="p">}}</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">expval</span> <span class="o">=</span> <span class="n">counts_to_expval</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="n">expvals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expval</span><span class="p">)</span>
+
+<span class="c1"># Extrapolate to zero noise</span>
+<span class="n">zne_expval</span> <span class="o">=</span> <span class="n">zero_noise_extrapolation</span><span class="p">(</span><span class="n">noise_levels</span><span class="p">,</span> <span class="n">expvals</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Zero-noise extrapolated value: </span><span class="si">{</span><span class="n">zne_expval</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="probabilistic-error-cancellation">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Probabilistic Error Cancellation</a><a class="headerlink" href="#probabilistic-error-cancellation" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.postprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">probabilistic_error_cancellation</span>
+
+<span class="c1"># Define ideal and noisy operations</span>
+<span class="n">ideal_circuit</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cnot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">noisy_circuit</span> <span class="o">=</span> <span class="n">ideal_circuit</span><span class="o">.</span><span class="n">device</span><span class="p">(</span>
+    <span class="s1">&#39;density_matrix&#39;</span><span class="p">,</span>
+    <span class="n">noise_model</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;depolarizing&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">}}</span>
+<span class="p">)</span>
+
+<span class="c1"># Apply PEC</span>
+<span class="n">mitigated_result</span> <span class="o">=</span> <span class="n">probabilistic_error_cancellation</span><span class="p">(</span>
+    <span class="n">noisy_circuit</span><span class="p">,</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">1000</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2><a class="toc-backref" href="#id18" role="doc-backlink">Best Practices</a><a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
+<section id="error-mitigation-guidelines">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Error Mitigation Guidelines</a><a class="headerlink" href="#error-mitigation-guidelines" title="Link to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p><strong>Calibrate regularly</strong>: Readout errors drift over time</p></li>
+<li><p><strong>Use appropriate shots</strong>: More shots for better mitigation</p></li>
+<li><p><strong>Validate mitigation</strong>: Compare with ideal simulations</p></li>
+<li><p><strong>Combine techniques</strong>: Use multiple mitigation methods together</p></li>
+</ol>
+</section>
+<section id="performance-tips">
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Performance Tips</a><a class="headerlink" href="#performance-tips" title="Link to this heading">#</a></h3>
+<ol class="arabic">
+<li><p><strong>Batch processing</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Process multiple count dictionaries efficiently</span>
+<span class="n">all_expvals</span> <span class="o">=</span> <span class="p">[</span><span class="n">counts_to_expval</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">count_list</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Caching calibration</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save and load calibration data</span>
+<span class="n">mitigator</span><span class="o">.</span><span class="n">save_calibration</span><span class="p">(</span><span class="s1">&#39;calibration.json&#39;</span><span class="p">)</span>
+<span class="n">mitigator</span><span class="o">.</span><span class="n">load_calibration</span><span class="p">(</span><span class="s1">&#39;calibration.json&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Parallel processing</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessPoolExecutor</span>
+
+<span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">()</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">process_counts</span><span class="p">,</span> <span class="n">count_list</span><span class="p">))</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="related-resources">
+<h2><a class="toc-backref" href="#id21" role="doc-backlink">Related Resources</a><a class="headerlink" href="#related-resources" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../../api/postprocessing/index.html"><span class="doc">Postprocessing API</span></a> - Postprocessing API Reference</p></li>
+<li><p><a class="reference internal" href="../devices/index.html"><span class="doc">Device Abstraction</span></a> - Device Execution Guide</p></li>
+<li><p><span class="xref std std-doc">/examples/readout_mitigation</span> - Error Mitigation Examples</p></li>
+<li><p><span class="xref std std-doc">/examples/noise_controls_demo</span> - Noise Modeling Examples</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../numerics/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Numerics Backend</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../advanced/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Advanced Topics</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#expectation-value-calculation">Expectation Value Calculation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-usage">Basic Usage</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pauli-observable-expectations">Pauli Observable Expectations</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-mitigation">Error Mitigation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#readout-error-mitigation">Readout Error Mitigation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#noise-adaptive-processing">Noise-Adaptive Processing</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classical-shadows">Classical Shadows</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-workflow">Basic Workflow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#advantages">Advantages</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#metrics-and-analysis">Metrics and Analysis</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fidelity-calculation">Fidelity Calculation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#entropy-measures">Entropy Measures</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#count-statistics">Count Statistics</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-techniques">Advanced Techniques</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#zero-noise-extrapolation">Zero-Noise Extrapolation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#probabilistic-error-cancellation">Probabilistic Error Cancellation</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#error-mitigation-guidelines">Error Mitigation Guidelines</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-tips">Performance Tips</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#related-resources">Related Resources</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/postprocessing/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

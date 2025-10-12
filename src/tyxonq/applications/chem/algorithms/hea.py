@@ -26,21 +26,101 @@ Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
 
 
 class HEA:
-    """Hardware-Efficient Ansatz (HEA) / 硬件高效参数化电路
+    """Hardware-Efficient Ansatz (HEA) implementation for variational quantum algorithms.
 
-    核心思路：以交替的单比特旋转与纠缠层（CNOT 链）构成参数化电路，用于 VQE 等变分算法。
-    本实现采用 RY-only 结构：初始 RY 层 + L 层(纠缠 + RY)。层与层之间插入 barrier（IR 指令），
-    便于可视化与编译边界控制。
+    HEA provides a parameterized quantum circuit designed for near-term quantum devices
+    with limited connectivity and coherence times. The implementation uses a RY-only
+    structure with alternating layers of single-qubit rotations and CNOT entangling chains.
 
-    - 参数个数： (layers + 1) * n
-    - 电路结构：
-        L0:  逐比特 RY(θ0,i)
-        对每层 l=1..L：CNOT 链 (0→1→...→n-1) + 逐比特 RY(θl,i)
+    Circuit Structure:
+        - Layer 0: Initial RY rotations RY(θ₀,ᵢ) for each qubit i
+        - For each layer l=1...L:
+            * CNOT chain: 0→1→2→...→(n-1)
+            * RY rotations: RY(θₗ,ᵢ) for each qubit i
+        - Barriers inserted between layers for visualization and compilation control
 
-    该类支持：
-    - 从“哈密顿量项列表”（counts 评估路径）直接构建并在设备路径上进行能量与参数移位梯度评估；
-    - 从分子积分/活性空间（PySCF）与费米子算符映射（parity/JW/BK）构建 HEA；
-    - 与旧版 static/hea.py 的功能对应，但实现已迁移到 algorithms/runtimes/libs，移除张量网络依赖。
+    Key Features:
+        - **Parameter count**: (layers + 1) × n_qubits
+        - **Hardware-efficient**: Optimized for NISQ device constraints
+        - **Gradient support**: Parameter-shift rule for exact gradients
+        - **Chemistry integration**: Direct construction from molecular integrals
+        - **Runtime flexibility**: Supports both numeric and device execution
+        - **RDM computation**: Reduced density matrix calculation for analysis
+
+    Args:
+        molecule (object, optional): PySCF Mole object or RHF instance for chemistry.
+        n_qubits (int, optional): Number of qubits (required if molecule not provided).
+        layers (int, optional): Number of entangling layers (required if molecule not provided).
+        hamiltonian (List, optional): Hamiltonian as list of (coeff, pauli_terms) tuples.
+        runtime (str, optional): Execution runtime ("device" or "numeric"). Default "device".
+        numeric_engine (str, optional): Numeric backend ("statevector", "pytorch", etc.).
+        active_space (Tuple[int, int], optional): Active space (n_electrons, n_orbitals).
+        mapping (str, optional): Fermion-to-qubit mapping ("parity", "jordan-wigner", "bravyi-kitaev").
+        classical_provider (str, optional): Provider for classical calculations. Default "local".
+        classical_device (str, optional): Device for classical calculations. Default "auto".
+        atom (object, optional): Direct molecular specification for PySCF.
+        basis (str, optional): Basis set for quantum chemistry. Default "sto-3g".
+        unit (str, optional): Unit for molecular coordinates. Default "Angstrom".
+        charge (int, optional): Molecular charge. Default 0.
+        spin (int, optional): Molecular spin. Default 0.
+
+    Attributes:
+        n_qubits (int): Number of qubits in the circuit.
+        layers (int): Number of entangling layers.
+        n_params (int): Total number of parameters.
+        hamiltonian (List): Hamiltonian terms.
+        init_guess (ndarray): Initial parameter guess.
+        params (ndarray): Optimized parameters (after kernel()).
+        opt_res (dict): Optimization result details.
+        runtime (str): Current execution runtime.
+        mapping (str): Fermion-to-qubit mapping method.
+        grad (str): Gradient computation method ("param-shift" or "free").
+
+    Examples:
+        >>> # Basic HEA construction
+        >>> hea = HEA(n_qubits=4, layers=2, hamiltonian=[
+        ...     (0.5, [('Z', 0)]),
+        ...     (0.3, [('X', 0), ('X', 1)])
+        ... ])
+        >>> energy = hea.energy()  # Evaluate at initial parameters
+        >>> optimal_energy = hea.kernel()  # Run optimization
+        
+        >>> # Chemistry application with H2 molecule
+        >>> from pyscf import gto
+        >>> mol = gto.M(atom='H 0 0 0; H 0 0 0.74', basis='sto-3g')
+        >>> hea = HEA(molecule=mol, layers=1, mapping="parity")
+        >>> ground_state_energy = hea.kernel()
+        
+        >>> # Direct molecular specification
+        >>> hea = HEA(atom="H 0 0 0; H 0 0 0.74", basis="6-31g", layers=2)
+        >>> hea.kernel(shots=1024)  # Optimize with shot noise
+        
+        >>> # Custom circuit analysis
+        >>> circuit = hea.get_circuit([0.1, 0.2, 0.3, 0.4])  # Specify parameters
+        >>> hea.print_circuit()  # Display circuit structure
+        >>> hea.print_summary()  # Show optimization results
+        
+        >>> # Gradient computation
+        >>> params = hea.init_guess
+        >>> energy, grad = hea.energy_and_grad(params)
+        >>> print(f"Energy: {energy}, Gradient norm: {np.linalg.norm(grad)}")
+        
+        >>> # Reduced density matrices (after optimization)
+        >>> rdm1 = hea.make_rdm1()  # 1-RDM for molecular analysis
+        >>> rdm2 = hea.make_rdm2()  # 2-RDM for correlation analysis
+
+    Notes:
+        - Parameter-shift gradients provide exact derivatives for optimization
+        - The parity mapping reduces qubit count by 2 for molecular systems
+        - RDM computation requires chemistry metadata from molecular construction
+        - Device runtime supports both simulators and quantum hardware
+        - Numeric runtime provides exact statevector simulation
+        
+    See Also:
+        UCCSD: Unitary Coupled Cluster Singles and Doubles algorithm.
+        UCC: Base class for unitary coupled cluster methods.
+        tyxonq.libs.circuits_library: Circuit building utilities.
+        tyxonq.applications.chem.runtimes: Execution runtime implementations.
     """
     def __init__(self, 
     molecule: object | None = None, 

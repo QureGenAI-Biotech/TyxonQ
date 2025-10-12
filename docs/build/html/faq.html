@@ -1,0 +1,931 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" data-theme="auto">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>FAQ &#8212; TyxonQ 0.1.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "auto";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "auto";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=92b9d507" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=92b9d507" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=38b66d78"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=fd10adb8"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'faq';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Glossary" href="glossary.html" />
+    <link rel="prev" title="Research Papers" href="technical_references/research_papers.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="auto">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">TyxonQ Documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/QureGenAI-Biotech/TyxonQ" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-github-square fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/tyxonq" title="PyPI" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fab fa-python fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">PyPI</span></a>
+        </li>
+</ul></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item"><nav class="sidebar-indices-items" aria-labelledby="pst-indices-navigation-heading-2">
+  <p id="pst-indices-navigation-heading-2" class="sidebar-indices-items__title" role="heading" aria-level="1">Indices</p>
+  <ul class="indices-link">
+        <li class="toctree-l1">
+          <a class="reference internal"
+             href="genindex.html"
+             accesskey="I">General Index</a>
+        </li>
+        <li class="toctree-l1">
+          <a class="reference internal" href="py-modindex.html">Python Module Index</a>
+        </li>
+  </ul>
+</nav></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">FAQ</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="faq">
+<h1>FAQ<a class="headerlink" href="#faq" title="Link to this heading">#</a></h1>
+</section>
+<section id="frequently-asked-questions">
+<h1>Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Link to this heading">#</a></h1>
+<section id="installation-and-setup">
+<h2>Installation and Setup<a class="headerlink" href="#installation-and-setup" title="Link to this heading">#</a></h2>
+<section id="how-do-i-install-tyxonq">
+<h3>How do I install TyxonQ?<a class="headerlink" href="#how-do-i-install-tyxonq" title="Link to this heading">#</a></h3>
+<p>TyxonQ can be installed via pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tyxonq
+</pre></div>
+</div>
+<p>For development installation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/QureGenAI-Biotech/TyxonQ.git
+<span class="nb">cd</span><span class="w"> </span>TyxonQ
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</section>
+<section id="what-are-the-dependencies">
+<h3>What are the dependencies?<a class="headerlink" href="#what-are-the-dependencies" title="Link to this heading">#</a></h3>
+<p><strong>Required dependencies</strong>:</p>
+<ul class="simple">
+<li><p>Python 3.8+</p></li>
+<li><p>NumPy</p></li>
+<li><p>SciPy</p></li>
+<li><p>NetworkX</p></li>
+</ul>
+<p><strong>Optional dependencies</strong>:</p>
+<ul class="simple">
+<li><p><strong>Qiskit</strong>: For Qiskit compiler backend and transpilation</p></li>
+<li><p><strong>PyTorch</strong>: For PyTorch numeric backend and GPU acceleration</p></li>
+<li><p><strong>CuPy/CuPyNumeric</strong>: For GPU-accelerated tensor operations</p></li>
+<li><p><strong>PySCF</strong>: For quantum chemistry calculations</p></li>
+<li><p><strong>Matplotlib</strong>: For visualization</p></li>
+</ul>
+<p>See <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> for complete dependency list.</p>
+</section>
+<section id="how-do-i-configure-the-numeric-backend">
+<h3>How do I configure the numeric backend?<a class="headerlink" href="#how-do-i-configure-the-numeric-backend" title="Link to this heading">#</a></h3>
+<p>TyxonQ supports three numeric backends:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="c1"># NumPy backend (default, CPU)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span>  <span class="c1"># or &quot;cpu&quot;</span>
+
+<span class="c1"># PyTorch backend (GPU support)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;pytorch&quot;</span><span class="p">)</span>  <span class="c1"># or &quot;torch&quot;, &quot;pt&quot;</span>
+
+<span class="c1"># CuPyNumeric backend (distributed GPU)</span>
+<span class="n">tq</span><span class="o">.</span><span class="n">set_backend</span><span class="p">(</span><span class="s2">&quot;cupynumeric&quot;</span><span class="p">)</span>  <span class="c1"># or &quot;gpu&quot;</span>
+</pre></div>
+</div>
+<p>Backends are configured in <code class="docutils literal notranslate"><span class="pre">src/tyxonq/config.py</span></code>.</p>
+</section>
+</section>
+<section id="circuit-construction">
+<h2>Circuit Construction<a class="headerlink" href="#circuit-construction" title="Link to this heading">#</a></h2>
+<section id="how-do-i-create-a-quantum-circuit">
+<h3>How do I create a quantum circuit?<a class="headerlink" href="#how-do-i-create-a-quantum-circuit" title="Link to this heading">#</a></h3>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">Circuit</span></code> class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tq</span>
+
+<span class="c1"># Create 2-qubit circuit</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">tq</span><span class="o">.</span><span class="n">Circuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>        <span class="c1"># Hadamard on qubit 0</span>
+<span class="n">c</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>    <span class="c1"># CNOT from qubit 0 to 1</span>
+<span class="n">c</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>  <span class="c1"># Measure all qubits</span>
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">user_guide/core</span> for detailed circuit construction.</p>
+</section>
+<section id="what-gates-are-supported">
+<h3>What gates are supported?<a class="headerlink" href="#what-gates-are-supported" title="Link to this heading">#</a></h3>
+<p><strong>Single-qubit gates</strong>:</p>
+<ul class="simple">
+<li><p>Pauli: <code class="docutils literal notranslate"><span class="pre">x()</span></code>, <code class="docutils literal notranslate"><span class="pre">y()</span></code>, <code class="docutils literal notranslate"><span class="pre">z()</span></code></p></li>
+<li><p>Hadamard: <code class="docutils literal notranslate"><span class="pre">h()</span></code></p></li>
+<li><p>Rotations: <code class="docutils literal notranslate"><span class="pre">rx()</span></code>, <code class="docutils literal notranslate"><span class="pre">ry()</span></code>, <code class="docutils literal notranslate"><span class="pre">rz()</span></code></p></li>
+<li><p>Phase: <code class="docutils literal notranslate"><span class="pre">s()</span></code>, <code class="docutils literal notranslate"><span class="pre">sdg()</span></code>, <code class="docutils literal notranslate"><span class="pre">t()</span></code>, <code class="docutils literal notranslate"><span class="pre">tdg()</span></code></p></li>
+<li><p>Others: <code class="docutils literal notranslate"><span class="pre">sx()</span></code>, <code class="docutils literal notranslate"><span class="pre">sxdg()</span></code></p></li>
+</ul>
+<p><strong>Two-qubit gates</strong>:</p>
+<ul class="simple">
+<li><p>CNOT: <code class="docutils literal notranslate"><span class="pre">cx()</span></code></p></li>
+<li><p>Controlled-Y: <code class="docutils literal notranslate"><span class="pre">cy()</span></code></p></li>
+<li><p>Controlled-Z: <code class="docutils literal notranslate"><span class="pre">cz()</span></code></p></li>
+<li><p>SWAP: <code class="docutils literal notranslate"><span class="pre">swap()</span></code></p></li>
+<li><p>Controlled-Phase: <code class="docutils literal notranslate"><span class="pre">cp()</span></code></p></li>
+</ul>
+<p><strong>Multi-qubit gates</strong>:</p>
+<ul class="simple">
+<li><p>Toffoli: <code class="docutils literal notranslate"><span class="pre">ccx()</span></code></p></li>
+<li><p>Multi-controlled gates: <code class="docutils literal notranslate"><span class="pre">mcx()</span></code>, <code class="docutils literal notranslate"><span class="pre">mcy()</span></code>, <code class="docutils literal notranslate"><span class="pre">mcz()</span></code></p></li>
+</ul>
+<p>See <code class="docutils literal notranslate"><span class="pre">src/tyxonq/core/ir/circuit.py</span></code> for complete gate set.</p>
+</section>
+<section id="how-do-i-use-parameterized-gates">
+<h3>How do I use parameterized gates?<a class="headerlink" href="#how-do-i-use-parameterized-gates" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span><span class="p">,</span> <span class="n">Param</span>
+
+<span class="c1"># Create parameter</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;theta&quot;</span><span class="p">)</span>
+
+<span class="c1"># Use in circuit</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">c</span><span class="o">.</span><span class="n">ry</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">theta</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">user_guide/core</span> for parameterized circuits.</p>
+</section>
+</section>
+<section id="compilation">
+<h2>Compilation<a class="headerlink" href="#compilation" title="Link to this heading">#</a></h2>
+<section id="how-do-i-compile-a-circuit">
+<h3>How do I compile a circuit?<a class="headerlink" href="#how-do-i-compile-a-circuit" title="Link to this heading">#</a></h3>
+<p>TyxonQ supports two compilation backends:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Native compiler (default)</span>
+<span class="n">compiled</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+
+<span class="c1"># Qiskit compiler (requires Qiskit)</span>
+<span class="n">compiled</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">engine</span><span class="o">=</span><span class="s2">&quot;qiskit&quot;</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">user_guide/compiler</span> for compilation details.</p>
+</section>
+<section id="what-optimization-passes-are-available">
+<h3>What optimization passes are available?<a class="headerlink" href="#what-optimization-passes-are-available" title="Link to this heading">#</a></h3>
+<p><strong>Native compiler passes</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">measurement_rewrite</span></code>: Optimize measurement operations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shot_scheduler</span></code>: Schedule shot-based execution</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_measure</span></code>: Automatically add measurements</p></li>
+</ul>
+<p><strong>Qiskit compiler</strong>:</p>
+<ul class="simple">
+<li><p>Full Qiskit transpilation with optimization levels 0-3</p></li>
+<li><p>Hardware-aware compilation</p></li>
+<li><p>Gate basis transformation</p></li>
+</ul>
+<p>See <code class="docutils literal notranslate"><span class="pre">src/tyxonq/compiler/</span></code> for implementation.</p>
+</section>
+<section id="why-do-i-get-missing-qiskit-dependency-error">
+<h3>Why do I get “Missing Qiskit Dependency” error?<a class="headerlink" href="#why-do-i-get-missing-qiskit-dependency-error" title="Link to this heading">#</a></h3>
+<p>The native compiler tries to delegate to Qiskit for certain operations. Install Qiskit:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>qiskit
+</pre></div>
+</div>
+<p>Or use the native compiler without Qiskit features.</p>
+</section>
+</section>
+<section id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Link to this heading">#</a></h2>
+<section id="how-do-i-run-a-circuit-on-a-simulator">
+<h3>How do I run a circuit on a simulator?<a class="headerlink" href="#how-do-i-run-a-circuit-on-a-simulator" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.runtime.simulator</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span>
+
+<span class="c1"># Statevector simulation</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="c1"># With specific backend</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">run</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;statevector&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">user_guide/devices</span> for execution details.</p>
+</section>
+<section id="how-do-i-run-on-cloud-hardware">
+<h3>How do I run on cloud hardware?<a class="headerlink" href="#how-do-i-run-on-cloud-hardware" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.cloud</span><span class="w"> </span><span class="kn">import</span> <span class="n">apis</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">getpass</span>
+
+<span class="c1"># Configure API key</span>
+<span class="n">API_KEY</span> <span class="o">=</span> <span class="n">getpass</span><span class="o">.</span><span class="n">getpass</span><span class="p">(</span><span class="s2">&quot;API Key: &quot;</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_token</span><span class="p">(</span><span class="n">API_KEY</span><span class="p">)</span>
+<span class="n">apis</span><span class="o">.</span><span class="n">set_provider</span><span class="p">(</span><span class="s2">&quot;tyxonq&quot;</span><span class="p">)</span>
+
+<span class="c1"># Submit to Homebrew_S2</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2?o=7&quot;</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">results</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="cloud_services/getting_started.html"><span class="doc">Getting Started</span></a> for cloud access.</p>
+</section>
+<section id="what-does-o-7-mean-in-device-names">
+<h3>What does “o=7” mean in device names?<a class="headerlink" href="#what-does-o-7-mean-in-device-names" title="Link to this heading">#</a></h3>
+<p>Optimization flags for Homebrew_S2 (additive):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">o=1</span></code>: Qubit mapping</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=2</span></code>: Gate decomposition</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=4</span></code>: Initial mapping</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">o=7</span></code>: All optimizations (1+2+4)</p></li>
+</ul>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">device=&quot;homebrew_s2?o=3&quot;</span></code> means qubit mapping + gate decomposition.</p>
+<p>See <a class="reference internal" href="cloud_services/device_management.html"><span class="doc">Device Management</span></a> for details.</p>
+</section>
+</section>
+<section id="quantum-chemistry">
+<h2>Quantum Chemistry<a class="headerlink" href="#quantum-chemistry" title="Link to this heading">#</a></h2>
+<section id="how-do-i-run-vqe-for-molecules">
+<h3>How do I run VQE for molecules?<a class="headerlink" href="#how-do-i-run-vqe-for-molecules" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCCSD</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.molecule</span><span class="w"> </span><span class="kn">import</span> <span class="n">h2</span>
+
+<span class="c1"># Create UCCSD instance</span>
+<span class="n">uccsd</span> <span class="o">=</span> <span class="n">UCCSD</span><span class="p">(</span><span class="n">h2</span><span class="p">)</span>
+
+<span class="c1"># Run VQE</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">uccsd</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">runtime</span><span class="o">=</span><span class="s2">&quot;numeric&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ground state energy: </span><span class="si">{</span><span class="n">energy</span><span class="si">}</span><span class="s2"> Ha&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">quantum_chemistry/algorithms</span> for quantum chemistry algorithms.</p>
+</section>
+<section id="what-molecules-are-predefined">
+<h3>What molecules are predefined?<a class="headerlink" href="#what-molecules-are-predefined" title="Link to this heading">#</a></h3>
+<p>Predefined molecules in <code class="docutils literal notranslate"><span class="pre">tyxonq.applications.chem.molecule</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">h2</span></code>: Hydrogen molecule</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lih</span></code>: Lithium hydride</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h2o</span></code>: Water</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nh3</span></code>: Ammonia</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ch4</span></code>: Methane</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n2</span></code>: Nitrogen molecule</p></li>
+</ul>
+<p>See <span class="xref std std-doc">quantum_chemistry/molecule</span> for molecule definitions.</p>
+</section>
+<section id="how-do-i-use-custom-molecules">
+<h3>How do I use custom molecules?<a class="headerlink" href="#how-do-i-use-custom-molecules" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq.applications.chem.molecule</span><span class="w"> </span><span class="kn">import</span> <span class="n">Molecule</span>
+
+<span class="c1"># Define custom molecule</span>
+<span class="n">my_mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span>
+    <span class="n">atom</span><span class="o">=</span><span class="s2">&quot;C 0 0 0; H 0.63 0.63 0.63; H -0.63 -0.63 0.63; H -0.63 0.63 -0.63; H 0.63 -0.63 -0.63&quot;</span><span class="p">,</span>
+    <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;sto-3g&quot;</span><span class="p">,</span>
+    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">spin</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">quantum_chemistry/molecule</span> for custom molecules.</p>
+</section>
+</section>
+<section id="pulse-level-programming">
+<h2>Pulse-Level Programming<a class="headerlink" href="#pulse-level-programming" title="Link to this heading">#</a></h2>
+<section id="how-do-i-use-pulse-level-control">
+<h3>How do I use pulse-level control?<a class="headerlink" href="#how-do-i-use-pulse-level-control" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tyxonq</span><span class="w"> </span><span class="kn">import</span> <span class="n">Circuit</span><span class="p">,</span> <span class="n">Param</span><span class="p">,</span> <span class="n">waveforms</span>
+
+<span class="c1"># Enable pulse mode</span>
+<span class="n">qc</span> <span class="o">=</span> <span class="n">Circuit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">use_pulse</span><span class="p">()</span>
+
+<span class="c1"># Define pulse calibration</span>
+<span class="n">param</span> <span class="o">=</span> <span class="n">Param</span><span class="p">(</span><span class="s2">&quot;q[0]&quot;</span><span class="p">)</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span><span class="s2">&quot;rabi_test&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">param</span><span class="p">])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">new_frame</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">play</span><span class="p">(</span><span class="s2">&quot;drive_frame&quot;</span><span class="p">,</span> <span class="n">waveforms</span><span class="o">.</span><span class="n">CosineDrag</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1"># Add calibration call</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">add_calibration</span><span class="p">(</span><span class="s1">&#39;rabi_test&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;q[0]&#39;</span><span class="p">])</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">measure_z</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Generate TQASM 0.2 code</span>
+<span class="n">tqasm</span> <span class="o">=</span> <span class="n">qc</span><span class="o">.</span><span class="n">to_tqasm</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="cloud_services/hardware_access.html"><span class="doc">Hardware Access</span></a> for pulse programming.</p>
+</section>
+<section id="what-waveforms-are-supported">
+<h3>What waveforms are supported?<a class="headerlink" href="#what-waveforms-are-supported" title="Link to this heading">#</a></h3>
+<p><strong>Supported waveforms</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CosineDrag(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma,</span> <span class="pre">beta)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Gaussian(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Sine(duration,</span> <span class="pre">amp,</span> <span class="pre">phase,</span> <span class="pre">freq,</span> <span class="pre">angle)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Flattop(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Constant(duration,</span> <span class="pre">amp)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GaussianSquare(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma,</span> <span class="pre">width)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Cosine(duration,</span> <span class="pre">amp,</span> <span class="pre">freq,</span> <span class="pre">phase)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Drag(duration,</span> <span class="pre">amp,</span> <span class="pre">sigma,</span> <span class="pre">beta)</span></code></p></li>
+</ul>
+<p>See <code class="docutils literal notranslate"><span class="pre">src/tyxonq/waveforms.py</span></code> and <code class="docutils literal notranslate"><span class="pre">docs/pulse_support_en.md</span></code> for details.</p>
+</section>
+<section id="do-i-need-to-disable-optimization-for-pulse-circuits">
+<h3>Do I need to disable optimization for pulse circuits?<a class="headerlink" href="#do-i-need-to-disable-optimization-for-pulse-circuits" title="Link to this heading">#</a></h3>
+<p><strong>Yes, absolutely critical!</strong> Pulse-level circuits must disable optimization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">task</span> <span class="o">=</span> <span class="n">apis</span><span class="o">.</span><span class="n">submit_task</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="o">=</span><span class="n">pulse_circuit</span><span class="p">,</span>
+    <span class="n">shots</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;homebrew_s2&quot;</span><span class="p">,</span>  <span class="c1"># No ?o= flag</span>
+    <span class="n">enable_qos_gate_decomposition</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">enable_qos_qubit_mapping</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Optimization will destroy pulse-level programming.</p>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">#</a></h2>
+<section id="why-is-my-circuit-not-running">
+<h3>Why is my circuit not running?<a class="headerlink" href="#why-is-my-circuit-not-running" title="Link to this heading">#</a></h3>
+<p><strong>Common issues</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>No measurements</strong>: Add <code class="docutils literal notranslate"><span class="pre">c.measure_all()</span></code> before execution</p></li>
+<li><p><strong>Missing backend</strong>: Install required backend (Qiskit, PyTorch, etc.)</p></li>
+<li><p><strong>Invalid gate basis</strong>: Check if gates are supported by target device</p></li>
+<li><p><strong>Token not set</strong>: Configure API token for cloud execution</p></li>
+</ol>
+</section>
+<section id="how-do-i-enable-debug-logging">
+<h3>How do I enable debug logging?<a class="headerlink" href="#how-do-i-enable-debug-logging" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="where-can-i-find-examples">
+<h3>Where can I find examples?<a class="headerlink" href="#where-can-i-find-examples" title="Link to this heading">#</a></h3>
+<p>Examples are in the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">circuit_chain_demo.py</span></code>: Circuit construction and execution</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cloud_api_task.py</span></code>: Cloud API usage</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pulse_demo.py</span></code>: Pulse-level programming</p></li>
+<li><p>VQE and quantum chemistry examples</p></li>
+</ul>
+<p>See <a class="reference internal" href="examples/index.html"><span class="doc">Examples</span></a> for documented examples.</p>
+</section>
+<section id="how-do-i-report-bugs">
+<h3>How do I report bugs?<a class="headerlink" href="#how-do-i-report-bugs" title="Link to this heading">#</a></h3>
+<p>Report issues on GitHub:</p>
+<ul class="simple">
+<li><p><strong>Repository</strong>: <a class="github reference external" href="https://github.com/QureGenAI-Biotech/TyxonQ">QureGenAI-Biotech/TyxonQ</a></p></li>
+<li><p><strong>Issues</strong>: <a class="github reference external" href="https://github.com/QureGenAI-Biotech/TyxonQ/issues">QureGenAI-Biotech/TyxonQ#issues</a></p></li>
+</ul>
+<p>Include:</p>
+<ul class="simple">
+<li><p>Python version</p></li>
+<li><p>TyxonQ version</p></li>
+<li><p>Minimal reproducible example</p></li>
+<li><p>Error traceback</p></li>
+</ul>
+</section>
+</section>
+<section id="performance">
+<h2>Performance<a class="headerlink" href="#performance" title="Link to this heading">#</a></h2>
+<section id="how-can-i-speed-up-simulations">
+<h3>How can I speed up simulations?<a class="headerlink" href="#how-can-i-speed-up-simulations" title="Link to this heading">#</a></h3>
+<p><strong>Strategies</strong>:</p>
+<ol class="arabic simple">
+<li><p><strong>Use GPU backend</strong>: <code class="docutils literal notranslate"><span class="pre">tq.set_backend(&quot;pytorch&quot;)</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;cupynumeric&quot;</span></code></p></li>
+<li><p><strong>Reduce shot count</strong>: Use fewer shots for testing</p></li>
+<li><p><strong>Optimize circuits</strong>: Use <code class="docutils literal notranslate"><span class="pre">optimization_level=3</span></code> in compilation</p></li>
+<li><p><strong>MPS backend</strong>: For low-entanglement circuits</p></li>
+</ol>
+<p>See <span class="xref std std-doc">technical_references/performance</span> for optimization techniques.</p>
+</section>
+<section id="why-is-pytorch-backend-slower-than-numpy">
+<h3>Why is PyTorch backend slower than NumPy?<a class="headerlink" href="#why-is-pytorch-backend-slower-than-numpy" title="Link to this heading">#</a></h3>
+<p>PyTorch has overhead for small circuits. GPU acceleration benefits appear for:</p>
+<ul class="simple">
+<li><p>Large circuits (&gt;15 qubits)</p></li>
+<li><p>Many shots (&gt;10000)</p></li>
+<li><p>Gradient computation</p></li>
+<li><p>Batched execution</p></li>
+</ul>
+<p>For small circuits, NumPy is usually faster.</p>
+</section>
+</section>
+<section id="further-help">
+<h2>Further Help<a class="headerlink" href="#further-help" title="Link to this heading">#</a></h2>
+<section id="where-can-i-learn-more">
+<h3>Where can I learn more?<a class="headerlink" href="#where-can-i-learn-more" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>User Guide</strong>: <a class="reference internal" href="user_guide/index.html"><span class="doc">User Guide</span></a></p></li>
+<li><p><strong>Tutorials</strong>: <a class="reference internal" href="tutorials/index.html"><span class="doc">Tutorials</span></a></p></li>
+<li><p><strong>API Reference</strong>: <a class="reference internal" href="api/index.html"><span class="doc">API Reference</span></a></p></li>
+<li><p><strong>Examples</strong>: <a class="reference internal" href="examples/index.html"><span class="doc">Examples</span></a></p></li>
+<li><p><strong>Cloud Services</strong>: <a class="reference internal" href="cloud_services/index.html"><span class="doc">Cloud Services</span></a></p></li>
+</ul>
+</section>
+<section id="how-do-i-contact-support">
+<h3>How do I contact support?<a class="headerlink" href="#how-do-i-contact-support" title="Link to this heading">#</a></h3>
+<p>For questions and support:</p>
+<ul class="simple">
+<li><p><strong>GitHub Discussions</strong>: <a class="github reference external" href="https://github.com/QureGenAI-Biotech/TyxonQ/discussions">QureGenAI-Biotech/TyxonQ#discussions</a></p></li>
+<li><p><strong>Email</strong>: Support information on <a class="reference external" href="https://www.tyxonq.com/">https://www.tyxonq.com/</a></p></li>
+</ul>
+</section>
+<section id="is-there-a-community">
+<h3>Is there a community?<a class="headerlink" href="#is-there-a-community" title="Link to this heading">#</a></h3>
+<p>Join the TyxonQ community:</p>
+<ul class="simple">
+<li><p><strong>GitHub</strong>: <a class="github reference external" href="https://github.com/QureGenAI-Biotech/TyxonQ">QureGenAI-Biotech/TyxonQ</a></p></li>
+<li><p><strong>Website</strong>: <a class="reference external" href="https://www.tyxonq.com/">https://www.tyxonq.com/</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="technical_references/research_papers.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Research Papers</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="glossary.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Glossary</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">FAQ</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#frequently-asked-questions">Frequently Asked Questions</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-and-setup">Installation and Setup</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-install-tyxonq">How do I install TyxonQ?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-are-the-dependencies">What are the dependencies?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-configure-the-numeric-backend">How do I configure the numeric backend?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#circuit-construction">Circuit Construction</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-create-a-quantum-circuit">How do I create a quantum circuit?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-gates-are-supported">What gates are supported?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-use-parameterized-gates">How do I use parameterized gates?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compilation">Compilation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-compile-a-circuit">How do I compile a circuit?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-optimization-passes-are-available">What optimization passes are available?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-do-i-get-missing-qiskit-dependency-error">Why do I get “Missing Qiskit Dependency” error?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution">Execution</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-run-a-circuit-on-a-simulator">How do I run a circuit on a simulator?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-run-on-cloud-hardware">How do I run on cloud hardware?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-does-o-7-mean-in-device-names">What does “o=7” mean in device names?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantum-chemistry">Quantum Chemistry</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-run-vqe-for-molecules">How do I run VQE for molecules?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-molecules-are-predefined">What molecules are predefined?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-use-custom-molecules">How do I use custom molecules?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pulse-level-programming">Pulse-Level Programming</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-use-pulse-level-control">How do I use pulse-level control?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#what-waveforms-are-supported">What waveforms are supported?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#do-i-need-to-disable-optimization-for-pulse-circuits">Do I need to disable optimization for pulse circuits?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#troubleshooting">Troubleshooting</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-is-my-circuit-not-running">Why is my circuit not running?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-enable-debug-logging">How do I enable debug logging?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-can-i-find-examples">Where can I find examples?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-report-bugs">How do I report bugs?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#performance">Performance</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-can-i-speed-up-simulations">How can I speed up simulations?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-is-pytorch-backend-slower-than-numpy">Why is PyTorch backend slower than NumPy?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#further-help">Further Help</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-can-i-learn-more">Where can I learn more?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-do-i-contact-support">How do I contact support?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#is-there-a-community">Is there a community?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/faq.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, QureGenAI Biotech.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
