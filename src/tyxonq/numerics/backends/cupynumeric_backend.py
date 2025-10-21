@@ -25,6 +25,32 @@ class CuPyNumericBackend:
         int64 = cn.int64
         bool = cn.bool_
         int = cn.int64
+    
+    # Default dtype strings (can be overridden by set_dtype)
+    dtypestr = "complex128"  # complex dtype for quantum states
+    rdtypestr = "float64"     # real dtype for parameters/measurements
+    
+    def set_dtype(self, dtype_str: str) -> Tuple[Any, Any]:
+        """Set default dtype for this backend.
+        
+        Args:
+            dtype_str: One of "complex64", "complex128"
+            
+        Returns:
+            Tuple of (complex_dtype, real_dtype)
+        """
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        if dtype_str == "complex64":
+            self.dtypestr = "complex64"
+            self.rdtypestr = "float32"
+            return (cn.complex64, cn.float32)
+        elif dtype_str == "complex128":
+            self.dtypestr = "complex128"
+            self.rdtypestr = "float64"
+            return (cn.complex128, cn.float64)
+        else:
+            raise ValueError(f"Unsupported dtype: {dtype_str}. Use 'complex64' or 'complex128'.")
 
     def array(self, data: Any, dtype: Any | None = None) -> Any:
         if cn is None:
@@ -150,6 +176,24 @@ class CuPyNumericBackend:
         if cn is None:
             raise RuntimeError("cupynumeric not available")
         return cn.square(a)
+
+    def copy(self, a: Any) -> Any:
+        """Create a copy of the array."""
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.copy(a)
+
+    def allclose(self, a: Any, b: Any, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        """Check if two arrays are element-wise equal within tolerance."""
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return bool(cn.allclose(a, b, rtol=rtol, atol=atol))
+
+    def isclose(self, a: Any, b: Any, rtol: float = 1e-5, atol: float = 1e-8) -> Any:
+        """Element-wise comparison with tolerance."""
+        if cn is None:
+            raise RuntimeError("cupynumeric not available")
+        return cn.isclose(a, b, rtol=rtol, atol=atol)
 
     def log(self, a: Any) -> Any:
         if cn is None:

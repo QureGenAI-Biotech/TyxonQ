@@ -17,12 +17,15 @@ from ....numerics.api import get_backend
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
+    gate_rxx, gate_ryy, gate_rzz,
 )
 from ....libs.quantum_library.kernels.statevector import (
     init_statevector,
     apply_1q_statevector,
     apply_2q_statevector,
     expect_z_statevector,
+    apply_kqubit_unitary,
+    apply_kraus_statevector,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -40,7 +43,7 @@ class StatevectorEngine:
     def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> Dict[str, Any]:
         shots = int(shots or 0)
         num_qubits = int(getattr(circuit, "num_qubits", 0))
-        state = init_statevector(num_qubits)
+        state = init_statevector(num_qubits, backend=self.backend)
         # optional noise parameters controlled by explicit switch
         use_noise = bool(kwargs.get("use_noise", False))
         noise = kwargs.get("noise") if use_noise else None
@@ -55,15 +58,15 @@ class StatevectorEngine:
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
             elif name == "rz":
-                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rz(theta), q, num_qubits)
+                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rz(theta, backend=self.backend), q, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
             elif name == "rx":
-                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rx(theta), q, num_qubits)
+                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rx(theta, backend=self.backend), q, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
             elif name == "ry":
-                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_ry(theta), q, num_qubits)
+                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_ry(theta, backend=self.backend), q, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
             elif name == "cx":
@@ -71,15 +74,27 @@ class StatevectorEngine:
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [c, t])
             elif name == "cry":
-                c = int(op[1]); t = int(op[2]); theta = float(op[3]); state = apply_2q_statevector(self.backend, state, gate_cry_4x4(theta), c, t, num_qubits)
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_cry_4x4(theta, backend=self.backend), c, t, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [c, t])
             elif name == "cz":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [c, t])
+            elif name == "rxx":
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rxx(theta, backend=self.backend), c, t, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [c, t])
+            elif name == "ryy":
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_ryy(theta, backend=self.backend), c, t, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [c, t])
+            elif name == "rzz":
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rzz(theta, backend=self.backend), c, t, num_qubits)
+                if use_noise and z_atten is not None:
+                    self._attenuate(noise, z_atten, [c, t])
             elif name == "x":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(), q, num_qubits)
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(backend=self.backend), q, num_qubits)
                 if use_noise and z_atten is not None:
                     self._attenuate(noise, z_atten, [q])
             elif name == "s":
@@ -101,6 +116,35 @@ class StatevectorEngine:
             elif name == "reset":
                 q = int(op[1])
                 state = self._project_z(state, q, 0, num_qubits)
+            elif name == "unitary":
+                # Handle custom unitary gate
+                if len(op) == 3:  # 1-qubit unitary: ("unitary", qubit, matrix_key)
+                    q = int(op[1])
+                    mat_key = str(op[2])
+                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
+                    if matrix is not None:
+                        state = apply_kqubit_unitary(state, matrix, [q], num_qubits, self.backend)
+                        if use_noise and z_atten is not None:
+                            self._attenuate(noise, z_atten, [q])
+                elif len(op) == 4:  # 2-qubit unitary: ("unitary", q0, q1, matrix_key)
+                    q0, q1 = int(op[1]), int(op[2])
+                    mat_key = str(op[3])
+                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
+                    if matrix is not None:
+                        state = apply_kqubit_unitary(state, matrix, [q0, q1], num_qubits, self.backend)
+                        if use_noise and z_atten is not None:
+                            self._attenuate(noise, z_atten, [q0, q1])
+            elif name == "kraus":
+                # Handle Kraus channel: ("kraus", qubit, kraus_key) or ("kraus", qubit, kraus_key, status)
+                q = int(op[1])
+                kraus_key = str(op[2])
+                status_val = float(op[3]) if len(op) > 3 else None
+                kraus_ops = getattr(circuit, "_kraus_cache", {}).get(kraus_key)
+                if kraus_ops is not None:
+                    state = apply_kraus_statevector(
+                        state, kraus_ops, q, num_qubits, status_val, self.backend
+                    )
+                    # Note: Kraus channels inherently model noise, no additional attenuation needed
             else:
                 # unsupported ops ignored in this minimal engine
                 continue
@@ -184,10 +228,23 @@ class StatevectorEngine:
                 z_atten[q] *= factor
 
     # ---- New public helpers ----
-    def state(self, circuit: "Circuit") -> np.ndarray:
-        """Return final statevector after applying circuit ops."""
+    def state(self, circuit: "Circuit") -> Any:
+        """Return final statevector after applying circuit ops.
+        
+        Returns backend tensor (preserves autograd for PyTorch backend).
+        Supports custom initial state via circuit._initial_state.
+        """
         n = int(getattr(circuit, "num_qubits", 0))
-        state = init_statevector(n)
+        
+        # Check if circuit has a custom initial state
+        initial_state = getattr(circuit, "_initial_state", None)
+        if initial_state is not None:
+            # Convert initial state to backend tensor (complex128)
+            state = self.backend.array(initial_state, dtype=self.backend.complex128)
+        else:
+            # Default: initialize to |00...0⟩
+            state = init_statevector(n, backend=self.backend)
+        
         for op in circuit.ops:
             if not isinstance(op, (list, tuple)) or not op:
                 continue
@@ -195,17 +252,23 @@ class StatevectorEngine:
             if name == "h":
                 q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_h(), q, n)
             elif name == "rz":
-                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rz(theta), q, n)
+                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rz(theta, backend=self.backend), q, n)
             elif name == "rx":
-                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_rx(theta), q, n)
+                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rx(theta, backend=self.backend), q, n)
             elif name == "ry":
-                q = int(op[1]); theta = float(op[2]); state = apply_1q_statevector(self.backend, state, gate_ry(theta), q, n)
+                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_ry(theta, backend=self.backend), q, n)
             elif name == "cx":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cx_4x4(), c, t, n)
             elif name == "cz":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, n)
+            elif name == "rxx":
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rxx(theta, backend=self.backend), c, t, n)
+            elif name == "ryy":
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_ryy(theta, backend=self.backend), c, t, n)
+            elif name == "rzz":
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rzz(theta, backend=self.backend), c, t, n)
             elif name == "x":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(), q, n)
+                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(backend=self.backend), q, n)
             elif name == "s":
                 q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_s(), q, n)
             elif name == "sdg":
@@ -214,10 +277,37 @@ class StatevectorEngine:
                 q = int(op[1]); keep = int(op[2]); state = self._project_z(state, q, keep, n)
             elif name == "reset":
                 q = int(op[1]); state = self._project_z(state, q, 0, n)
+            elif name == "unitary":
+                # Handle custom unitary gate
+                if len(op) == 3:  # 1-qubit: ("unitary", qubit, matrix_key)
+                    q = int(op[1])
+                    mat_key = str(op[2])
+                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
+                    if matrix is not None:
+                        state = apply_kqubit_unitary(state, matrix, [q], n, self.backend)
+                elif len(op) == 4:  # 2-qubit: ("unitary", q0, q1, matrix_key)
+                    q0, q1 = int(op[1]), int(op[2])
+                    mat_key = str(op[3])
+                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
+                    if matrix is not None:
+                        state = apply_kqubit_unitary(state, matrix, [q0, q1], n, self.backend)
+            elif name == "kraus":
+                # Handle Kraus channel
+                q = int(op[1])
+                kraus_key = str(op[2])
+                status_val = float(op[3]) if len(op) > 3 else None
+                kraus_ops = getattr(circuit, "_kraus_cache", {}).get(kraus_key)
+                if kraus_ops is not None:
+                    state = apply_kraus_statevector(
+                        state, kraus_ops, q, n, status_val, self.backend
+                    )
         return state
 
-    def probability(self, circuit: "Circuit") -> np.ndarray:
-        """Return probability vector over computational basis."""
+    def probability(self, circuit: "Circuit") -> Any:
+        """Return probability vector over computational basis.
+        
+        Returns backend tensor (numpy array or torch tensor depending on backend).
+        """
         s = self.state(circuit)
         return np.abs(s) ** 2
 
@@ -247,7 +337,7 @@ class StatevectorEngine:
         return bits, prob
 
     # internal: projection on Z-basis
-    def _project_z(self, state: np.ndarray, qubit: int, keep: int, n: int) -> np.ndarray:
+    def _project_z(self, state: Any, qubit: int, keep: int, n: int) -> Any:
         t = state.reshape([2] * n)
         t = np.moveaxis(t, qubit, 0)
         if keep == 0:

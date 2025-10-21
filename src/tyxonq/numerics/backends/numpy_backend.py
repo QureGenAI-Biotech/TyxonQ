@@ -18,6 +18,31 @@ class NumpyBackend:
     int64 = _np.int64
     bool = _np.bool_
     int = _np.int64
+    
+    # Default dtype strings (can be overridden by set_dtype)
+    dtypestr = "complex128"  # complex dtype for quantum states
+    rdtypestr = "float64"     # real dtype for parameters/measurements
+    
+    def set_dtype(self, dtype_str: str) -> tuple[Any, Any]:
+        """Set default dtype for this backend.
+        
+        Args:
+            dtype_str: One of "complex64", "complex128"
+            
+        Returns:
+            Tuple of (complex_dtype, real_dtype)
+        """
+        import numpy as _np
+        if dtype_str == "complex64":
+            self.dtypestr = "complex64"
+            self.rdtypestr = "float32"
+            return (_np.complex64, _np.float32)
+        elif dtype_str == "complex128":
+            self.dtypestr = "complex128"
+            self.rdtypestr = "float64"
+            return (_np.complex128, _np.float64)
+        else:
+            raise ValueError(f"Unsupported dtype: {dtype_str}. Use 'complex64' or 'complex128'.")
 
     def array(self, data: Any, dtype: Any | None = None) -> Any:
         return np.array(data, dtype=dtype)
@@ -79,6 +104,18 @@ class NumpyBackend:
 
     def square(self, a: Any) -> Any:
         return np.square(a)
+    
+    def copy(self, a: Any) -> Any:
+        """Create a copy of the array."""
+        return np.copy(a)
+    
+    def allclose(self, a: Any, b: Any, rtol: float = 1e-5, atol: float = 1e-8) -> bool:
+        """Check if two arrays are element-wise equal within tolerance."""
+        return np.allclose(a, b, rtol=rtol, atol=atol)
+    
+    def isclose(self, a: Any, b: Any, rtol: float = 1e-5, atol: float = 1e-8) -> Any:
+        """Element-wise comparison with tolerance."""
+        return np.isclose(a, b, rtol=rtol, atol=atol)
 
     # Elementary math
     def exp(self, a: Any) -> Any:
@@ -99,9 +136,80 @@ class NumpyBackend:
     def log2(self, a: Any) -> Any:
         return np.log2(a)
 
+    # Additional array ops
+    def stack(self, arrays: Any, axis: int = 0) -> Any:
+        """Stack arrays along new axis."""
+        return np.stack(arrays, axis=axis)
+
+    def concatenate(self, arrays: Any, axis: int = 0) -> Any:
+        """Concatenate arrays along existing axis."""
+        return np.concatenate(arrays, axis=axis)
+
+    def arange(self, start: Any, stop: Any | None = None, step: Any = 1) -> Any:
+        """Return evenly spaced values within interval."""
+        if stop is None:
+            return np.arange(start)
+        return np.arange(start, stop, step)
+
+    def linspace(self, start: Any, stop: Any, num: int = 50) -> Any:
+        """Return evenly spaced numbers over interval."""
+        return np.linspace(start, stop, num)
+
+    def transpose(self, a: Any, axes: Any | None = None) -> Any:
+        """Transpose array dimensions."""
+        return np.transpose(a, axes=axes)
+
+    def norm(self, a: Any, ord: Any | None = None, axis: Any | None = None) -> Any:
+        """Matrix or vector norm."""
+        return np.linalg.norm(a, ord=ord, axis=axis)
+
+    def imag(self, a: Any) -> Any:
+        """Imaginary part of complex array."""
+        return np.imag(a)
+
+    def cast(self, a: Any, dtype: Any) -> Any:
+        """Cast array to specified dtype."""
+        return np.asarray(a, dtype=dtype)
+
+    def sign(self, a: Any) -> Any:
+        """Element-wise sign function."""
+        return np.sign(a)
+
+    def outer(self, a: Any, b: Any) -> Any:
+        """Outer product of vectors."""
+        return np.outer(a, b)
+
     # Linear algebra
     def svd(self, a: Any, full_matrices: bool = False) -> Tuple[Any, Any, Any]:
         return np.linalg.svd(a, full_matrices=full_matrices)
+
+    def eigh(self, a: Any) -> Tuple[Any, Any]:
+        """Eigenvalues and eigenvectors of Hermitian matrix."""
+        return np.linalg.eigh(a)
+
+    def eig(self, a: Any) -> Tuple[Any, Any]:
+        """Eigenvalues and eigenvectors of general matrix."""
+        return np.linalg.eig(a)
+
+    def solve(self, a: Any, b: Any, assume_a: str = 'gen') -> Any:
+        """Solve linear system ax = b."""
+        if assume_a == 'sym' or assume_a == 'her':
+            # For symmetric/Hermitian, could use specialized solver
+            return np.linalg.solve(a, b)
+        return np.linalg.solve(a, b)
+
+    def inv(self, a: Any) -> Any:
+        """Matrix inverse."""
+        return np.linalg.inv(a)
+
+    def expm(self, a: Any) -> Any:
+        """Matrix exponential."""
+        import scipy.linalg
+        return scipy.linalg.expm(a)
+
+    def tensordot(self, a: Any, b: Any, axes: Any = 2) -> Any:
+        """Tensor dot product."""
+        return np.tensordot(a, b, axes=axes)
 
     def rng(self, seed: int | None = None) -> Any:
         return np.random.default_rng(seed)
@@ -129,6 +237,127 @@ class NumpyBackend:
     # --- K-like helpers (no-op/finite-diff implementations) ---
     def jit(self, fn):  # numpy has no JIT; return original
         return fn
+
+    def jacfwd(self, fn, argnums: int = 0):
+        """Forward-mode Jacobian via finite difference.
+        
+        Args:
+            fn: Function to compute Jacobian of
+            argnums: Argument index to differentiate with respect to
+            
+        Returns:
+            Function that computes Jacobian matrix
+        """
+        eps = 1e-7
+        
+        def wrapped(*args: Any, **kwargs: Any):
+            import numpy as _np
+            
+            args_list = list(args)
+            x = _np.asarray(args_list[argnums], dtype=float)
+            
+            # Evaluate function at base point to get output shape
+            y0 = fn(*args_list, **kwargs)
+            y0 = _np.asarray(y0)
+            
+            # Jacobian shape: (output_size, input_size)
+            x_flat = x.reshape(-1)
+            y_flat = y0.reshape(-1)
+            jac = _np.zeros((y_flat.size, x_flat.size))
+            
+            # Compute each column via finite difference
+            for i in range(x_flat.size):
+                x_plus = x_flat.copy()
+                x_minus = x_flat.copy()
+                x_plus[i] += eps
+                x_minus[i] -= eps
+                
+                args_plus = list(args_list)
+                args_minus = list(args_list)
+                args_plus[argnums] = x_plus.reshape(x.shape)
+                args_minus[argnums] = x_minus.reshape(x.shape)
+                
+                y_plus = _np.asarray(fn(*args_plus, **kwargs)).reshape(-1)
+                y_minus = _np.asarray(fn(*args_minus, **kwargs)).reshape(-1)
+                
+                jac[:, i] = (y_plus - y_minus) / (2 * eps)
+            
+            # Reshape to (output_shape, input_shape)
+            return jac.reshape(y0.shape + x.shape)
+        
+        return wrapped
+    
+    def hessian(self, fn, argnums: int = 0):
+        """Hessian via finite difference.
+        
+        Args:
+            fn: Function to compute Hessian of (must return scalar)
+            argnums: Argument index to differentiate with respect to
+            
+        Returns:
+            Function that computes Hessian matrix
+        """
+        eps = 1e-5
+        
+        def wrapped(*args: Any, **kwargs: Any):
+            import numpy as _np
+            
+            args_list = list(args)
+            x = _np.asarray(args_list[argnums], dtype=float)
+            x_flat = x.reshape(-1)
+            n = x_flat.size
+            
+            hess = _np.zeros((n, n))
+            
+            # Compute Hessian using central difference
+            # H[i,j] = (f(x+ei+ej) - f(x+ei-ej) - f(x-ei+ej) + f(x-ei-ej)) / (4*eps^2)
+            for i in range(n):
+                for j in range(i, n):  # Symmetric, only compute upper triangle
+                    # Four evaluations for mixed partial
+                    if i == j:
+                        # Diagonal: use 3-point stencil
+                        # f''(x) ≈ (f(x+h) - 2f(x) + f(x-h)) / h^2
+                        x0 = x_flat.copy()
+                        x_plus = x_flat.copy(); x_plus[i] += eps
+                        x_minus = x_flat.copy(); x_minus[i] -= eps
+                        
+                        args0 = list(args_list)
+                        args_plus = list(args_list)
+                        args_minus = list(args_list)
+                        
+                        args0[argnums] = x0.reshape(x.shape)
+                        args_plus[argnums] = x_plus.reshape(x.shape)
+                        args_minus[argnums] = x_minus.reshape(x.shape)
+                        
+                        f0 = float(fn(*args0, **kwargs))
+                        f_plus = float(fn(*args_plus, **kwargs))
+                        f_minus = float(fn(*args_minus, **kwargs))
+                        
+                        hess[i, i] = (f_plus - 2*f0 + f_minus) / (eps**2)
+                    else:
+                        # Off-diagonal: mixed partial
+                        x_pp = x_flat.copy(); x_pp[i] += eps; x_pp[j] += eps
+                        x_pm = x_flat.copy(); x_pm[i] += eps; x_pm[j] -= eps
+                        x_mp = x_flat.copy(); x_mp[i] -= eps; x_mp[j] += eps
+                        x_mm = x_flat.copy(); x_mm[i] -= eps; x_mm[j] -= eps
+                        
+                        args_pp = list(args_list); args_pp[argnums] = x_pp.reshape(x.shape)
+                        args_pm = list(args_list); args_pm[argnums] = x_pm.reshape(x.shape)
+                        args_mp = list(args_list); args_mp[argnums] = x_mp.reshape(x.shape)
+                        args_mm = list(args_list); args_mm[argnums] = x_mm.reshape(x.shape)
+                        
+                        f_pp = float(fn(*args_pp, **kwargs))
+                        f_pm = float(fn(*args_pm, **kwargs))
+                        f_mp = float(fn(*args_mp, **kwargs))
+                        f_mm = float(fn(*args_mm, **kwargs))
+                        
+                        hess[i, j] = (f_pp - f_pm - f_mp + f_mm) / (4 * eps**2)
+                        hess[j, i] = hess[i, j]  # Symmetric
+            
+            # Reshape to input shape
+            return hess.reshape(x.shape + x.shape)
+        
+        return wrapped
 
     def value_and_grad(self, fn, argnums: int | tuple[int, ...] = 0):
         # Simple finite-difference fallback; not efficient but keeps API uniform

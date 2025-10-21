@@ -105,20 +105,26 @@ def get_statevector(
 
 
 def _apply_kqubit_unitary(state: np.ndarray, unitary: np.ndarray, qubit_idx: list[int], n_qubits: int) -> np.ndarray:
-    # Bring target axes to the end (numpy uses LSB-first axes order), then apply local unitary
-    k = int(len(qubit_idx))
-    if k == 0:
-        return state
-    axes_all = list(range(n_qubits))
-    # Match StatevectorEngine bit order: axis == qubit index (LSB at index 0)
-    target_axes = [int(q) for q in qubit_idx]
-    keep_axes = [ax for ax in axes_all if ax not in target_axes]
-    perm = keep_axes + target_axes
-    psi_nd = state.reshape([2] * n_qubits).transpose(perm).reshape(-1, 1 << k)
-    U = np.asarray(unitary, dtype=np.complex128).reshape((1 << k), (1 << k))
-    out = psi_nd @ U.T
-    out = out.reshape([2] * n_qubits).transpose(np.argsort(perm)).reshape(-1)
-    return out
+    """Apply k-qubit unitary to statevector.
+    
+    This function now delegates to the unified implementation in quantum_library.kernels.
+    Kept for backward compatibility with existing chem code.
+    
+    Args:
+        state: Statevector of shape (2^n_qubits,)
+        unitary: Unitary matrix of shape (2^k, 2^k)
+        qubit_idx: List of target qubit indices
+        n_qubits: Total number of qubits
+        
+    Returns:
+        Updated statevector
+    """
+    from tyxonq.libs.quantum_library.kernels.statevector import apply_kqubit_unitary
+    from tyxonq.numerics import NumericBackend as nb
+    
+    # Delegate to unified implementation
+    result = apply_kqubit_unitary(state, unitary, qubit_idx, n_qubits, backend=nb)
+    return np.asarray(result, dtype=np.complex128)
 
 
 def evolve_excitation(statevector: np.ndarray, f_idx: tuple[int, ...], theta: float, mode: str) -> np.ndarray:

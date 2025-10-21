@@ -6,34 +6,70 @@ from ...core.ir import Circuit
 
 
 def _apply_single_term(c: Circuit, ps: Sequence[int], theta: float) -> Circuit:
-    """Apply exp(-i theta P) via native gates for limited Pauli patterns.
+    """Apply exp(-i theta P) via native gates for Pauli strings.
 
     Supported patterns per qubit code: 0=I, 1=X, 2=Y, 3=Z
-    - Single-qubit Z: RZ
     - Single-qubit X: H-RZ-H
-    - Two-qubit ZZ: CX-RZ-CX
+    - Single-qubit Y: S†-H-RZ-H-S
+    - Single-qubit Z: RZ
+    - Two-qubit XX, YY, ZZ: basis transformation + CX-RZ-CX
+    - Multi-qubit Pauli strings: general decomposition
 
-    This is a minimal template to get examples running; it can be extended.
+    Strategy:
+    1. Transform all non-Z Paulis to Z basis via basis rotations
+    2. Apply ZZ...Z interaction via CNOT ladder
+    3. Undo basis transformations
     """
 
     n = len(ps)
-    # count non-identity qubits
+    # Find non-identity qubits
     nz: List[int] = [i for i, v in enumerate(ps) if v != 0]
     if not nz:
         return c
+    
+    # Single-qubit case
     if len(nz) == 1:
         q = nz[0]
-        if ps[q] == 3:  # Z
-            return c.rz(q, 2.0 * theta)  # exp(-i theta Z) = RZ(2 theta)
         if ps[q] == 1:  # X
             return c.h(q).rz(q, 2.0 * theta).h(q)
-        # Y: S^† H RZ H S (not implemented)
-        raise NotImplementedError("Single-qubit Y rotation not yet implemented in trotter template")
-    if len(nz) == 2 and ps[nz[0]] == 3 and ps[nz[1]] == 3:
-        a, b = nz
-        # exp(-i theta Z.Z) = CX(a->b) RZ(2 theta) on b then CX
-        return c.cx(a, b).rz(b, 2.0 * theta).cx(a, b)
-    raise NotImplementedError("Pauli pattern not supported by minimal trotter template")
+        elif ps[q] == 2:  # Y
+            # Y = S† X S, so exp(-iθY) = S† exp(-iθX) S = S† H RZ H S
+            return c.sdg(q).h(q).rz(q, 2.0 * theta).h(q).s(q)
+        elif ps[q] == 3:  # Z
+            return c.rz(q, 2.0 * theta)
+        return c
+    
+    # Multi-qubit case: transform to Z basis, apply ZZ...Z, transform back
+    # Step 1: Basis transformations to map all Paulis to Z
+    for q in nz:
+        if ps[q] == 1:  # X -> Z via H
+            c.h(q)
+        elif ps[q] == 2:  # Y -> Z via S† H
+            c.sdg(q)
+            c.h(q)
+        # Z stays as Z (no transformation needed)
+    
+    # Step 2: Apply exp(-i theta Z⊗Z⊗...⊗Z) via CNOT ladder
+    # CNOT ladder: propagate parity to last qubit, rotate, then undo
+    for i in range(len(nz) - 1):
+        c.cx(nz[i], nz[i + 1])
+    
+    # Rotation on last qubit
+    c.rz(nz[-1], 2.0 * theta)
+    
+    # Undo CNOT ladder
+    for i in range(len(nz) - 2, -1, -1):
+        c.cx(nz[i], nz[i + 1])
+    
+    # Step 3: Undo basis transformations
+    for q in reversed(nz):  # Reverse order for proper unwinding
+        if ps[q] == 1:  # Z -> X via H
+            c.h(q)
+        elif ps[q] == 2:  # Z -> Y via H S
+            c.h(q)
+            c.s(q)
+    
+    return c
 
 
 def build_trotter_circuit(

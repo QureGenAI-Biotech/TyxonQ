@@ -23,6 +23,7 @@ from ....libs.quantum_library.kernels.density_matrix import (
     apply_1q_density,
     apply_2q_density,
     exp_z_density,
+    apply_kraus_density,  # Use new kernel implementation
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -87,6 +88,15 @@ class DensityMatrixEngine:
                 rho = self._project_z(rho, q, keep, n)
             elif name == "reset":
                 q = int(op[1]); rho = self._project_z(rho, q, 0, n)
+            elif name == "kraus":
+                # Handle Kraus channel: ("kraus", qubit, kraus_key) or ("kraus", qubit, kraus_key, status)
+                # Note: status is ignored in density matrix simulation (exact evolution)
+                q = int(op[1])
+                kraus_key = str(op[2])
+                kraus_ops = getattr(circuit, "_kraus_cache", {}).get(kraus_key)
+                if kraus_ops is not None:
+                    rho = apply_kraus_density(rho, kraus_ops, q, n, backend=self.backend)
+                    # Note: Kraus channels inherently model noise, no additional noise application needed
 
         # If shots requested and there are measurements, return sampled counts from diagonal of rho
         if shots > 0 and len(measures) > 0:
@@ -166,6 +176,7 @@ class DensityMatrixEngine:
     # helpers removed; using gates kernels
 
     def _apply_noise_if_any(self, rho: np.ndarray, noise: Any, wires: list[int], n: int) -> np.ndarray:
+        """Apply noise channel to density matrix using new kernel implementation."""
         if not noise:
             return rho
         ntype = str(noise.get("type", "")).lower()
@@ -174,21 +185,25 @@ class DensityMatrixEngine:
                 p = float(noise.get("p", 0.0))
                 Ks = noise_channels.depolarizing(p)
                 for q in wires:
-                    rho = noise_channels.apply_to_density_matrix(rho, Ks, q, n)
+                    rho = apply_kraus_density(rho, Ks, q, n, backend=self.backend)
             elif ntype == "amplitude_damping":
                 g = float(noise.get("gamma", noise.get("g", 0.0)))
                 Ks = noise_channels.amplitude_damping(g)
                 for q in wires:
-                    rho = noise_channels.apply_to_density_matrix(rho, Ks, q, n)
+                    rho = apply_kraus_density(rho, Ks, q, n, backend=self.backend)
             elif ntype == "phase_damping":
                 lmbda = float(noise.get("lambda", noise.get("l", 0.0)))
                 Ks = noise_channels.phase_damping(lmbda)
                 for q in wires:
-                    rho = noise_channels.apply_to_density_matrix(rho, Ks, q, n)
+                    rho = apply_kraus_density(rho, Ks, q, n, backend=self.backend)
             elif ntype == "pauli":
-                Ks = noise_channels.pauli_channel(float(noise.get("px", 0.0)), float(noise.get("py", 0.0)), float(noise.get("pz", 0.0)))
+                Ks = noise_channels.pauli_channel(
+                    float(noise.get("px", 0.0)),
+                    float(noise.get("py", 0.0)),
+                    float(noise.get("pz", 0.0))
+                )
                 for q in wires:
-                    rho = noise_channels.apply_to_density_matrix(rho, Ks, q, n)
+                    rho = apply_kraus_density(rho, Ks, q, n, backend=self.backend)
         except Exception:
             return rho
         return rho

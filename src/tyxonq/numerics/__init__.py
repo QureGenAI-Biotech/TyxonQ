@@ -1,7 +1,10 @@
 """Numerics backends and vectorization utilities."""
 
+from __future__ import annotations
+from typing import Any, Tuple
+
 from .api import ArrayBackend, VectorizationPolicy, vectorize_or_fallback, get_backend
-from .context import set_backend, use_backend
+from .context import set_backend as _set_backend_internal, use_backend
 
 __all__ = [
     "ArrayBackend",
@@ -9,8 +12,50 @@ __all__ = [
     "vectorize_or_fallback",
     "get_backend",
     "set_backend",
+    "set_dtype",
     "use_backend",
 ]
+
+
+def set_backend(name_or_instance: Any) -> Any:
+    """Set global numerics backend and return the backend instance.
+    
+    Args:
+        name_or_instance: Backend name ('numpy', 'pytorch', 'cupynumeric') or backend instance
+        
+    Returns:
+        The backend instance
+    """
+    # If it's a string, create instance and store it
+    if isinstance(name_or_instance, str):
+        bk = get_backend(name_or_instance)
+        _set_backend_internal(bk)  # Store the instance, not the name
+        return bk
+    else:
+        _set_backend_internal(name_or_instance)
+        return name_or_instance
+
+
+def set_dtype(dtype_str: str) -> Tuple[Any, Any]:
+    """Set default dtype for the current backend.
+    
+    This is a convenience function that calls set_dtype() on the current backend instance.
+    It sets both complex dtype (for quantum states) and real dtype (for parameters).
+    
+    Args:
+        dtype_str: One of "complex64" or "complex128"
+        
+    Returns:
+        Tuple of (complex_dtype, real_dtype) from the current backend
+        
+    Example:
+        >>> import tyxonq as tq
+        >>> tq.set_backend("pytorch")
+        >>> ctype, rtype = tq.set_dtype("complex64")
+        >>> # Now backend uses complex64 for states, float32 for parameters
+    """
+    backend = get_backend(None)  # Get current backend
+    return backend.set_dtype(dtype_str)
 
 
 
@@ -116,6 +161,26 @@ class NumericBackend:
         return get_backend(None).array(data, dtype=dtype)
 
     @classmethod
+    def array_to_tensor(cls, data, dtype=None):
+        """Convert array-like data to backend tensor.
+        
+        This is an alias for array() with clearer semantic meaning in quantum
+        computing contexts where 'tensor' refers to the backend representation.
+        
+        Args:
+            data: Array-like data (list, numpy array, etc.)
+            dtype: Target data type (optional)
+        
+        Returns:
+            Backend tensor representation
+        
+        Examples:
+            >>> psi = NumericBackend.array_to_tensor([1.0, 0.0])  # |0⟩ state
+            >>> H = NumericBackend.array_to_tensor([[1, 1], [1, -1]], dtype=NumericBackend.complex128)
+        """
+        return get_backend(None).array(data, dtype=dtype)
+
+    @classmethod
     def asarray(cls, data):
         return get_backend(None).asarray(data)
 
@@ -157,8 +222,45 @@ class NumericBackend:
         return get_backend(None).real(a)
 
     @classmethod
+    def imag(cls, a):
+        return get_backend(None).imag(a)
+
+    @classmethod
     def conj(cls, a):
         return get_backend(None).conj(a)
+
+    @classmethod
+    def adjoint(cls, a):
+        """Compute the Hermitian conjugate (adjoint) of a matrix.
+        
+        For a matrix A, returns A† = (A*)ᵀ (conjugate transpose).
+        
+        Args:
+            a: Input array/tensor (typically a matrix)
+        
+        Returns:
+            Hermitian conjugate of a
+        
+        Examples:
+            >>> # Pauli Y matrix
+            >>> Y = NumericBackend.array([[0, -1j], [1j, 0]])
+            >>> Y_dag = NumericBackend.adjoint(Y)  # Y† = Y (Y is Hermitian)
+            
+            >>> # Create state |ψ⟩ = (|0⟩ + |1⟩)/√2
+            >>> psi = NumericBackend.array([1/np.sqrt(2), 1/np.sqrt(2)])
+            >>> psi_col = psi.reshape((-1, 1))  # Column vector
+            >>> bra = NumericBackend.adjoint(psi_col)  # Row vector ⟨ψ|
+        
+        Note:
+            This is equivalent to conj(a).T or conj(transpose(a, axes=[1, 0]))
+        """
+        b = get_backend(None)
+        # Use backend's adjoint if available, otherwise compute manually
+        adj = getattr(b, "adjoint", None)
+        if callable(adj):
+            return adj(a)
+        # Fallback: conjugate transpose
+        return b.conj(b.transpose(a))
 
     @classmethod
     def diag(cls, a):
@@ -183,6 +285,68 @@ class NumericBackend:
     @classmethod
     def kron(cls, a, b):
         return get_backend(None).kron(a, b)
+    
+    # Additional array operations
+    @classmethod
+    def stack(cls, arrays, axis=0):
+        return get_backend(None).stack(arrays, axis=axis)
+
+    @classmethod
+    def concatenate(cls, arrays, axis=0):
+        return get_backend(None).concatenate(arrays, axis=axis)
+
+    @classmethod
+    def arange(cls, start, stop=None, step=1):
+        return get_backend(None).arange(start, stop, step)
+
+    @classmethod
+    def linspace(cls, start, stop, num=50):
+        return get_backend(None).linspace(start, stop, num)
+
+    @classmethod
+    def transpose(cls, a, axes=None):
+        return get_backend(None).transpose(a, axes=axes)
+
+    @classmethod
+    def norm(cls, a, ord=None, axis=None):
+        return get_backend(None).norm(a, ord=ord, axis=axis)
+
+    @classmethod
+    def cast(cls, a, dtype):
+        return get_backend(None).cast(a, dtype)
+
+    @classmethod
+    def sign(cls, a):
+        return get_backend(None).sign(a)
+
+    @classmethod
+    def outer(cls, a, b):
+        return get_backend(None).outer(a, b)
+    
+    # Linear algebra (extended)
+    @classmethod
+    def eigh(cls, a):
+        return get_backend(None).eigh(a)
+
+    @classmethod
+    def eig(cls, a):
+        return get_backend(None).eig(a)
+
+    @classmethod
+    def solve(cls, a, b, assume_a='gen'):
+        return get_backend(None).solve(a, b, assume_a=assume_a)
+
+    @classmethod
+    def inv(cls, a):
+        return get_backend(None).inv(a)
+
+    @classmethod
+    def expm(cls, a):
+        return get_backend(None).expm(a)
+
+    @classmethod
+    def tensordot(cls, a, b, axes=2):
+        return get_backend(None).tensordot(a, b, axes=axes)
     
     @classmethod
     def svd(cls, a, full_matrices: bool = False):
