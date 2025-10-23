@@ -441,6 +441,16 @@ Circuit Decomposition
        basis_gates=['h', 'rx', 'ry', 'rz', 'cx']
    )
 
+Complete Method Reference
+=========================
+
+For detailed documentation of all Circuit methods, see:
+
+.. toctree::
+   :maxdepth: 1
+
+   circuit_methods
+
 See Also
 ========
 
@@ -448,3 +458,4 @@ See Also
 - :doc:`/getting_started/first_circuit` - First Circuit Tutorial  
 - :doc:`/examples/basic_examples` - Circuit Examples
 - :doc:`/api/compiler/index` - Compiler API
+- :doc:`circuit_methods` - Complete Circuit Methods API

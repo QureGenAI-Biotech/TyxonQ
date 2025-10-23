@@ -621,6 +621,259 @@ Quantum Generative Adversarial Networks
            result = circuit.run(shots=100)
            return result
 
+Noise Simulation for NISQ Algorithms
+=====================================
+
+TyxonQ provides production-ready noise simulation for developing realistic quantum algorithms. This section demonstrates how to use noise models to simulate real quantum hardware behavior.
+
+Basic Noise Simulation
+----------------------
+
+Adding depolarizing noise to a Bell state:
+
+.. code-block:: python
+
+   import tyxonq as tq
+   import numpy as np
+
+   # Create Bell state circuit
+   circuit = tq.Circuit(2)
+   circuit.h(0)
+   circuit.cnot(0, 1)
+
+   # Compare ideal vs noisy execution
+   ideal_result = circuit.run(shots=1024)
+   noisy_result = circuit.with_noise("depolarizing", p=0.05).run(shots=1024)
+
+   print("Ideal:", ideal_result.counts)
+   print("Noisy:", noisy_result.counts)
+   # Noisy result will show some '01' and '10' errors
+
+Comparing Different Noise Models
+---------------------------------
+
+Test how different noise types affect a GHZ state:
+
+.. code-block:: python
+
+   def compare_noise_models():
+       """Compare all noise models on a 3-qubit GHZ state."""
+       
+       # Create GHZ state
+       circuit = tq.Circuit(3)
+       circuit.h(0)
+       circuit.cnot(0, 1)
+       circuit.cnot(1, 2)
+       
+       # Test different noise models
+       noise_configs = [
+           ("Ideal", None, {}),
+           ("Depolarizing", "depolarizing", {"p": 0.05}),
+           ("Amplitude Damping", "amplitude_damping", {"gamma": 0.1}),
+           ("Phase Damping", "phase_damping", {"l": 0.1}),
+           ("Pauli (asymmetric)", "pauli", {"px": 0.02, "py": 0.02, "pz": 0.06})
+       ]
+       
+       results = {}
+       for name, noise_type, params in noise_configs:
+           if noise_type is None:
+               result = circuit.run(shots=2048)
+           else:
+               result = circuit.with_noise(noise_type, **params).run(shots=2048)
+           
+           # Calculate GHZ fidelity
+           total = sum(result.counts.values())
+           ghz_fidelity = (
+               result.counts.get('000', 0) + result.counts.get('111', 0)
+           ) / total
+           
+           results[name] = {
+               'counts': result.counts,
+               'fidelity': ghz_fidelity
+           }
+           print(f"{name:30s} GHZ fidelity: {ghz_fidelity:.4f}")
+       
+       return results
+
+   # Run comparison
+   results = compare_noise_models()
+
+VQE with Realistic Noise
+------------------------
+
+Variational Quantum Eigensolver with noise simulation:
+
+.. code-block:: python
+
+   from scipy.optimize import minimize
+   from tyxonq.libs.hamiltonian_encoding import PauliSum
+
+   # Define Hamiltonian
+   hamiltonian = PauliSum()
+   hamiltonian.add_term('ZZ', [0, 1], -0.8)
+   hamiltonian.add_term('Z', [0], 0.2)
+   hamiltonian.add_term('Z', [1], 0.2)
+
+   def vqe_ansatz(params):
+       """Parameterized quantum circuit for VQE."""
+       circuit = tq.Circuit(2)
+       circuit.ry(0, params[0])
+       circuit.ry(1, params[1])
+       circuit.cnot(0, 1)
+       circuit.ry(0, params[2])
+       circuit.ry(1, params[3])
+       return circuit
+
+   def energy_evaluation(params, noise_level=0.0):
+       """Evaluate energy with optional noise."""
+       circuit = vqe_ansatz(params)
+       
+       if noise_level > 0:
+           result = (
+               circuit.with_noise("depolarizing", p=noise_level)
+                      .run(shots=4096)
+           )
+       else:
+           result = circuit.run(shots=0)  # Exact simulation
+       
+       # Compute Hamiltonian expectation value
+       energy = hamiltonian.expectation(result)
+       return energy
+
+   # Compare optimization with and without noise
+   init_params = np.random.rand(4) * 2 * np.pi
+
+   # Ideal case
+   result_ideal = minimize(
+       lambda p: energy_evaluation(p, noise_level=0.0),
+       init_params,
+       method='COBYLA'
+   )
+
+   # Noisy case (5% depolarizing noise)
+   result_noisy = minimize(
+       lambda p: energy_evaluation(p, noise_level=0.05),
+       init_params,
+       method='COBYLA'
+   )
+
+   print(f"Ideal VQE energy: {result_ideal.fun:.6f} Hartree")
+   print(f"Noisy VQE energy: {result_noisy.fun:.6f} Hartree")
+   print(f"Energy error due to noise: {abs(result_noisy.fun - result_ideal.fun):.6f}")
+
+Realistic Hardware Simulation
+-----------------------------
+
+Model a superconducting qubit device with T₁ and T₂ relaxation:
+
+.. code-block:: python
+
+   def simulate_hardware_noise(circuit, hardware_params):
+       """
+       Simulate circuit with realistic hardware noise.
+       
+       Args:
+           circuit: Quantum circuit to simulate
+           hardware_params: Dict with 'T1', 'T2', 'gate_time' in seconds
+       
+       Returns:
+           Noisy simulation result
+       """
+       T1 = hardware_params['T1']  # e.g., 100e-6 (100 μs)
+       T2 = hardware_params['T2']  # e.g., 80e-6 (80 μs)
+       gate_time = hardware_params['gate_time']  # e.g., 50e-9 (50 ns)
+       
+       # Calculate noise parameters
+       gamma = 1 - np.exp(-gate_time / T1)  # Amplitude damping
+       lambda_val = 1 - np.exp(-gate_time / T2)  # Phase damping
+       
+       print(f"Hardware parameters:")
+       print(f"  T₁ = {T1*1e6:.1f} μs")
+       print(f"  T₂ = {T2*1e6:.1f} μs")
+       print(f"  Gate time = {gate_time*1e9:.1f} ns")
+       print(f"  γ (amplitude damping) = {gamma:.6f}")
+       print(f"  λ (phase damping) = {lambda_val:.6f}")
+       
+       # Apply combined noise (simplified: use depolarizing as approximation)
+       # For more accurate simulation, apply both T1 and T2 sequentially
+       p_total = gamma + lambda_val
+       result = circuit.with_noise("depolarizing", p=p_total).run(shots=2048)
+       
+       return result
+
+   # Example: Simulate IBM-like hardware
+   circuit = tq.Circuit(4)
+   circuit.h(0)
+   for i in range(3):
+       circuit.cnot(i, i+1)
+
+   ibm_params = {
+       'T1': 100e-6,      # 100 microseconds
+       'T2': 80e-6,       # 80 microseconds
+       'gate_time': 50e-9 # 50 nanoseconds
+   }
+
+   result = simulate_hardware_noise(circuit, ibm_params)
+   print(f"\nResult: {result.counts}")
+
+Noise-Aware Circuit Optimization
+---------------------------------
+
+Optimize circuit depth to minimize noise impact:
+
+.. code-block:: python
+
+   def noise_aware_compilation(circuit, noise_level):
+       """
+       Compile circuit with noise awareness.
+       
+       Trade-off: Deeper optimized circuits may have fewer gates
+       but same noise accumulation if gate count reduction is minimal.
+       """
+       from tyxonq.compiler import optimize_circuit
+       
+       # Get different optimization levels
+       opt_levels = [0, 1, 2, 3]
+       results = {}
+       
+       for level in opt_levels:
+           optimized = optimize_circuit(
+               circuit,
+               optimization_level=level
+           )
+           
+           gate_count = len(optimized.ops)
+           depth = calculate_circuit_depth(optimized)
+           
+           # Simulate with noise
+           noisy_result = (
+               optimized.with_noise("depolarizing", p=noise_level)
+                        .run(shots=2048)
+           )
+           
+           # Calculate success probability (circuit-dependent metric)
+           success_prob = evaluate_success_metric(noisy_result)
+           
+           results[level] = {
+               'gates': gate_count,
+               'depth': depth,
+               'success_prob': success_prob
+           }
+           
+           print(f"Level {level}: {gate_count} gates, "
+                 f"depth {depth}, success {success_prob:.3f}")
+       
+       # Choose level with best success probability
+       best_level = max(results.items(), key=lambda x: x[1]['success_prob'])[0]
+       print(f"\nBest optimization level: {best_level}")
+       
+       return results
+
+**See Also**:
+
+- :doc:`../user_guide/devices/noise_simulation` - Complete noise simulation guide
+- :doc:`../user_guide/postprocessing/index` - Error mitigation techniques
+
 Performance Optimization
 ========================
 

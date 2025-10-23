@@ -126,9 +126,37 @@ Performance Comparison
      - Approximate
      - Large system simulation
 
+Noise Simulation
+================
+
+TyxonQ provides comprehensive noise simulation for realistic NISQ algorithm development:
+
+.. code-block:: python
+
+   # Add noise to your circuit with one line
+   result = circuit.with_noise("depolarizing", p=0.05).run(shots=1024)
+
+**Supported Noise Models**:
+
+- **Depolarizing**: Uniform Pauli errors (X, Y, Z)
+- **Amplitude Damping**: Energy relaxation (T₁)
+- **Phase Damping**: Decoherence (T₂)
+- **Pauli Channel**: Asymmetric error rates
+
+For complete details, see :doc:`noise_simulation`.
+
+Sections
+========
+
+.. toctree::
+   :maxdepth: 1
+
+   noise_simulation
+
 Related Resources
 =================
 
 - :doc:`/api/devices/index` - Devices API Reference
 - :doc:`../numerics/index` - Numerical Computation Backend
 - :doc:`/cloud_services/index` - Cloud Device Access
+- :doc:`noise_simulation` - Complete Noise Simulation Guide

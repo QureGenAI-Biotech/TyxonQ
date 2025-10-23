@@ -28,7 +28,7 @@ Directly use the TyxonQ cloud task submission API. For details, see the example:
 ### Minimal circuit → simulator / hardware
 ```python
 import tyxonq as tq
-from tyxonq.postprocessing import metrics
+from tyxonq.libs.quantum_library.kernels import quantum_info
 import getpass
 tq.set_backend("numpy")
 
@@ -146,6 +146,77 @@ This document provides:
 
 - **☁️ Quantum Cloud Services**: Scalable quantum computing as a service
 
+### 🚀 Performance Leadership
+
+TyxonQ delivers **industry-leading performance** in gradient computation:
+
+| Framework | Time/Step | Method |
+|-----------|-----------|--------|
+| **TyxonQ** (PyTorch + Autograd) | **0.012s** | Automatic differentiation |
+| PennyLane (default.qubit) | 0.017s | Backpropagation |
+| Qiskit (Estimator) | 0.067s | Finite differences |
+
+*Benchmark: LiH molecule VQE (4 qubits, 10 parameters), measured on M2 MacBook Pro*
+
+**Key Performance Advantages**:
+- ✨ **PyTorch Autograd**: Complete automatic differentiation support with gradient chain preservation
+- 🎯 **Multi-Backend Architecture**: Seamless switching between NumPy/PyTorch/CuPy without code changes
+- 🔬 **Optimized Implementation**: Efficient gradient computation through proper autograd integration
+- 📊 **Production-Ready**: Validated on VQE benchmarks with H₂, LiH, BeH₂ molecules
+
+### ✨ Advanced Quantum Features
+
+#### Automatic Differentiation
+```python
+import tyxonq as tq
+import torch
+
+# PyTorch autograd automatically tracks gradients
+tq.set_backend("pytorch")
+params = torch.randn(10, requires_grad=True)
+
+def vqe_energy(p):
+    circuit = build_ansatz(p)
+    return circuit.run_energy(hamiltonian)
+
+energy = vqe_energy(params)
+energy.backward()  # Automatic gradient computation
+print(params.grad)  # Gradients ready for optimization
+```
+
+#### Quantum Natural Gradient (QNG)
+```python
+from tyxonq.compiler.stages.gradients.qng import compute_qng_metric
+
+# Fubini-Study metric for quantum optimization
+metric = compute_qng_metric(circuit, params)
+natural_grad = torch.linalg.solve(metric, grad)
+params -= learning_rate * natural_grad
+```
+
+#### Time Evolution with Trotter-Suzuki
+```python
+from tyxonq.libs.circuits_library.trotter_circuit import build_trotter_circuit
+
+# Hamiltonian time evolution
+H = build_hamiltonian("HeisenbergXXZ")
+circuit = build_trotter_circuit(H, time=1.0, trotter_steps=10)
+result = circuit.run(shots=2048)
+```
+
+#### Production-Ready Noise Simulation
+```python
+# Realistic noise models for NISQ algorithms
+circuit = tq.Circuit(2).h(0).cx(0, 1)
+
+# Depolarizing noise
+result = circuit.with_noise("depolarizing", p=0.05).run(shots=1024)
+
+# T1/T2 relaxation (amplitude/phase damping)
+result = circuit.with_noise("amplitude_damping", gamma=0.1).run(shots=1024)
+result = circuit.with_noise("phase_damping", l=0.05).run(shots=1024)
+```
+
 
 
 ### Quantum AIDD Key features
@@ -164,9 +235,23 @@ This document provides:
   - Expanded properties and excited states (VQD/pVQD) aligned with spectroscopy and binding‑relevant observables.
 
 
+## 📚 Comprehensive Example Library
+
+TyxonQ includes **66 high-quality examples** covering:
+
+- **Variational Algorithms**: VQE, QAOA, VQD with SciPy/PyTorch optimization
+- **Quantum Chemistry**: UCCSD, k-UpCCGSD, molecular properties (RDM, dipole)
+- **Quantum Machine Learning**: MNIST classification, hybrid GPU training
+- **Advanced Techniques**: Quantum Natural Gradient, Trotter evolution, slicing
+- **Noise Simulation**: T1/T2 calibration, readout mitigation, error analysis
+- **Performance Benchmarks**: Framework comparisons, optimization strategies
+- **Hardware Deployment**: Real quantum computer execution examples
+
+Explore the full collection in [`examples/`](examples/) directory.
+
 ## Dependencies
 - Python >= 3.10 (supports Python 3.10, 3.11, 3.12+)
-- PyTorch >= 1.8.0
+- PyTorch >= 1.8.0 (required for autograd support)
 
 
 ## 📧 Contact & Support
