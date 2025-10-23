@@ -153,8 +153,8 @@ TyxonQ delivers **industry-leading performance** in gradient computation:
 | Framework | Time/Step | Method |
 |-----------|-----------|--------|
 | **TyxonQ** (PyTorch + Autograd) | **0.012s** | Automatic differentiation |
-| PennyLane (default.qubit) | 0.017s | Backpropagation |
-| Qiskit (Estimator) | 0.067s | Finite differences |
+| PennyLane (default.qubit) | 0.0165s | Backpropagation |
+| Qiskit (Estimator) | 0.0673s | Finite differences |
 
 *Benchmark: LiH molecule VQE (4 qubits, 10 parameters), measured on M2 MacBook Pro*
 
