@@ -2,17 +2,19 @@
 
 <cite>
 **本文档引用的文件**   
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py) - *在最近的提交中进行了性能增强，并支持GPU服务器和修复了开壳层bug*
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py) - *在最近的提交中进行了性能增强，并支持GPU服务器和修复了开壳层bug，新增HOMO-LUMO能隙计算功能*
 - [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py) - *更新了性能*
 - [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py) - *更新了性能*
 - [blocks.py](file://src/tyxonq/libs/circuits_library/blocks.py) - *构建RY-only电路*
 - [qiskit_real_amplitudes.py](file://src/tyxonq/libs/circuits_library/qiskit_real_amplitudes.py) - *Qiskit电路转换*
 - [hamiltonian_builders.py](file://src/tyxonq/applications/chem/chem_libs/hamiltonians_chem_library/hamiltonian_builders.py) - *哈密顿量构建*
 - [hamiltonian_grouping.py](file://src/tyxonq/compiler/utils/hamiltonian_grouping.py) - *哈密顿量分组*
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py) - *HOMO-LUMO能隙计算演示*
 </cite>
 
 ## 更新摘要
 **变更内容**   
+- 新增HOMO-LUMO能隙计算功能，通过`get_homo_lumo_gap()`方法和`homo_lumo_gap`属性提供
 - 更新了`kernel()`方法中关于shots=0时的默认行为，以避免采样噪声
 - 增强了HEA算法在numeric和device运行时路径下的性能
 - 更新了能量评估和梯度计算的实现细节
@@ -31,7 +33,8 @@
 7. [与Qiskit的兼容性](#与qiskit的兼容性)
 8. [性能分析](#性能分析)
 9. [常见问题与解决方案](#常见问题与解决方案)
-10. [结论](#结论)
+10. [HOMO-LUMO能隙计算](#homo-lumo能隙计算)
+11. [结论](#结论)
 
 ## 引言
 
@@ -138,6 +141,46 @@ HEA算法通过`from_qiskit_circuit`接口支持Qiskit RealAmplitudes电路的�
 - **优化收敛慢**：检查初始猜测是否合理，考虑调整优化器参数。
 - **采样噪声干扰**：在优化过程中使用shots=0以避免采样噪声影响。
 
+## HOMO-LUMO能隙计算
+
+HEA算法新增了HOMO-LUMO能隙计算功能，通过`get_homo_lumo_gap()`方法和`homo_lumo_gap`属性提供。该功能委托给内部的UCC对象进行化学相关计算，利用Hartree-Fock计算结果进行HOMO-LUMO分析。
+
+### 主要特性
+- **自动确定**：自动根据分子系统（闭壳或开壳）确定HOMO和LUMO轨道
+- **手动指定**：支持手动指定HOMO和LUMO轨道索引
+- **单位转换**：可选择包含eV单位的转换结果
+- **系统类型识别**：自动识别闭壳或开壳系统
+
+### 使用方法
+```python
+from tyxonq.chem import HEA
+from tyxonq.chem.molecule import h2
+
+# 创建HEA实例
+hea = HEA(molecule=h2, layers=1)
+
+# 获取详细能隙信息
+gap_info = hea.get_homo_lumo_gap()
+print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree")
+
+# 包含eV转换
+gap_info = hea.get_homo_lumo_gap(include_ev=True)
+print(f"HOMO-LUMO gap: {gap_info['gap_ev']:.6f} eV")
+
+# 使用属性快速访问
+gap = hea.homo_lumo_gap
+print(f"Gap: {gap:.6f} Hartree")
+```
+
+### 注意事项
+- 仅适用于通过`from_molecule()`或直接分子输入构建的HEA实例
+- 对于直接从积分构建的HEA，无法进行HOMO-LUMO能隙计算
+- 需要分子构建时提供完整的化学元数据
+
+**Section sources**
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L1-L201)
+
 ## 结论
 
-HEA算法作为一种硬件高效的变分量子电路，为NISQ时代的量子化学计算提供了有效的解决方案。其灵活的构建方式和高效的优化路径使其成为VQE应用中的重要工具。
+HEA算法作为一种硬件高效的变分量子电路，为NISQ时代的量子化学计算提供了有效的解决方案。其灵活的构建方式和高效的优化路径使其成为VQE应用中的重要工具。新增的HOMO-LUMO能隙计算功能进一步增强了其在量子化学分析中的实用性。

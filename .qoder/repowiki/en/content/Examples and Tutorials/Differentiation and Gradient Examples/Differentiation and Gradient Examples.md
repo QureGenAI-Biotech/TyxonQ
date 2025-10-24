@@ -6,8 +6,8 @@
 - [parameter_shift.py](file://examples/parameter_shift.py)
 - [jacobian_cal.py](file://examples/jacobian_cal.py)
 - [sample_value_gradient.py](file://examples/sample_value_gradient.py)
-- [matprod_vmap.py](file://examples-ng/matprod_vmap.py)
-- [vmap_randomness.py](file://examples-ng/vmap_randomness.py)
+- [matprod_vmap.py](file://examples-done/matprod_vmap.py) - *Updated in commit 635b13ea*
+- [vmap_randomness.py](file://examples-done/vmap_randomness.py) - *Updated in commit 635b13ea*
 - [circuit.py](file://src/tyxonq/core/ir/circuit.py)
 - [statevector/engine.py](file://src/tyxonq/devices/simulators/statevector/engine.py)
 - [pytorch_backend.py](file://src/tyxonq/numerics/backends/pytorch_backend.py)
@@ -15,6 +15,13 @@
 - [metrics.py](file://src/tyxonq/postprocessing/metrics.py)
 - [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated file references for `matprod_vmap.py` and `vmap_randomness.py` to reflect their new location in `examples-done/` after the refactor
+- Added annotations to indicate these files were updated in commit `635b13ea`
+- Maintained all existing content as the core functionality remains unchanged despite the file relocation
+- Updated section sources to use correct file paths
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -81,19 +88,19 @@ The example includes a finite-difference baseline for validation, allowing compa
 
 ## Vectorized Operations with vmap
 
-The `matprod_vmap.py` and `vmap_randomness.py` examples demonstrate the use of vectorized operations through the vmap functionality in the Tyxonq framework. The `matprod_vmap.py` example implements matrix multiplication using vmap to vectorize inner product operations across matrix rows and columns. This approach transforms a standard matrix multiplication into a series of vectorized inner products, potentially enabling performance optimizations through parallel execution.
+The `matprod_vmap.py` and `vmap_randomness.py` examples demonstrate the use of vectorized operations through the vmap functionality in the TyxonQ framework. The `matprod_vmap.py` example implements matrix multiplication using vmap to vectorize inner product operations across matrix rows and columns. This approach transforms a standard matrix multiplication into a series of vectorized inner products, potentially enabling performance optimizations through parallel execution.
 
 The implementation compares traditional matrix multiplication with the vmap-based approach, benchmarking performance across different matrix dimensions. The results illustrate how vectorization can leverage hardware acceleration and parallel processing capabilities, particularly when using backends like PyTorch that support just-in-time compilation and GPU acceleration.
 
 The `vmap_randomness.py` example explores the interaction between vmap, JIT compilation, and random number generation. It demonstrates how randomness is handled in vectorized and compiled functions, showing that vmap applies the same random operation across all vectorized dimensions while maintaining proper random number generation semantics. This is crucial for quantum algorithms that require stochastic operations or noise simulation in a vectorized context.
 
 **Section sources**
-- [matprod_vmap.py](file://examples-ng/matprod_vmap.py#L1-L42)
-- [vmap_randomness.py](file://examples-ng/vmap_randomness.py#L1-L27)
+- [matprod_vmap.py](file://examples-done/matprod_vmap.py#L1-L42) - *Updated in commit 635b13ea*
+- [vmap_randomness.py](file://examples-done/vmap_randomness.py#L1-L27) - *Updated in commit 635b13ea*
 
 ## Mathematical Foundations and Accuracy Trade-offs
 
-The gradient computation methods in Tyxonq are grounded in fundamental mathematical principles of quantum mechanics and numerical analysis. The parameter shift rule relies on the trigonometric identity that the derivative of cos(θ) is -sin(θ), which can be expressed as the difference of cosine functions at shifted arguments. For a parameterized gate U(θ) = exp(-iθG) where G is a generator with eigenvalues ±1, the gradient of an expectation value ⟨ψ(θ)|O|ψ(θ)⟩ can be expressed as a linear combination of expectation values at θ±π/2.
+The gradient computation methods in TyxonQ are grounded in fundamental mathematical principles of quantum mechanics and numerical analysis. The parameter shift rule relies on the trigonometric identity that the derivative of cos(θ) is -sin(θ), which can be expressed as the difference of cosine functions at shifted arguments. For a parameterized gate U(θ) = exp(-iθG) where G is a generator with eigenvalues ±1, the gradient of an expectation value ⟨ψ(θ)|O|ψ(θ)⟩ can be expressed as a linear combination of expectation values at θ±π/2.
 
 Autograd-based differentiation leverages the chain rule of calculus through automatic differentiation, computing exact gradients by tracking operations in the computational graph. This method provides machine-precision accuracy but assumes noiseless quantum operations and measurements. In contrast, counts-based estimation introduces statistical uncertainty proportional to 1/√N where N is the number of shots, reflecting the fundamental quantum measurement limit.
 
@@ -115,8 +122,8 @@ Performance optimization techniques include vectorization through vmap, which ca
 Memory efficiency can be improved through circuit decomposition and lightcone optimization, while computational efficiency benefits from operator grouping and measurement reduction techniques implemented in the compiler stages.
 
 **Section sources**
-- [matprod_vmap.py](file://examples-ng/matprod_vmap.py#L1-L42)
-- [vmap_randomness.py](file://examples-ng/vmap_randomness.py#L1-L27)
+- [matprod_vmap.py](file://examples-done/matprod_vmap.py#L1-L42) - *Updated in commit 635b13ea*
+- [vmap_randomness.py](file://examples-done/vmap_randomness.py#L1-L27) - *Updated in commit 635b13ea*
 - [pytorch_backend.py](file://src/tyxonq/numerics/backends/pytorch_backend.py#L1-L259)
 - [numpy_backend.py](file://src/tyxonq/numerics/backends/numpy_backend.py#L1-L165)
 

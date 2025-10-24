@@ -12,7 +12,17 @@
 - [src/tyxonq/cloud/__init__.py](file://src/tyxonq/cloud/__init__.py)
 - [src/tyxonq/cloud/api.py](file://src/tyxonq/cloud/api.py)
 - [src/tyxonq/applications/__init__.py](file://src/tyxonq/applications/__init__.py)
+- [src/tyxonq/applications/chem/algorithms/hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py) - *Updated in recent commit*
+- [src/tyxonq/applications/chem/algorithms/ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py) - *Updated in recent commit*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Added comprehensive documentation for HOMO-LUMO gap calculation methods in HEA and UCC classes
+- Added new section on HOMO-LUMO Gap Analysis under Applications/chem
+- Updated Applications/chem section to include new methods and properties
+- Added detailed examples and parameter descriptions for gap calculation methods
+- Enhanced documentation with return value specifications and error conditions
 
 ## Table of Contents
 1. [Core](#core)
@@ -211,15 +221,82 @@ The Cloud module provides a unified interface for interacting with remote quantu
 The Applications module organizes high-level quantum algorithms and domain-specific workflows.
 
 ### chem
-- **Submodule**: `tyxonq.applications.chem`
-- **Purpose**: Contains quantum chemistry algorithms and utilities.
-- **Key Components**:
-  - Molecular Hamiltonian construction.
-  - Variational algorithms (VQE, UCCSD).
-  - Classical-quantum hybrid solvers.
-  - Runtime environments for chemistry simulations.
+
+The chemistry application module provides quantum algorithms for molecular simulations and quantum chemistry calculations.
+
+#### HEA (Hardware-Efficient Ansatz)
+- **Class**: `HEA`
+- **Purpose**: Implements a parameterized quantum circuit designed for near-term quantum devices with limited connectivity and coherence times.
+- **Key Features**:
+  - RY-only structure with alternating layers of single-qubit rotations and CNOT entangling chains
+  - Gradient support via parameter-shift rule
+  - Chemistry integration through molecular integral construction
+  - Runtime flexibility supporting both numeric and device execution
+  - Reduced density matrix (RDM) calculation for analysis
+
+#### UCC (Unitary Coupled Cluster)
+- **Class**: `UCC`
+- **Purpose**: Implements the Unitary Coupled Cluster algorithm for quantum chemistry simulations.
+- **Key Features**:
+  - Supports parameterized ansatz with excitation operators
+  - Provides energy and gradient computation
+  - Integrates with classical quantum chemistry calculations
+  - Supports various initialization methods (MP2, CCSD, etc.)
+
+### HOMO-LUMO Gap Analysis
+
+The HOMO-LUMO gap analysis functionality provides methods to calculate the energy difference between the Highest Occupied Molecular Orbital (HOMO) and Lowest Unoccupied Molecular Orbital (LUMO), which is a key property in quantum chemistry.
+
+#### get_homo_lumo_gap() Method
+- **Function**: `get_homo_lumo_gap(homo_idx=None, lumo_idx=None, include_ev=False)`
+- **Purpose**: Calculates the HOMO-LUMO gap and corresponding orbital energies.
+- **Parameters**:
+  - `homo_idx`: Manual specification of HOMO orbital index (0-based). If None, automatically determined from electron count.
+  - `lumo_idx`: Manual specification of LUMO orbital index (0-based). If None, automatically determined from electron count.
+  - `include_ev`: Whether to include eV conversion in output. Default False.
+- **Returns**: Dictionary containing:
+  - `'homo_energy'`: Energy of HOMO orbital (Hartree)
+  - `'lumo_energy'`: Energy of LUMO orbital (Hartree)
+  - `'gap'`: HOMO-LUMO energy gap (Hartree)
+  - `'gap_ev'`: HOMO-LUMO energy gap (eV) [only if include_ev=True]
+  - `'homo_idx'`: Index of HOMO orbital
+  - `'lumo_idx'`: Index of LUMO orbital
+  - `'system_type'`: 'closed-shell' or 'open-shell'
+- **Examples**:
+```python
+>>> from tyxonq.chem import HEA
+>>> from tyxonq.chem.molecule import h2
+>>> hea = HEA(molecule=h2, layers=1)
+>>> gap_info = hea.get_homo_lumo_gap()
+>>> print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree")
+>>> 
+>>> # Include eV conversion
+>>> gap_info = hea.get_homo_lumo_gap(include_ev=True)
+>>> print(f"HOMO-LUMO gap: {gap_info['gap_ev']:.6f} eV")
+```
+- **Raises**: `RuntimeError` if HEA was not constructed from molecule (no UCC object available).
+- **Notes**:
+  - Only works for HEA constructed via from_molecule() or direct molecule input
+  - For HEA built from integrals directly, no HOMO-LUMO gap calculation is possible
+  - Uses the same logic as UCC.get_homo_lumo_gap()
+
+#### homo_lumo_gap Property
+- **Property**: `homo_lumo_gap`
+- **Purpose**: Returns the HOMO-LUMO energy gap in Hartree as a property.
+- **Returns**: HOMO-LUMO gap in Hartree (float)
+- **Examples**:
+```python
+>>> from tyxonq.chem import HEA
+>>> from tyxonq.chem.molecule import h2
+>>> hea = HEA(molecule=h2, layers=1)
+>>> gap = hea.homo_lumo_gap
+>>> print(f"Gap: {gap:.6f} Hartree ({gap*27.2114:.4f} eV)")
+```
+- **See Also**: `get_homo_lumo_gap()` method for detailed gap calculation with orbital information
 
 **Section sources**
+- [src/tyxonq/applications/chem/algorithms/hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L788) - *Updated in recent commit*
+- [src/tyxonq/applications/chem/algorithms/ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1219) - *Updated in recent commit*
 - [src/tyxonq/applications/__init__.py](file://src/tyxonq/applications/__init__.py#L0-L15)
 
 ## Libraries

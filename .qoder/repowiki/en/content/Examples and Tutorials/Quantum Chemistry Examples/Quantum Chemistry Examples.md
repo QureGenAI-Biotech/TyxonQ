@@ -12,7 +12,17 @@
 - [vqetfim_benchmark.py](file://examples/vqetfim_benchmark.py)
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
 - [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py) - *Added in recent commit*
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py) - *Added in recent commit*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Added new section on HOMO-LUMO Gap Analysis to showcase new functionality
+- Updated UCCSD and HEA Algorithms section to include HOMO-LUMO gap capabilities
+- Added references to new demonstration files for HOMO-LUMO gap functionality
+- Enhanced documentation to reflect new property-based access to HOMO-LUMO gap calculations
+- Updated diagram sources to include new implementation details
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -23,9 +33,10 @@
 6. [Benchmarking Studies](#benchmarking-studies)
 7. [Algorithm Selection and Accuracy](#algorithm-selection-and-accuracy)
 8. [Workflow Configuration and Metrics](#workflow-configuration-and-metrics)
+9. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
 
 ## Introduction
-This document showcases TyxonQ's capabilities in computational quantum chemistry through a series of examples. It covers advanced algorithms such as UCCSD and HEA for molecular systems, integration with classical chemistry methods, hydrogen chain modeling, and various VQE implementations. The examples demonstrate how to configure chemistry workflows, interpret chemical accuracy metrics, and understand the trade-offs between algorithm choice, accuracy, and computational cost.
+This document showcases TyxonQ's capabilities in computational quantum chemistry through a series of examples. It covers advanced algorithms such as UCCSD and HEA for molecular systems, integration with classical chemistry methods, hydrogen chain modeling, and various VQE implementations. The examples demonstrate how to configure chemistry workflows, interpret chemical accuracy metrics, and understand the trade-offs between algorithm choice, accuracy, and computational cost. Recent updates include new functionality for HOMO-LUMO gap analysis, which is now available for both UCCSD and HEA algorithms.
 
 ## UCCSD and HEA Algorithms
 The UCCSD (Unitary Coupled Cluster Singles and Doubles) and HEA (Hardware-Efficient Ansatz) algorithms are central to quantum chemistry simulations in TyxonQ. These algorithms are demonstrated in the `cloud_uccsd_hea_demo.py` example, which shows their application to molecular systems using PySCF molecules.
@@ -231,3 +242,45 @@ end
 - [cloud_classical_methods_demo.py](file://examples/cloud_classical_methods_demo.py#L0-L60)
 - [vqeh2o_benchmark.py](file://examples/vqeh2o_benchmark.py#L0-L162)
 - [vqetfim_benchmark.py](file://examples/vqetfim_benchmark.py#L0-L123)
+
+## HOMO-LUMO Gap Analysis
+TyxonQ now includes comprehensive HOMO-LUMO gap analysis capabilities for both UCCSD and HEA algorithms, as demonstrated in the new `demo_homo_lumo_gap.py` and `demo_hea_homo_lumo_gap.py` examples. The HOMO-LUMO gap is a fundamental property in quantum chemistry that represents the energy difference between the highest occupied molecular orbital (HOMO) and the lowest unoccupied molecular orbital (LUMO).
+
+The HOMO-LUMO gap can be accessed through both a property interface (`homo_lumo_gap`) for quick access and a detailed method (`get_homo_lumo_gap()`) that provides comprehensive information including orbital indices, energies, and system type. The implementation supports both closed-shell and open-shell systems, with automatic determination of HOMO and LUMO indices based on electron count and orbital occupation.
+
+```mermaid
+classDiagram
+class HOMOLUMOInterface {
+<<interface>>
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap float
+}
+class UCC {
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap float
+}
+class HEA {
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap float
+}
+class UCCSD {
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap float
+}
+HOMOLUMOInterface <|-- UCC
+HOMOLUMOInterface <|-- HEA
+UCC <|-- UCCSD
+HEA --> UCC : "delegates"
+```
+
+**Diagram sources**
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L0-L200)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py#L0-L174)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1219)
+
+**Section sources**
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L0-L200)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py#L0-L174)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1219)

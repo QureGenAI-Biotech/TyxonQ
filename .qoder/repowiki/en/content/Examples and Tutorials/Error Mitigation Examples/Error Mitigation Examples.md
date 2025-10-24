@@ -2,16 +2,24 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [readout_mitigation.py](file://examples/readout_mitigation.py)
-- [mcnoise_boost.py](file://examples-ng/mcnoise_boost.py)
-- [mcnoise_boost_v2.py](file://examples-ng/mcnoise_boost_v2.py)
-- [mcnoise_check.py](file://examples-ng/mcnoise_check.py)
-- [noise_calibration.py](file://examples-ng/noise_calibration.py)
-- [noisy_qml.py](file://examples-ng/noisy_qml.py)
-- [noisy_sampling_jit.py](file://examples-ng/noisy_sampling_jit.py)
-- [readout.py](file://src/tyxonq/postprocessing/readout.py)
-- [channels.py](file://src/tyxonq/devices/simulators/noise/channels.py)
+- [readout_mitigation.py](file://examples/readout_mitigation.py) - *Updated in recent commit*
+- [mcnoise_boost.py](file://examples-done/archived/performance_experiments/mcnoise_boost.py) - *Updated in commit 635b13ea7cd1f9636a1a8bebaf351da9e0835f20*
+- [mcnoise_boost_v2.py](file://examples-done/archived/performance_experiments/mcnoise_boost_v2.py) - *Updated in commit 635b13ea7cd1f9636a1a8bebaf351da9e0835f20*
+- [mcnoise_check.py](file://examples-done/archived/performance_experiments/mcnoise_check.py) - *Updated in recent commit*
+- [noise_calibration.py](file://examples-done/noise_calibration.py) - *Updated in recent commit*
+- [noisy_qml.py](file://examples-done/noisy_qml.py) - *Updated in recent commit*
+- [noisy_sampling_jit.py](file://examples/noisy_sampling_comparison.py) - *Replaced by noisy_sampling_comparison.py*
+- [readout.py](file://src/tyxonq/postprocessing/readout.py) - *Updated in recent commit*
+- [channels.py](file://src/tyxonq/devices/simulators/noise/channels.py) - *Updated in recent commit*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated file paths to reflect current repository structure
+- Corrected outdated file references (examples-ng → examples-done/archived/performance_experiments)
+- Added new source file references based on actual codebase
+- Updated section sources with accurate line ranges and file locations
+- Enhanced documentation accuracy based on code analysis
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -46,13 +54,13 @@ RecoverIdeal --> CompareResults["Compare Ideal, Raw, and Corrected"]
 CompareResults --> End([End])
 ```
 
-**Diagram sources**
-- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133)
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
-
 **Section sources**
-- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133)
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
+- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133) - *Updated in recent commit*
+- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142) - *Updated in recent commit*
+
+**Diagram sources**
+- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133) - *Updated in recent commit*
+- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142) - *Updated in recent commit*
 
 ## Monte Carlo Noise Boosting
 The Monte Carlo noise boosting techniques in `mcnoise_boost.py` and `mcnoise_boost_v2.py` address performance optimization in noisy quantum simulations. The primary challenge in Monte Carlo simulations is the computational cost of staging time, particularly when dealing with general noise channels applied at each circuit layer. The solution implements circuit layerwise slicing to improve JIT compilation efficiency and reduce staging overhead.
@@ -77,13 +85,13 @@ A1 --> A2 --> A3
 B1 --> B2 --> B3 --> B4 --> B5
 ```
 
-**Diagram sources**
-- [mcnoise_boost.py](file://examples-ng/mcnoise_boost.py#L0-L97)
-- [mcnoise_boost_v2.py](file://examples-ng/mcnoise_boost_v2.py#L0-L85)
-
 **Section sources**
-- [mcnoise_boost.py](file://examples-ng/mcnoise_boost.py#L0-L97)
-- [mcnoise_boost_v2.py](file://examples-ng/mcnoise_boost_v2.py#L0-L85)
+- [mcnoise_boost.py](file://examples-done/archived/performance_experiments/mcnoise_boost.py#L0-L97) - *Updated in commit 635b13ea7cd1f9636a1a8bebaf351da9e0835f20*
+- [mcnoise_boost_v2.py](file://examples-done/archived/performance_experiments/mcnoise_boost_v2.py#L0-L85) - *Updated in commit 635b13ea7cd1f9636a1a8bebaf351da9e0835f20*
+
+**Diagram sources**
+- [mcnoise_boost.py](file://examples-done/archived/performance_experiments/mcnoise_boost.py#L0-L97) - *Updated in commit 635b13ea7cd1f9636a1a8bebaf351da9e0835f20*
+- [mcnoise_boost_v2.py](file://examples-done/archived/performance_experiments/mcnoise_boost_v2.py#L0-L85) - *Updated in commit 635b13ea7cd1f9636a1a8bebaf351da9e0835f20*
 
 ## Noise Characterization and Validation
 The `mcnoise_check.py` example provides a rigorous validation framework for comparing different quantum simulation methods. It cross-checks the results of density matrix simulation against Monte Carlo trajectory simulation to ensure numerical consistency. The validation process computes key metrics such as fidelity and trace distance between the density matrix obtained from exact simulation and the ensemble average of Monte Carlo trajectories.
@@ -111,11 +119,11 @@ Validation->>Validation : Compute trace_distance(ρ, ρ0)
 Validation-->>User : Report validation results
 ```
 
-**Diagram sources**
-- [mcnoise_check.py](file://examples-ng/mcnoise_check.py#L0-L81)
-
 **Section sources**
-- [mcnoise_check.py](file://examples-ng/mcnoise_check.py#L0-L81)
+- [mcnoise_check.py](file://examples-done/archived/performance_experiments/mcnoise_check.py#L0-L81) - *Updated in recent commit*
+
+**Diagram sources**
+- [mcnoise_check.py](file://examples-done/archived/performance_experiments/mcnoise_check.py#L0-L81) - *Updated in recent commit*
 
 ## Noise Calibration Procedures
 The `noise_calibration.py` module implements comprehensive procedures for characterizing and calibrating quantum device noise. It addresses two primary noise types: readout errors and thermal relaxation (T1/T2) processes. The readout error mitigation uses a complete set of basis state preparations to construct the full calibration matrix, while the thermal relaxation calibration employs specialized pulse sequences to extract T1 and T2 time constants.
@@ -151,11 +159,11 @@ T1 --> T2 --> T3 --> T4 --> T5
 U1 --> U2 --> U3 --> U4 --> U5 --> U6 --> U7
 ```
 
-**Diagram sources**
-- [noise_calibration.py](file://examples-ng/noise_calibration.py#L0-L214)
-
 **Section sources**
-- [noise_calibration.py](file://examples-ng/noise_calibration.py#L0-L214)
+- [noise_calibration.py](file://examples-done/noise_calibration.py#L0-L214) - *Updated in recent commit*
+
+**Diagram sources**
+- [noise_calibration.py](file://examples-done/noise_calibration.py#L0-L214) - *Updated in recent commit*
 
 ## Noisy Quantum Machine Learning
 The `noisy_qml.py` example demonstrates quantum machine learning with explicit noise modeling using Monte Carlo simulation. The implementation trains a variational quantum classifier on MNIST data while incorporating depolarizing noise in the quantum circuit. The noise is modeled using vmapped Monte Carlo trajectories, allowing efficient gradient computation through noisy circuits.
@@ -192,11 +200,11 @@ Q1 --> Q2 --> Q3 --> Q4 --> Q5 --> Q6 --> Q7 --> T2
 T2 --> T3 --> T4 --> T5
 ```
 
-**Diagram sources**
-- [noisy_qml.py](file://examples-ng/noisy_qml.py#L0-L227)
-
 **Section sources**
-- [noisy_qml.py](file://examples-ng/noisy_qml.py#L0-L227)
+- [noisy_qml.py](file://examples-done/noisy_qml.py#L0-L227) - *Updated in recent commit*
+
+**Diagram sources**
+- [noisy_qml.py](file://examples-done/noisy_qml.py#L0-L227) - *Updated in recent commit*
 
 ## JIT-Compiled Noisy Sampling
 The `noisy_sampling_jit.py` example demonstrates high-performance noisy quantum simulation using JIT compilation and vectorization. It compares exact density matrix simulation results with Monte Carlo sampling estimates, validating the accuracy of the sampling approach. The implementation uses PyTorch as the backend with complex64 precision for optimal performance.
@@ -222,11 +230,11 @@ Comparison->>Comparison : Compute |exact - mc|
 Comparison-->>User : Report accuracy
 ```
 
-**Diagram sources**
-- [noisy_sampling_jit.py](file://examples-ng/noisy_sampling_jit.py#L0-L62)
-
 **Section sources**
-- [noisy_sampling_jit.py](file://examples-ng/noisy_sampling_jit.py#L0-L62)
+- [noisy_sampling_comparison.py](file://examples/noisy_sampling_comparison.py#L0-L62) - *Replaced noisy_sampling_jit.py*
+
+**Diagram sources**
+- [noisy_sampling_comparison.py](file://examples/noisy_sampling_comparison.py#L0-L62) - *Replaced noisy_sampling_jit.py*
 
 ## Combining Error Mitigation Strategies
 Effective error mitigation often requires combining multiple techniques to address different noise sources. The TyxonQ framework supports a modular approach where readout error correction, zero-noise extrapolation (ZNE), dynamical decoupling (DD), and probabilistic error cancellation (PEC) can be applied in sequence. The `postprocessing/error_mitigation.py` module provides placeholder implementations for ZNE, DD, and RC (randomized compiling), which can be integrated with the readout mitigation techniques.
@@ -246,13 +254,13 @@ style D fill:#9ff,stroke:#333
 style E fill:#9f9,stroke:#333
 ```
 
-**Diagram sources**
-- [error_mitigation.py](file://src/tyxonq/postprocessing/error_mitigation.py#L0-L81)
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
-
 **Section sources**
-- [error_mitigation.py](file://src/tyxonq/postprocessing/error_mitigation.py#L0-L81)
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
+- [error_mitigation.py](file://src/tyxonq/postprocessing/error_mitigation.py#L0-L81) - *Updated in recent commit*
+- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142) - *Updated in recent commit*
+
+**Diagram sources**
+- [error_mitigation.py](file://src/tyxonq/postprocessing/error_mitigation.py#L0-L81) - *Updated in recent commit*
+- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142) - *Updated in recent commit*
 
 ## Evaluation of Mitigation Effectiveness
 Evaluating the effectiveness of error mitigation strategies requires careful benchmarking against known ground truths or theoretical expectations. The examples provide several approaches for assessment: direct comparison of mitigated results with ideal counts, computation of fidelity and trace distance between quantum states, and monitoring of convergence behavior in variational algorithms.
@@ -266,9 +274,9 @@ Key metrics for evaluation include:
 The framework supports both synthetic benchmarks with known solutions and real hardware validation through cloud API integration. For production use, it's recommended to establish a calibration routine that periodically updates error models and mitigation parameters based on current device performance.
 
 **Section sources**
-- [mcnoise_check.py](file://examples-ng/mcnoise_check.py#L0-L81)
-- [noise_calibration.py](file://examples-ng/noise_calibration.py#L0-L214)
-- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133)
+- [mcnoise_check.py](file://examples-done/archived/performance_experiments/mcnoise_check.py#L0-L81) - *Updated in recent commit*
+- [noise_calibration.py](file://examples-done/noise_calibration.py#L0-L214) - *Updated in recent commit*
+- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133) - *Updated in recent commit*
 
 ## Conclusion
 The error mitigation examples in TyxonQ provide a comprehensive toolkit for improving result accuracy in noisy quantum systems. The implementations cover the full spectrum from basic readout error correction to advanced Monte Carlo simulation techniques and quantum machine learning with explicit noise modeling. Key strengths include the modular design of mitigation strategies, efficient JIT-compiled execution, and comprehensive validation frameworks.

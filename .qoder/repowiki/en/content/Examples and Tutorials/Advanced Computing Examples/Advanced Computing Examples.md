@@ -2,15 +2,23 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [hea_scan_jit_acc.py](file://examples-ng/hea_scan_jit_acc.py)
-- [hybrid_gpu_pipeline.py](file://examples-ng/hybrid_gpu_pipeline.py)
-- [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py)
-- [bp_benchmark.py](file://examples-ng/bp_benchmark.py)
-- [cotengra_setting_bench.py](file://examples-ng/cotengra_setting_bench.py)
-- [checkpoint_memsave.py](file://examples-ng/checkpoint_memsave.py)
-- [clifford_optimization.py](file://examples-ng/clifford_optimization.py)
-- [lightcone_simplify.py](file://examples-ng/lightcone_simplify.py)
+- [hea_scan_jit_acc.py](file://examples-done/hea_scan_jit_acc.py)
+- [hybrid_gpu_pipeline.py](file://examples-done/hybrid_gpu_pipeline.py)
+- [rem_super_large_scale.py](file://examples-done/rem_super_large_scale.py)
+- [bp_benchmark.py](file://examples-done/bp_benchmark.py) - *Updated in recent commit*
+- [cotengra_setting_bench.py](file://examples-done/cotengra_setting_bench.py)
+- [checkpoint_memsave.py](file://examples-done/checkpoint_memsave.py)
+- [clifford_optimization.py](file://examples-done/clifford_optimization.py)
+- [lightcone_simplify.py](file://examples-done/lightcone_simplify.py) - *Updated in recent commit*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated **Backpropagation Benchmarking** section to reflect recent changes in `bp_benchmark.py`
+- Updated **Lightcone-Based Circuit Simplification** section with enhanced details from updated `lightcone_simplify.py`
+- Added performance metrics and correctness validation details based on code changes
+- Enhanced source tracking with precise file references and annotations
+- Removed outdated diagram references where diagrams were not directly tied to specific code structures
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -40,11 +48,8 @@ D --> E["Benchmark Both Approaches"]
 E --> F["Compare Results"]
 ```
 
-**Diagram sources**
-- [hea_scan_jit_acc.py](file://examples-ng/hea_scan_jit_acc.py#L20-L78)
-
 **Section sources**
-- [hea_scan_jit_acc.py](file://examples-ng/hea_scan_jit_acc.py#L1-L78)
+- [hea_scan_jit_acc.py](file://examples-done/hea_scan_jit_acc.py)
 
 ## Hybrid GPU Pipelines
 The `hybrid_gpu_pipeline.py` example illustrates a hybrid quantum-classical pipeline where both quantum and neural network components run on GPU using PyTorch. This implementation demonstrates end-to-end training of a quantum neural network on the MNIST dataset, with quantum circuits integrated as differentiable layers within a classical neural network. The pipeline leverages GPU acceleration for both quantum state evolution and classical parameter optimization, enabling efficient training of hybrid models. The example includes data preprocessing, quantum circuit definition, and integration with PyTorch's automatic differentiation system.
@@ -59,11 +64,8 @@ E --> F["Backpropagation"]
 F --> G["Parameter Update"]
 ```
 
-**Diagram sources**
-- [hybrid_gpu_pipeline.py](file://examples-ng/hybrid_gpu_pipeline.py#L1-L123)
-
 **Section sources**
-- [hybrid_gpu_pipeline.py](file://examples-ng/hybrid_gpu_pipeline.py#L1-L123)
+- [hybrid_gpu_pipeline.py](file://examples-done/hybrid_gpu_pipeline.py)
 
 ## Memory-Efficient Large-Scale Simulations
 The `rem_super_large_scale.py` example demonstrates the limitations of readout error mitigation (REM) techniques when scaling to large qubit systems. This implementation shows how the effectiveness of REM degrades as the number of qubits increases relative to the error probability. The simulation creates circuits with all-zero and all-one states, applies probabilistic bit-flip noise, and evaluates the performance of REM calibration. This example highlights the challenges of error mitigation in large-scale quantum simulations and provides insights into the scalability of current error correction techniques.
@@ -77,14 +79,13 @@ D --> E["Evaluate Expectation"]
 E --> F["Analyze Results"]
 ```
 
-**Diagram sources**
-- [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py#L1-L58)
-
 **Section sources**
-- [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py#L1-L58)
+- [rem_super_large_scale.py](file://examples-done/rem_super_large_scale.py)
 
 ## Backpropagation Benchmarking
 The `bp_benchmark.py` example provides a comprehensive benchmark for evaluating barren plateau phenomena in quantum neural networks. This implementation compares the performance of TyxonQ with PennyLane for gradient computation in variational quantum circuits. The benchmark measures both staging time (compilation/initialization) and running time (execution) for gradient calculations, providing insights into the efficiency of different quantum computing frameworks. The example includes a custom circuit with random unitary operations and entangling gates, simulating realistic variational quantum algorithms.
+
+**Updated** The benchmark now uses a single-circuit setup to avoid functorch batching issues and implements manual gradient computation over the first parameter using PyTorch's autograd system.
 
 ```mermaid
 flowchart TD
@@ -94,11 +95,8 @@ C --> D["Benchmark Performance"]
 D --> E["Compare Frameworks"]
 ```
 
-**Diagram sources**
-- [bp_benchmark.py](file://examples-ng/bp_benchmark.py#L1-L131)
-
 **Section sources**
-- [bp_benchmark.py](file://examples-ng/bp_benchmark.py#L1-L131)
+- [bp_benchmark.py](file://examples-done/bp_benchmark.py) - *Updated in recent commit*
 
 ## Tensor Contraction Optimization
 The `cotengra_setting_bench.py` example demonstrates optimization of tensor contraction paths using the cotengra library. This implementation explores various optimization strategies for tensor network contractions in quantum circuit simulations. The benchmark evaluates different combinations of optimization methods, libraries, post-processing techniques, and cost functions to determine the most efficient contraction paths. This approach is critical for reducing computational complexity in large-scale quantum simulations, where tensor contractions represent a significant portion of the computational workload.
@@ -111,11 +109,8 @@ C --> D["Evaluate Contraction Cost"]
 D --> E["Compare Optimization Settings"]
 ```
 
-**Diagram sources**
-- [cotengra_setting_bench.py](file://examples-ng/cotengra_setting_bench.py#L1-L159)
-
 **Section sources**
-- [cotengra_setting_bench.py](file://examples-ng/cotengra_setting_bench.py#L1-L159)
+- [cotengra_setting_bench.py](file://examples-done/cotengra_setting_bench.py)
 
 ## Memory-Saving Checkpointing Techniques
 The `checkpoint_memsave.py` example demonstrates memory-saving techniques for variational quantum eigensolvers (VQE) using recursive checkpointing. This implementation shows how to reduce memory consumption during gradient computation by trading off computation time for memory efficiency. The recursive checkpointing approach divides the circuit into segments, recomputing intermediate states during backpropagation instead of storing them. This technique is particularly valuable for deep circuits where memory requirements would otherwise exceed available resources.
@@ -131,11 +126,8 @@ F --> G["Recompute First Half"]
 G --> H["Compute Gradients"]
 ```
 
-**Diagram sources**
-- [checkpoint_memsave.py](file://examples-ng/checkpoint_memsave.py#L1-L119)
-
 **Section sources**
-- [checkpoint_memsave.py](file://examples-ng/checkpoint_memsave.py#L1-L119)
+- [checkpoint_memsave.py](file://examples-done/checkpoint_memsave.py)
 
 ## Clifford Circuit Optimization
 The `clifford_optimization.py` example presents a DQAS-style optimization approach for discrete Clifford-type quantum circuits. This implementation uses a probabilistic model to optimize circuit structures, where gate choices are represented as continuous parameters that are gradually sharpened during optimization. The method combines softmax sampling with gradient-based updates to explore the discrete space of Clifford gates efficiently. This approach enables optimization over circuit architectures rather than just continuous parameters, expanding the search space for quantum circuit design.
@@ -150,14 +142,13 @@ E --> F["Check Convergence"]
 F --> G["Output Optimized Circuit"]
 ```
 
-**Diagram sources**
-- [clifford_optimization.py](file://examples-ng/clifford_optimization.py#L1-L202)
-
 **Section sources**
-- [clifford_optimization.py](file://examples-ng/clifford_optimization.py#L1-L202)
+- [clifford_optimization.py](file://examples-done/clifford_optimization.py)
 
 ## Lightcone-Based Circuit Simplification
 The `lightcone_simplify.py` example demonstrates the efficiency gains from lightcone-based circuit simplification in expectation value calculations. This implementation compares the performance of quantum circuit evaluation with and without lightcone optimization. The lightcone method identifies and removes gates that do not affect the measured qubits, significantly reducing computational complexity. This optimization is particularly effective for local measurements in deep circuits, where only a subset of gates influence the final measurement outcomes.
+
+**Updated** The implementation now includes comprehensive benchmarking across various problem sizes and formal correctness validation. Lightcone optimization provides 2-50x speedup, with larger circuits benefiting more due to exponential scaling. The optimization is mathematically exact with zero accuracy loss.
 
 ```mermaid
 flowchart TD
@@ -168,10 +159,12 @@ D --> E["Compare with Baseline"]
 ```
 
 **Diagram sources**
-- [lightcone_simplify.py](file://examples-ng/lightcone_simplify.py#L1-L66)
+- [lightcone_simplify.py](file://examples-done/lightcone_simplify.py#L1-L66) - *Updated in recent commit*
+- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py) - *Core implementation*
 
 **Section sources**
-- [lightcone_simplify.py](file://examples-ng/lightcone_simplify.py#L1-L66)
+- [lightcone_simplify.py](file://examples-done/lightcone_simplify.py) - *Updated in recent commit*
+- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py)
 
 ## Performance Tuning and Resource Management
 The examples collectively demonstrate several key principles for performance tuning and resource management in quantum simulations:

@@ -11,17 +11,29 @@
 - [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py)
 - [gradient_benchmark.py](file://examples/gradient_benchmark.py)
 - [profile_chem.py](file://scripts/profile_chem.py)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py) - *Added in recent commit*
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py) - *Added in recent commit*
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py) - *Updated with HOMO-LUMO gap functionality*
+- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py) - *Base functionality for HOMO-LUMO gap*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Added new section on HOMO-LUMO Gap Analysis with comprehensive examples
+- Updated Quantum Chemistry Applications section to include HEA HOMO-LUMO gap functionality
+- Added references to new demonstration files and updated source tracking
+- Enhanced documentation with detailed implementation details of the HOMO-LUMO gap calculation
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Basic Circuit Construction](#basic-circuit-construction)
 3. [Quantum Chemistry Applications](#quantum-chemistry-applications)
-4. [Variational Algorithms](#variational-algorithms)
-5. [Advanced Optimization Techniques](#advanced-optimization-techniques)
-6. [Next-Generation Examples](#next-generation-examples)
-7. [Utility Scripts](#utility-scripts)
-8. [Common Modifications and Pitfalls](#common-modifications-and-pitfalls)
+4. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
+5. [Variational Algorithms](#variational-algorithms)
+6. [Advanced Optimization Techniques](#advanced-optimization-techniques)
+7. [Next-Generation Examples](#next-generation-examples)
+8. [Utility Scripts](#utility-scripts)
+9. [Common Modifications and Pitfalls](#common-modifications-and-pitfalls)
 
 ## Introduction
 This document provides comprehensive tutorials and examples for the TyxonQ quantum computing framework, organized by complexity and application domain. The examples demonstrate practical implementation patterns for quantum circuit construction, quantum chemistry simulations, variational algorithms, and advanced optimization techniques. Each example includes step-by-step walkthroughs of key concepts, with explanations of the underlying quantum computing principles and framework-specific implementation details.
@@ -51,6 +63,32 @@ The HEA implementation demonstrates a more flexible approach that can be initial
 
 **Section sources**
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py#L1-L57)
+
+## HOMO-LUMO Gap Analysis
+
+The `demo_hea_homo_lumo_gap.py` and `demo_homo_lumo_gap.py` examples demonstrate the new HOMO-LUMO gap calculation functionality in TyxonQ, providing tools for analyzing electronic structure properties of molecular systems. This feature enables researchers to calculate the energy difference between the highest occupied molecular orbital (HOMO) and the lowest unoccupied molecular orbital (LUMO), which is crucial for understanding chemical reactivity, excitation energies, and material properties.
+
+The implementation provides a unified interface for HOMO-LUMO gap calculation across different quantum chemistry algorithms, with consistent API design between UCCSD and HEA classes. The gap calculation is based on Hartree-Fock orbital energies and automatically handles both closed-shell and open-shell systems.
+
+For UCCSD, the gap calculation is a native feature that directly accesses the Hartree-Fock results from the underlying PySCF computation. The method automatically determines HOMO and LUMO indices based on electron count for closed-shell systems, or analyzes orbital occupations for open-shell systems. Users can also manually specify orbital indices for custom analysis.
+
+The HEA implementation delegates HOMO-LUMO gap calculation to an internal UCC object, creating a seamless experience for users who want to analyze electronic structure properties while using hardware-efficient ansatz circuits. This architectural design maintains code reuse and consistency while extending functionality to different algorithm types.
+
+Key features demonstrated include:
+- Automatic HOMO-LUMO determination based on electron count and orbital occupations
+- Support for both closed-shell and open-shell systems
+- Manual specification of HOMO/LUMO orbitals for custom analysis
+- eV unit conversion for convenient interpretation
+- Active space considerations in gap calculations
+- Numerical validation against PySCF reference data
+
+The examples show how to compare HOMO-LUMO gaps between different algorithms (HEA vs UCC) and across multiple molecules, providing insights into the accuracy and consistency of different quantum chemistry approaches. Error handling is also demonstrated, showing appropriate behavior when attempting gap calculations on HEA instances constructed from integrals rather than molecular objects.
+
+**Section sources**
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py#L1-L174)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L1-L200)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L788)
+- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L1089-L1219)
 
 ## Variational Algorithms
 
@@ -157,6 +195,8 @@ When working with the examples in this repository, several common modifications 
 
 7. **JIT Compilation Overheads**: While JIT compilation can accelerate repeated circuit executions, the initial compilation time can be substantial, especially for deep circuits. Techniques like scan operations can mitigate this issue but may introduce other trade-offs in runtime performance.
 
+8. **HOMO-LUMO Gap Calculation Limitations**: The HOMO-LUMO gap functionality is only available for HEA instances constructed from molecular objects, not from integrals directly. Users should ensure they use the appropriate constructor method when they need electronic structure analysis.
+
 By understanding these common considerations, users can effectively adapt the provided examples to their specific research questions and computational environments, avoiding common pitfalls and maximizing the effectiveness of their quantum algorithms.
 
 **Section sources**
@@ -169,3 +209,5 @@ By understanding these common considerations, users can effectively adapt the pr
 - [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py#L1-L59)
 - [gradient_benchmark.py](file://examples/gradient_benchmark.py)
 - [profile_chem.py](file://scripts/profile_chem.py#L1-L120)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py#L1-L174)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L1-L200)

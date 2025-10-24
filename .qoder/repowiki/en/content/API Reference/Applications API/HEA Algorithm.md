@@ -5,6 +5,13 @@
 - [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
 </cite>
 
+## Update Summary
+**Changes Made**   
+- Added new section on HOMO-LUMO Gap Calculation to document the newly added `get_homo_lumo_gap` method and `homo_lumo_gap` property
+- Updated Introduction to include HOMO-LUMO gap functionality
+- Added new usage example demonstrating HOMO-LUMO gap calculation
+- Updated document sources to reflect the new functionality
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [HEA Class Initialization](#hea-class-initialization)
@@ -14,10 +21,11 @@
 6. [HEA Construction from Molecular Data](#hea-construction-from-molecular-data)
 7. [Reduced Density Matrix Calculation](#reduced-density-matrix-calculation)
 8. [Configuration Options](#configuration-options)
-9. [Usage Examples](#usage-examples)
+9. [HOMO-LUMO Gap Calculation](#homo-lumo-gap-calculation)
+10. [Usage Examples](#usage-examples)
 
 ## Introduction
-The Hardware-Efficient Ansatz (HEA) algorithm in TyxonQ is a variational quantum algorithm designed for molecular energy calculations using a parameterized quantum circuit. The HEA class implements a RY-only circuit structure with alternating layers of CNOT chains and RY rotations, enabling efficient execution on quantum hardware. This documentation details the initialization, circuit structure, energy evaluation, optimization, and post-processing methods of the HEA class, along with configuration options and usage examples.
+The Hardware-Efficient Ansatz (HEA) algorithm in TyxonQ is a variational quantum algorithm designed for molecular energy calculations using a parameterized quantum circuit. The HEA class implements a RY-only circuit structure with alternating layers of CNOT chains and RY rotations, enabling efficient execution on quantum hardware. This documentation details the initialization, circuit structure, energy evaluation, optimization, and post-processing methods of the HEA class, along with configuration options and usage examples. The implementation also includes HOMO-LUMO gap calculation capabilities for molecular analysis.
 
 ## HEA Class Initialization
 The HEA class can be initialized with molecular parameters, qubit count, circuit layers, and Hamiltonian specification. The constructor supports two initialization paths: direct specification of parameters or construction from molecular data.
@@ -233,6 +241,36 @@ The `mapping` parameter supports three fermion-to-qubit mappings:
 - "jordan-wigner": Standard mapping preserving locality
 - "bravyi-kitaev": More efficient mapping with logarithmic locality
 
+## HOMO-LUMO Gap Calculation
+The HEA class now includes functionality for calculating the HOMO-LUMO gap, which is essential for understanding molecular electronic structure and chemical reactivity. This feature is available when the HEA instance is constructed from molecular data via `from_molecule()` or direct molecule input.
+
+### get_homo_lumo_gap Method
+The `get_homo_lumo_gap` method calculates the HOMO-LUMO gap and provides detailed orbital energy information. It delegates to the internal UCC object for chemistry-related calculations, using the Hartree-Fock results from the molecular construction.
+
+**Parameters:**
+- `homo_idx`: Manual specification of HOMO orbital index (0-based). If None, automatically determined from electron count.
+- `lumo_idx`: Manual specification of LUMO orbital index (0-based). If None, automatically determined from electron count.
+- `include_ev`: Whether to include eV conversion in output. Default False.
+
+**Returns:**
+- Dictionary containing:
+  - 'homo_energy': Energy of HOMO orbital (Hartree)
+  - 'lumo_energy': Energy of LUMO orbital (Hartree)
+  - 'gap': HOMO-LUMO energy gap (Hartree)
+  - 'gap_ev': HOMO-LUMO energy gap (eV) [only if include_ev=True]
+  - 'homo_idx': Index of HOMO orbital
+  - 'lumo_idx': Index of LUMO orbital
+  - 'system_type': 'closed-shell' or 'open-shell'
+
+### homo_lumo_gap Property
+The `homo_lumo_gap` property provides a convenient way to access the HOMO-LUMO gap value directly. It automatically determines HOMO and LUMO based on the molecular system and returns the gap in Hartree.
+
+**Returns:**
+- HOMO-LUMO gap in Hartree
+
+**Section sources**
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L750-L833)
+
 ## Usage Examples
 The HEA algorithm can be used in various workflows for molecular energy calculations. Here are typical usage patterns:
 
@@ -258,6 +296,17 @@ rdm2 = hea.make_rdm2()
 # Use RDMs for property calculations
 ```
 
+### HOMO-LUMO Gap Calculation
+```python
+# Calculate HOMO-LUMO gap
+gap_info = hea.get_homo_lumo_gap(include_ev=True)
+print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree ({gap_info['gap_ev']:.4f} eV)")
+
+# Access gap directly via property
+gap = hea.homo_lumo_gap
+print(f"Gap: {gap:.6f} Hartree")
+```
+
 ### Custom Optimization Configuration
 ```python
 # Configure optimization options
@@ -277,4 +326,4 @@ solver = HEA.as_pyscf_solver(n_layers=2, mapping="parity")
 These examples demonstrate the flexibility of the HEA implementation in TyxonQ for various quantum chemistry applications.
 
 **Section sources**
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L833)

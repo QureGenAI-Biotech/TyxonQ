@@ -21,6 +21,7 @@
 8. [Code Examples and Usage](#code-examples-and-usage)
 9. [Energy Evaluation and Optimization](#energy-evaluation-and-optimization)
 10. [Chemical Accuracy and Validation](#chemical-accuracy-and-validation)
+11. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
 
 ## Introduction
 This document provides a comprehensive overview of quantum chemistry algorithms implemented in the TyxonQ framework, focusing on UCCSD, HEA, k-UpCCGSD, and PUCCD methods for molecular energy calculations. These algorithms leverage quantum computing to solve electronic structure problems by constructing parameterized quantum circuits that represent electronic wavefunctions. The document explains the theoretical foundations, implementation details, and practical usage of these methods, including their integration with classical computational chemistry tools like PySCF for molecular initialization, active space selection, and amplitude initialization.
@@ -357,3 +358,42 @@ style H fill:#cfc,stroke:#333
 **Section sources**
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
 - [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+
+## HOMO-LUMO Gap Analysis
+The HOMO-LUMO gap analysis functionality has been enhanced in the TyxonQ framework to provide detailed information about the highest occupied molecular orbital (HOMO) and lowest unoccupied molecular orbital (LUMO) energy gap. This feature is available through both the `get_homo_lumo_gap()` method and the `homo_lumo_gap` property in both the UCC and HEA classes.
+
+The `get_homo_lumo_gap()` method provides comprehensive information about the HOMO-LUMO gap, including orbital energies, indices, and system type. It automatically determines HOMO and LUMO indices based on the molecular system (closed-shell or open-shell) unless explicitly specified. For closed-shell systems (spin=0), the HOMO index is calculated as (n_electrons // 2) - 1 and the LUMO index as n_electrons // 2. For open-shell systems (spin≠0), the method uses orbital occupation analysis to determine the appropriate indices.
+
+The method returns a dictionary containing:
+- 'homo_energy': Energy of HOMO orbital in Hartree
+- 'lumo_energy': Energy of LUMO orbital in Hartree
+- 'gap': HOMO-LUMO energy gap in Hartree
+- 'gap_ev': HOMO-LUMO energy gap in eV (when include_ev=True)
+- 'homo_idx': Index of HOMO orbital
+- 'lumo_idx': Index of LUMO orbital
+- 'system_type': 'closed-shell' or 'open-shell'
+
+The `homo_lumo_gap` property provides a convenient way to access just the gap value in Hartree by calling `get_homo_lumo_gap()['gap']`. This property simplifies access to the gap value when detailed orbital information is not needed.
+
+For HEA instances, the HOMO-LUMO gap calculation requires that the HEA was constructed from a molecule (using the molecule parameter or from_molecule method) rather than directly from integrals. This is because the calculation delegates to an internal UCC object that contains the necessary Hartree-Fock calculation results. If an HEA instance was built from integrals directly, attempting to calculate the HOMO-LUMO gap will raise a RuntimeError.
+
+```mermaid
+classDiagram
+class UCC {
++get_homo_lumo_gap(homo_idx : int | None, lumo_idx : int | None, include_ev : bool) dict
++homo_lumo_gap() float
+}
+class HEA {
++get_homo_lumo_gap(homo_idx : int | None, lumo_idx : int | None, include_ev : bool) dict
++homo_lumo_gap() float
+}
+UCC <|-- HEA
+```
+
+**Diagram sources**
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
+
+**Section sources**
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)

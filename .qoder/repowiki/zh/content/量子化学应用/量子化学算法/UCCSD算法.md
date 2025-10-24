@@ -18,6 +18,7 @@
 **新增内容**  
 - 在“执行路径：device与numeric”部分新增了关于缓存机制的说明。
 - 在“变分优化与能量计算”部分增加了对`energy_and_grad`方法的说明。
+- **新增“HOMO-LUMO能隙计算”章节**，详细介绍`get_homo_lumo_gap`和`homo_lumo_gap`方法的实现与使用。
 
 **已弃用内容**  
 - 无
@@ -35,7 +36,8 @@
 7. [活性空间近似与参数配置](#活性空间近似与参数配置)
 8. [与经典方法的能量对比](#与经典方法的能量对比)
 9. [常见问题与解决方案](#常见问题与解决方案)
-10. [结论](#结论)
+10. [HOMO-LUMO能隙计算](#homolumo能隙计算)
+11. [结论](#结论)
 
 ## 引言
 UCCSD（单双激发耦合簇）算法是量子化学中用于精确计算分子基态能量的重要变分量子算法。该算法通过构建包含单激发（S）和双激发（D）的幺正耦合簇（UCC）试探波函数，结合经典优化器对变分参数进行优化，从而逼近真实基态能量。在AI药物设计等任务中，UCCSD因其高精度和灵活性而被广泛应用。本文档深入解析该算法在TyxonQ框架中的实现机制与API设计，涵盖从分子输入到能量输出的完整流程。
@@ -206,5 +208,34 @@ print(f"FCI Energy: {uccsd.e_fci}")
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
 - [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
 
+## HOMO-LUMO能隙计算
+UCCSD算法继承了`UCC`基类的`get_homo_lumo_gap`和`homo_lumo_gap`方法，用于计算分子的HOMO-LUMO能隙。此功能对于分析分子的电子结构和化学反应性至关重要。
+
+`get_homo_lumo_gap`方法返回一个包含详细信息的字典，包括HOMO和LUMO轨道的能量、能隙值、轨道索引以及系统类型（闭壳或开壳）。用户可以手动指定HOMO和LUMO的轨道索引，或让算法自动确定。此外，通过设置`include_ev=True`，可以获取以电子伏特（eV）为单位的能隙值。
+
+```python
+# 计算HOMO-LUMO能隙
+gap_info = uccsd.get_homo_lumo_gap()
+print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree")
+print(f"HOMO index: {gap_info['homo_idx']}, LUMO index: {gap_info['lumo_idx']}")
+
+# 获取以eV为单位的能隙
+gap_info_ev = uccsd.get_homo_lumo_gap(include_ev=True)
+print(f"HOMO-LUMO gap: {gap_info_ev['gap_ev']:.6f} eV")
+```
+
+`homo_lumo_gap`属性提供了一个便捷的访问方式，直接返回以Hartree为单位的能隙值。
+
+```python
+# 使用属性访问能隙
+gap = uccsd.homo_lumo_gap
+print(f"Gap: {gap:.6f} Hartree")
+```
+
+该功能依赖于Hartree-Fock计算结果，因此在调用这些方法前必须确保UCCSD实例已正确初始化。
+
+**本节来源**  
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
+
 ## 结论
-UCCSD算法在TyxonQ框架中实现了高效且灵活的量子化学能量计算。其核心机制包括从分子输入构建费米子算符、生成并筛选单双激发项、以及通过变分优化求解基态能量。API设计支持多种初始化方式和执行路径，结合活性空间近似和初始振幅配置，使其能够适应从简单分子到复杂药物分子的广泛计算需求。与经典CCSD/FCI方法的能量对比验证了其高精度，使其成为AI药物设计等前沿应用中的有力工具。
+UCCSD算法在TyxonQ框架中实现了高效且灵活的量子化学能量计算。其核心机制包括从分子输入构建费米子算符、生成并筛选单双激发项、以及通过变分优化求解基态能量。API设计支持多种初始化方式和执行路径，结合活性空间近似和初始振幅配置，使其能够适应从简单分子到复杂药物分子的广泛计算需求。与经典CCSD/FCI方法的能量对比验证了其高精度，使其成为AI药物设计等前沿应用中的有力工具。新增的HOMO-LUMO能隙计算功能进一步增强了其在分子电子结构分析中的实用性。

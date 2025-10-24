@@ -7,7 +7,15 @@
 - [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py)
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
 - [api.py](file://src/tyxonq/compiler/api.py)
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py) - *Added in recent commit*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Added new section on HOMO-LUMO gap calculation with detailed method descriptions
+- Added documentation for `get_homo_lumo_gap` method and `homo_lumo_gap` property
+- Updated referenced files to include ucc.py which contains the new HOMO-LUMO functionality
+- Enhanced example usage section with HOMO-LUMO gap calculation examples
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -15,9 +23,10 @@
 3. [Excitation Operator Generation](#excitation-operator-generation)
 4. [Retrieving Excitation Operators and Parameters](#retrieving-excitation-operators-and-parameters)
 5. [Accessing Final Energy Results](#accessing-final-energy-results)
-6. [Example Usage with H2 Molecule](#example-usage-with-h2-molecule)
-7. [Integration with Core Framework](#integration-with-core-framework)
-8. [Configuration Options](#configuration-options)
+6. [HOMO-LUMO Gap Calculation](#homo-lumo-gap-calculation)
+7. [Example Usage with H2 Molecule](#example-usage-with-h2-molecule)
+8. [Integration with Core Framework](#integration-with-core-framework)
+9. [Configuration Options](#configuration-options)
 
 ## Introduction
 The Unitary Coupled Cluster Singles and Doubles (UCCSD) algorithm in TyxonQ is a quantum chemistry method used for simulating molecular systems on quantum computers. It implements the UCCSD ansatz to approximate the ground state energy of molecules by constructing a parameterized quantum circuit based on single and double excitation operators derived from Hartree-Fock references. This documentation details the API for the UCCSD class, covering initialization parameters, excitation operator handling, energy computation, and integration with the broader TyxonQ framework.
@@ -129,6 +138,39 @@ The energy computation can be performed using different runtime backends, with t
 **Section sources**
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L223-L227)
 
+## HOMO-LUMO Gap Calculation
+The UCCSD class provides methods for calculating the HOMO-LUMO gap, which is the energy difference between the highest occupied molecular orbital (HOMO) and the lowest unoccupied molecular orbital (LUMO). This gap is a key indicator of molecular stability and reactivity.
+
+### get_homo_lumo_gap Method
+The `get_homo_lumo_gap` method calculates the HOMO-LUMO gap and returns detailed information about the orbital energies:
+
+**Parameters:**
+- **homo_idx**: Manual specification of HOMO orbital index (0-based). If None, automatically determined from electron count.
+- **lumo_idx**: Manual specification of LUMO orbital index (0-based). If None, automatically determined from electron count.
+- **include_ev**: Whether to include eV conversion in output. Default False.
+
+**Returns:**
+- **homo_energy**: Energy of HOMO orbital (Hartree)
+- **lumo_energy**: Energy of LUMO orbital (Hartree)
+- **gap**: HOMO-LUMO energy gap (Hartree)
+- **gap_ev**: HOMO-LUMO energy gap (eV) [only if include_ev=True]
+- **homo_idx**: Index of HOMO orbital
+- **lumo_idx**: Index of LUMO orbital
+- **system_type**: 'closed-shell' or 'open-shell'
+
+For closed-shell systems (spin=0): HOMO index = (n_electrons // 2) - 1, LUMO index = n_electrons // 2.
+For open-shell systems (spin≠0): Uses orbital occupation analysis.
+Orbital energies are obtained from the Hartree-Fock calculation.
+
+### homo_lumo_gap Property
+The `homo_lumo_gap` property provides a convenient way to access the HOMO-LUMO energy gap in Hartree units. It automatically determines HOMO and LUMO based on the molecular system and returns the gap value.
+
+**Returns:**
+- **float**: HOMO-LUMO gap in Hartree
+
+**Section sources**
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246) - *Added in recent commit*
+
 ## Example Usage with H2 Molecule
 The following example demonstrates UCCSD initialization and energy calculation for the hydrogen molecule (H2):
 
@@ -166,11 +208,28 @@ e_local = ucc_local.kernel(shots=0, runtime="device", provider="simulator", devi
 print(f"UCCSD local energy: {e_local}")
 ```
 
+Example of HOMO-LUMO gap calculation:
+
+```python
+# Calculate HOMO-LUMO gap
+gap_info = uccsd.get_homo_lumo_gap()
+print(f"HOMO-LUMO gap: {gap_info['gap']:.6f} Hartree")
+
+# Include eV conversion
+gap_info = uccsd.get_homo_lumo_gap(include_ev=True)
+print(f"HOMO-LUMO gap: {gap_info['gap_ev']:.6f} eV")
+
+# Access the gap through property
+gap = uccsd.homo_lumo_gap
+print(f"Gap: {gap:.6f} Hartree")
+```
+
 These examples illustrate both direct molecule input using predefined molecules and explicit molecular construction through PySCF's Mole object.
 
 **Section sources**
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py#L20-L56)
 - [molecule.py](file://src/tyxonq/applications/chem/molecule.py#L200-L210)
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246) - *Added in recent commit*
 
 ## Integration with Core Framework
 The UCCSD algorithm integrates with TyxonQ's core framework components through several key interfaces:

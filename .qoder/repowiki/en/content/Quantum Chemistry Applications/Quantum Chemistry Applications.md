@@ -2,8 +2,8 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
+- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py) - *Updated with HOMO-LUMO gap method*
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py) - *Updated with HOMO-LUMO gap method*
 - [kupccgsd.py](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py)
 - [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py)
 - [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py)
@@ -13,7 +13,15 @@
 - [hamiltonian_builders.py](file://src/tyxonq/applications/chem/chem_libs/hamiltonians_chem_library/hamiltonian_builders.py)
 - [molecule.py](file://src/tyxonq/applications/chem/molecule.py)
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py) - *Added HOMO-LUMO gap calculation functionality*
 </cite>
+
+## Update Summary
+- **Added**: HOMO-LUMO gap calculation functionality to HEA and UCC/UCCSD methods
+- **Updated**: Computational Chemistry Algorithms section to include HOMO-LUMO gap explanation
+- **Added**: New section on HOMO-LUMO Gap Calculation
+- **Updated**: Section sources to include ucc.py where HOMO-LUMO gap functionality is implemented
+- **Enhanced**: Examples to demonstrate HOMO-LUMO gap usage in quantum chemistry workflows
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -23,20 +31,21 @@
    - [HEA Method](#hea-method)
    - [k-UpCCGSD Method](#k-upccgsd-method)
    - [pUCCD Method](#puccd-method)
-4. [Dual Runtime Systems](#dual-runtime-systems)
+4. [HOMO-LUMO Gap Calculation](#homo-lumo-gap-calculation)
+5. [Dual Runtime Systems](#dual-runtime-systems)
    - [Device-Based Execution](#device-based-execution)
    - [Numeric Runtime for Exact Simulation](#numeric-runtime-for-exact-simulation)
-5. [End-to-End Quantum Chemistry Workflows](#end-to-end-quantum-chemistry-workflows)
-6. [Configuration Options](#configuration-options)
+6. [End-to-End Quantum Chemistry Workflows](#end-to-end-quantum-chemistry-workflows)
+7. [Configuration Options](#configuration-options)
    - [Convergence Criteria](#convergence-criteria)
    - [Orbital Optimization](#orbital-optimization)
    - [Active Space Selection](#active-space-selection)
-7. [Chemical Accuracy and Classical Method Comparison](#chemical-accuracy-and-classical-method-comparison)
-8. [Conclusion](#conclusion)
+8. [Chemical Accuracy and Classical Method Comparison](#chemical-accuracy-and-classical-method-comparison)
+9. [Conclusion](#conclusion)
 
 ## Introduction
 
-Quantum chemistry applications leverage quantum computing to solve molecular energy calculations with high precision. This document details the implementation of various quantum computational chemistry algorithms including UCC/UCCSD, HEA, k-UpCCGSD, and pUCCD methods. It explains molecule representation and Hamiltonian construction through chem_libs, describes dual runtime systems for both device-based execution and numeric simulation, and provides examples from cloud_uccsd_hea_demo.py demonstrating end-to-end workflows. The documentation also covers configuration options for convergence criteria, orbital optimization, and active space selection, along with guidance on interpreting chemical accuracy and comparing results with classical methods like PySCF.
+Quantum chemistry applications leverage quantum computing to solve molecular energy calculations with high precision. This document details the implementation of various quantum computational chemistry algorithms including UCC/UCCSD, HEA, k-UpCCGSD, and pUCCD methods. It explains molecule representation and Hamiltonian construction through chem_libs, describes dual runtime systems for both device-based execution and numeric simulation, and provides examples from cloud_uccsd_hea_demo.py demonstrating end-to-end workflows. The documentation also covers configuration options for convergence criteria, orbital optimization, and active space selection, along with guidance on interpreting chemical accuracy and comparing results with classical methods like PySCF. Additionally, this update introduces the HOMO-LUMO gap calculation functionality, which provides critical insights into electronic structure and chemical reactivity.
 
 ## Molecular Representation and Hamiltonian Construction
 
@@ -113,6 +122,25 @@ pUCCD is particularly effective for:
 **Section sources**
 - [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py#L1-L188)
 
+## HOMO-LUMO Gap Calculation
+
+The framework now includes HOMO-LUMO (Highest Occupied Molecular Orbital - Lowest Unoccupied Molecular Orbital) gap calculation functionality, which provides critical insights into electronic structure, chemical reactivity, and material properties. This feature has been implemented in both the UCC and HEA classes, enabling researchers to analyze fundamental electronic properties of molecular systems.
+
+The HOMO-LUMO gap is calculated using the Hartree-Fock orbital energies obtained during the initial quantum chemistry calculations. For closed-shell systems (spin=0), the HOMO index is determined as (n_electrons // 2) - 1 and the LUMO index as n_electrons // 2. For open-shell systems (spin≠0), the calculation uses orbital occupation analysis to identify the highest occupied and lowest unoccupied orbitals.
+
+The implementation provides both a detailed method `get_homo_lumo_gap()` and a convenient property `homo_lumo_gap` for accessing the gap value. The detailed method returns a comprehensive dictionary containing:
+- HOMO and LUMO orbital energies (in Hartree)
+- HOMO-LUMO energy gap (in Hartree)
+- Option to include eV conversion of the gap
+- Orbital indices for HOMO and LUMO
+- System type classification (closed-shell or open-shell)
+
+For HEA instances, the HOMO-LUMO gap calculation is delegated to an internal UCC object created during molecule construction, ensuring consistency with the underlying quantum chemistry framework. This approach allows HEA to leverage the same robust HOMO-LUMO analysis while maintaining its hardware-efficient ansatz structure.
+
+**Section sources**
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1219)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L788)
+
 ## Dual Runtime Systems
 
 ### Device-Based Execution
@@ -173,7 +201,7 @@ A typical workflow includes:
 
 The demo example illustrates both local and cloud-based execution paths. The local baseline uses PySCF for HF and integral computation, while the cloud path delegates these classical computations to remote servers. This hybrid approach allows researchers to leverage powerful classical computing resources for the most demanding parts of the calculation while focusing quantum resources on the variational optimization.
 
-The workflows support various configuration options and can be easily adapted for different molecules and computational requirements. They serve as templates for developing custom quantum chemistry applications and provide a foundation for more complex calculations such as potential energy surfaces and reaction pathways.
+The workflows now support HOMO-LUMO gap analysis as part of the result interpretation phase. After optimization, users can access both the ground state energy and electronic structure properties through methods like `get_homo_lumo_gap()` and the `homo_lumo_gap` property. This enables comprehensive analysis of chemical reactivity and electronic properties alongside energy calculations.
 
 **Section sources**
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py#L1-L57)
@@ -219,6 +247,7 @@ Key comparison metrics include:
 - Relative energies for reaction pathways and isomerization
 - Dipole moments and other molecular properties
 - Potential energy surface accuracy
+- HOMO-LUMO gaps for electronic structure analysis
 
 The implementation includes reference calculations such as HF, MP2, CCSD, and FCI through integration with PySCF, providing a comprehensive benchmarking suite. Chemical accuracy is typically defined as agreement within 1 kcal/mol (approximately 1.6 mHa) of experimental or high-level theoretical values.
 
@@ -239,5 +268,7 @@ These comparison capabilities are crucial for understanding the strengths and li
 The Quantum Chemistry Applications framework provides a comprehensive suite of tools for quantum computational chemistry, implementing state-of-the-art algorithms like UCC/UCCSD, HEA, k-UpCCGSD, and pUCCD for molecular energy calculations. The system integrates molecular representation and Hamiltonian construction through chem_libs, supports dual runtime systems for both device-based execution and exact numeric simulation, and provides end-to-end workflows demonstrated in practical examples.
 
 Key strengths of the framework include its modular design, support for various ansatz types, integration with classical quantum chemistry software, and comprehensive configuration options for convergence criteria, orbital optimization, and active space selection. The ability to compare results with classical methods like PySCF enables rigorous assessment of chemical accuracy and guides the development of improved quantum algorithms.
+
+This update introduces HOMO-LUMO gap calculation functionality, enhancing the framework's capabilities for electronic structure analysis. The HOMO-LUMO gap provides critical insights into chemical reactivity, material properties, and electronic transitions, making it an essential tool for quantum chemistry research. This feature is seamlessly integrated across both UCC and HEA methods, ensuring consistent analysis capabilities regardless of the chosen ansatz.
 
 As quantum hardware continues to advance, this framework provides a solid foundation for exploring the potential of quantum computing in chemistry, from fundamental research to practical applications in materials science and drug discovery.

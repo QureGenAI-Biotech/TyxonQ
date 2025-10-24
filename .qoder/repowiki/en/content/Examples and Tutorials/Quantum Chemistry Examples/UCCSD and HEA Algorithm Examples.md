@@ -10,6 +10,8 @@
 - [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py)
 - [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py)
 - [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py) - *Added in recent commit*
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py) - *Added in recent commit*
 </cite>
 
 ## Table of Contents
@@ -29,28 +31,34 @@ This document provides a comprehensive analysis of the Unitary Coupled Cluster (
 
 The UCCSD and HEA algorithms represent two distinct approaches to variational quantum eigensolvers (VQE) for quantum chemistry simulations. UCCSD is a chemistry-inspired ansatz that systematically builds upon the Hartree-Fock state with excitations that preserve particle number, while HEA is a hardware-efficient approach that uses alternating layers of single-qubit rotations and entangling gates to create parameterized circuits that are more amenable to current quantum hardware constraints.
 
+Recent updates have introduced HOMO-LUMO gap calculation functionality for both UCCSD and HEA algorithms, enabling users to analyze electronic structure properties beyond ground state energy. This feature is particularly valuable for understanding chemical reactivity, excitation energies, and material properties.
+
 ## Project Structure
 
-The project structure reveals a well-organized codebase with clear separation of concerns. The core implementations of UCCSD and HEA are located in the `src/tyxonq/applications/chem/algorithms/` directory, with runtime-specific implementations in the `runtimes/` subdirectory. The example demonstrating their usage is located in the `examples/` directory.
+The project structure reveals a well-organized codebase with clear separation of concerns. The core implementations of UCCSD and HEA are located in the `src/tyxonq/applications/chem/algorithms/` directory, with runtime-specific implementations in the `runtimes/` subdirectory. The example demonstrating their usage is located in the `examples/` directory. New examples for HOMO-LUMO gap calculations have been added to the examples directory.
 
 ```mermaid
 graph TD
 A[Project Root] --> B[examples]
 A --> C[src/tyxonq/applications/chem]
 B --> D[cloud_uccsd_hea_demo.py]
-C --> E[algorithms]
-C --> F[runtimes]
-E --> G[uccsd.py]
-E --> H[hea.py]
-E --> I[ucc.py]
-F --> J[ucc_device_runtime.py]
-F --> K[hea_device_runtime.py]
-F --> L[ucc_numeric_runtime.py]
-F --> M[hea_numeric_runtime.py]
+B --> E[demo_homo_lumo_gap.py]
+B --> F[demo_hea_homo_lumo_gap.py]
+C --> G[algorithms]
+C --> H[runtimes]
+G --> I[uccsd.py]
+G --> J[hea.py]
+G --> K[ucc.py]
+H --> L[ucc_device_runtime.py]
+H --> M[hea_device_runtime.py]
+H --> N[ucc_numeric_runtime.py]
+H --> O[hea_numeric_runtime.py]
 ```
 
 **Diagram sources**
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py)
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
 - [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
 - [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py)
@@ -69,7 +77,7 @@ The core components of the UCCSD and HEA implementations are the algorithm class
 
 The UCCSD class extends the base UCC class and implements the Unitary Coupled Cluster Singles and Doubles method, which is a chemistry-inspired ansatz that systematically builds upon the Hartree-Fock state with excitations that preserve particle number. The HEA class implements a hardware-efficient approach that uses alternating layers of single-qubit rotations and entangling gates to create parameterized circuits that are more amenable to current quantum hardware constraints.
 
-Both classes follow a similar pattern of initialization, where molecular parameters are specified, and the ansatz is configured with appropriate parameters such as the number of layers and qubit mapping. The kernel method is used to execute the variational optimization and return the optimal energy.
+Both classes follow a similar pattern of initialization, where molecular parameters are specified, and the ansatz is configured with appropriate parameters such as the number of layers and qubit mapping. The kernel method is used to execute the variational optimization and return the optimal energy. Additionally, both classes now support HOMO-LUMO gap calculations through the `get_homo_lumo_gap()` method and `homo_lumo_gap` property.
 
 **Section sources**
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
@@ -78,27 +86,26 @@ Both classes follow a similar pattern of initialization, where molecular paramet
 
 ## Architecture Overview
 
-The architecture of the UCCSD and HEA implementations follows a modular design with clear separation between algorithm logic, runtime execution, and device interaction. The system is designed to support both local and cloud-based execution, with the ability to offload classical chemistry calculations to cloud resources.
+The architecture of the UCCSD and HEA implementations follows a modular design with clear separation between algorithm logic, runtime execution, and device interaction. The system is designed to support both local and cloud-based execution, with the ability to offload classical chemistry calculations to cloud resources. The recent addition of HOMO-LUMO gap functionality extends the analysis capabilities of both algorithms.
 
 ```mermaid
 graph TD
 A[UCCSD/HEA Algorithm] --> B[Configuration]
 A --> C[Ansatz Construction]
 A --> D[Variational Optimization]
-B --> E[Molecule Specification]
-B --> F[Ansatz Parameters]
-C --> G[Excitation Operators]
-C --> H[Circuit Generation]
-D --> I[Energy Evaluation]
-D --> J[Gradient Calculation]
-I --> K[Device Runtime]
-I --> L[Numeric Runtime]
-J --> K
-J --> L
-K --> M[Cloud Quantum Device]
-K --> N[Local Simulator]
-L --> O[Statevector Simulation]
-L --> P[CI Vector Methods]
+A --> E[HOMO-LUMO Gap Analysis]
+B --> F[Molecule Specification]
+B --> G[Ansatz Parameters]
+C --> H[Excitation Operators]
+C --> I[Circuit Generation]
+D --> J[Energy Evaluation]
+D --> K[Gradient Calculation]
+J --> L[Device Runtime]
+J --> M[Numeric Runtime]
+K --> L
+K --> M
+E --> N[Hartree-Fock Analysis]
+E --> O[Orbital Energy Extraction]
 ```
 
 **Diagram sources**
@@ -141,6 +148,8 @@ class UCCSD {
 +get_ex_ops(t1, t2) Tuple[List[Tuple], List[int], List[float]]
 +pick_and_sort(ex_ops, param_ids, init_guess, do_pick, do_sort)
 +e_uccsd() float
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap() float
 }
 class UCC {
 +mol : Union[Mole, RHF]
@@ -174,6 +183,8 @@ class UCC {
 +n_params() int
 +get_circuit(params, decompose_multicontrol, trotter) Circuit
 +get_ex_ops(t1, t2)
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap() float
 }
 UCCSD --> UCC : "extends"
 ```
@@ -188,7 +199,7 @@ UCCSD --> UCC : "extends"
 
 ### HEA Algorithm Analysis
 
-The HEA algorithm is implemented as a standalone class that provides a hardware-efficient ansatz for molecular energy calculations. It uses alternating layers of single-qubit rotations and entangling gates to create parameterized circuits that are more amenable to current quantum hardware constraints.
+The HEA algorithm is implemented as a standalone class that provides a hardware-efficient ansatz for molecular energy calculations. It uses alternating layers of single-qubit rotations and entangling gates to create parameterized circuits that are more amenable to current quantum hardware constraints. The recent update adds HOMO-LUMO gap calculation capabilities by delegating to an internal UCC object.
 
 ```mermaid
 classDiagram
@@ -208,6 +219,7 @@ class HEA {
 +unit : str
 +charge : int
 +spin : int
++_ucc_object : UCC | None
 +__init__(molecule, n_qubits, layers, hamiltonian, runtime, numeric_engine, active_space, mapping, classical_provider, classical_device, atom, basis, unit, charge, spin, **kwargs)
 +get_circuit(params) Circuit
 +energy(params, **device_opts) float
@@ -230,6 +242,8 @@ class HEA {
 +params() np.ndarray | None
 +params=(p) None
 +_resolve_params(params) np.ndarray
++get_homo_lumo_gap(homo_idx, lumo_idx, include_ev) dict
++homo_lumo_gap() float
 }
 ```
 
@@ -360,24 +374,28 @@ graph TD
 A[cloud_uccsd_hea_demo.py] --> B[uccsd.py]
 A --> C[hea.py]
 A --> D[h2.py]
-B --> E[ucc.py]
-C --> F[ucc.py]
-B --> G[hea_device_runtime.py]
-B --> H[hea_numeric_runtime.py]
-C --> I[ucc_device_runtime.py]
-C --> J[ucc_numeric_runtime.py]
-E --> K[StatevectorEngine]
-E --> L[HamiltonianGrouping]
-F --> M[StatevectorEngine]
-F --> N[HamiltonianGrouping]
-G --> O[device_base.run]
-H --> P[StatevectorEngine]
+A --> E[demo_homo_lumo_gap.py]
+A --> F[demo_hea_homo_lumo_gap.py]
+B --> G[ucc.py]
+C --> H[ucc.py]
+B --> I[hea_device_runtime.py]
+B --> J[hea_numeric_runtime.py]
+C --> K[ucc_device_runtime.py]
+C --> L[ucc_numeric_runtime.py]
+G --> M[StatevectorEngine]
+G --> N[HamiltonianGrouping]
+H --> O[StatevectorEngine]
+H --> P[HamiltonianGrouping]
 I --> Q[device_base.run]
 J --> R[StatevectorEngine]
+K --> S[device_base.run]
+L --> T[StatevectorEngine]
 ```
 
 **Diagram sources**
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py)
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
 - [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
 - [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py)
@@ -388,6 +406,8 @@ J --> R[StatevectorEngine]
 
 **Section sources**
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py)
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
 - [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
 - [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py)
@@ -403,6 +423,8 @@ The performance of the UCCSD and HEA algorithms is influenced by several factors
 The runtime configuration allows for both device-based execution (using actual quantum hardware or simulators) and numeric-based execution (using classical numerical methods for exact calculations). The choice of runtime can significantly impact performance, with numeric execution being faster for small systems but limited by classical computational resources, while device execution can handle larger systems but is subject to quantum hardware constraints and noise.
 
 The optimization process is implemented using SciPy's minimize function, with different methods available depending on whether gradients are computed. The L-BFGS-B method is used when gradients are available, while COBYLA is used for gradient-free optimization. The maximum number of iterations is set to 200 for analytic/numeric paths and 100 for device paths, reflecting the different convergence characteristics of these execution modes.
+
+The addition of HOMO-LUMO gap calculations does not significantly impact performance, as these calculations leverage existing Hartree-Fock results and are computed classically. For HEA, the HOMO-LUMO gap calculation is delegated to an internal UCC object created during molecule initialization, ensuring consistency with UCCSD results.
 
 **Section sources**
 - [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
@@ -427,6 +449,8 @@ When working with the UCCSD and HEA algorithms, several common issues may arise.
 
 4. **Noise and errors in device execution**: When using actual quantum hardware, noise and errors can affect the accuracy of the results. Consider using error mitigation techniques or increasing the number of shots to improve statistical accuracy.
 
+5. **HOMO-LUMO gap calculation errors**: For HEA, ensure that the instance was constructed from a molecule object rather than directly from integrals, as HOMO-LUMO gap calculation requires the internal UCC object. Attempting to calculate the gap from a HEA instance created with `from_integral()` will raise a RuntimeError.
+
 ### Strategies for Parameter Initialization
 
 1. **Use chemistry-inspired initial guesses**: For UCCSD, the "mp2" or "ccsd" initial methods provide physically meaningful starting points based on perturbation theory or coupled cluster calculations.
@@ -448,6 +472,15 @@ The UCCSD and HEA algorithms provide powerful tools for quantum chemistry simula
 
 The implementation in the TyxonQ framework demonstrates a modular and extensible design, with clear separation between algorithm logic, runtime execution, and device interaction. This design allows for flexible configuration and execution on both local and cloud-based quantum devices, making it suitable for a wide range of quantum chemistry applications.
 
+Recent updates have enhanced both algorithms with HOMO-LUMO gap calculation capabilities, enabling users to analyze electronic structure properties critical for understanding chemical reactivity and material properties. For UCCSD, this functionality is native, while for HEA it is implemented through delegation to an internal UCC object, ensuring consistency between the two approaches.
+
 When choosing between UCCSD and HEA, consider the specific requirements of your application, including the desired accuracy, available quantum resources, and computational constraints. For high-accuracy calculations on small to medium-sized molecules, UCCSD may be the preferred choice, while for larger systems or when hardware constraints are a concern, HEA may provide a more practical solution.
 
 The framework's support for both device-based and numeric-based execution provides flexibility in balancing accuracy and computational efficiency, while the integration with cloud-based classical chemistry calculations enables scalable and distributed quantum chemistry simulations.
+
+**Section sources**
+- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
+- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py)
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py)
