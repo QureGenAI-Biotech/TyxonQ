@@ -22,6 +22,7 @@ __all__ = [
     "phase_damping_channel",
     "pauli_channel",
     "measurement_channel",
+    "zz_crosstalk_hamiltonian",
 ]
 
 
@@ -249,3 +250,91 @@ def measurement_channel(p: float) -> List[np.ndarray]:
     K2 = np.sqrt(1 - p) * np.eye(2, dtype=np.complex128)  # Identity
     
     return [K0, K1, K2]
+
+
+def zz_crosstalk_hamiltonian(xi: float, num_qubits: int = 2) -> np.ndarray:
+    """ZZ crosstalk Hamiltonian for adjacent qubits.
+    
+    Models always-on ZZ coupling between neighboring qubits in superconducting
+    quantum processors. This coherent noise arises from residual capacitive or
+    inductive coupling and causes unwanted conditional phase accumulation.
+    
+    Hamiltonian:
+        H_ZZ = ξ · σ_z ⊗ σ_z
+    
+    where ξ is the ZZ coupling strength (typically 0.1-10 MHz for transmons).
+    
+    Args:
+        xi: ZZ coupling strength (Hz), can be positive or negative
+            Typical values for superconducting qubits:
+            - IBM: ξ ≈ 1-5 MHz (arXiv:2108.12323)
+            - Google: ξ ≈ 0.1-1 MHz (tunable couplers)
+            - Rigetti: ξ ≈ 2-10 MHz (always-on coupling)
+        num_qubits: Number of qubits (default: 2)
+                   For num_qubits > 2, returns H_ZZ for qubits 0 and 1
+        
+    Returns:
+        Hamiltonian matrix (4×4 complex for 2 qubits, 2^n × 2^n for n qubits)
+        
+    Physical interpretation:
+        - ξ > 0: Energy penalty for |11⟩ state (most common)
+        - ξ < 0: Energy bonus for |11⟩ state (rare)
+        - Causes conditional phase: U_ZZ(t) = exp(-i ξ t Z⊗Z)
+        - Leads to correlated errors in parallel gate operations
+        - Cannot be turned off (always-on coupling)
+        
+    Effects on quantum gates:
+        1. **Idle crosstalk**: Phase accumulation during idle time
+        2. **Gate crosstalk**: Unwanted phase during single-qubit gates
+        3. **Spectator errors**: Errors on non-target qubits
+        4. **Correlated dephasing**: T2 degradation for nearby qubits
+        
+    Mitigation strategies:
+        - Echo sequences (dynamical decoupling)
+        - Conditional phase compensation
+        - Tunable couplers (Google approach)
+        - Optimal gate scheduling (avoid parallel operations)
+        
+    Example:
+        >>> # IBM transmon typical ZZ coupling
+        >>> H_ZZ = zz_crosstalk_hamiltonian(xi=3e6)  # 3 MHz
+        >>> 
+        >>> # Time evolution for 100 ns
+        >>> import scipy.linalg
+        >>> t = 100e-9  # 100 ns
+        >>> U_ZZ = scipy.linalg.expm(-1j * H_ZZ * t)
+        >>> 
+        >>> # Conditional phase accumulated
+        >>> phi_zz = xi * t  # radians
+        >>> print(f"Conditional phase: {phi_zz * 180/np.pi:.2f} degrees")
+        
+    References:
+        - Jurcevic et al., "ZZ Freedom" arXiv:2108.12323 (IBM)
+        - Sundaresan et al., "Reducing ZZ" PRL 125, 230504 (2020)
+        - Chen et al., "Measuring ZZ" PRX Quantum 2, 030348 (2021)
+        - QuTiP-qip: Quantum 6, 630 (2022) - Processor.add_control()
+    """
+    xi = float(xi)
+    
+    if num_qubits < 2:
+        raise ValueError(f"num_qubits must be >= 2, got {num_qubits}")
+    
+    # Pauli Z matrix
+    Z = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=np.complex128)
+    I = np.eye(2, dtype=np.complex128)
+    
+    if num_qubits == 2:
+        # Direct construction for 2 qubits: H = ξ · Z ⊗ Z
+        H_ZZ = xi * np.kron(Z, Z)
+    else:
+        # For n > 2 qubits: H = ξ · Z_0 ⊗ Z_1 ⊗ I ⊗ I ⊗ ...
+        # Build Z ⊗ Z for qubits 0 and 1
+        ZZ = np.kron(Z, Z)
+        
+        # Extend to full Hilbert space
+        for _ in range(num_qubits - 2):
+            ZZ = np.kron(ZZ, I)
+        
+        H_ZZ = xi * ZZ
+    
+    return H_ZZ

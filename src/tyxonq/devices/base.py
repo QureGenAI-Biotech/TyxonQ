@@ -243,7 +243,7 @@ def run(
     *,
     provider: Optional[str] = None,
     device: Optional[str] = None,
-    circuit: Optional["Circuit"] = None,
+    circuit: Optional["Circuit"]| None = None,
     source: Optional[Union[str, Sequence[str]]] = None,
     shots: Union[int, Sequence[int]] = 1024,
     **opts: Any,

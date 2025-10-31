@@ -295,6 +295,126 @@ class Circuit:
         })
         
         return self
+    
+    # ---- Pulse Programming API ----
+    def use_pulse(self, mode: str = "hybrid", **pulse_options: Any) -> "Circuit":
+        """Configure Pulse-level compilation for this circuit.
+        
+        TyxonQ Pulse Programming supports dual-mode execution (Memory: 8b12df21):
+            - Mode A (Chain): Gate Circuit → Pulse Compiler → Execution
+            - Mode B (Direct): Hamiltonian → Direct Pulse Evolution
+        
+        This method configures Mode A (chain compilation).
+        
+        Args:
+            mode (str): Pulse compilation mode:
+                - "hybrid": Mix gates and pulses (keep measurements, compile others)
+                - "pulse_only": Compile all gates to pulses
+                - "auto_lower": Automatic gate→pulse decision
+            **pulse_options: Additional Pulse compiler options:
+                - device_params (dict): Physical device parameters:
+                    - qubit_freq (list): Qubit frequencies (Hz)
+                    - anharmonicity (list): Anharmonicity values (Hz)
+                    - T1 (list): Amplitude damping times (s)
+                    - T2 (list): Dephasing times (s)
+                - inline_pulses (bool): Whether to inline pulse definitions
+                    - False: Keep pulse references (default, supports autograd)
+                    - True: Fully expand pulses (cloud-compatible, serializable)
+                - output (str): Output format:
+                    - "pulse_ir": TyxonQ Native IR (default)
+                    - "tqasm": TQASM 0.2 format (for cloud submission)
+        
+        Returns:
+            Circuit: The same circuit instance with Pulse compilation configured.
+        
+        Examples:
+            >>> # Local simulation with Pulse (supports PyTorch autograd)
+            >>> c = Circuit(2).h(0).cx(0, 1)
+            >>> c.use_pulse(
+            ...     mode="pulse_only",
+            ...     device_params={
+            ...         "qubit_freq": [5.0e9, 5.1e9],
+            ...         "anharmonicity": [-330e6, -320e6]
+            ...     },
+            ...     inline_pulses=False
+            ... )
+            >>> result = c.device(provider="simulator").run()
+            
+            >>> # Cloud submission with TQASM
+            >>> c.use_pulse(
+            ...     mode="pulse_only",
+            ...     device_params={...},
+            ...     inline_pulses=True,
+            ...     output="tqasm"
+            ... )
+            >>> result = c.device(provider="tyxonq", device="homebrew_s2").run()
+        
+        See Also:
+            - add_calibration(): Add custom pulse calibrations
+            - docs/source/user_guide/pulse/index.rst: Complete Pulse programming guide
+        """
+        # Configure compile engine to use Pulse compiler
+        self._compile_engine = "pulse"
+        
+        # Store Pulse-specific options
+        pulse_compile_opts = {"mode": mode}
+        pulse_compile_opts.update(pulse_options)
+        self._compile_opts.update(pulse_compile_opts)
+        
+        return self
+    
+    def add_calibration(self, gate_name: str, qubits: List[int], pulse_waveform: Any, params: Optional[Dict[str, Any]] = None) -> "Circuit":
+        """Add a custom Pulse calibration for a specific gate.
+        
+        Custom calibrations override default gate→pulse decomposition,
+        enabling hardware-specific optimization and fine-tuning.
+        
+        Args:
+            gate_name (str): Gate name to calibrate (e.g., "x", "cx", "h")
+            qubits (List[int]): Qubit indices this calibration applies to
+            pulse_waveform: Pulse waveform object (from tyxonq.waveforms)
+            params (dict, optional): Physical parameters:
+                - qubit_freq (float): Qubit frequency (Hz)
+                - drive_freq (float): Drive frequency (Hz)
+                - phase (float): Pulse phase (radians)
+        
+        Returns:
+            Circuit: The same circuit instance with calibration added.
+        
+        Examples:
+            >>> from tyxonq import waveforms
+            >>> 
+            >>> c = Circuit(2)
+            >>> 
+            >>> # Custom DRAG pulse for X gate on qubit 0
+            >>> x_pulse = waveforms.Drag(amp=0.5, duration=160, sigma=40, beta=0.2)
+            >>> c.add_calibration("x", [0], x_pulse, {
+            ...     "qubit_freq": 5.0e9,
+            ...     "drive_freq": 5.0e9
+            ... })
+            >>> 
+            >>> # Now when compiling to Pulse, this calibration will be used
+            >>> c.x(0).use_pulse(mode="pulse_only").run()
+        
+        Notes:
+            - Calibrations are stored in metadata["pulse_calibrations"]
+            - Multiple calibrations can be added for different gates/qubits
+            - Last added calibration takes precedence for conflicts
+        """
+        # Initialize calibrations dict in metadata
+        if "pulse_calibrations" not in self.metadata:
+            self.metadata["pulse_calibrations"] = {}
+        
+        # Store calibration
+        cal_key = f"{gate_name}_{'_'.join(map(str, qubits))}"
+        self.metadata["pulse_calibrations"][cal_key] = {
+            "gate": gate_name,
+            "qubits": list(qubits),
+            "pulse": pulse_waveform,
+            "params": params or {}
+        }
+        
+        return self
 
     def state(self, engine: str | None = None, backend: Any | None = None, form: str | None = None) -> Any:
         """Get the quantum state of this circuit.
@@ -726,7 +846,15 @@ class Circuit:
             merged_opts.update(options)
         # compiler/api.compile 现在只接受 (circuit, compile_engine, output, options)
         res = compile_api(self, compile_engine=prov, output=out, options=merged_opts)
-        return res["circuit"]
+        
+        # 关键优化：如果编译结果是字符串（TQASM/QASM），缓存到 _source 避免重复编译
+        # 这样后续 .run() 时会直接使用缓存的 source，不会重新编译
+        compiled_result = res["circuit"]
+        if isinstance(compiled_result, str):
+            self._source = compiled_result
+            return compiled_result
+        
+        return compiled_result
 
     def run(
         self,
@@ -775,12 +903,20 @@ class Circuit:
             if isinstance(compiled, str):
                 source_to_submit = compiled
             elif is_tyxonq_hw:
-                # Auto-compile to qasm2 for hardware submission via qiskit provider
-                qiskit_opts = dict(self._compile_opts)
-                if not qiskit_opts.get("basis_gates"):
-                    qiskit_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
-                qasm_res = compile_api(self, compile_engine="qiskit", output="qasm2", options=qiskit_opts)
-                source_to_submit = qasm_res["circuit"]
+                # 检查是否为 Pulse 编译
+                if self._compile_engine == "pulse":
+                    # Pulse 编译：使用 tqasm 格式
+                    pulse_opts = dict(self._compile_opts)
+                    pulse_opts["inline_pulses"] = True  # 云端提交必须内联
+                    tqasm_res = compile_api(self, compile_engine="pulse", output="tqasm", options=pulse_opts)
+                    source_to_submit = tqasm_res["circuit"]
+                else:
+                    # 普通门编译：使用 qasm2 格式
+                    qiskit_opts = dict(self._compile_opts)
+                    if not qiskit_opts.get("basis_gates"):
+                        qiskit_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
+                    qasm_res = compile_api(self, compile_engine="qiskit", output="qasm2", options=qiskit_opts)
+                    source_to_submit = qasm_res["circuit"]
             else:
                 source_to_submit = None
 

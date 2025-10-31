@@ -2,7 +2,7 @@
 Intermediate Tutorials
 ======================
 
-Ready to go deeper? This tutorial covers variational algorithms, quantum chemistry, and optimization techniques.
+Ready to go deeper? This tutorial covers pulse programming, variational algorithms, quantum chemistry, and optimization techniques.
 
 .. contents:: Tutorial Contents
    :depth: 3
@@ -23,6 +23,41 @@ Before starting, make sure you understand:
 
 If you need a refresher, review the :doc:`../beginner/index` tutorial first.
 
+Pulse-Level Quantum Programming
+================================
+
+From Gates to Pulses
+---------------------
+
+Traditional quantum programming uses abstract gates:
+
+.. code-block:: homebrew_s2
+
+   circuit = tq.Circuit(1)
+   circuit.x(0)  # What does this actually do on hardware?
+
+Pulse programming reveals the physical implementation:
+
+.. code-block:: homebrew_s2
+
+   from tyxonq.core.ir.pulse import PulseProgram
+   
+   prog = PulseProgram(1)
+   prog.drag(0, amp=1.0, duration=160, sigma=40, beta=0.2)
+   # DRAG pulse: Gaussian + derivative correction
+
+**Key advantages**:
+
+✅ **Higher fidelity** - Optimize pulses for your hardware  
+✅ **Noise resilience** - Custom pulse shapes minimize decoherence  
+✅ **Leakage suppression** - DRAG pulses reduce errors  
+
+For complete pulse programming guide, see:
+
+- :doc:`pulse_programming_basics` - **Complete pulse programming tutorial (P0.1-P0.5)**
+- :doc:`../advanced/pulse_three_level` - Advanced three-level system simulation
+- :doc:`../advanced/pulse_zz_crosstalk` - ZZ crosstalk noise modeling
+
 Variational Quantum Algorithms
 ===============================
 
@@ -37,7 +72,7 @@ What are Variational Algorithms?
 3. 📋 Use classical optimization to adjust parameters
 4. 🔁 Repeat until convergence
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    import tyxonq as tq
    import numpy as np
@@ -68,7 +103,7 @@ Your First VQE Algorithm
 
 **Step 1: Define the problem**
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    # Simple Hamiltonian: H = 0.5*Z0 + 0.3*Z1 - 0.7*X0*X1
    hamiltonian = [
@@ -79,7 +114,7 @@ Your First VQE Algorithm
 
 **Step 2: Implement energy calculation**
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    def calculate_energy(params):
        """Calculate energy expectation value"""
@@ -122,7 +157,7 @@ Your First VQE Algorithm
 
 **Step 3: Run optimization**
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    # Optimize using scipy
    initial_params = np.random.uniform(0, 2*np.pi, 4)
@@ -143,7 +178,7 @@ Building Better Ansatz Circuits
 
 **Hardware Efficient Ansatz (HEA)**:
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    def create_hea_circuit(params, n_qubits, layers):
        """Hardware-efficient ansatz with multiple layers"""
@@ -199,7 +234,7 @@ Why Quantum Chemistry?
 Your First Molecule: H₂
 -----------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    from tyxonq.applications.chem import UCCSD
    from pyscf import gto
@@ -238,7 +273,7 @@ Your First Molecule: H₂
 Comparing Different Algorithms
 ------------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    from tyxonq.applications.chem import HEA, PUCCD
    import time
@@ -273,7 +308,7 @@ Optimization Techniques
 Choosing the Right Optimizer
 ----------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    # Test different optimizers on a simple problem
    def test_function(x):
@@ -298,7 +333,7 @@ Choosing the Right Optimizer
 Parameter-Shift Gradients
 -------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    def parameter_shift_gradient(circuit_func, params, param_idx):
        """Compute gradient using parameter-shift rule"""
@@ -337,7 +372,7 @@ Practical Projects
 Project 1: Custom VQE Implementation
 ------------------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    class MyVQE:
        def __init__(self, hamiltonian, ansatz_func, n_params):

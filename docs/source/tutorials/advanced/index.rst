@@ -19,7 +19,7 @@ Before starting, you should be comfortable with:
 
 ✅ **Variational algorithms**: VQE, QAOA, parameter optimization  
 ✅ **Quantum chemistry**: Molecular Hamiltonians, ansatz design  
-✅ **Python programming**: NumPy, SciPy, object-oriented programming  
+✅ **homebrew_s2 programming**: NumPy, SciPy, object-oriented programming  
 ✅ **Basic machine learning**: Neural networks, optimization  
 
 If you haven't completed the previous tutorials, please review:
@@ -34,7 +34,7 @@ Quantum Neural Networks
 
 **Concept**: Integrate quantum circuits as trainable layers in classical neural networks.
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    import tyxonq as tq
    import numpy as np
@@ -133,7 +133,7 @@ Quantum Neural Networks
 Quantum Kernels and SVM
 -----------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    def quantum_kernel(x1, x2, n_qubits=4):
        """Compute quantum kernel K(x1, x2)"""
@@ -201,7 +201,7 @@ Quantum Generative Models
 Quantum GAN Generator
 ---------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    class QuantumGenerator:
        """Quantum generator for GAN"""
@@ -268,7 +268,7 @@ Advanced VQE Techniques
 Adaptive VQE
 ------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    class AdaptiveVQE:
        """Adaptive Variational Quantum Eigensolver"""
@@ -343,7 +343,7 @@ Quantum Error Correction
 Three-Qubit Bit Flip Code
 -------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    def three_qubit_bit_flip_code():
        """Implement 3-qubit bit flip error correction"""
@@ -419,6 +419,21 @@ Congratulations! You've mastered advanced quantum computing. Here are research d
 - Hardware-specific optimization  
 - Error correction protocols
 - Quantum advantage demonstrations
+
+Pulse-Level Quantum Programming
+===============================
+
+Three-Level System Simulation
+-----------------------------
+
+For advanced pulse-level control and accurate hardware simulation:
+
+Pulse-Level Quantum Programming
+================================
+
+- :doc:`pulse_three_level` - **Three-level quantum system simulation** (DRAG pulse leakage suppression)
+- :doc:`pulse_zz_crosstalk` - **ZZ crosstalk noise modeling** (Always-on coupling in superconducting qubits)
+- :doc:`quantum_natural_gradient` - Quantum natural gradient optimization
 
 See Also
 ========

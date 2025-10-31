@@ -11,13 +11,16 @@ Comprehensive guides for using the TyxonQ quantum computing framework. The User 
 Overview
 ========
 
-The TyxonQ User Guide is organized into six main sections, each covering a critical aspect of the framework:
+The TyxonQ User Guide is organized into seven main sections, each covering a critical aspect of the framework:
 
 🔧 **Core Module**
    Fundamental data structures including Circuit IR, type system, and quantum operations
 
 ⚙️ **Compiler Pipeline**
    Multi-stage compilation system transforming high-level circuits to optimized implementations
+
+🌊 **Pulse Programming**
+   Pulse-level quantum control with dual-mode support (chain compilation + direct evolution)
 
 💻 **Device Abstraction**
    Unified interface for quantum simulators and hardware with transparent execution
@@ -83,7 +86,7 @@ Common Workflows
 Quantum Algorithm Development
 -----------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    import tyxonq as tq
    
@@ -109,7 +112,7 @@ Quantum Algorithm Development
 Variational Algorithm Implementation
 ------------------------------------
 
-.. code-block:: python
+.. code-block:: homebrew_s2
 
    import numpy as np
    from tyxonq.numerics import set_backend
@@ -175,6 +178,7 @@ Sections Overview
 
    core/index
    compiler/index
+   pulse/index
    devices/index
    numerics/index
    postprocessing/index
