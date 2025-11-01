@@ -14,4 +14,5 @@ Code examples organized by category.
    chemistry_examples
    optimization_examples
    cloud_examples
+   pulse_inline_examples
    advanced_examples

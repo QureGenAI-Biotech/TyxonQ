@@ -23,6 +23,7 @@ from __future__ import annotations
 
 __all__ = [
     "PulseCompiler",
+    "DefcalLibrary",
     "save_pulse_circuit",
     "load_pulse_circuit",
     "serialize_pulse_circuit_to_json",
@@ -34,6 +35,9 @@ def __getattr__(name: str):
     if name == "PulseCompiler":
         from .native.pulse_compiler import PulseCompiler
         return PulseCompiler
+    elif name == "DefcalLibrary":
+        from .defcal_library import DefcalLibrary
+        return DefcalLibrary
     elif name in ("save_pulse_circuit", "load_pulse_circuit",
                   "serialize_pulse_circuit_to_json", "deserialize_pulse_circuit_from_json"):
         from .serialization import (

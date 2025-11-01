@@ -107,6 +107,59 @@ def gate_cz_4x4() -> Any:
     ], dtype=nb.complex128)
 
 
+def gate_iswap_4x4() -> Any:
+    """iSWAP gate: exchanges qubits and applies relative phase.
+    
+    Matrix representation:
+    [[1,  0,  0,  0],
+     [0,  0, 1j,  0],
+     [0, 1j,  0,  0],
+     [0,  0,  0,  1]]
+    
+    Physical model: iSWAP = exp(-i π/4 · σ_x ⊗ σ_x)
+    Swaps |01⟩ ↔ |10⟩ with relative phase i
+    
+    Reference:
+        Shende & Markov, PRA 72, 062305 (2005)
+    """
+    one = nb.array(1.0, dtype=nb.complex128)
+    zero = nb.array(0.0, dtype=nb.complex128)
+    j = nb.array(1j, dtype=nb.complex128)
+    return nb.array([
+        [one, zero, zero, zero],
+        [zero, zero, j, zero],
+        [zero, j, zero, zero],
+        [zero, zero, zero, one],
+    ], dtype=nb.complex128)
+
+
+def gate_swap_4x4() -> Any:
+    """SWAP gate: exchanges qubits without phase.
+    
+    Matrix representation:
+    [[1, 0, 0, 0],
+     [0, 0, 1, 0],
+     [0, 1, 0, 0],
+     [0, 0, 0, 1]]
+    
+    Pure state exchange: |01⟩ ↔ |10⟩
+    No relative phase factor
+    
+    Properties:
+        - SWAP² = I (applying twice gives identity)
+        - SWAP is Hermitian
+        - Useful for qubit routing and layout optimization
+    """
+    one = nb.array(1.0, dtype=nb.complex128)
+    zero = nb.array(0.0, dtype=nb.complex128)
+    return nb.array([
+        [one, zero, zero, zero],
+        [zero, zero, one, zero],
+        [zero, one, zero, zero],
+        [zero, zero, zero, one],
+    ], dtype=nb.complex128)
+
+
 def gate_x(backend: ArrayBackend | None = None) -> Any:
     K = backend if backend is not None else get_backend(None)
     zero = K.array(0.0, dtype=K.complex128)

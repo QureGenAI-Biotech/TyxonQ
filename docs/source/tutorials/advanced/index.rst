@@ -9,6 +9,19 @@ and research-level applications.
    :depth: 3
    :local:
 
+.. toctree::
+   :hidden:
+   
+   pulse_advanced_waveforms
+   pulse_defcal_integration
+   pulse_hybrid_mode_integration
+   pulse_inline_three_level
+   pulse_three_level
+   pulse_virtual_z_optimization
+   pulse_zz_crosstalk
+   pulse_iswap_swap_decomposition
+   quantum_natural_gradient
+
 .. note::
    This tutorial requires solid understanding of quantum computing fundamentals and variational algorithms.
 
@@ -423,15 +436,10 @@ Congratulations! You've mastered advanced quantum computing. Here are research d
 Pulse-Level Quantum Programming
 ===============================
 
-Three-Level System Simulation
------------------------------
-
-For advanced pulse-level control and accurate hardware simulation:
-
-Pulse-Level Quantum Programming
-================================
-
+- :doc:`pulse_virtual_z_optimization` - **Virtual-Z Optimization in Pulse Compilation** (Automatic RZ gate merging, phase tracking simplification)
 - :doc:`pulse_three_level` - **Three-level quantum system simulation** (DRAG pulse leakage suppression)
+- :doc:`pulse_inline_three_level` - **pulse_inline with three-level support** (Cloud-ready leakage simulation)
+- :doc:`pulse_iswap_swap_decomposition` - **iSWAP and SWAP gate decomposition** (CX chain implementation, physics-native gates)
 - :doc:`pulse_zz_crosstalk` - **ZZ crosstalk noise modeling** (Always-on coupling in superconducting qubits)
 - :doc:`quantum_natural_gradient` - Quantum natural gradient optimization
 

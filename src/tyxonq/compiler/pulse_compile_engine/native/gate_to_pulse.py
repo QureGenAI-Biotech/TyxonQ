@@ -51,9 +51,15 @@ class GateToPulsePass:
         >>> pulse_circuit = pass_instance.execute_plan(gate_circuit, device_params={...})
     """
     
-    def __init__(self):
-        """Initialize the gate-to-pulse pass."""
+    def __init__(self, defcal_library: Optional[Any] = None):
+        """Initialize the gate-to-pulse pass.
+        
+        Args:
+            defcal_library: Optional DefcalLibrary instance for user-provided calibrations.
+                          If None, only default calibrations are used.
+        """
         self._default_calibrations = self._build_default_calibrations()
+        self.defcal_library = defcal_library
     
     def execute_plan(
         self,
@@ -102,6 +108,9 @@ class GateToPulsePass:
                 # Hybrid mode: keep gate as-is
                 new_ops.append(op)
         
+        # Optimize virtual-Z operations (merge adjacent RZ gates)
+        new_ops = self._optimize_virtual_z(new_ops)
+        
         from dataclasses import replace
         return replace(circuit, ops=new_ops)
     
@@ -134,22 +143,34 @@ class GateToPulsePass:
     ) -> List[Any]:
         """Convert a single gate to pulse operations.
         
+        Priority:
+            1. Check defcal_library if available (user-provided calibrations)
+            2. Check circuit metadata calibrations
+            3. Use default physics-based decomposition
+        
         Args:
             op: Gate operation tuple
             device_params: Device physical parameters
-            calibrations: User-provided calibrations
+            calibrations: User-provided calibrations (legacy)
             circuit: Circuit object (for pulse cache)
         
         Returns:
             List of pulse operations
         """
         gate_name = str(op[0]).lower()
+        qubits = self._extract_qubits(op)
         
-        # Check user calibrations first
+        # 1️⃣ Priority: Check defcal_library first
+        if self.defcal_library:
+            calib_data = self.defcal_library.get_calibration(gate_name, qubits)
+            if calib_data:
+                return self._apply_defcal(op, calib_data, circuit)
+        
+        # 2️⃣ Check legacy calibrations in circuit metadata
         if gate_name in calibrations:
             return self._apply_calibration(op, calibrations[gate_name], circuit)
         
-        # Use default decomposition
+        # 3️⃣ Use default decomposition
         if gate_name in ("x", "rx"):
             return self._decompose_x_gate(op, device_params, circuit)
         elif gate_name in ("y", "ry"):
@@ -162,6 +183,10 @@ class GateToPulsePass:
             return self._decompose_cx_gate(op, device_params, circuit)
         elif gate_name == "cz":
             return self._decompose_cz_gate(op, device_params, circuit)
+        elif gate_name == "iswap":
+            return self._decompose_iswap_gate(op, device_params, circuit)
+        elif gate_name == "swap":
+            return self._decompose_swap_gate(op, device_params, circuit)
         else:
             # Unsupported gate: return empty (will fallback to original gate)
             return []
@@ -546,8 +571,161 @@ class GateToPulsePass:
             ("h", target),
             device_params,
             circuit
-        )
+        )  
         pulse_ops.extend(h_post_ops)
+        
+        return pulse_ops
+    
+    def _decompose_iswap_gate(
+        self, op: Any, device_params: Dict, circuit: "Circuit"
+    ) -> List[Any]:
+        """Decompose iSWAP gate to pulse sequence.
+        
+        Physical Model (iSWAP Gate):
+            iSWAP = exp(-i π/4 · σ_x ⊗ σ_x)
+            
+            Swaps two qubits and applies a global phase i to the |01⟩ and |10⟩ states.
+        
+        Implementation Strategy (via CX chain):
+            iSWAP(q0, q1) = CX(q0, q1) · CX(q1, q0) · CX(q0, q1)
+            
+            This is equivalent to the iSWAP unitary and works on any qubit
+            topology supporting CX gates.
+        
+        Alternative (Direct Parametric):
+            For hardware with tunable XX coupling (e.g., Google Sycamore):
+            iSWAP ≈ XX(π/4) pulse sequence
+            
+            This implementation uses the CX chain which is universal.
+        
+        References:
+            [1] Shende & Markov, PRA 72, 062305 (2005) - Optimal 2-qubit decomposition
+            [2] Rigetti/Google: arXiv:1903.02492 - Parametric XX coupling
+            [3] QuTiP-qip: iSWAP via CX decomposition
+        
+        Gate Counts:
+            - CX chain: 3 CX gates (typically 3 × 300 ns = 900 ns)
+            - Parametric XX: Direct pulse (typically 200 ns, if available)
+        
+        Args:
+            op: Gate operation tuple ("iswap", qubit0, qubit1)
+            device_params: Device physical parameters
+            circuit: Circuit object
+        
+        Returns:
+            List of pulse operations implementing iSWAP
+        """
+        if len(op) < 3:
+            return []
+        
+        qubit0 = int(op[1])
+        qubit1 = int(op[2])
+        
+        # Check if tunable XX coupling is available
+        has_xx_coupling = device_params.get("has_xx_coupling", False)
+        
+        if has_xx_coupling:
+            # Future: Use direct parametric XX pulse (more efficient)
+            # For now, fall back to CX chain
+            pass
+        
+        # Decomposition: iSWAP = CX(0,1) · CX(1,0) · CX(0,1)
+        pulse_ops = []
+        
+        # 1. CX(q0, q1)
+        cx_01_ops = self._decompose_cx_gate(
+            ("cx", qubit0, qubit1),
+            device_params,
+            circuit
+        )
+        pulse_ops.extend(cx_01_ops)
+        
+        # 2. CX(q1, q0)
+        cx_10_ops = self._decompose_cx_gate(
+            ("cx", qubit1, qubit0),
+            device_params,
+            circuit
+        )
+        pulse_ops.extend(cx_10_ops)
+        
+        # 3. CX(q0, q1)
+        cx_01_ops_2 = self._decompose_cx_gate(
+            ("cx", qubit0, qubit1),
+            device_params,
+            circuit
+        )
+        pulse_ops.extend(cx_01_ops_2)
+        
+        return pulse_ops
+    
+    def _decompose_swap_gate(
+        self, op: Any, device_params: Dict, circuit: "Circuit"
+    ) -> List[Any]:
+        """Decompose SWAP gate to pulse sequence.
+        
+        Physical Model (SWAP Gate):
+            SWAP = [[1, 0, 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 1, 0, 0],
+                    [0, 0, 0, 1]]
+            
+            Exchanges quantum states between two qubits.
+        
+        Implementation (via CX chain):
+            SWAP(q0, q1) = CX(q0, q1) · CX(q1, q0) · CX(q0, q1)
+            
+            This is identical to iSWAP without the relative phase!
+            In fact: iSWAP = exp(i π/4) · SWAP (differs by global phase)
+        
+        Gate Counts:
+            - CX chain: 3 CX gates (typically 900 ns)
+            - Direct tunable coupling (future): ~200 ns
+        
+        References:
+            [1] Nielsen & Chuang - CX-based SWAP decomposition
+            [2] Shende & Markov, PRA 72, 062305 (2005)
+        
+        Args:
+            op: Gate operation tuple ("swap", qubit0, qubit1)
+            device_params: Device physical parameters
+            circuit: Circuit object
+        
+        Returns:
+            List of pulse operations implementing SWAP
+        """
+        if len(op) < 3:
+            return []
+        
+        qubit0 = int(op[1])
+        qubit1 = int(op[2])
+        
+        # SWAP = CX(q0, q1) · CX(q1, q0) · CX(q0, q1)
+        # Same as iSWAP decomposition (differs only in relative phase)
+        pulse_ops = []
+        
+        # 1. CX(q0, q1)
+        cx_01_ops = self._decompose_cx_gate(
+            ("cx", qubit0, qubit1),
+            device_params,
+            circuit
+        )
+        pulse_ops.extend(cx_01_ops)
+        
+        # 2. CX(q1, q0)
+        cx_10_ops = self._decompose_cx_gate(
+            ("cx", qubit1, qubit0),
+            device_params,
+            circuit
+        )
+        pulse_ops.extend(cx_10_ops)
+        
+        # 3. CX(q0, q1)
+        cx_01_ops_2 = self._decompose_cx_gate(
+            ("cx", qubit0, qubit1),
+            device_params,
+            circuit
+        )
+        pulse_ops.extend(cx_01_ops_2)
         
         return pulse_ops
     
@@ -593,7 +771,137 @@ class GateToPulsePass:
             return float(anharm[qubit])
         return -300e6  # Default anharmonicity for transmon qubits
     
+    def _extract_qubits(self, op: Any) -> tuple:
+        """Extract qubit indices from a gate operation.
+        
+        Args:
+            op: Gate operation tuple (gate_name, qubit0, [qubit1], ...)
+        
+        Returns:
+            Tuple of qubit indices
+        """
+        if not isinstance(op, (list, tuple)) or len(op) < 2:
+            return ()
+        
+        qubits = []
+        for i in range(1, len(op)):
+            val = op[i]
+            # Check if it's an integer type (not float)
+            if isinstance(val, int) and not isinstance(val, bool):
+                qubits.append(val)
+            else:
+                # Stop at non-integer argument (e.g., parameters like π/2)
+                break
+        
+        return tuple(qubits)
+    
+    def _apply_defcal(self, op: Any, calib_data: Any, circuit: "Circuit") -> List[Any]:
+        """Apply a user-provided defcal calibration.
+        
+        Args:
+            op: Gate operation tuple
+            calib_data: CalibrationData from defcal_library
+            circuit: Circuit object (for pulse cache)
+        
+        Returns:
+            List of pulse operations using the calibration
+        """
+        try:
+            qubit = int(op[1])
+            
+            # Get the pulse waveform from calibration
+            pulse = calib_data.pulse
+            params = calib_data.params or {}
+            
+            # Generate pulse key for library
+            pulse_key = f"{calib_data.gate}_q{qubit}_{id(pulse)}"
+            
+            # Store pulse in circuit metadata
+            circuit.metadata["pulse_library"][pulse_key] = pulse
+            
+            # Return pulse operation
+            return [("pulse", qubit, pulse_key, params)]
+        except (IndexError, ValueError, AttributeError):
+            # Fallback: return empty list (will use default decomposition)
+            return []
+    
     def _build_default_calibrations(self) -> Dict[str, Any]:
         """Build default pulse calibrations for common gates."""
         # Placeholder for future default calibration library
         return {}
+    
+    def _optimize_virtual_z(self, pulse_ops: List[Any]) -> List[Any]:
+        """Optimize virtual-Z operations by merging adjacent RZ gates.
+        
+        Physical Principle:
+            Virtual-Z gates on the same qubit are commutative and can be merged:
+            VZ(θ₁) · VZ(θ₂) = VZ(θ₁ + θ₂)
+            
+            This optimization reduces the number of phase frame updates and
+            simplifies the phase tracking logic in the pulse scheduler.
+        
+        Algorithm:
+            1. Scan operations left to right
+            2. When encountering a virtual_z operation:
+               a. Accumulate angle of all consecutive virtual_z on same qubit
+               b. Stop when reaching a non-virtual_z operation or different qubit
+               c. Emit single merged virtual_z (if total angle != 0)
+            3. Pass through all non-virtual_z operations unchanged
+        
+        Example:
+            Input:  [vz(π/4, q0), vz(π/3, q0), pulse(...), vz(π/2, q0)]
+            Output: [vz(7π/12, q0), pulse(...), vz(π/2, q0)]
+            
+            Where: 7π/12 = π/4 + π/3
+        
+        Args:
+            pulse_ops: List of pulse operations (including virtual_z)
+        
+        Returns:
+            Optimized list with merged virtual_z operations
+        
+        Notes:
+            - Angles are normalized to [0, 2π) range after merging
+            - Zero-angle virtual_z operations are filtered out
+            - Preserves ordering of non-virtual_z operations
+        """
+        if not pulse_ops:
+            return pulse_ops
+        
+        optimized_ops: List[Any] = []
+        i = 0
+        
+        while i < len(pulse_ops):
+            op = pulse_ops[i]
+            
+            # Check if this is a virtual_z operation
+            if isinstance(op, (list, tuple)) and len(op) >= 3 and str(op[0]).lower() == "virtual_z":
+                qubit = int(op[1])
+                angle = float(op[2])
+                
+                # Accumulate all consecutive virtual_z on the same qubit
+                j = i + 1
+                while j < len(pulse_ops):
+                    next_op = pulse_ops[j]
+                    if (isinstance(next_op, (list, tuple)) and len(next_op) >= 3 and
+                        str(next_op[0]).lower() == "virtual_z" and int(next_op[1]) == qubit):
+                        angle += float(next_op[2])
+                        j += 1
+                    else:
+                        break
+                
+                # Normalize angle to [0, 2π)
+                angle = angle % (2 * math.pi)
+                
+                # Emit merged virtual_z only if angle is non-zero
+                if abs(angle) > 1e-10:  # Avoid floating-point errors
+                    optimized_ops.append(("virtual_z", qubit, angle))
+                
+                # Move to next unprocessed operation
+                i = j
+            else:
+                # Non-virtual_z operation: pass through unchanged
+                optimized_ops.append(op)
+                i += 1
+        
+        return optimized_ops

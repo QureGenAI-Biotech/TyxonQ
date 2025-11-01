@@ -298,6 +298,9 @@ def compile_three_level_unitary(
     This function computes the unitary evolution operator U(T) by solving
     the Schrödinger equation for all three basis states.
     
+    **Autograd Support**: When using PyTorch backend, preserves gradients
+    for automatic differentiation.
+    
     Parameters
     ----------
     pulse_waveform : waveform object
@@ -337,6 +340,33 @@ def compile_three_level_unitary(
         from ...numerics.api import get_backend
         backend = get_backend()
     
+    # Check if using PyTorch backend
+    use_pytorch = backend.name == 'pytorch'
+    
+    if use_pytorch:
+        # Use differentiable PyTorch integration
+        return _compile_three_level_pytorch(
+            pulse_waveform, qubit_freq, drive_freq, anharmonicity, rabi_freq, backend
+        )
+    else:
+        # Use standard scipy integration (original implementation)
+        return _compile_three_level_scipy(
+            pulse_waveform, qubit_freq, drive_freq, anharmonicity, rabi_freq, backend
+        )
+
+
+def _compile_three_level_scipy(
+    pulse_waveform: Any,
+    qubit_freq: float,
+    drive_freq: Optional[float],
+    anharmonicity: float,
+    rabi_freq: float,
+    backend: Any
+) -> Any:
+    """Compile 3-level pulse using scipy (original implementation)."""
+    if drive_freq is None:
+        drive_freq = qubit_freq
+    
     # Initialize 3×3 unitary matrix (use numpy)
     U = np.zeros((3, 3), dtype=np.complex128)
     
@@ -363,6 +393,81 @@ def compile_three_level_unitary(
     
     # Convert final U to backend array if needed
     U = backend.asarray(U)
+    
+    return U
+
+
+def _compile_three_level_pytorch(
+    pulse_waveform: Any,
+    qubit_freq: float,
+    drive_freq: Optional[float],
+    anharmonicity: float,
+    rabi_freq: float,
+    backend: Any
+) -> Any:
+    """Compile 3-level pulse using PyTorch differentiable integration.
+    
+    Replicates physics from evolve_three_level_pulse but uses PyTorch
+    to preserve autograd chain.
+    """
+    import torch
+    
+    if drive_freq is None:
+        drive_freq = qubit_freq
+    
+    # Physical constants (angular frequencies)
+    SAMPLING_RATE = 2e9
+    duration_sec = pulse_waveform.duration / SAMPLING_RATE
+    delta_rad = 2 * np.pi * (qubit_freq - drive_freq)
+    alpha_rad = 2 * np.pi * anharmonicity
+    rabi_angular = 2 * np.pi * rabi_freq
+    
+    # Time evolution parameters
+    num_steps = min(pulse_waveform.duration, 200)
+    dt = duration_sec / num_steps
+    
+    # Evolution function
+    def evolve_state_3level(psi_init):
+        psi = psi_init.clone()
+        for step in range(num_steps):
+            t = step * dt
+            
+            # Sample waveform
+            from .pulse_simulation import sample_waveform
+            omega_t = sample_waveform(pulse_waveform, t, backend)
+            omega_drive = omega_t * rabi_angular
+            
+            # Both transitions driven (KEY physics!)
+            omega_01 = omega_drive
+            omega_12 = omega_drive
+            
+            # Build 3×3 Hamiltonian (preserve gradients!)
+            zero = torch.tensor(0.0 + 0.0j, dtype=torch.complex128)
+            delta_c = torch.tensor(delta_rad + 0.0j, dtype=torch.complex128)
+            alpha_c = torch.tensor(alpha_rad + 0.0j, dtype=torch.complex128)
+            
+            row0 = torch.stack([zero, omega_01, zero])
+            row1 = torch.stack([torch.conj(omega_01), delta_c, omega_12])
+            row2 = torch.stack([zero, torch.conj(omega_12), delta_c + alpha_c])
+            H = torch.stack([row0, row1, row2])
+            
+            # Schrödinger equation
+            psi = psi - 1j * dt * (H @ psi)
+            psi = psi / torch.sqrt(torch.sum(torch.abs(psi)**2))
+        
+        return psi
+    
+    # Evolve all three basis states
+    psi0 = torch.tensor([1, 0, 0], dtype=torch.complex128)
+    psi1 = torch.tensor([0, 1, 0], dtype=torch.complex128)
+    psi2 = torch.tensor([0, 0, 1], dtype=torch.complex128)
+    
+    col0 = evolve_state_3level(psi0)
+    col1 = evolve_state_3level(psi1)
+    col2 = evolve_state_3level(psi2)
+    
+    # Stack to form 3×3 unitary
+    U = torch.stack([col0, col1, col2], dim=1)
     
     return U
 

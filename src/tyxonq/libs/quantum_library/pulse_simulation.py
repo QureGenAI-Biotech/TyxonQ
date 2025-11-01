@@ -41,7 +41,7 @@ SAMPLING_RATE = 2e9  # 2 GHz sampling rate (standard for superconducting qubits)
 HBAR = 1.054571817e-34  # Reduced Planck constant (J·s)
 
 
-def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
+def sample_waveform(waveform: Any, t: float, backend: Any = None) -> Any:
     """
     Sample waveform envelope at time t.
     
@@ -58,8 +58,9 @@ def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
         
     Returns
     -------
-    complex
+    complex or tensor
         Complex amplitude at time t (Ω(t) in Hamiltonian)
+        Returns Python complex for numpy backend, tensor for PyTorch backend
         
     Notes
     -----
@@ -72,6 +73,9 @@ def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
         from ...numerics.api import get_backend
         backend = get_backend()
     
+    # Detect if we're using PyTorch backend
+    use_torch = backend.name == 'pytorch'
+    
     waveform_type = waveform.__class__.__name__.lower()
     
     # Convert time to sample index
@@ -80,6 +84,9 @@ def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
     
     # Outside pulse duration → zero amplitude
     if t_sample < 0 or t_sample >= duration_samples:
+        if use_torch:
+            import torch
+            return torch.tensor(0.0 + 0.0j, dtype=torch.complex128)
         return 0.0 + 0.0j
     
     # Normalized time: τ ∈ [0, 1]
@@ -101,38 +108,65 @@ def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
         
         # Apply phase rotation
         envelope = g_tau * np.exp(1j * phase) + 1j * alpha * dg_dtau
+        if use_torch:
+            import torch
+            return torch.tensor(complex(envelope), dtype=torch.complex128)
         return complex(envelope)
     
     elif waveform_type == "drag":
         # DRAG pulse: Derivative Removal by Adiabatic Gate
-        # Similar to Gaussian but with derivative correction
-        # Formula: Ω(τ) = A·exp(-(τ-0.5)²/(2σ²)) + iβ·dΩ/dτ
+        # Formula: Ω(τ) = [A·exp(-(τ-0.5)²/(2σ²)) + iβ·dΩ/dτ] · exp(iφ)
         amp = waveform.amp
-        sigma = waveform.sigma / duration_samples  # Normalize sigma
+        sigma = waveform.sigma / duration_samples
         beta = waveform.beta
+        phase = getattr(waveform, 'phase', 0.0)
         
-        # Gaussian envelope
-        g_tau = amp * np.exp(-((tau - 0.5)**2) / (2 * sigma**2))
-        
-        # Derivative for DRAG correction (in units of samples⁻¹)
-        # d/dτ where τ ∈ [0,1], so need to scale by duration_samples
-        dg_dtau = g_tau * (-(tau - 0.5) / sigma**2)
-        
-        # Apply DRAG correction with proper units
-        # beta is dimensionless, scales the derivative term
-        envelope = g_tau + 1j * beta * dg_dtau
-        return complex(envelope)
+        # Smart dispatch: use PyTorch if parameters are tensors
+        if use_torch:
+            import torch
+            # Convert to tensors if not already
+            amp_t = amp if torch.is_tensor(amp) else torch.tensor(float(amp), dtype=torch.float64)
+            beta_t = beta if torch.is_tensor(beta) else torch.tensor(float(beta), dtype=torch.float64)
+            phase_t = torch.tensor(float(phase), dtype=torch.float64)
+            
+            # Gaussian envelope (use torch math)
+            exponent = -((tau - 0.5)**2) / (2 * sigma**2)
+            g_tau = amp_t * torch.exp(torch.tensor(exponent, dtype=torch.float64))
+            dg_dtau = g_tau * (-(tau - 0.5) / sigma**2)
+            
+            # DRAG correction with phase
+            envelope = (g_tau + 1j * beta_t * dg_dtau) * torch.exp(1j * phase_t)
+            return envelope.to(torch.complex128)
+        else:
+            # Use numpy
+            g_tau = amp * np.exp(-((tau - 0.5)**2) / (2 * sigma**2))
+            dg_dtau = g_tau * (-(tau - 0.5) / sigma**2)
+            envelope = (g_tau + 1j * beta * dg_dtau) * np.exp(1j * phase)
+            return complex(envelope)
     
     elif waveform_type == "gaussian":
         # Gaussian pulse: smooth envelope
-        # Formula: Ω(τ) = A·exp(-(τ-0.5)²/(2σ²))·exp(iθ)
+        # Formula: Ω(τ) = A·exp(-(τ-0.5)²/(2σ²))·exp(iφ)
         amp = waveform.amp
-        sigma = waveform.sigma / duration_samples  # Normalize sigma
-        angle = getattr(waveform, "angle", 0.0)
+        sigma = waveform.sigma / duration_samples
+        phase = getattr(waveform, 'phase', 0.0)
+        angle = getattr(waveform, "angle", 0.0)  # Legacy support
         
-        envelope = amp * np.exp(-((tau - 0.5)**2) / (2 * sigma**2))
-        envelope *= np.exp(1j * angle)
-        return complex(envelope)
+        if use_torch:
+            import torch
+            amp_t = amp if torch.is_tensor(amp) else torch.tensor(float(amp), dtype=torch.float64)
+            phase_t = torch.tensor(float(phase + angle), dtype=torch.float64)
+            
+            # Gaussian envelope (use torch math)
+            exponent = -((tau - 0.5)**2) / (2 * sigma**2)
+            envelope = amp_t * torch.exp(torch.tensor(exponent, dtype=torch.float64))
+            envelope = envelope * torch.exp(1j * phase_t)
+            return envelope.to(torch.complex128)
+        else:
+            # Use numpy
+            envelope = amp * np.exp(-((tau - 0.5)**2) / (2 * sigma**2))
+            envelope *= np.exp(1j * (phase + angle))
+            return complex(envelope)
     
     elif waveform_type == "flattop":
         # Flat-top pulse: Gaussian rise/fall + constant plateau
@@ -151,6 +185,9 @@ def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
         envelope = (amp / 2) * (
             erf((w + T - t_abs) / sigma) - erf((w - t_abs) / sigma)
         )
+        if use_torch:
+            import torch
+            return torch.tensor(complex(envelope), dtype=torch.complex128)
         return complex(envelope)
     
     elif waveform_type == "sine":
@@ -164,11 +201,94 @@ def sample_waveform(waveform: Any, t: float, backend: Any = None) -> complex:
         t_abs = t_sample / SAMPLING_RATE
         envelope = amp * np.sin(2 * np.pi * freq * t_abs + phase)
         envelope *= np.exp(1j * angle)
+        if use_torch:
+            import torch
+            return torch.tensor(complex(envelope), dtype=torch.complex128)
         return complex(envelope)
     
     elif waveform_type == "constant":
         # Constant amplitude (DC pulse)
+        if use_torch:
+            import torch
+            return torch.tensor(complex(waveform.amp), dtype=torch.complex128)
         return complex(waveform.amp)
+    
+    elif waveform_type == "hermite":
+        # Hermite polynomial envelope: minimal spectral leakage
+        # Uses probabilist's Hermite polynomials for smooth envelope
+        # Formula (order 2): H₂(x) = x² - 1
+        #         (order 3): H₃(x) = x³ - 3x
+        # Where x = (τ - 0.5) / σ (normalized centered coordinate)
+        
+        amp = waveform.amp
+        order = int(waveform.order) if hasattr(waveform, 'order') else 2
+        phase = getattr(waveform, 'phase', 0.0)
+        
+        # Normalized coordinate (centered at τ=0.5)
+        x = (tau - 0.5) * 4  # Stretch to [-2, 2] for better coverage
+        
+        # Gaussian envelope (always present)
+        sigma_envelope = 0.35  # Controls envelope width
+        gaussian = np.exp(-(x**2) / (2 * sigma_envelope**2))
+        
+        # Hermite modulation
+        if order == 2:
+            # H₂(x) = x² - 1, normalized
+            hermite_mod = 1.0 + (x**2 - 1) / 4.0
+        elif order == 3:
+            # H₃(x) = x³ - 3x, normalized
+            hermite_mod = 1.0 + (x**3 - 3*x) / 6.0
+        else:
+            # Default: use Gaussian only
+            hermite_mod = 1.0
+        
+        # Combine envelope and modulation
+        envelope = amp * gaussian * np.maximum(hermite_mod, 0.01)  # Avoid zero
+        envelope *= np.exp(1j * phase)
+        
+        if use_torch:
+            import torch
+            return torch.tensor(complex(envelope), dtype=torch.complex128)
+        return complex(envelope)
+    
+    elif waveform_type == "blackman_square" or waveform_type == "blackmansquare":
+        # Blackman window with flat-top: extremely low spectral sidelobes
+        # Blackman window: w(t) = 0.42 - 0.5·cos(2πt/T) + 0.08·cos(4πt/T)
+        # Applied as: ramp-up [0, w/2] → plateau [w/2, T-w/2] → ramp-down [T-w/2, T]
+        
+        amp = waveform.amp
+        width_samples = waveform.width  # Plateau width
+        duration_samples_total = waveform.duration
+        phase = getattr(waveform, 'phase', 0.0)
+        
+        # Ramp duration (from plateau width)
+        ramp_duration = (duration_samples_total - width_samples) / 2
+        
+        t_abs = t_sample  # Current sample
+        
+        # Determine region
+        if t_abs < ramp_duration:
+            # Ramp-up region [0, ramp_duration]
+            t_ramp = t_abs / ramp_duration  # Normalized to [0, 1]
+            # Blackman window
+            window = 0.42 - 0.5 * np.cos(2 * np.pi * t_ramp) + 0.08 * np.cos(4 * np.pi * t_ramp)
+            envelope = amp * window
+        elif t_abs < ramp_duration + width_samples:
+            # Plateau region [ramp_duration, ramp_duration + width_samples]
+            envelope = amp  # Full amplitude
+        else:
+            # Ramp-down region [ramp_duration + width_samples, duration]
+            t_ramp = (duration_samples_total - t_abs) / ramp_duration  # Normalized to [0, 1]
+            # Blackman window
+            window = 0.42 - 0.5 * np.cos(2 * np.pi * t_ramp) + 0.08 * np.cos(4 * np.pi * t_ramp)
+            envelope = amp * window
+        
+        envelope *= np.exp(1j * phase)
+        
+        if use_torch:
+            import torch
+            return torch.tensor(complex(envelope), dtype=torch.complex128)
+        return complex(envelope)
     
     else:
         raise ValueError(f"Unsupported waveform type: {waveform_type}")
@@ -179,6 +299,7 @@ def build_pulse_hamiltonian(
     qubit_freq: float,
     drive_freq: float,
     anharmonicity: float = -300e6,
+    rabi_freq: float = 50e6,  # NEW: Rabi frequency parameter
     backend: Any = None
 ) -> Tuple[Any, Any]:
     """
@@ -205,6 +326,9 @@ def build_pulse_hamiltonian(
         Drive frequency (Hz), typically near qubit_freq
     anharmonicity : float, optional
         Qubit anharmonicity (Hz), default -300 MHz for transmon
+    rabi_freq : float, optional
+        Peak Rabi frequency (Hz), default 50 MHz
+        This scales the normalized pulse amplitude to physical drive strength.
     backend : ArrayBackend, optional
         
     Returns
@@ -233,18 +357,25 @@ def build_pulse_hamiltonian(
     detuning = qubit_freq - drive_freq
     H_drift = (detuning / 2) * sigma_z
     
+    # Rabi frequency scaling (convert to angular frequency)
+    rabi_angular = 2 * np.pi * rabi_freq
+    
     # Drive Hamiltonian function (time-dependent)
     def H_drive(t):
-        # Sample waveform envelope
+        # Sample waveform envelope (normalized)
         omega_t = sample_waveform(pulse_waveform, t, backend)
+        
+        # Scale by physical Rabi frequency
+        # omega_t is normalized (max ≈ pulse.amp), scale to target Rabi freq
+        omega_drive = omega_t * rabi_angular
         
         # In RWA: H_drive = Ω(t)/2 [σ_+ exp(-iφ) + σ_- exp(iφ)]
         # Simplified (φ=0): H_drive = Ω(t)/2 (σ_x + iσ_y) + c.c.
         #                            = Ω(t) σ_x  (if Ω real)
         
         # For complex Ω(t), split into real/imaginary parts
-        omega_real = backend.real(omega_t)
-        omega_imag = backend.imag(omega_t)
+        omega_real = backend.real(omega_drive)
+        omega_imag = backend.imag(omega_drive)
         
         H_d = omega_real * sigma_x + omega_imag * sigma_y
         return H_d
@@ -259,6 +390,7 @@ def evolve_pulse_hamiltonian(
     qubit_freq: float = 5.0e9,
     drive_freq: Optional[float] = None,
     anharmonicity: float = -300e6,
+    rabi_freq: float = 50e6,  # NEW: Rabi frequency parameter
     T1: Optional[float] = None,
     T2: Optional[float] = None,
     backend: Any = None
@@ -283,6 +415,8 @@ def evolve_pulse_hamiltonian(
         Drive frequency in Hz (default = qubit_freq, on-resonance)
     anharmonicity : float, optional
         Qubit anharmonicity in Hz (default -300 MHz)
+    rabi_freq : float, optional
+        Peak Rabi frequency in Hz (default 50 MHz)
     T1 : float, optional
         Amplitude damping time in seconds (if None, no relaxation)
     T2 : float, optional
@@ -316,7 +450,7 @@ def evolve_pulse_hamiltonian(
     
     # Build Hamiltonian
     H_drift, H_drive = build_pulse_hamiltonian(
-        pulse_waveform, qubit_freq, drive_freq, anharmonicity, backend
+        pulse_waveform, qubit_freq, drive_freq, anharmonicity, rabi_freq, backend
     )
     
     # Total Hamiltonian function
@@ -395,6 +529,7 @@ def compile_pulse_to_unitary(
     qubit_freq: float = 5.0e9,
     drive_freq: Optional[float] = None,
     anharmonicity: float = -300e6,
+    rabi_freq: float = 50e6,  # NEW: Rabi frequency parameter
     backend: Any = None
 ) -> Any:
     """
@@ -402,6 +537,9 @@ def compile_pulse_to_unitary(
     
     Computes U = T exp[-i ∫ H(t) dt] via time evolution of identity
     basis states.
+    
+    **Autograd Support**: When using PyTorch backend, this function
+    preserves gradient information for automatic differentiation.
     
     Parameters
     ----------
@@ -413,6 +551,8 @@ def compile_pulse_to_unitary(
         Drive frequency in Hz (default = qubit_freq)
     anharmonicity : float, optional
         Anharmonicity in Hz
+    rabi_freq : float, optional
+        Peak Rabi frequency in Hz (default 50 MHz)
     backend : ArrayBackend, optional
         
     Returns
@@ -431,11 +571,38 @@ def compile_pulse_to_unitary(
     Notes
     -----
     Used in chain API: compile() → Pulse → unitary → apply to circuit
+    
+    **For PyTorch backend**: Uses differentiable Euler integration instead
+    of scipy.solve_ivp to preserve autograd chain.
     """
     if backend is None:
         from ...numerics.api import get_backend
         backend = get_backend()
     
+    # Check if using PyTorch backend for autograd support
+    use_pytorch = backend.name == 'pytorch'
+    
+    if use_pytorch:
+        # Use differentiable PyTorch integration
+        return _compile_pulse_pytorch(
+            pulse_waveform, qubit_freq, drive_freq, anharmonicity, rabi_freq, backend
+        )
+    else:
+        # Use standard scipy integration (more accurate)
+        return _compile_pulse_scipy(
+            pulse_waveform, qubit_freq, drive_freq, anharmonicity, rabi_freq, backend
+        )
+
+
+def _compile_pulse_scipy(
+    pulse_waveform: Any,
+    qubit_freq: float,
+    drive_freq: float,
+    anharmonicity: float,
+    rabi_freq: float,
+    backend: Any
+) -> Any:
+    """Compile pulse using scipy integration (original implementation)."""
     # Evolve basis states |0⟩ and |1⟩
     psi0 = backend.array([1, 0], dtype=backend.complex128)
     psi1 = backend.array([0, 1], dtype=backend.complex128)
@@ -445,6 +612,7 @@ def compile_pulse_to_unitary(
         qubit_freq=qubit_freq, 
         drive_freq=drive_freq,
         anharmonicity=anharmonicity,
+        rabi_freq=rabi_freq,
         backend=backend
     )
     
@@ -453,11 +621,81 @@ def compile_pulse_to_unitary(
         qubit_freq=qubit_freq,
         drive_freq=drive_freq,
         anharmonicity=anharmonicity,
+        rabi_freq=rabi_freq,
         backend=backend
     )
     
     # Stack columns to form unitary
     U = backend.stack([col0, col1], axis=1)
+    
+    return U
+
+
+def _compile_pulse_pytorch(
+    pulse_waveform: Any,
+    qubit_freq: float,
+    drive_freq: float,
+    anharmonicity: float,
+    rabi_freq: float,
+    backend: Any
+) -> Any:
+    """Compile pulse using PyTorch differentiable integration.
+    
+    This version preserves autograd chain by using Euler method instead
+    of scipy.solve_ivp.
+    """
+    import torch
+    
+    # Physical constants
+    duration_sec = pulse_waveform.duration / SAMPLING_RATE
+    detuning = qubit_freq - drive_freq
+    rabi_angular = 2 * np.pi * rabi_freq
+    
+    # Pauli matrices
+    sigma_z = torch.tensor([[1, 0], [0, -1]], dtype=torch.complex128)
+    sigma_x = torch.tensor([[0, 1], [1, 0]], dtype=torch.complex128)
+    sigma_y = torch.tensor([[0, -1j], [1j, 0]], dtype=torch.complex128)
+    
+    # Drift Hamiltonian
+    H_drift = (detuning / 2) * sigma_z
+    
+    # Time evolution parameters
+    num_steps = min(pulse_waveform.duration, 200)  # Limit for speed
+    dt = duration_sec / num_steps
+    
+    # Evolution function
+    def evolve_state(psi_init):
+        psi = psi_init.clone()
+        for step in range(num_steps):
+            t = step * dt
+            
+            # Sample waveform (must be PyTorch compatible!)
+            omega_t = sample_waveform(pulse_waveform, t, backend)
+            omega_drive = omega_t * rabi_angular
+            
+            # Drive Hamiltonian
+            H_drive = torch.real(omega_drive) * sigma_x + torch.imag(omega_drive) * sigma_y
+            
+            # Total Hamiltonian
+            H_total = H_drift + H_drive
+            
+            # Euler step: ψ(t+dt) = ψ(t) - i*dt*H*ψ(t)
+            psi = psi - 1j * dt * (H_total @ psi)
+            
+            # Normalize
+            psi = psi / torch.sqrt(torch.sum(torch.abs(psi)**2))
+        
+        return psi
+    
+    # Evolve basis states
+    psi0 = torch.tensor([1, 0], dtype=torch.complex128)
+    psi1 = torch.tensor([0, 1], dtype=torch.complex128)
+    
+    col0 = evolve_state(psi0)
+    col1 = evolve_state(psi1)
+    
+    # Stack to form unitary
+    U = torch.stack([col0, col1], dim=1)
     
     return U
 

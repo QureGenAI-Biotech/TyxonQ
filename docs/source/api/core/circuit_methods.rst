@@ -693,6 +693,191 @@ inverse()
    
    - :doc:`/tutorials/circuit_transformations`: Circuit transformation tutorial
 
+Two-Qubit Interaction Gates
+---------------------------
+
+iswap()
+~~~~~~~
+
+.. method:: Circuit.iswap(q0, q1)
+
+   Apply iSWAP gate between two qubits.
+
+   The iSWAP gate exchanges quantum states and applies a relative phase:
+   **iSWAP = exp(-iπ/4 · σ_x ⊗ σ_x)**
+
+   **Matrix representation:**
+
+   .. code-block:: text
+
+      [[1,  0,  0,  0],
+       [0,  0, 1j,  0],
+       [0, 1j,  0,  0],
+       [0,  0,  0,  1]]
+
+   **Physical properties:**
+
+   - Swaps quantum states: iSWAP|01⟩ = i|10⟩, iSWAP|10⟩ = i|01⟩
+   - Adds π/2 relative phase to swapped basis states
+   - Native gate on many superconducting platforms (Rigetti, IonQ)
+   - Useful for exchanging and entangling qubits
+   - Energy-preserving interaction (Heisenberg XX coupling)
+
+   **Pulse Implementation:**
+
+   - Decomposed to CX chain: CX(q0,q1) · CX(q1,q0) · CX(q0,q1)
+   - Cross-resonance driven in pulse compiler
+   - Supports three_level simulation with leakage modeling
+
+   :param q0: First qubit index (0-based)
+   :type q0: int
+
+   :param q1: Second qubit index (0-based)
+   :type q1: int
+
+   :returns: Self for method chaining
+   :rtype: Circuit
+
+   **Examples:**
+
+   Create iSWAP entanglement:
+
+   .. code-block:: python
+
+      import tyxonq as tq
+
+      c = tq.Circuit(2)
+      c.h(0).iswap(0, 1)  # Creates entangled state with phase
+
+   Chain multiple iSWAPs:
+
+   .. code-block:: python
+
+      c = tq.Circuit(4)
+      c.iswap(0, 1).iswap(2, 3)  # Two independent iSWAPs
+
+   Mix with other gates:
+
+   .. code-block:: python
+
+      c = tq.Circuit(3)
+      c.h(0).iswap(0, 1).cx(1, 2)  # Mix iSWAP and CNOT
+
+   Use in VQE with Hubbard model:
+
+   .. code-block:: python
+
+      # iSWAP is natural for Hubbard/Fermi-Hubbard model simulation
+      c = tq.Circuit(4)
+      for i in range(3):
+          c.iswap(i, i+1)  # Apply along chain
+
+   **References:**
+
+   - Shende & Markov, "Minimal universal two-qubit controlled-NOT-based circuits",
+     *Physical Review A* **72**, 062305 (2005) [arXiv:quant-ph/0308033]
+   - Rigetti, "A Practical Quantum Instruction Set Architecture" (2017)
+     [arXiv:1903.02492]
+
+   **See Also:**
+
+   - :meth:`swap`: Standard SWAP gate (no relative phase)
+   - :doc:`/tutorials/advanced/pulse_iswap_swap_decomposition`: Tutorial on gate decomposition
+   - :doc:`/user_guide/pulse/index`: Pulse programming guide
+
+swap()
+~~~~~~
+
+.. method:: Circuit.swap(q0, q1)
+
+   Apply SWAP gate between two qubits.
+
+   The SWAP gate exchanges quantum states without adding phase:
+
+   **Matrix representation:**
+
+   .. code-block:: text
+
+      [[1, 0, 0, 0],
+       [0, 0, 1, 0],
+       [0, 1, 0, 0],
+       [0, 0, 0, 1]]
+
+   **Physical properties:**
+
+   - Pure state exchange: SWAP|01⟩ = |10⟩, SWAP|10⟩ = |01⟩
+   - No relative phase (unlike iSWAP)
+   - Equivalent to 3 CNOT gates: CX(q0,q1) · CX(q1,q0) · CX(q0,q1)
+   - Useful for qubit relabeling and layout optimization
+   - Commonly used in quantum algorithms to reorder qubits
+
+   **Pulse Implementation:**
+
+   - Identical CX chain decomposition to iSWAP
+   - Software distinguishes physical difference (phase)
+   - Cross-resonance driven pulse compilation
+   - Supports three_level leakage simulation
+
+   :param q0: First qubit index (0-based)
+   :type q0: int
+
+   :param q1: Second qubit index (0-based)
+   :type q1: int
+
+   :returns: Self for method chaining
+   :rtype: Circuit
+
+   **Examples:**
+
+   Swap adjacent qubits:
+
+   .. code-block:: python
+
+      import tyxonq as tq
+
+      c = tq.Circuit(3)
+      c.h(0).cx(0, 1).swap(0, 2)  # Rearrange qubit order
+
+   Use in layout optimization:
+
+   .. code-block:: python
+
+      c = tq.Circuit(4)
+      c.cx(0, 1).swap(1, 3).cx(1, 2)  # Map logical circuit to physical hardware
+
+   Verify SWAP property:
+
+   .. code-block:: python
+
+      # Initial: q0=1, q1=0 (|10⟩)
+      c = tq.Circuit(2)
+      c.x(0)  # Set q0 to |1⟩
+      c.swap(0, 1)  # After: q0=0, q1=1 (|01⟩)
+      c.measure_z(0).measure_z(1)
+
+   Measure before and after:
+
+   .. code-block:: python
+
+      import tyxonq as tq
+
+      c = tq.Circuit(2)
+      c.h(0).h(1)  # Superposition
+      c.swap(0, 1)  # Exchange
+      c.measure_z(0).measure_z(1)  # Verify qubits swapped
+
+   **Mathematical Properties:**
+
+   - SWAP² = I (applying twice gives identity)
+   - SWAP commutes with some gates but not all
+   - Determinant = 1 (real unitary matrix)
+
+   **See Also:**
+
+   - :meth:`iswap`: iSWAP gate (with relative phase)
+   - :doc:`/tutorials/advanced/pulse_iswap_swap_decomposition`: Tutorial on gate decomposition
+   - :doc:`/user_guide/pulse/index`: Pulse programming guide
+
 Aliases
 -------
 
@@ -701,6 +886,8 @@ The following are aliases for commonly used methods:
 - ``MEASURE_Z(q)``: Alias for :meth:`measure_z`
 - ``CNOT(c, t)``: Alias for :meth:`cx`
 - ``cnot(c, t)``: Alias for :meth:`cx`
+- ``ISWAP(q0, q1)``: Alias for :meth:`iswap`
+- ``SWAP(q0, q1)``: Alias for :meth:`swap`
 
 .. seealso::
 

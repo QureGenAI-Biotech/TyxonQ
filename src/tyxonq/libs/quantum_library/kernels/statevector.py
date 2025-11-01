@@ -27,6 +27,8 @@ def init_statevector(num_qubits: int, backend: ArrayBackend | None = None) -> An
 
 def apply_1q_statevector(backend: Any, state: Any, gate2: Any, qubit: int, num_qubits: int) -> Any:
     K = backend or nb
+    # CRITICAL: Use backend operations throughout to preserve gradient chain
+    # Use the backend's reshape and asarray to maintain PyTorch autograd if present
     psi = K.reshape(K.asarray(state), (2,) * num_qubits)
     g2 = K.asarray(gate2)
     letters = list("abcdefghijklmnopqrstuvwxyz")
@@ -36,7 +38,8 @@ def apply_1q_statevector(backend: Any, state: Any, gate2: Any, qubit: int, num_q
     out_axes = axes.copy(); out_axes[qubit] = 'a'
     spec = f"ab,{''.join(in_axes)}->{''.join(out_axes)}"
     arr = K.einsum(spec, g2, psi)
-    return K.reshape(K.asarray(arr), (-1,))
+    # CRITICAL: Don't call K.asarray on the result - K.einsum already returns backend tensor
+    return K.reshape(arr, (-1,))
 
 
 def apply_2q_statevector(backend: Any, state: Any, gate4: Any, q0: int, q1: int, num_qubits: int) -> Any:
@@ -52,7 +55,8 @@ def apply_2q_statevector(backend: Any, state: Any, gate4: Any, q0: int, q1: int,
     spec = f"abcd,{''.join(in_axes)}->{''.join(out_axes)}"
     g4 = K.reshape(K.asarray(gate4), (2, 2, 2, 2))
     arr = K.einsum(spec, g4, psi)
-    return K.reshape(K.asarray(arr), (-1,))
+    # CRITICAL: Don't call K.asarray on the result - K.einsum already returns backend tensor
+    return K.reshape(arr, (-1,))
 
 
 def expect_z_statevector(state: Any, qubit: int, num_qubits: int, backend: ArrayBackend | None = None) -> Any:

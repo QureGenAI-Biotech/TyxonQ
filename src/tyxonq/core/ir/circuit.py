@@ -1531,6 +1531,103 @@ class Circuit:
     def RZZ(self, c: int, t: int, theta: Any):
         return self.rzz(c, t, theta)
 
+    def iswap(self, q0: int, q1: int):
+        """Apply iSWAP gate between two qubits.
+        
+        The iSWAP gate exchanges quantum states and applies a relative phase:
+        iSWAP = exp(-iπ/4 · σ_x ⊗ σ_x)
+        
+        Matrix representation:
+        [[1,  0,  0,  0],
+         [0,  0, 1j,  0],
+         [0, 1j,  0,  0],
+         [0,  0,  0,  1]]
+        
+        Physical properties:
+        - Swaps quantum states: iSWAP|01⟩ = i|10⟩, iSWAP|10⟩ = i|01⟩
+        - Adds π/2 relative phase to swapped basis states
+        - Native gate on many superconducting platforms (Rigetti, IonQ)
+        - Useful for exchanging and entangling qubits
+        
+        Reference:
+            Shende & Markov, "Minimal universal two-qubit controlled-NOT-based circuits",
+            Physical Review A 72, 062305 (2005)
+            https://arxiv.org/abs/quant-ph/0308033
+        
+        Args:
+            q0 (int): First qubit index (0-based).
+            q1 (int): Second qubit index (0-based).
+            
+        Returns:
+            Circuit: Self for method chaining.
+            
+        Examples:
+            >>> # Create iSWAP entanglement
+            >>> c = Circuit(2)
+            >>> c.h(0).iswap(0, 1)  # Creates a specific entangled state
+            >>> 
+            >>> # Chain multiple iSWAPs
+            >>> c = Circuit(4)
+            >>> c.iswap(0, 1).iswap(2, 3)  # Two independent iSWAPs
+            >>> 
+            >>> # Use in hybrid gate-pulse mode
+            >>> c = Circuit(3)
+            >>> c.h(0).iswap(0, 1).cx(1, 2)  # Mix iSWAP and CNOT
+        """
+        self.ops.append(("iswap", int(q0), int(q1)))
+        return self
+
+    def ISWAP(self, q0: int, q1: int):
+        """Uppercase alias for iswap()."""
+        return self.iswap(q0, q1)
+
+    def swap(self, q0: int, q1: int):
+        """Apply SWAP gate between two qubits.
+        
+        The SWAP gate exchanges quantum states without adding phase:
+        SWAP = [[1, 0, 0, 0],
+                [0, 0, 1, 0],
+                [0, 1, 0, 0],
+                [0, 0, 0, 1]]
+        
+        Physical properties:
+        - Pure state exchange: SWAP|01⟩ = |10⟩, SWAP|10⟩ = |01⟩
+        - No relative phase (unlike iSWAP)
+        - Equivalent to 3 CNOT gates: CX(q0,q1)·CX(q1,q0)·CX(q0,q1)
+        - Useful for qubit relabeling and layout optimization
+        - Commonly used in quantum algorithms to reorder qubits
+        
+        Implementation note:
+            In pulse-level compilation, SWAP is decomposed into 3 CX gates
+            for hardware execution (see gate_to_pulse.py)
+        
+        Args:
+            q0 (int): First qubit index (0-based).
+            q1 (int): Second qubit index (0-based).
+            
+        Returns:
+            Circuit: Self for method chaining.
+            
+        Examples:
+            >>> # Swap adjacent qubits
+            >>> c = Circuit(3)
+            >>> c.h(0).cx(0, 1).swap(0, 2)  # Rearrange qubit order
+            >>> 
+            >>> # Use in layout optimization
+            >>> c = Circuit(4)
+            >>> c.cx(0, 1).swap(1, 3).cx(1, 2)  # Implement logical circuit on physical hardware
+            >>> 
+            >>> # Combine with measurements
+            >>> c = Circuit(2)
+            >>> c.h(0).h(1).swap(0, 1).measure_z(0).measure_z(1)
+        """
+        self.ops.append(("swap", int(q0), int(q1)))
+        return self
+
+    def SWAP(self, q0: int, q1: int):
+        """Uppercase alias for swap()."""
+        return self.swap(q0, q1)
+
     def expectation(self, *pauli_ops: Any) -> Any:
         """Compute expectation value of Pauli operator product.
         
