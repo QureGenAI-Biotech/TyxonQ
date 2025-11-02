@@ -225,43 +225,37 @@ Complete Usage Examples
 Example 1: Local VQE Optimization (pulse mode + PyTorch)
 ---------------------------------------------------------
 
-.. code-block:: homebrew_s2
+.. code-block:: python
 
    import torch
    from tyxonq import Circuit, waveforms
-   from tyxonq.compiler.pulse_compile_engine import PulseCompiler
+   from tyxonq.compiler.api import compile
    from tyxonq.numerics.context import set_backend
    
    set_backend("pytorch")
    
-   # Parameterized Pulse amplitude
+   # Parameterized pulse amplitude
    amp = torch.tensor([1.0], requires_grad=True)
    
    def create_pulse_circuit(amp_val):
        c = Circuit(2)
        c.h(0)
-       
-       # Add parameterized Pulse calibration
-       compiler = PulseCompiler()
-       x_pulse = waveforms.Drag(amp=amp_val, duration=160, sigma=40, beta=0.2)
-       compiler.add_calibration("x", [1], x_pulse)
-       
-       c.x(1)  # Use custom Pulse
+       c.x(1)  # Will be compiled to pulse
        c.cx(0, 1)
        
-       # Compile (preserve objects, support autograd)
-       return compiler.compile(
-           c,
-           output="pulse_ir",
-           inline_pulses=False,  # Keep homebrew_s2 objects
-           calibrations=compiler.get_calibrations()
-       )
+       # Enable pulse mode with parameterized amplitude
+       c.use_pulse(device_params={
+           "qubit_freq": [5.0e9, 5.05e9],
+           "anharmonicity": [-330e6, -330e6]
+       })
+       
+       return c
    
    # VQE optimization loop
    optimizer = torch.optim.Adam([amp], lr=0.01)
    
    for step in range(100):
-       circuit = create_pulse_circuit(amp)
+       circuit = create_pulse_circuit(float(amp))
        energy = circuit.run().expectation("Z0")  # Gradient auto-propagates!
        
        loss = energy
@@ -272,10 +266,10 @@ Example 1: Local VQE Optimization (pulse mode + PyTorch)
 Example 2: Cloud Submission (pulse_inline + TQASM)
 ---------------------------------------------------
 
-.. code-block:: homebrew_s2
+.. code-block:: python
 
    from tyxonq import Circuit
-   from tyxonq.compiler.pulse_compile_engine import PulseCompiler, save_pulse_circuit
+   from tyxonq.compiler.api import compile
    
    c = Circuit(2)
    c.h(0)
@@ -283,38 +277,26 @@ Example 2: Cloud Submission (pulse_inline + TQASM)
    c.measure_z(0)
    c.measure_z(1)
    
-   compiler = PulseCompiler()
+   # Enable pulse mode
+   c.use_pulse(device_params={
+       "qubit_freq": [5.0e9, 5.1e9],
+       "anharmonicity": [-330e6, -320e6]
+   })
    
-   # Step 1: Compile to pulse_inline (cloud-compatible)
-   pulse_circuit = compiler.compile(
-       c,
-       device_params={
-           "qubit_freq": [5.0e9, 5.1e9],
-           "anharmonicity": [-330e6, -320e6]
-       },
-       output="pulse_ir",
-       inline_pulses=True,  # Required! Cloud needs fully expanded
-       mode="pulse_only"
-   )
+   # Step 1: Compile to TQASM (auto-converts to tyxonq_homebrew_tqasm for homebrew_s2)
+   tqasm_code = compile(c, output="tqasm", options={"inline_pulses": True})
    
-   # Step 2: Export to TQASM 0.2
-   tqasm_code = compiler.compile(
-       c,
-       device_params={
-           "qubit_freq": [5.0e9, 5.1e9],
-           "anharmonicity": [-330e6, -320e6]
-       },
-       output="tqasm",  # TQASM format
-       mode="pulse_only"
-   )
+   # tqasm_code is a string with TQASM 0.2 format
+   print(tqasm_code)
    
-   # Step 3: Submit to cloud
-   # result = pulse_circuit.device(provider="tyxonq", device="homebrew_s2").run()
+   # Step 2: Submit to cloud (use device to set provider)
+   c.device(provider="tyxonq", device="homebrew_s2")
+   result = c.run()
 
 Example 3: Mode B - Direct Numerical Simulation
 ------------------------------------------------
 
-.. code-block:: homebrew_s2
+.. code-block:: python
 
    import numpy as np
    from tyxonq.libs.quantum_library import pulse_simulation

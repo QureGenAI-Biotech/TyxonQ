@@ -378,14 +378,15 @@ The ``GateToPulsePass`` compiler automatically queries DefcalLibrary during comp
    # Step 3: Compile with defcal-aware compiler
    compiler = GateToPulsePass(defcal_library=lib)
    
-   device_params = {
+   # Store device parameters in circuit metadata
+   circuit.metadata["pulse_device_params"] = {
        "qubit_freq": [5.0e9, 5.05e9, 4.95e9],
        "anharmonicity": [-330e6, -330e6, -330e6],
    }
    
+   # Execute gate-to-pulse compilation
    pulse_circuit = compiler.execute_plan(
        circuit,
-       device_params=device_params,
        mode="pulse_only"
    )
    
@@ -505,9 +506,9 @@ The simplest way to use DefcalLibrary in production is via the complete chain AP
 
    # 3. Compile with defcal
    compiler = GateToPulsePass(defcal_library=lib)
+   circuit.metadata["pulse_device_params"] = {"qubit_freq": [5.0e9, 5.05e9]}
    pulse_circuit = compiler.execute_plan(
        circuit,
-       device_params={"qubit_freq": [5.0e9, 5.05e9]},
        mode="pulse_only"
    )
 

@@ -169,16 +169,24 @@ Step-by-Step Guide
 
    from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
    
-   compiler = GateToPulsePass(defcal_library=lib)
+   # Create compiler with DefcalLibrary
+   defcal_lib = DefcalLibrary(hardware="Homebrew_S2")
+   # ... add calibrations ...
+   
+   compiler = GateToPulsePass(defcal_library=defcal_lib)
    
    device_params = {
        "qubit_freq": [5.0e9, 5.05e9],
        "anharmonicity": [-330e6, -330e6],
    }
    
+   # Store device params in circuit metadata
+   circuit.metadata["pulse_device_params"] = device_params
+   circuit.metadata["pulse_calibrations"] = {}  # Optional: legacy calibrations
+   
+   # Compile using execute_plan
    pulse_circuit = compiler.execute_plan(
        circuit,
-       device_params=device_params,
        mode="pulse_only"  # Converts all gates to pulses
    )
 
@@ -226,12 +234,15 @@ Here's a complete example of hybrid mode in action:
    # ===== STEP 3: Compile with Hybrid =====
    compiler = GateToPulsePass(defcal_library=lib)
    
+   # Store device params in metadata
+   circuit.metadata["pulse_device_params"] = {
+       "qubit_freq": [5.0e9, 5.05e9],
+       "anharmonicity": [-330e6, -330e6],
+   }
+   
+   # Execute gate-to-pulse compilation
    pulse_circuit = compiler.execute_plan(
        circuit,
-       device_params={
-           "qubit_freq": [5.0e9, 5.05e9],
-           "anharmonicity": [-330e6, -330e6],
-       },
        mode="pulse_only"
    )
    
@@ -298,11 +309,12 @@ Always compare hybrid vs gate-only:
 
    # Without calibrations (baseline)
    compiler_baseline = GateToPulsePass(defcal_library=None)
-   pulse_baseline = compiler_baseline.execute_plan(circuit, device_params)
+   circuit.metadata["pulse_device_params"] = device_params
+   pulse_baseline = compiler_baseline.execute_plan(circuit, mode="pulse_only")
    
    # With calibrations (hybrid)
    compiler_hybrid = GateToPulsePass(defcal_library=lib)
-   pulse_hybrid = compiler_hybrid.execute_plan(circuit, device_params)
+   pulse_hybrid = compiler_hybrid.execute_plan(circuit, mode="pulse_only")
    
    # Execute both and compare
    result_baseline = pulse_baseline.device().run(shots=1024)

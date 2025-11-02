@@ -32,14 +32,24 @@ Main Compilation Function
 .. code-block:: python
 
    def compile(
-       circuit,                      # Circuit to compile
-       optimization_level: int = 1,  # 0, 1, 2, or 3
-       basis_gates: List[str] = None,  # Target gate set
-       compile_engine: str = "default",  # Compiler backend
-       **options
-   ) -> Circuit
+       circuit,                           # Circuit or PulseProgram to compile
+       compile_engine: str = "default",  # Compiler backend: "native", "qiskit", "pulse"
+       output: str = "ir",               # Output format: "ir", "qasm2", "qasm3", "tqasm", "pulse_ir"
+       device_params: Dict = None,       # Device parameters for pulse compilation
+       options: Dict = None,             # Additional compilation options
+       **kwargs
+   ) -> Union[Circuit, str]
 
-**Example**:
+**Output Format Options**:
+
+- ``"ir"`` (default): TyxonQ internal IR. Auto-converts when pulse operations detected
+- ``"qasm2"``: OpenQASM 2.0 format
+- ``"qasm3"`` / ``"openqasm3"``: OpenQASM 3.0 format with pulse extensions
+- ``"tqasm"`` / ``"tqasm0.2"``: TQASM 0.2 format (cloud-ready)
+- ``"pulse_ir"``: TyxonQ pulse IR (preserves waveform objects)
+- ``"tyxonq_homebrew_tqasm"``: TQASM 0.2 for homebrew_s2 device
+
+**Example 1: Gate Circuit Compilation**:
 
 .. code-block:: python
 
@@ -52,15 +62,131 @@ Main Compilation Function
    circuit.cx(0, 1)
    circuit.cx(1, 2)
    
-   # Compile with optimization
+   # Basic compilation
+   compiled = compile(circuit)
+   
+   # Specify optimization
    compiled = compile(
        circuit,
-       optimization_level=2,
-       basis_gates=['h', 'rx', 'ry', 'rz', 'cx']
+       options={'optimization_level': 2}
    )
+
+**Example 2: Pulse Circuit Compilation**:
+
+.. code-block:: python
+
+   # Create circuit with pulse operations
+   circuit = Circuit(2)
+   circuit.h(0)
+   circuit.cx(0, 1)
+   
+   # Enable pulse compilation with device parameters
+   circuit.use_pulse(device_params={
+       "qubit_freq": [5.0e9, 5.1e9],
+       "anharmonicity": [-330e6, -320e6]
+   })
+   
+   # Compile to TQASM (auto-detects pulse operations)
+   result = compile(circuit, output="tqasm")
+   # Returns TQASM code as string
+   
+   # Or compile to pulse IR (preserves waveform objects)
+   result = compile(circuit, output="pulse_ir")
+   # Returns Circuit with pulse operations
+
+**Example 3: Cloud Submission (homebrew_s2)**:
+
+.. code-block:: python
+
+   # Setup for cloud execution
+   circuit = Circuit(2)
+   circuit.device(provider="tyxonq", device="homebrew_s2")
+   circuit.h(0)
+   circuit.cx(0, 1)
+   
+   # Use pulse mode
+   circuit.use_pulse(device_params={
+       "qubit_freq": [5.0e9, 5.1e9],
+       "anharmonicity": [-330e6, -320e6]
+   })
+   
+   # Compile to TQASM (auto-converts to tyxonq_homebrew_tqasm for homebrew_s2)
+   tqasm_code = compile(circuit, output="tqasm")
+   
+   # Submit to cloud
+   result = circuit.run()
 
 Optimization Levels
 ===================
+
+Automatic Compilation Rules
+---------------------------
+
+The compiler applies automatic rules to optimize output format based on circuit type and device:
+
+**Rule 1: Gate-only circuits on homebrew_s2**
+
+.. code-block:: python
+
+   circuit = Circuit(2)
+   circuit.device(provider="tyxonq", device="homebrew_s2")
+   circuit.h(0)
+   circuit.cx(0, 1)
+   
+   result = compile(circuit)  # output="ir" (default)
+   # Result: Automatically converted to qasm2 format
+
+**Rule 2: Pulse-mode circuits (auto-detection)**
+
+.. code-block:: python
+
+   circuit = Circuit(2)
+   circuit.h(0)
+   circuit.use_pulse(device_params={...})  # Enable pulse mode
+   circuit.cx(0, 1)
+   
+   result = compile(circuit, output="ir")
+   # Result: Automatically detects pulse operations, converts to openqasm3
+
+**Rule 3: Pulse circuits on homebrew_s2**
+
+.. code-block:: python
+
+   circuit = Circuit(2)
+   circuit.device(provider="tyxonq", device="homebrew_s2")
+   circuit.h(0)
+   circuit.use_pulse(device_params={...})  # Enable pulse mode
+   circuit.cx(0, 1)
+   
+   result = compile(circuit, output="ir")
+   # Result: Automatically converts to tyxonq_homebrew_tqasm (TQASM 0.2)
+
+Detailed Compilation Behavior
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Pulse Operation Detection**:
+
+When compiling circuits with ``output="ir"``, the compiler automatically detects pulse operations:
+
+.. code-block:: python
+
+   # These trigger pulse detection:
+   - circuit.use_pulse()  # Explicit pulse mode
+   - Pulse operations in circuit.ops ("pulse", "pulse_inline", etc.)
+   - mode="pulse_only" in options
+
+**Auto-conversion Logic**:
+
+1. If output="ir" and pulse operations detected:
+   
+   - For homebrew_s2: convert to ``tyxonq_homebrew_tqasm``
+   - For other devices: convert to ``openqasm3``
+
+2. If output is explicit ("tqasm", "qasm3", etc.), use as-is with device check
+3. If output="qasm2", keep as-is (gate-only)
+
+Optimization Levels
+-------------------
 
 Level 0: No Optimization
 ------------------------
