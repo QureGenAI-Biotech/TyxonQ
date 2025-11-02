@@ -3,8 +3,8 @@
 
 def test_smart_pulse_inference():
     """测试 output='tqasm' 自动启用 pulse 编译 + 自动补足默认参数"""
-    from src.tyxonq.core.ir.circuit import Circuit
-    from src.tyxonq.compiler.api import compile
+    from tyxonq.core.ir.circuit import Circuit
+    from tyxonq.compiler.api import compile
     import warnings
     
     print("=" * 70)

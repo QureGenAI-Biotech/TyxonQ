@@ -14,7 +14,9 @@ def test_readout_mit_basic_inverse_and_square():
     p_true = np.array([0.8, 0.2])
     A = mit.single_qubit_cals[0]
     p_meas = A @ p_true
-    meas_counts = {"0": int(round(p_meas[0] * 100)), "1": int(round(p_meas[1] * 100))}
+    # Ensure p_meas is numpy array to avoid issues with Tensor.__round__
+    p_meas = np.asarray(p_meas, dtype=float)
+    meas_counts = {"0": int(np.round(p_meas[0] * 100)), "1": int(np.round(p_meas[1] * 100))}
 
     inv_counts = mit.apply_readout_mitigation(meas_counts, method="inverse")
     assert sum(inv_counts.values()) == 100

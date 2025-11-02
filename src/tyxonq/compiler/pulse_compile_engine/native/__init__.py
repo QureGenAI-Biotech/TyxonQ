@@ -10,7 +10,6 @@ Key Components:
     - PulseSchedulingPass: Optimize pulse timing and scheduling
 
 References:
-    - TensorCircuit Pulse: https://github.com/tensorcircuit/tensorcircuit-ng
     - QuTiP-qip: Physics model reference (Quantum 6, 630, 2022)
 """
 

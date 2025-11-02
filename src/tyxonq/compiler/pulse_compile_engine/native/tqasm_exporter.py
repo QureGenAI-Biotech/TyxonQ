@@ -90,20 +90,42 @@ class TQASMExporter:
         [3] OpenPulse Grammar: https://openqasm.com/language/openpulse.html
     """
     
-    def __init__(self, version: str = "tqasm"):
+    def __init__(self, version: str = "openqasm3"):
         """Initialize TQASM exporter.
         
         Args:
             version: Version format to use:
-                - "tqasm": Use "TQASM 0.2" declaration (TensorCircuit compatible)
-                - "openqasm3": Use "OPENQASM 3.0" + "defcalgrammar openpulse" (IBM/Rigetti compatible)
+                - "tyxonq_homebrew_tqasm": homebrew_s2 特殊 TQASM 0.2 格式（Qiskit 风格 qreg q[n];）
+                - "openqasm3": 标准 OpenQASM 3.0 + OpenPulse 格式（qubit[n] q;）
         """
+        if version not in ("tyxonq_homebrew_tqasm", "openqasm3"):
+            raise ValueError(
+                f"Unsupported version: {version}. "
+                f"Use 'tyxonq_homebrew_tqasm' (homebrew_s2 special) or 'openqasm3' (standard)."
+            )
         self._version = version
         self._waveform_counter = 0
         self._defcal_definitions: Dict[str, List[str]] = defaultdict(list)
         self._frames: Dict[int, str] = {}  # qubit -> frame_name
         self._ports: Set[int] = set()  # Physical qubit indices with ports
     
+    def _get_qubit_declaration(self, num_qubits: int) -> str:
+        """生成量子比特声明语句
+        
+        Args:
+            num_qubits: 量子比特数量
+        
+        Returns:
+            量子比特声明语句
+        """
+        # 根据版本决定量子比特声明风格
+        if self._version == "tyxonq_homebrew_tqasm":
+            # homebrew_s2 特殊格式：Qiskit 风格
+            return f"qreg q[{num_qubits}];"
+        else:  # openqasm3
+            # 标准 OpenQASM 3.0 风格
+            return f"qubit[{num_qubits}] q;"
+
     def export(self, pulse_circuit) -> str:
         """Export pulse circuit or PulseProgram to TQASM 0.2 / OpenQASM 3 + OpenPulse format.
         
@@ -147,19 +169,18 @@ class TQASMExporter:
         tqasm_lines = []
         
         # 1. Header - Version declaration
-        # TQASM 0.2 和 OpenQASM 3.0 本质是一回事，只是版本声明不同
-        # TQASM 0.2: 用于 TensorCircuit 互操作
-        # OpenQASM 3.0: 用于 IBM/Rigetti 等标准硬件
+        # tyxonq_homebrew_tqasm: homebrew_s2 特殊格式（TQASM 0.2）
+        # openqasm3: 标准 OpenQASM 3.0 + OpenPulse
         if self._version == "openqasm3":
             tqasm_lines.append("OPENQASM 3.0;")
             tqasm_lines.append('defcalgrammar "openpulse";')
-        else:  # "tqasm" or "tqasm0.2"
+        else:  # tyxonq_homebrew_tqasm
             tqasm_lines.append("TQASM 0.2;")
         tqasm_lines.append("")
         
-        # 2. Qubit declaration (OpenQASM 3 syntax)
+        # 2. Qubit declaration
         num_qubits = pulse_circuit.num_qubits
-        tqasm_lines.append(f"qubit[{num_qubits}] q;")
+        tqasm_lines.append(self._get_qubit_declaration(num_qubits))
         tqasm_lines.append("")
         
         # 3. Extract pulse operations and build defcal definitions
@@ -228,13 +249,13 @@ class TQASMExporter:
         if self._version == "openqasm3":
             tqasm_lines.append("OPENQASM 3.0;")
             tqasm_lines.append('defcalgrammar "openpulse";')
-        else:
+        else:  # tyxonq_homebrew_tqasm
             tqasm_lines.append("TQASM 0.2;")
         tqasm_lines.append("")
         
         # 2. Qubit declaration
         num_qubits = pulse_program.num_qubits
-        tqasm_lines.append(f"qubit[{num_qubits}] q;")
+        tqasm_lines.append(self._get_qubit_declaration(num_qubits))
         tqasm_lines.append("")
         
         # 3. 从 PulseProgram.pulse_ops 构建 defcal 定义

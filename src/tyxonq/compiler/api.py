@@ -109,7 +109,8 @@ def compile(
         >>> result = compile(c, compile_plan=custom_plan)
 
     Notes:
-        - The "homebrew_s2" device automatically forces "qasm2" output
+        - The "homebrew_s2" device automatically forces "qasm2" output for gate circuits
+        - The "homebrew_s2" device automatically forces "tyxonq_homebrew_tqasm" output for pulse circuits
         - Native compiler includes essential normalization passes by default
         - Qiskit engine requires qiskit installation for QASM/Qiskit output
         - Compilation falls back to native engine if requested engine unavailable
@@ -124,25 +125,97 @@ def compile(
         CompileResult: Type definition for compilation results.
         tyxonq.compiler.passes: Available compilation passes.
     """
+    
+    def _has_pulse_ops(circuit_or_pulse: Any) -> bool:
+        """检查 circuit 或 pulse_program 中是否含有脉冲操作
+        
+        支持 Circuit 和 PulseProgram 两种类型：
+        - Circuit 的 ops 格式：(gate_name, ...) 或 ("pulse", qubit, key, params)
+        - PulseProgram 的 ops 格式：(qubit, waveform, params) - 有有冲口上就是 pulse
+        
+        Args:
+            circuit_or_pulse: Circuit 或 PulseProgram 对象
+        
+        Returns:
+            True 如果是 PulseProgram 或包含脉冲操作，False 否则
+        """
+        # 检查是否是 PulseProgram（简单的类型检查）
+        # PulseProgram 特迷：ops 的每个元素都是 (int, waveform, dict) 格式
+        if hasattr(circuit_or_pulse, '__class__'):
+            class_name = circuit_or_pulse.__class__.__name__
+            if class_name == "PulseProgram":
+                # PulseProgram 本身原就是脉冲程序，只要有 ops 就是 pulse
+                return hasattr(circuit_or_pulse, 'ops') and len(circuit_or_pulse.ops) > 0
+        
+        # 对于 Circuit 对象：检查 ops 中是否有脉冲相关的操作
+        if not hasattr(circuit_or_pulse, 'ops'):
+            return False
+        
+        for op in circuit_or_pulse.ops:
+            if not isinstance(op, (list, tuple)) or len(op) == 0:
+                continue
+            
+            op_type = op[0]
+            # 检查是否为脉冲相关操作
+            if op_type in ("pulse", "pulse_inline", "play", "set_phase", "shift_phase", "set_frequency"):
+                return True
+        
+        return False
+
+    # ... existing code ...
 
 
 
     # cap_target: Dict[str, Any] = _parse_target(target_device) if isinstance(target_device, str) else {}
     opts = dict(options or {})
 
-    if circuit._device_opts.get("provider") == "tyxonq" and circuit._device_opts.get('device') == 'homebrew_s2': 
+    # 判断逻辑：
+    # 1. 检查 circuit 中是否有脉冲操作（pulse, pulse_inline, play 等）
+    # 2. 检查是否显式调用 use_pulse() 或指定了脉冲编译模式
+    has_pulse_ops = _has_pulse_ops(circuit)
+    has_explicit_pulse_mode = (
+        getattr(circuit, "_compile_engine", None) == "pulse"
+        or opts.get("mode") in ("pulse_only", "hybrid")
+    )
+    is_pulse_compilation = has_pulse_ops or has_explicit_pulse_mode
+    
+    # 检测设备目标
+    is_homebrew_s2 = (
+        circuit._device_opts.get("provider") == "tyxonq" 
+        and circuit._device_opts.get("device") == "homebrew_s2"
+    )
+    
+    # ===================== 编译规则实现 =====================
+    # 规则1：门电路 + homebrew_s2 → 自动设为 qasm2
+    # 规则3：脉冲电路 + homebrew_s2 → 自动设为 tyxonq_homebrew_tqasm
+    
+    if is_pulse_compilation:
+        if is_homebrew_s2:
+            # 规则3：脉冲电路 + homebrew_s2 → tyxonq_homebrew_tqasm
+            output = "tyxonq_homebrew_tqasm"
+        if output == 'ir':
+            output = 'pulse_ir'
+        # 其他脉冲编译：保持用户设置或默认
+        
+        # 自动设置 homebrew_s2 默认的波形限制（如果用户未指定）
+        if "supported_waveforms" not in opts:
+            opts["supported_waveforms"] = ["drag", "gaussian", "constant"]
+    elif is_homebrew_s2:
+        # 规则1：门电路 + homebrew_s2 → qasm2
         output = "qasm2"
+    
     if output:
         opts["output"] = output
 
     compile_engine = (compile_engine or "default").lower()
     
-    # 智能推断：output="tqasm" 或 "qasm3" 自动启用 pulse 编译
-    if output in ("tqasm", "tqasm0.2", "qasm3", "qasm3.0", "openqasm3", "openqasm3.0") and compile_engine in ("default", "tyxonq", "native"):
+    # 智能推断：如果检测到脉冲操作或显式脉冲编译模式，自动启用 pulse 编译
+    # 注意：output="qasm3" 等不再直接触发脉冲编译，只在有实际脉冲操作时才启用
+    if is_pulse_compilation and compile_engine in ("default", "tyxonq", "native"):
         compile_engine = "pulse"
         import warnings
         warnings.warn(
-            f"output='{output}' 需要脉冲级编译，自动启用 pulse compiler。"
+            f"检测到脉冲操作或脉冲编译模式，自动启用 pulse compiler。"
             "建议显式调用 circuit.use_pulse() 以明确编译意图。",
             UserWarning,
             stacklevel=2
@@ -185,20 +258,24 @@ def compile(
                 stacklevel=2
             )
         
-        # 关键修复: 如果 output="tqasm"，自动设置 inline_pulses=True
-        if output in ("tqasm", "tqasm0.2", "qasm3", "qasm3.0", "openqasm3", "openqasm3.0"):
+        # 关键修复: 如果 output="tqasm"、"qasm3" 等，自动设置 inline_pulses=True
+        if output in ("tqasm", "tqasm0.2", "qasm3", "qasm3.0", "openqasm3", "openqasm3.0", "tyxonq_homebrew_tqasm"):
             if "inline_pulses" not in opts:
                 opts["inline_pulses"] = True
         
-        compiler = PulseCompiler(optimization_level=opts.get("optimization_level", 1))
+        compiler = PulseCompiler(
+            optimization_level=opts.get("optimization_level", 1),
+            supported_waveforms=opts.get("supported_waveforms")  # 新增：传递波形约束
+        )
         
         # 移除 device_params 避免重复传递
-        compile_opts = {k: v for k, v in opts.items() if k not in ("device_params", "calibrations")}
+        compile_opts = {k: v for k, v in opts.items() if k not in ("device_params", "calibrations", "supported_waveforms")}
         
         compiled_circuit = compiler.compile(
             circuit,
             device_params=opts.get("device_params"),
             calibrations=opts.get("calibrations"),
+            supported_waveforms=opts.get("supported_waveforms"),
             **compile_opts
         )
         
@@ -236,6 +313,7 @@ def compile_pulse(
     output: str = "pulse_ir",
     device_params: Dict[str, Any] | None = None,
     calibrations: Dict[str, Any] | None = None,
+    device: str | None = None,
     options: Dict[str, Any] | None = None,
 ) -> PulseCompileResult:
     """Unified compilation entry point for pulse programs (平级 with compile()).
@@ -262,6 +340,11 @@ def compile_pulse(
             
         calibrations (Dict[str, Any], optional): Custom pulse calibrations:
             - Format: {"gate_name": {"qubits": [0, 1], "pulse": waveform}}
+        
+        device (str, optional): Target hardware device for TQASM style selection:
+            - "homebrew_s2": Uses Qiskit-compatible qreg syntax
+            - Others: Uses standard OpenQASM 3.0 qubit syntax
+            If not specified, auto-detected from pulse_program._device_opts
             
         options (Dict[str, Any], optional): Compilation options:
             - optimization_level (int): Optimization level (0-3)
@@ -297,7 +380,7 @@ def compile_pulse(
         - This function is parallel to compile() for Circuit
         - PulseProgram and Circuit are peer-level IR representations
         - Pulse compilation follows: PulseProgram → Compiler → Device
-        - No .to_circuit() conversion needed for native execution
+        - This is a thin wrapper around compile() with pulse-specific defaults
     
     See Also:
         compile: Compilation entry point for Circuit.
@@ -306,13 +389,7 @@ def compile_pulse(
     """
     opts = dict(options or {})
     
-    # Import pulse compiler
-    from .pulse_compile_engine import PulseCompiler
-    
-    # 关键改进：PulseProgram 不需要转换为 Circuit！
-    # TQASMExporter 直接支持 PulseProgram 和 Circuit 两种输入
-    
-    # 自动补足 device_params（如果未提供）
+    # 关键：自动补足 device_params（如果未提供）
     if not device_params:
         device_params = {
             "qubit_freq": [5.0e9] * pulse_program.num_qubits,
@@ -322,30 +399,33 @@ def compile_pulse(
     # 更新 PulseProgram 的 device_params
     pulse_program.device_params.update(device_params)
     
-    # 根据output格式决定返回内容
-    if output in ("tqasm", "tqasm0.2", "qasm3", "qasm3.0", "openqasm3", "openqasm3.0"):
-        # 导出为TQASM（直接从 PulseProgram 导出）
-        from .pulse_compile_engine.native.tqasm_exporter import TQASMExporter
-        
-        # 关键：直接传递 PulseProgram，TQASMExporter 会自动检测类型
-        exporter = TQASMExporter(version="tqasm" if "tqasm" in output else "openqasm3")
-        tqasm_code = exporter.export(pulse_program)
-        
-        # 缓存 TQASM 到 pulse_program._source，避免 run() 时重复编译
-        pulse_program._source = tqasm_code
-        
-        return {
-            "pulse_schedule": tqasm_code,
-            "metadata": {}
-        }
-    else:
-        # 返回pulse_ir（PulseProgram 自身）
-        return {
-            "pulse_schedule": pulse_program,
-            "metadata": {
-                "pulse_device_params": device_params,
-                "pulse_calibrations": calibrations or {}
-            }
-        }
+    # 设置编译选项
+    opts["device_params"] = device_params
+    if calibrations:
+        opts["calibrations"] = calibrations
+    
+    # 提取设备信息（用于 TQASM 风格选择）
+    device_name = device or pulse_program._device_opts.get("device", "default")
+    pulse_program.metadata["device_target"] = device_name
+    
+    # 关键：调用通用的 compile() 函数，继承其所有逻辑
+    # compile() 会自动处理：
+    # 1. 云端设备判断（tyxonq + homebrew_s2）
+    # 2. 脉冲编译的自动启用
+    # 3. output 格式的智能转换
+    # 4. supported_waveforms 的自动设置
+    # 5. 缓存机制
+    result = compile(
+        pulse_program,
+        compile_engine="pulse",  # 强制使用脉冲编译
+        output=output,
+        options=opts
+    )
+    
+    # 转换返回格式为 PulseCompileResult
+    return {
+        "pulse_schedule": result["circuit"],
+        "metadata": result.get("metadata", {})
+    }
 
 

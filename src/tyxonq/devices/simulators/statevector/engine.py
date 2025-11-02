@@ -761,7 +761,6 @@ class StatevectorEngine:
             Embedded operator (2^n × 2^n matrix)
         """
         import numpy as np
-        
         # Convert to numpy for kron operations
         op_single_np = np.asarray(self.backend.to_numpy(op_single))
         

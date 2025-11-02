@@ -431,34 +431,43 @@ def get_task_details(task: Any, *, wait: bool = False, poll_interval: float = 2.
         {
           'result': Dict[str, int],      # normalized counts like {'00': 51, '11': 49}
           'result_meta': Dict[str, Any], # original driver payload
+          'uni_status': str,            # unified status string
+          'error': str                  # error message if any
         }
     """
     if not isinstance(task, DeviceTask):
         raise TypeError("Task handle should be a DeviceTask type")
 
     drv = resolve_driver(task.provider, task.device)
-
-    def _fetch() -> Dict[str, Any]:
-        return drv.get_task_details(task.handle, None)
-
-    def _wrap(info: Dict[str, Any]) -> Dict[str, Any]:
-        src = info.get('result') or info.get('results') or {}
-        return {'result': src, 'result_meta': info}
-
-    if not wait:
-        return _wrap(_fetch())
-
-    start = time.perf_counter()
+    start_time = time.perf_counter()
+    
     while True:
-        info = _fetch()
-        if not task.async_result:
-            return _wrap(info)
-        uni_status = str(info.get("uni_status", "completed")).lower()
-        if uni_status in ("done", "completed", "success", "finished"):
-            return _wrap(info)
-        if (time.perf_counter() - start) >= timeout:
-            return _wrap(info)
-        time.sleep(max(0.05, poll_interval))
+        # 获取驱动返回的原始数据
+        info = drv.get_task_details(task.handle, None)
+        
+        # 统一格式：提取测量结果
+        result_counts = info.get('result') or info.get('results') or {}
+        
+        # 构建统一返回格式
+        unified = {
+            'result': result_counts,
+            'result_meta': info,
+            'uni_status': str(info.get('uni_status', 'unknown')).lower(),
+            'error': info.get('error', None)
+        }
+        
+        # 异步任务：检查是否完成
+        uni_status = unified['uni_status']
+        if uni_status in ('done', 'completed', 'success', 'finished'):
+            return unified
+        if wait and (time.perf_counter() - start_time) >= timeout:
+            return unified
+        if wait:
+            time.sleep(max(0.05, poll_interval))
+            continue
+        
+        # 同步任务或不等待：直接返回
+        return unified
 
 
 

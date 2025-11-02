@@ -7,8 +7,8 @@ from tyxonq.devices.simulators.noise.channels import (
     amplitude_damping,
     phase_damping,
     pauli_channel,
-    apply_to_density_matrix,
 )
+from tyxonq.libs.quantum_library.kernels.density_matrix import apply_kraus_density
 
 
 def _dm0():
@@ -20,7 +20,7 @@ def _dm0():
 def test_depolarizing_channel_preserves_trace():
     rho = _dm0()
     K = depolarizing(0.2)
-    out = apply_to_density_matrix(rho, K, wire=0, num_qubits=1)
+    out = apply_kraus_density(rho, K, qubit=0, num_qubits=1)
     tr = np.trace(out)
     assert abs(tr - 1.0) < 1e-12
 
@@ -29,7 +29,7 @@ def test_amplitude_damping_relaxes_excited_pop():
     rho = np.zeros((2, 2), dtype=np.complex128)
     rho[1, 1] = 1.0
     K = amplitude_damping(0.5)
-    out = apply_to_density_matrix(rho, K, wire=0, num_qubits=1)
+    out = apply_kraus_density(rho, K, qubit=0, num_qubits=1)
     # population should move towards |0>
     assert out[0, 0].real > 0.0
 
@@ -37,7 +37,7 @@ def test_amplitude_damping_relaxes_excited_pop():
 def test_phase_damping_kills_coherences():
     rho = np.array([[0.5, 0.5], [0.5, 0.5]], dtype=np.complex128)
     K = phase_damping(1.0)
-    out = apply_to_density_matrix(rho, K, wire=0, num_qubits=1)
+    out = apply_kraus_density(rho, K, qubit=0, num_qubits=1)
     assert abs(out[0, 1]) < 1e-12 and abs(out[1, 0]) < 1e-12
 
 

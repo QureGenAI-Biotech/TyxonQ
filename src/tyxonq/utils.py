@@ -20,7 +20,7 @@ def return_partial(
 
     :Example:
 
-    >>> from tensorcircuit.utils import return_partial
+    >>> from utils import return_partial
     >>> testin = np.array([[1,2],[3,4],[5,6],[7,8]])
     >>> # Method 1:
     >>> return_partial(lambda x: x, [1, 3])(testin)

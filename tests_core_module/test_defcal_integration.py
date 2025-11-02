@@ -129,9 +129,6 @@ class TestDefcalLibraryCompilationFlow:
     
     def test_create_circuit_and_compile_without_defcal(self):
         """Test basic circuit creation and compilation without defcal."""
-        if not HAS_TYXONQ:
-            pytest.skip("TyxonQ not available")
-        
         # Create a simple circuit
         c = Circuit(2)
         c.h(0)

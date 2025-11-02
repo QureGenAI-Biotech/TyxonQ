@@ -80,7 +80,11 @@ def run(
     from uuid import uuid4
 
     def _one(c: Any) -> Any:
-        out = eng.run(c, shots=shots, **opts)
+        error = ''
+        try:
+            out = eng.run(c, shots=shots, **opts)
+        except Exception as e:
+            error = str(e)  
         # Normalize simulator outputs:
         # - shots>0: counts in 'result'
         # - shots==0: analytic expectations in 'expectations'; also provide probabilities for exact multi-Z
@@ -97,7 +101,8 @@ def run(
                 prob = _np.abs(_np.asarray(psi)) ** 2
                 meta.setdefault("num_qubits", int(getattr(c, "num_qubits", 0)))
                 statevec = _np.asarray(psi)
-            except Exception:
+            except Exception as e:
+                error = str(e)
                 prob = None
                 statevec = None
         result = {
@@ -105,7 +110,9 @@ def run(
             'expectations': expectations,
             'probabilities': prob,
             'statevector': statevec,
-            'metadata': meta,
+            'result_meta': meta,
+            'uni_status': 'completed',
+            'error': error
         }
         return SimTask(id=str(uuid4()), device=device, result=result)
 

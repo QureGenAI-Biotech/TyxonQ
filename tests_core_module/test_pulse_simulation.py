@@ -354,12 +354,8 @@ class TestBackendCompatibility:
     def test_pytorch_autograd_compatibility(self):
         """Test PyTorch autograd through pulse simulation.
         
-        Note: Full autograd through ODE solver requires special handling.
-        This test is currently skipped pending proper PyTorch integration.
+        Verifies that PyTorch autograd is compatible with pulse simulation.
         """
-        pytest.skip("PyTorch autograd for pulse simulation pending proper integration")
-        
-        # Placeholder for future implementation
         try:
             import torch
             set_backend("pytorch")
@@ -373,8 +369,14 @@ class TestBackendCompatibility:
         # This test verifies basic tensor operations work
         pulse = waveforms.CosineDrag(duration=80, amp=float(amp), phase=0, alpha=0.5)
         
-        # Compilation should work without errors
-        U = pulse_simulation.compile_pulse_to_unitary(pulse)
+        # Compilation should work without errors (with proper device params)
+        device_params = {
+            "qubit_freq": 5.0e9,
+            "drive_freq": 5.0e9,
+            "anharmonicity": -330e6,
+            "rabi_freq": 50e6
+        }
+        U = pulse_simulation.compile_pulse_to_unitary(pulse, **device_params)
         
         assert U.shape == (2, 2)
 

@@ -3,8 +3,8 @@
 
 def test_bell_state_pulse_compilation():
     """测试 Bell 态制备的完整脉冲编译流程"""
-    from src.tyxonq.core.ir.circuit import Circuit
-    from src.tyxonq.compiler.api import compile
+    from tyxonq.core.ir.circuit import Circuit
+    from tyxonq.compiler.api import compile
     
     print("=" * 70)
     print("端到端测试：Bell 态脉冲编译 (H·CX)")
@@ -40,21 +40,27 @@ def test_bell_state_pulse_compilation():
     compiled_circuit = result["circuit"]
     
     print(f"   原始门数: {len(bell_circuit.ops)}")
-    print(f"   脉冲操作数: {len(compiled_circuit.ops)}")
-    print(f"   脉冲库大小: {len(compiled_circuit.metadata.get('pulse_library', {}))}")
-    
-    # 分析脉冲序列
-    print("\n   脉冲序列结构:")
-    h_pulses = 0
-    cx_pulses = 0
-    
-    for op in compiled_circuit.ops:
-        if len(op) >= 3 and op[0] == "pulse":
-            pulse_key = op[2]
-            if "h_" in pulse_key:
-                h_pulses += 1
-            elif "cx_" in pulse_key:
-                cx_pulses += 1
+    # 检查 compiled_circuit 的类型
+    if isinstance(compiled_circuit, str):
+        print(f"   脉冲代码输出: {len(compiled_circuit)} 字符")
+        h_pulses = compiled_circuit.count("h_")
+        cx_pulses = compiled_circuit.count("cx_")
+    else:
+        print(f"   脉冲操作数: {len(compiled_circuit.ops)}")
+        print(f"   脉冲库大小: {len(compiled_circuit.metadata.get('pulse_library', {}))}")
+        
+        # 分析脉冲序列
+        print("\n   脉冲序列结构:")
+        h_pulses = 0
+        cx_pulses = 0
+        
+        for op in compiled_circuit.ops:
+            if len(op) >= 3 and op[0] == "pulse":
+                pulse_key = op[2]
+                if "h_" in pulse_key:
+                    h_pulses += 1
+                elif "cx_" in pulse_key:
+                    cx_pulses += 1
     
     print(f"      H 门脉冲: {h_pulses} 个 (2个脉冲: RY + RX)")
     print(f"      CX 门脉冲: {cx_pulses} 个 (4个脉冲: pre + CR + echo + post)")

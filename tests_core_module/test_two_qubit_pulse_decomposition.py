@@ -3,8 +3,8 @@
 
 def test_two_qubit_pulse_decomposition():
     """测试 CX 和 CZ 门的脉冲分解"""
-    from src.tyxonq.core.ir.circuit import Circuit
-    from src.tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+    from tyxonq.core.ir.circuit import Circuit
+    from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
     
     print("=" * 70)
     print("测试：双比特门脉冲分解 (CX, CZ via Cross-Resonance)")

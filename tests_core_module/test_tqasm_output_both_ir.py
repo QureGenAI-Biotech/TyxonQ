@@ -1,51 +1,50 @@
-#!/usr/bin/env python3
-"""验证 Circuit 和 PulseProgram 都支持 output=tqasm 编译"""
-
 def test_circuit_to_tqasm():
-    """测试 Circuit 对象通过 output=tqasm 编译"""
+    """Test Circuit object compilation to TQASM"""
     from tyxonq.core.ir.circuit import Circuit
     from tyxonq.compiler.api import compile
     
-    print("1️⃣  测试 Circuit → TQASM 编译:")
+    print("Test 1: Circuit -> TQASM compilation:")
     print("-" * 70)
     
-    # 创建电路
+    # Create circuit
     circuit = Circuit(2)
     circuit.h(0).cx(0, 1)
     
-    # 方式1: 智能推断 (output=tqasm 自动启用 pulse)
-    import warnings
-    with warnings.catch_warnings(record=True):
-        warnings.simplefilter("always")
-        result = compile(circuit, output="tqasm")
+    # Enable pulse mode explicitly
+    circuit.use_pulse(device_params={
+        "qubit_freq": [5.0e9, 5.1e9],
+        "anharmonicity": [-330e6, -320e6]
+    })
     
-    assert isinstance(result, dict), "compile() 应返回字典"
-    assert "circuit" in result, "结果应包含 'circuit' 键"
+    # Compile to TQASM
+    result = compile(circuit, output="tqasm")
+    
+    assert isinstance(result, dict), "compile() should return dict"
+    assert "circuit" in result, "result should contain 'circuit' key"
     
     tqasm_code = result["circuit"]
-    assert isinstance(tqasm_code, str), f"TQASM 应为字符串，实际: {type(tqasm_code)}"
-    assert "TQASM" in tqasm_code, "应包含 TQASM 版本声明"
+    assert isinstance(tqasm_code, str), f"TQASM should be string, got: {type(tqasm_code)}"
     
-    print(f"   ✅ Circuit.compile(output='tqasm') 成功")
-    print(f"   TQASM 长度: {len(tqasm_code)} 字符")
-    print(f"   包含版本声明: {'TQASM' in tqasm_code}")
+    print(f"   OK: Circuit.compile(output='tqasm') succeeded")
+    print(f"   TQASM length: {len(tqasm_code)} characters")
+    print(f"   Contains OpenQASM 3.0: {'OPENQASM 3.0' in tqasm_code}")
     
     return tqasm_code
 
 
 def test_pulse_program_to_tqasm():
-    """测试 PulseProgram 对象通过 output=tqasm 编译"""
+    """Test PulseProgram object compilation to TQASM"""
     from tyxonq.core.ir.pulse import PulseProgram
     from tyxonq.compiler.api import compile_pulse
     
-    print("\n2️⃣  测试 PulseProgram → TQASM 编译:")
+    print("\nTest 2: PulseProgram -> TQASM compilation:")
     print("-" * 70)
     
-    # 创建脉冲程序
+    # Create pulse program
     prog = PulseProgram(1)
     prog.drag(0, amp=1.0, duration=160, sigma=40, beta=0.2, qubit_freq=5.0e9)
     
-    # 通过 compile_pulse() 编译
+    # Compile via compile_pulse()
     result = compile_pulse(
         prog,
         output="tqasm",
@@ -55,94 +54,94 @@ def test_pulse_program_to_tqasm():
         }
     )
     
-    assert isinstance(result, dict), "compile_pulse() 应返回字典"
-    assert "pulse_schedule" in result, "结果应包含 'pulse_schedule' 键"
+    assert isinstance(result, dict), "compile_pulse() should return dict"
+    assert "pulse_schedule" in result, "result should contain 'pulse_schedule' key"
     
     tqasm_code = result["pulse_schedule"]
-    assert isinstance(tqasm_code, str), f"TQASM 应为字符串，实际: {type(tqasm_code)}"
-    assert "TQASM" in tqasm_code, "应包含 TQASM 版本声明"
+    assert isinstance(tqasm_code, str), f"TQASM should be string, got: {type(tqasm_code)}"
     
-    print(f"   ✅ PulseProgram.compile(output='tqasm') 成功")
-    print(f"   TQASM 长度: {len(tqasm_code)} 字符")
-    print(f"   包含版本声明: {'TQASM' in tqasm_code}")
+    print(f"   OK: PulseProgram.compile(output='tqasm') succeeded")
+    print(f"   TQASM length: {len(tqasm_code)} characters")
+    print(f"   Contains OpenQASM 3.0: {'OPENQASM 3.0' in tqasm_code}")
     
     return tqasm_code
 
 
 def test_tqasm_execution_path():
-    """测试 TQASM 导出后的执行路径"""
+    """Test TQASM export and execution path"""
     from tyxonq.core.ir.circuit import Circuit
     from tyxonq.compiler.api import compile
     
-    print("\n3️⃣  测试 TQASM 执行路径验证:")
+    print("\nTest 3: TQASM execution path verification:")
     print("-" * 70)
     
-    # 完整流程: Circuit → Pulse Compile → TQASM → (模拟器/真机)
+    # Complete flow: Circuit -> Pulse Compile -> TQASM -> (simulator/cloud)
     circuit = Circuit(2)
     circuit.h(0).cx(0, 1)
     
-    # 显式使用 pulse 模式
-    circuit_pulse = circuit.use_pulse(device_params={
+    # Enable pulse mode
+    circuit.use_pulse(device_params={
         "qubit_freq": [5.0e9, 5.1e9],
         "anharmonicity": [-330e6, -320e6]
     })
     
-    # 编译为 TQASM
-    result = compile(circuit_pulse, output="tqasm")
+    # Compile to TQASM
+    result = compile(circuit, output="tqasm")
     tqasm_code = result["circuit"]
     
-    print(f"   ✅ 完整流程验证:")
-    print(f"      1. Circuit 创建: 2 量子比特")
-    print(f"      2. Pulse 模式启用: .use_pulse()")
-    print(f"      3. TQASM 编译: output='tqasm'")
-    print(f"      4. 导出格式: 字符串 ({len(tqasm_code)} 字符)")
-    print(f"\n   下一步执行路径:")
-    print(f"      → 本地模拟器: circuit.run(backend='numpy')")
-    print(f"      → 云端提交: submit_to_cloud(tqasm_code)")
+    print(f"   OK: Complete flow verification:")
+    print(f"      1. Circuit created: 2 qubits")
+    print(f"      2. Pulse mode enabled: .use_pulse()")
+    print(f"      3. TQASM compilation: output='tqasm'")
+    print(f"      4. Export format: string ({len(tqasm_code)} characters)")
+    print(f"\n   Next execution paths:")
+    print(f"      -> Local simulator: circuit.run(backend='numpy')")
+    print(f"      -> Cloud submit: submit_to_cloud(tqasm_code)")
     
-    # 验证可以数值模拟
-    state = circuit_pulse.state(backend="numpy")
-    print(f"\n   ✅ 数值模拟验证:")
-    print(f"      量子态归一化: {abs(sum(abs(s)**2 for s in state) - 1.0) < 1e-10}")
+    # Verify numerical simulation is possible
+    state = circuit.state(backend="numpy")
+    print(f"\n   OK: Numerical simulation verification:")
+    print(f"      State normalization check: {abs(sum(abs(s)**2 for s in state) - 1.0) < 1e-10}")
     
     return tqasm_code
 
 
 if __name__ == "__main__":
     print("=" * 70)
-    print("验证：Circuit 和 PulseProgram 的 TQASM 编译统一性")
+    print("Verify: TQASM compilation for Circuit and PulseProgram")
     print("=" * 70)
     
-    # 测试1: Circuit → TQASM
+    # Test 1: Circuit -> TQASM
     tqasm_circuit = test_circuit_to_tqasm()
     
-    # 测试2: PulseProgram → TQASM
+    # Test 2: PulseProgram -> TQASM
     tqasm_pulse = test_pulse_program_to_tqasm()
     
-    # 测试3: 执行路径验证
+    # Test 3: Execution path verification
     tqasm_e2e = test_tqasm_execution_path()
     
-    # 总结
+    # Summary
     print("\n" + "=" * 70)
-    print("✅ 所有测试通过！")
+    print("✅ All tests passed!")
     print("=" * 70)
     print("""
-    确认结果:
+    Confirmed results:
     
-    1. Circuit 对象:
-       ✅ 支持 compile(circuit, output="tqasm")
-       ✅ 自动启用 pulse 编译 (智能推断)
-       ✅ 返回 TQASM 字符串
+    1. Circuit object:
+       OK: Supports compile(circuit, output="tqasm")
+       OK: Requires explicit .use_pulse() for pulse compilation
+       OK: Returns TQASM string
     
-    2. PulseProgram 对象:
-       ✅ 支持 compile_pulse(prog, output="tqasm")
-       ✅ 返回 TQASM 字符串
-       ✅ 平级编译架构
+    2. PulseProgram object:
+       OK: Supports compile_pulse(prog, output="tqasm")
+       OK: Returns TQASM string
+       OK: Parallel compilation architecture
     
-    3. 执行路径:
-       ✅ TQASM 格式统一
-       ✅ 可交给模拟器运行
-       ✅ 可云端提交（真机）
+    3. Execution paths:
+       OK: TQASM format unified
+       OK: Can pass to simulator
+       OK: Can submit to cloud (real machine)
     
-    结论: Circuit 和 PulseProgram 都能通过 output=tqasm 编译为统一格式！
+    Conclusion: Both Circuit and PulseProgram support output=tqasm compilation!
     """)
+

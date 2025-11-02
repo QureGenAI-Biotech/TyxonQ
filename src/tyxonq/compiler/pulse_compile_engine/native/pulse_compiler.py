@@ -60,13 +60,20 @@ class PulseCompiler:
             - 3: Full optimization with calibration-aware routing
     """
     
-    def __init__(self, optimization_level: int = 1):
+    def __init__(self, optimization_level: int = 1, supported_waveforms: Optional[List[str]] = None):
         """Initialize the pulse compiler.
         
         Args:
             optimization_level: Optimization level (0-3). Default is 1.
+            supported_waveforms: List of supported waveform types (e.g., ['drag', 'gaussian']).
+                If None, all waveforms are supported (no validation).
+                Common hardware support:
+                - TyxonQ Homebrew_S2: ['drag', 'gaussian', 'constant']
+                - IBM Qiskit-Aer: ['drag', 'gaussian']
+                - Rigetti Aspen: ['drag', 'pulse_parametrized']
         """
         self.optimization_level = optimization_level
+        self.supported_waveforms = supported_waveforms or []  # Empty list = all waveforms supported
         self._gate_to_pulse_pass = GateToPulsePass()
         self._pulse_lowering_pass = PulseLoweringPass()
         self._pulse_scheduling_pass = PulseSchedulingPass()
@@ -77,6 +84,7 @@ class PulseCompiler:
         device_params: Optional[Dict[str, Any]] = None,
         calibrations: Optional[Dict[str, Any]] = None,
         output: str = "pulse_ir",
+        supported_waveforms: Optional[List[str]] = None,
         **options: Any
     ) -> Any:
         """Compile a gate-level circuit to pulse-level representation.
@@ -94,6 +102,12 @@ class PulseCompiler:
             output: Output format:
                 - "pulse_ir": TyxonQ Native Pulse IR (default)
                 - "tqasm": TQASM 0.2 format (for cloud execution)
+            supported_waveforms: List of supported waveform types for validation.
+                If provided, validates that all pulses use only these waveforms.
+                Examples:
+                - None (default): No validation
+                - []: Empty list = all waveforms supported
+                - ['drag', 'gaussian', 'constant']: Hardware supports these only
             **options: Additional compilation options:
                 - mode: "hybrid" | "pulse_only" | "auto_lower" (default: "hybrid")
                 - dt: Sample time step (default: 1e-10 s)
@@ -110,16 +124,21 @@ class PulseCompiler:
         calibrations = calibrations or {}
         mode = options.get("mode", "hybrid")
         
+        # Use provided supported_waveforms or fall back to instance setting
+        waveform_filter = supported_waveforms if supported_waveforms is not None else self.supported_waveforms
+        
         # Store calibrations and device params in circuit metadata
         circuit = circuit.with_metadata(
             pulse_device_params=device_params,
             pulse_calibrations=calibrations,
-            pulse_mode=mode
+            pulse_mode=mode,
+            supported_waveforms=waveform_filter  # Track waveform constraints
         )
         
         # 确保 mode 参数被传递给 Gate→Pulse Pass
         options_with_mode = dict(options)
         options_with_mode["mode"] = mode
+        options_with_mode["supported_waveforms"] = waveform_filter  # Pass filter to passes
         
         # Pass 1: Gate → Pulse decomposition
         circuit = self._gate_to_pulse_pass.execute_plan(circuit, **options_with_mode)
@@ -156,14 +175,14 @@ class PulseCompiler:
             circuit = self._pulse_scheduling_pass.execute_plan(circuit, **options)
         
         # Output format conversion
-        if output in ("tqasm", "tqasm0.2"):
-            # Export to TQASM 0.2 format (TensorCircuit compatible)
+        if output == 'tyxonq_homebrew_tqasm':
+            # Export to TQASM 0.2 format (homebrew_s2 special format)
             from .tqasm_exporter import TQASMExporter
-            exporter = TQASMExporter(version="tqasm")
+            exporter = TQASMExporter(version="tyxonq_homebrew_tqasm")
             tqasm_code = exporter.export(circuit)
             return tqasm_code
-        elif output in ("qasm3", "qasm3.0", "openqasm3", "openqasm3.0"):
-            # Export to OpenQASM 3.0 format (IBM/Rigetti compatible)
+        elif output in ("qasm","qasm3", "qasm3.0", "openqasm3", "openqasm3.0","tqasm", "tqasm0.2"):
+            # Export to OpenQASM 3.0 + OpenPulse format (standard)
             from .tqasm_exporter import TQASMExporter
             exporter = TQASMExporter(version="openqasm3")
             tqasm_code = exporter.export(circuit)
@@ -227,3 +246,71 @@ class PulseCompiler:
             Dictionary of calibrations keyed by gate_qubits string
         """
         return getattr(self, "_custom_calibrations", {})
+    
+    def validate_waveforms(self, circuit: "Circuit") -> Dict[str, Any]:
+        """Validate that all waveforms in circuit are supported.
+        
+        Args:
+            circuit: Pulse circuit to validate
+        
+        Returns:
+            Validation result dict:
+            {
+                'valid': bool,
+                'unsupported_waveforms': List[str],  # Unsupported waveform types
+                'used_waveforms': Dict[str, int],    # Count of each waveform type
+                'warnings': List[str]                 # Validation warnings
+            }
+        
+        Examples:
+            >>> compiler = PulseCompiler(supported_waveforms=['drag', 'gaussian'])
+            >>> result = compiler.validate_waveforms(pulse_circuit)
+            >>> if not result['valid']:
+            ...     print(f"Unsupported: {result['unsupported_waveforms']}")
+        """
+        if not self.supported_waveforms:
+            # No filter = all waveforms supported
+            return {
+                'valid': True,
+                'unsupported_waveforms': [],
+                'used_waveforms': {},
+                'warnings': ['No waveform filtering enabled']
+            }
+        
+        used_waveforms: Dict[str, int] = {}
+        unsupported = set()
+        
+        # Scan pulse_library in metadata
+        pulse_lib = circuit.metadata.get('pulse_library', {})
+        for pulse_key, pulse_obj in pulse_lib.items():
+            if hasattr(pulse_obj, '__class__'):
+                wf_type = pulse_obj.__class__.__name__.lower()
+                used_waveforms[wf_type] = used_waveforms.get(wf_type, 0) + 1
+                
+                if wf_type not in self.supported_waveforms:
+                    unsupported.add(wf_type)
+        
+        # Scan inline pulses
+        for op in circuit.ops:
+            if op[0] == 'pulse_inline' and len(op) > 2:
+                wf_dict = op[2]
+                if isinstance(wf_dict, dict) and 'type' in wf_dict:
+                    wf_type = wf_dict['type'].lower()
+                    used_waveforms[wf_type] = used_waveforms.get(wf_type, 0) + 1
+                    
+                    if wf_type not in self.supported_waveforms:
+                        unsupported.add(wf_type)
+        
+        warnings_list = []
+        if unsupported:
+            warnings_list.append(
+                f"Unsupported waveforms detected: {sorted(unsupported)}. "
+                f"Hardware supports: {self.supported_waveforms}"
+            )
+        
+        return {
+            'valid': len(unsupported) == 0,
+            'unsupported_waveforms': sorted(list(unsupported)),
+            'used_waveforms': used_waveforms,
+            'warnings': warnings_list
+        }

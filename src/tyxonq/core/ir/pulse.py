@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Dict, List, Optional, Tuple
 import warnings
 
@@ -99,7 +99,7 @@ class PulseProgram:
     
     Attributes:
         num_qubits: Number of qubits in the system
-        pulse_ops: List of pulse operations (qubit, waveform, params)
+        ops: List of pulse operations (qubit, waveform, params) - matches Circuit.ops
         device_params: Physical device parameters
         metadata: Additional metadata (calibrations, etc.)
     
@@ -120,7 +120,7 @@ class PulseProgram:
     """
     
     num_qubits: int
-    pulse_ops: List[Tuple[int, Any, Dict[str, Any]]] = field(default_factory=list)
+    ops: List[Tuple[int, Any, Dict[str, Any]]] = field(default_factory=list)
     device_params: Dict[str, Any] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
     
@@ -140,22 +140,14 @@ class PulseProgram:
             raise ValueError("num_qubits must be non-negative")
         
         # Validate pulse operations
-        for op in self.pulse_ops:
+        for op in self.ops:
             if not isinstance(op, (tuple, list)) or len(op) != 3:
-                raise ValueError("pulse_op must be (qubit, waveform, params) tuple")
+                raise ValueError("pulse op must be (qubit, waveform, params) tuple")
             qubit, waveform, params = op
             if not isinstance(qubit, int) or qubit < 0 or qubit >= self.num_qubits:
                 raise ValueError(f"Invalid qubit index: {qubit}")
             if not isinstance(params, dict):
                 raise TypeError("params must be a dict")
-        
-        # Initialize chainable options
-        if not hasattr(self, '_compile_opts') or self._compile_opts is None:
-            object.__setattr__(self, '_compile_opts', {})
-        if not hasattr(self, '_device_opts') or self._device_opts is None:
-            object.__setattr__(self, '_device_opts', {})
-        if not hasattr(self, '_post_opts') or self._post_opts is None:
-            object.__setattr__(self, '_post_opts', {})
     
     def add_pulse(
         self, 
@@ -189,7 +181,7 @@ class PulseProgram:
         if qubit < 0 or qubit >= self.num_qubits:
             raise ValueError(f"Qubit index {qubit} out of range [0, {self.num_qubits})")
         
-        self.pulse_ops.append((qubit, waveform, dict(params)))
+        self.ops.append((qubit, waveform, dict(params)))
         return self
     
     # ---- 链式方法 (与 Circuit 对齐) ----
@@ -329,6 +321,38 @@ class PulseProgram:
         self.device_params.update(params)
         return self
     
+    def with_metadata(self, **kwargs: Any) -> "PulseProgram":
+        """Return a new PulseProgram with merged metadata (shallow merge).
+        
+        This method aligns PulseProgram with Circuit for compiler compatibility.
+        
+        Args:
+            **kwargs: Metadata key-value pairs to merge
+        
+        Returns:
+            New PulseProgram instance with updated metadata
+        
+        Examples:
+            >>> prog = PulseProgram(1)
+            >>> new_prog = prog.with_metadata(pulse_device_params={"qubit_freq": [5.0e9]})
+        """
+        new_meta = dict(self.metadata)
+        new_meta.update(kwargs)
+        return replace(self, metadata=new_meta)
+    
+    @property
+    def pulse_ops(self) -> List[Tuple[int, Any, Dict[str, Any]]]:
+        """Alias for ops to maintain backward compatibility.
+        
+        This property allows code using the old pulse_ops name to continue working.
+        """
+        return self.ops
+    
+    @pulse_ops.setter
+    def pulse_ops(self, value: List[Tuple[int, Any, Dict[str, Any]]]) -> None:
+        """Setter for pulse_ops backward compatibility."""
+        self.ops = value
+    
     # ---- 链式配置方法 (与 Circuit 对齐) ----
     
     def compile(self, output: str = "pulse_ir", **options: Any) -> Any:
@@ -426,50 +450,42 @@ class PulseProgram:
         device_name = merged_opts.get("device")
         shots = merged_opts.get("shots", 0)
         
-        # Check if hardware execution requested
-        if provider or device_name:
-            # Hardware/cloud execution path (平级 with Circuit)
-            # 步骤1: 编译 (via compile_pulse)
+        if shots == 0:
+            # 数值解析：返回 statevector
+            backend = options.get("backend")
+            return self.state(backend=backend)
+        else:
+            # shots > 0：发送到 device driver（device driver 判断是真机还是模拟）
+            from ...devices import base as device_base
             from ...compiler.api import compile_pulse
             
-            compile_opts = dict(self._compile_opts)
+            # 如果有缓存的 TQASM 源代码，直接使用
+            if self._source is not None:
+                source_to_submit = self._source
+            else:
+                # 编译为 TQASM
+                compile_opts = dict(self._compile_opts)
+                compile_opts["inline_pulses"] = True
+                
+                result = compile_pulse(
+                    self,
+                    device_params=self.device_params,
+                    calibrations=None,
+                    options=compile_opts
+                )
+                
+                source_to_submit = result["pulse_schedule"]
             
-            # 调用独立的 compile_pulse() 函数
-            result = compile_pulse(
-                self,
-                output="pulse_ir",
-                device_params=self.device_params,
-                calibrations=None,
-                options=compile_opts
+            # 直接发送到 device driver
+            tasks = device_base.run(
+                provider=provider,
+                device=device_name,
+                source=source_to_submit,
+                shots=shots,
+                **{k: v for k, v in merged_opts.items() if k not in ("provider", "device", "shots")}
             )
             
-            # 步骤2: 提交到设备 (via compiled circuit)
-            compiled_circuit = result["pulse_schedule"]
-            
-            # 复制设备选项
-            for key, value in self._device_opts.items():
-                compiled_circuit._device_opts[key] = value
-            
-            # 委托给已编译的 Circuit 执行
-            return compiled_circuit.run(**options)
-        else:
-            # Local simulation path
-            backend = options.get("backend")
-            
-            if shots == 0:
-                # Statevector simulation
-                return self.state(backend=backend)
-            else:
-                # Sampling from statevector
-                state = self.state(backend=backend)
-                import numpy as np
-                from ...numerics.api import get_backend
-                backend_obj = get_backend()
-                
-                probs = np.abs(backend_obj.to_numpy(state))**2
-                samples = np.random.choice(len(probs), size=shots, p=probs)
-                from collections import Counter
-                return {"counts": Counter(samples)}
+            return tasks
 
     
     def state(self, backend: Optional[str] = None, form: Optional[str] = None) -> Any:
@@ -514,7 +530,7 @@ class PulseProgram:
         
         # Apply each pulse sequentially
         current_state = initial_state
-        for qubit, waveform, params in self.pulse_ops:
+        for qubit, waveform, params in self.ops:
             # Extract parameters
             qubit_freq = params.get("qubit_freq")
             if qubit_freq is None:
@@ -607,7 +623,7 @@ class PulseProgram:
         c.metadata["pulse_library"] = {}
         
         # Convert pulse_ops to circuit operations
-        for idx, (qubit, waveform, params) in enumerate(self.pulse_ops):
+        for idx, (qubit, waveform, params) in enumerate(self.ops):
             # Store waveform in library
             pulse_key = f"pulse_{idx}"
             c.metadata["pulse_library"][pulse_key] = waveform

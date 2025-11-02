@@ -297,7 +297,7 @@ class Circuit:
         return self
     
     # ---- Pulse Programming API ----
-    def use_pulse(self, mode: str = "hybrid", **pulse_options: Any) -> "Circuit":
+    def use_pulse(self, mode: str = "hybrid", supported_waveforms: list | None = None, **pulse_options: Any) -> "Circuit":
         """Configure Pulse-level compilation for this circuit.
         
         TyxonQ Pulse Programming supports dual-mode execution (Memory: 8b12df21):
@@ -311,6 +311,11 @@ class Circuit:
                 - "hybrid": Mix gates and pulses (keep measurements, compile others)
                 - "pulse_only": Compile all gates to pulses
                 - "auto_lower": Automatic gate→pulse decision
+            supported_waveforms (list, optional): List of supported waveform types.
+                Used for hardware compatibility checking. Examples:
+                - None (default): No validation
+                - ['drag', 'gaussian']: Only these waveforms allowed
+                - ['drag', 'gaussian', 'constant']: Hardware supports these
             **pulse_options: Additional Pulse compiler options:
                 - device_params (dict): Physical device parameters:
                     - qubit_freq (list): Qubit frequencies (Hz)
@@ -340,9 +345,10 @@ class Circuit:
             ... )
             >>> result = c.device(provider="simulator").run()
             
-            >>> # Cloud submission with TQASM
+            >>> # Cloud submission with TQASM and hardware constraints
             >>> c.use_pulse(
             ...     mode="pulse_only",
+            ...     supported_waveforms=['drag', 'gaussian', 'constant'],
             ...     device_params={...},
             ...     inline_pulses=True,
             ...     output="tqasm"
@@ -358,6 +364,8 @@ class Circuit:
         
         # Store Pulse-specific options
         pulse_compile_opts = {"mode": mode}
+        if supported_waveforms is not None:
+            pulse_compile_opts["supported_waveforms"] = supported_waveforms
         pulse_compile_opts.update(pulse_options)
         self._compile_opts.update(pulse_compile_opts)
         
