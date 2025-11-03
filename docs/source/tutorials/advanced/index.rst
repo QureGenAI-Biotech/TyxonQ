@@ -12,6 +12,7 @@ and research-level applications.
 .. toctree::
    :hidden:
    
+   pulse_calibration_workflow
    pulse_advanced_waveforms
    pulse_defcal_integration
    pulse_hybrid_mode_integration
@@ -436,6 +437,7 @@ Congratulations! You've mastered advanced quantum computing. Here are research d
 Pulse-Level Quantum Programming
 ===============================
 
+- :doc:`pulse_calibration_workflow` - **Complete Pulse Calibration Workflow** (7-step practical guide from hardware basics to Defcal integration)
 - :doc:`pulse_virtual_z_optimization` - **Virtual-Z Optimization in Pulse Compilation** (Automatic RZ gate merging, phase tracking simplification)
 - :doc:`pulse_three_level` - **Three-level quantum system simulation** (DRAG pulse leakage suppression)
 - :doc:`pulse_inline_three_level` - **pulse_inline with three-level support** (Cloud-ready leakage simulation)
