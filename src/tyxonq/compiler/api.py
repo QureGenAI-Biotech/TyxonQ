@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Protocol, TypedDict, TYPE_CHECKING
+from typing import Any, Dict, Protocol, TypedDict, TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
@@ -13,13 +13,14 @@ class CompileResult(TypedDict):
     """Result of compilation containing the compiled circuit and metadata."""
 
     circuit: Any  # Circuit | str (for TQASM/QASM output)
+    compiled_source: Optional[str]  # 编译后的源代码（QASM2/QASM3/TQASM 等）如果有的话
     metadata: Dict[str, Any]
 
 
 class PulseCompileResult(TypedDict):
     """Result of pulse compilation containing the compiled pulse schedule and metadata."""
-
-    pulse_schedule: Any  # PulseSchedule or compiled Circuit with pulse ops
+    pulse_program: Any  # PulseProgram IR object
+    compiled_pulse_schedule: Optional[str]  # Compiled pulse schedule (TQASM/OpenQASM3 with defcal)
     metadata: Dict[str, Any]
 
 
@@ -203,6 +204,9 @@ def compile(
     elif is_homebrew_s2:
         # 规则1：门电路 + homebrew_s2 → qasm2
         output = "qasm2"
+        # 为 homebrew_s2 设置默认 basis_gates（如果未指定）
+        if "basis_gates" not in opts:
+            opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
     
     if output:
         opts["output"] = output
@@ -226,9 +230,8 @@ def compile(
 
         result = NativeCompiler().compile(circuit = circuit,compile_plan= compile_plan, device_rule=device_rule, options = opts)  # type: ignore[arg-type]
         
-        # 缓存字符串结果到 _source，避免重复编译
-        if isinstance(result.get("circuit"), str):
-            circuit._source = result["circuit"]
+        # 缓存编译源代码到 _source，避免重复编译
+        circuit._source = result["compiled_source"]
         
         return result
     if compile_engine == "pulse":
@@ -279,30 +282,28 @@ def compile(
             **compile_opts
         )
         
-        # 如果返回字符串（如 TQASM），包装为标准格式
-        if isinstance(compiled_circuit, str):
-            # 关键优化：缓存 TQASM 到 circuit._source，避免 .run() 时重复编译
-            circuit._source = compiled_circuit
-            return {"circuit": compiled_circuit, "metadata": {}}
-        else:
-            return {"circuit": compiled_circuit, "metadata": getattr(compiled_circuit, "metadata", {})}
+        # PulseCompiler 现在返回统一的 CompileResult 结构
+        # 包含 circuit、compiled_source、metadata 三个字段
+        # 返回值已经是正确的 CompileResult 格式
+        compiled_source = compiled_circuit.get("compiled_source")
+        # 缓存编译源代码（TQASM/QASM3 等）
+        circuit._source = compiled_source
+        return compiled_circuit
     if compile_engine == "qiskit":
         from .compile_engine.qiskit import QiskitCompiler
 
         result = QiskitCompiler().compile(circuit= circuit, options = opts)  # type: ignore[arg-type]
         
-        # 缓存字符串结果到 _source，避免重复编译
-        if isinstance(result.get("circuit"), str):
-            circuit._source = result["circuit"]
+        # 缓存编译源代码到 _source，避免重复编译
+        circuit._source = result["compiled_source"]
         
         return result
     # Fallback to native
     from .compile_engine.native.native_compiler import NativeCompiler
     result = NativeCompiler().compile(circuit = circuit,compile_plan=compile_plan, device_rule=device_rule,options = opts)  # type: ignore[arg-type]
     
-    # 缓存字符串结果到 _source，避免重复编译
-    if isinstance(result.get("circuit"), str):
-        circuit._source = result["circuit"]
+    # 缓存编译源代码到 _source，避免重复编译
+    circuit._source = result["compiled_source"]
     
     return result
 
@@ -424,7 +425,8 @@ def compile_pulse(
     
     # 转换返回格式为 PulseCompileResult
     return {
-        "pulse_schedule": result["circuit"],
+        "pulse_program": result["circuit"],
+        "compiled_pulse_schedule": result["compiled_source"],
         "metadata": result.get("metadata", {})
     }
 

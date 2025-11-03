@@ -180,16 +180,16 @@ class PulseCompiler:
             from .tqasm_exporter import TQASMExporter
             exporter = TQASMExporter(version="tyxonq_homebrew_tqasm")
             tqasm_code = exporter.export(circuit)
-            return tqasm_code
+            return {"circuit": circuit, "compiled_source": tqasm_code, "metadata": {}}
         elif output in ("qasm","qasm3", "qasm3.0", "openqasm3", "openqasm3.0","tqasm", "tqasm0.2"):
             # Export to OpenQASM 3.0 + OpenPulse format (standard)
             from .tqasm_exporter import TQASMExporter
             exporter = TQASMExporter(version="openqasm3")
             tqasm_code = exporter.export(circuit)
-            return tqasm_code
+            return {"circuit": circuit, "compiled_source": tqasm_code, "metadata": {}}
         elif output == "pulse_ir":
             # Return TyxonQ Native Pulse IR
-            return circuit
+            return {"circuit": circuit, "compiled_source": circuit, "metadata": {}}
         else:
             raise ValueError(
                 f"Unsupported output format: {output}. "

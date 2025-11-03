@@ -857,12 +857,9 @@ class Circuit:
         
         # 关键优化：如果编译结果是字符串（TQASM/QASM），缓存到 _source 避免重复编译
         # 这样后续 .run() 时会直接使用缓存的 source，不会重新编译
-        compiled_result = res["circuit"]
-        if isinstance(compiled_result, str):
-            self._source = compiled_result
-            return compiled_result
-        
-        return compiled_result
+        self._source = res.get("compiled_source",None)
+        return res
+    
 
     def run(
         self,
@@ -898,37 +895,20 @@ class Circuit:
             )
         else:
             # Compile first using current defaults
-            compiled = self.compile(
+            # compile() 函数已经处理了所有的规则（homebrew_s2、脉冲编译、output 格式等）
+            # 直接使用编译结果的 compiled_source 字段
+            compiled_result = self.compile(
                 compile_engine=self._compile_engine,
                 output=self._compile_output,
                 target=self._compile_target,
                 options=self._compile_opts,
             )
-            # For hardware providers, ensure we submit provider-native source (e.g., qasm2)
-            prov_norm = (dev_provider or "").lower() if isinstance(dev_provider, str) else str(dev_provider).lower()
-            # is_hw = prov_norm not in ("simulator", "local", "")
-            is_tyxonq_hw = prov_norm in ("tyxonq")
-            if isinstance(compiled, str):
-                source_to_submit = compiled
-            elif is_tyxonq_hw:
-                # 检查是否为 Pulse 编译
-                if self._compile_engine == "pulse":
-                    # Pulse 编译：使用 tqasm 格式
-                    pulse_opts = dict(self._compile_opts)
-                    pulse_opts["inline_pulses"] = True  # 云端提交必须内联
-                    tqasm_res = compile_api(self, compile_engine="pulse", output="tqasm", options=pulse_opts)
-                    source_to_submit = tqasm_res["circuit"]
-                else:
-                    # 普通门编译：使用 qasm2 格式
-                    qiskit_opts = dict(self._compile_opts)
-                    if not qiskit_opts.get("basis_gates"):
-                        qiskit_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
-                    qasm_res = compile_api(self, compile_engine="qiskit", output="qasm2", options=qiskit_opts)
-                    source_to_submit = qasm_res["circuit"]
-            else:
-                source_to_submit = None
-
+            
+            # compiled_result 是 CompileResult 类型：{"circuit": ..., "compiled_source": ..., "metadata": ...}
+            source_to_submit = compiled_result.get("compiled_source")
+            circuit = compiled_result.get("circuit")
             if source_to_submit is not None:
+                # 有编译源代码（QASM2/QASM3/TQASM），提交给 device
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
@@ -937,11 +917,11 @@ class Circuit:
                     **dev_opts,
                 )
             else:
-                # Submit IR directly (simulator/local)
+                # 没有编译源代码，直接提交 IR (仅供 simulator/local 使用)
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
-                    circuit=compiled,
+                    circuit=circuit,
                     shots=dev_shots,
                     **dev_opts,
                 )

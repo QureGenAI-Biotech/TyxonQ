@@ -89,10 +89,26 @@ def submit_task(
     lang: str = "OPENQASM",
     **kws: Any,
 ) -> List[TyxonQTask]:
+    # Type and content validation for homebrew_s2
+    dev = device.split("::")[-1]
+    
+    if dev == "homebrew_s2":
+        # Normalize source to list for uniform validation
+        sources_to_validate = source if isinstance(source, (list, tuple)) else [source]
+        
+        for src in sources_to_validate:
+            if not isinstance(src, str):
+                raise TypeError(
+                    f"homebrew_s2 requires QASM2 source code (str), got {type(src).__name__}"
+                )
+            if not ("qreg" in src or "creg" in src):
+                raise ValueError(
+                    f"homebrew_s2 source must be valid QASM2 format (must contain qreg/creg)"
+                )
+    
     # Minimal pass-through; compilation handled elsewhere
     url = _endpoint("tasks/submit_task")
     payload: Any
-    dev = device.split("::")[-1]
     if isinstance(source, (list, tuple)):
         if not isinstance(shots, (list, tuple)):
             shots = [shots for _ in source]

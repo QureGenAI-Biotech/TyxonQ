@@ -244,7 +244,7 @@ def run(
     provider: Optional[str] = None,
     device: Optional[str] = None,
     circuit: Optional["Circuit"]| None = None,
-    source: Optional[Union[str, Sequence[str]]] = None,
+    source: Optional[Union[str, "Circuit"]] = None,
     shots: Union[int, Sequence[int]] = 1024,
     **opts: Any,
 ) -> Any:
@@ -257,6 +257,12 @@ def run(
       - simulator/local: call simulator driver run
       - hardware: require caller to have compiled to `source`
     - Normalize return: single submission -> single task; batch -> list of tasks
+
+    Args:
+        source: Compilation source code or IR object. Can be:
+            - str: QASM2 (homebrew_s2), QASM3 (simulator), TQASM 0.2 (pulse)
+            - Circuit: IR object (pulse_ir or circuit IR) for local execution
+            Both str and Circuit types are supported depending on driver capabilities.
 
     Returns:
         List[DeviceTask] Unified task-handle wrapper:
@@ -304,11 +310,13 @@ def run(
     # direct source path (already compiled or raw program)
     if source is not None:
         if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
-            if circuit is not None:
-                raw = _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
-            else:
-                raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
+            # if circuit is not None:
+            #     raw = _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
+            # else:
+            #if source is not none, just use compiled source code 
+            raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
         else:
+            #hardware just send source to cloud hardware
             raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
     else:
         # circuit path (simulator/local only). Support single or batched circuits uniformly.

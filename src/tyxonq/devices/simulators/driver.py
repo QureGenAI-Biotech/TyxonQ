@@ -41,15 +41,34 @@ def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
 def _qasm_to_ir_if_needed(circuit: Any, source: Any) -> Any:
     if source is None:
         return circuit
+    
+    # 如果 source 不是字符串（即是 IR/PulseIR 对象），直接返回
+    if not isinstance(source, str):
+        return source
+    
     try:
+        # Import native QASM3 importer (TyxonQ's own implementation)
+        from ...compiler.pulse_compile_engine.native.qasm3_importer import qasm3_to_circuit  # type: ignore
+        # Fall back to Qiskit for QASM2
         from ...compiler.compile_engine.qiskit.dialect import qasm_to_ir  # type: ignore
 
+        # Helper to detect and parse a single QASM string
+        def parse_qasm(qasm_str: str) -> Any:
+            # Detect QASM version: OPENQASM 3 or TQASM 0.2 → native, else → Qiskit QASM2
+            qasm_str_stripped = qasm_str.strip()
+            if qasm_str_stripped.startswith(("OPENQASM 3", "TQASM 0.2")):
+                return qasm3_to_circuit(qasm_str)
+            else:
+                return qasm_to_ir(qasm_str)
+        
+        # 判断是 list 格式还是单个字符串
         if isinstance(source, (list, tuple)):
-            return [qasm_to_ir(s) for s in source]
-        return qasm_to_ir(source)
+            return [parse_qasm(s) for s in source]
+        return parse_qasm(source)
     except Exception as exc:
         raise ValueError(
-            "OpenQASM support requires qiskit; please install qiskit or pass an IR circuit"
+            "OpenQASM support requires TyxonQ native QASM3 importer or Qiskit for QASM2; "
+            "please pass an IR circuit or valid QASM code"
         ) from exc
 
 
