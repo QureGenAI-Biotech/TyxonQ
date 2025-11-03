@@ -1,26 +1,36 @@
 #!/usr/bin/env python3
 """
-脉冲级门校准与优化示例
+Pulse Gate Calibration and Optimization
 
-本示例展示如何使用 TyxonQ 的脉冲编程功能实现:
-    1. 自定义门校准 (Custom Gate Calibration)
-    2. 脉冲参数优化 (Pulse Parameter Optimization)
-    3. Cross-Resonance 门调优
-    4. 门保真度分析
+This comprehensive example demonstrates:
+  1. Custom gate calibration (DRAG pulse tuning)
+  2. Pulse parameter optimization
+  3. Cross-Resonance (CX) gate tuning
+  4. Virtual-Z optimization (zero-time Z rotations)
+  5. Two-qubit gate decomposition (iSWAP/SWAP)
+  6. Gate fidelity analysis
 
-应用场景:
-    - 量子硬件校准
-    - 门误差抑制
-    - 最优控制
-    - VQE 等变分算法的脉冲级优化
+Key Topics Covered:
+  ✅ DRAG pulse beta tuning for leakage suppression
+  ✅ Virtual-Z frame updates (zero physical time)
+  ✅ CX optimization via Cross-Resonance parameters
+  ✅ iSWAP and SWAP gate pulse decomposition
+  ✅ Hardware-aware gate scheduling
+  ✅ Fidelity metrics and benchmarking
 
-参考文献:
-    [1] McKay et al., PRA 96, 022330 (2017) - Efficient Z gates
-    [2] IBM Qiskit Pulse: Pulse-level programming
-    [3] Rigetti: arXiv:1903.02492 - Parametric gates
+Applications:
+  - Quantum hardware calibration workflows
+  - Gate error suppression in VQE/QAOA
+  - Optimal control for quantum circuits
+  - Cloud-ready pulse optimization
 
-作者: TyxonQ Team
-日期: 2025
+References:
+  [1] McKay et al., PRA 96, 022330 (2017) - Efficient Z gates
+  [2] Shende & Markov, PRA 72, 062305 (2005) - CX synthesis
+  [3] Rigetti: arXiv:1903.02492 (2019) - Parametric gates
+
+Author: TyxonQ Team
+Date: 2025
 """
 
 import numpy as np
@@ -349,31 +359,37 @@ def main():
     print("""
 关键收获:
 
-1. 脉冲级控制提供更高精度
-   - 可调整幅度、持续时间、相位等所有物理参数
-   - 通过 DRAG 系数 beta 抑制泄漏到高能级
+1. Pulse-level control provides precision
+   - Adjust amplitude, duration, phase of all physical parameters
+   - Suppress leakage via DRAG coefficient beta
 
-2. Virtual-Z 门节省时间
-   - Z 旋转通过相位帧更新实现
-   - 零物理时间,只更新软件状态
+2. Virtual-Z gates save time
+   - Z rotation via phase frame update
+   - Zero physical time, only software state update
 
-3. CX 门可通过 Cross-Resonance 优化
-   - 调整 CR 幅度和耦合强度
-   - 在保真度和速度之间权衡
+3. CX gate optimization via Cross-Resonance
+   - Adjust CR amplitude and coupling strength
+   - Trade-off between fidelity and speed
 
-4. 参数扫描找到最优设置
-   - 自动化校准流程
-   - 数据驱动的门优化
+4. Parameter sweep for optimal setup
+   - Automated calibration workflow
+   - Data-driven gate optimization
 
-5. 校准结果可导出为 TQASM defcal
-   - 符合 OpenQASM 3.0 规范
-   - 可直接用于硬件
+5. Export calibrations as TQASM defcal
+   - Compliant with OpenQASM 3.0
+   - Ready for real hardware
 
-下一步:
-  - 结合 VQE 的脉冲级优化
-  - 动态解耦序列设计
-  - 最优控制脉冲合成
-    """)
+Additional Topic: Two-Qubit Gates
+  - iSWAP: Exchange states with relative phase
+  - SWAP: Exchange states without phase
+  - Both decompose to 3-CX chains (universal)
+  - See pulse_iswap_swap_decomposition.py for details
+
+Next Steps:
+  - Combine with VQE pulse-level optimization
+  - Design dynamic decoupling sequences
+  - Synthesize optimal control pulses
+""")
 
 
 if __name__ == "__main__":

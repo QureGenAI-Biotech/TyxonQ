@@ -1,40 +1,51 @@
 #!/usr/bin/env python3
 """
-Complete example: iSWAP and SWAP gate pulse decomposition
+Two-Qubit Gate Pulse Decomposition: iSWAP and SWAP
 
 ================================================================================
-NEW FEATURE: iSWAP and SWAP gate pulse support (P1.4 Task 5)
+FEATURE: iSWAP and SWAP gate pulse support (P1.4 Task 5)
 ================================================================================
 
-iSWAP and SWAP are fundamental two-qubit gates that exchange quantum states
-between qubits. This example demonstrates their pulse-level implementation.
-
-Key Points:
-  ✅ iSWAP and SWAP now supported in pulse compilation
-  ✅ Both decompose to 3-CX chains (universal implementation)
+This example demonstrates pulse-level implementation of two-qubit exchange gates:
+  ✅ iSWAP: Exchange states with relative phase factor (i)
+  ✅ SWAP: Exchange states without phase change
+  ✅ Both decompose universally to 3-CX chains
   ✅ Compatible with all qubit topologies
   ✅ Ready for TQASM export and cloud submission
 
-Physical Difference (Software-Handled):
-  - SWAP: Exchanges states |01⟩ ↔ |10⟩
-  - iSWAP: Same exchange + relative phase (i factor on |01⟩, |10⟩)
-  - Pulse Implementation: Identical (phase handled in software)
+Key Physics:
+  SWAP(q0, q1):
+    - Exchanges |01⟩ ↔ |10⟩
+    - No relative phase
+    - Unitary: [[1,0,0,0], [0,0,1,0], [0,1,0,0], [0,0,0,1]]
+  
+  iSWAP(q0, q1):
+    - Exchanges |01⟩ ↔ i|10⟩, with phase i
+    - Adds relative phase to swapped states
+    - Unitary: [[1,0,0,0], [0,0,i,0], [0,i,0,0], [0,0,0,1]]
+  
+  Pulse Implementation (TyxonQ):
+    Both use identical decomposition: CX(q0,q1) · CX(q1,q0) · CX(q0,q1)
+    Phase difference handled automatically in software
+    Universal approach works on any qubit connectivity
 
-Decomposition Strategy:
-  iSWAP(q0, q1) = CX(q0, q1) · CX(q1, q0) · CX(q0, q1)
-  SWAP(q0, q1) = CX(q0, q1) · CX(q1, q0) · CX(q0, q1)
+Use Cases:
+  SWAP: Qubit routing, permutation networks, circuit mapping
+  iSWAP: Interaction simulation, Hubbard model, condensed matter
+  Both: Standard two-qubit operations in quantum algorithms
 
 References:
   [1] Shende & Markov, PRA 72, 062305 (2005)
-      - Optimal synthesis of 2-qubit circuits
-      - CX-based SWAP and iSWAP decomposition
+      Optimal synthesis of 2-qubit circuits using CX gates
   
   [2] Nielsen & Chuang, Cambridge (2010)
-      - Standard gate equivalences
+      Standard quantum gate equivalences
   
   [3] Rigetti: arXiv:1903.02492 (2019)
-      - Parametric XX/YY coupling for native iSWAP
-================================================================================
+      Parametric XX/YY coupling for native iSWAP
+
+Author: TyxonQ Development Team
+Date: 2025
 """
 
 import tyxonq as tq
