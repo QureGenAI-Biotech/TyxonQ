@@ -35,7 +35,7 @@ class TestPulseInlineTQASMThreeLevel:
         })
         
         result = compile_api(c_pulse, output="tqasm", options={"mode": "pulse_only"})
-        tqasm_code = result["circuit"]
+        tqasm_code = result["compiled_source"]
         
         # Verify: no three_level in TQASM
         assert isinstance(tqasm_code, str), "Output should be string (TQASM code)"

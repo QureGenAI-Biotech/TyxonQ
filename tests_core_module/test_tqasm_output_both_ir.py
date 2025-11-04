@@ -22,7 +22,7 @@ def test_circuit_to_tqasm():
     assert isinstance(result, dict), "compile() should return dict"
     assert "circuit" in result, "result should contain 'circuit' key"
     
-    tqasm_code = result["circuit"]
+    tqasm_code = result["compiled_source"]
     assert isinstance(tqasm_code, str), f"TQASM should be string, got: {type(tqasm_code)}"
     
     print(f"   OK: Circuit.compile(output='tqasm') succeeded")
@@ -55,9 +55,9 @@ def test_pulse_program_to_tqasm():
     )
     
     assert isinstance(result, dict), "compile_pulse() should return dict"
-    assert "pulse_schedule" in result, "result should contain 'pulse_schedule' key"
+    assert "compiled_pulse_schedule" in result, "result should contain 'compiled_pulse_schedule' key"
     
-    tqasm_code = result["pulse_schedule"]
+    tqasm_code = result["compiled_pulse_schedule"]
     assert isinstance(tqasm_code, str), f"TQASM should be string, got: {type(tqasm_code)}"
     
     print(f"   OK: PulseProgram.compile(output='tqasm') succeeded")
@@ -87,7 +87,7 @@ def test_tqasm_execution_path():
     
     # Compile to TQASM
     result = compile(circuit, output="tqasm")
-    tqasm_code = result["circuit"]
+    tqasm_code = result["compiled_source"]
     
     print(f"   OK: Complete flow verification:")
     print(f"      1. Circuit created: 2 qubits")

@@ -32,7 +32,7 @@ def test_tqasm_version():
     
     # 编译
     result = compile(circuit, output="tqasm")
-    tqasm_code = result["circuit"]
+    tqasm_code = result["compiled_source"]
     
     print("\n生成的代码:")
     print("-" * 70)
@@ -71,7 +71,7 @@ def test_openqasm3_version():
     
     # 编译
     result = compile(circuit, output="qasm3")
-    openqasm_code = result["circuit"]
+    openqasm_code = result["compiled_source"]
     
     print("\n生成的代码:")
     print("-" * 70)
@@ -110,7 +110,7 @@ def test_version_difference():
     })
     
     result1 = compile(c1, output="tqasm")
-    tqasm_code = result1["circuit"]
+    tqasm_code = result1["compiled_source"]
     
     # OpenQASM 3.0 版本（其他设备）
     c2 = Circuit(2)
@@ -121,7 +121,7 @@ def test_version_difference():
     })
     
     result2 = compile(c2, output="qasm3")
-    openqasm_code = result2["circuit"]
+    openqasm_code = result2["compiled_source"]
     
     print("\n对比结果:")
     print("-" * 70)

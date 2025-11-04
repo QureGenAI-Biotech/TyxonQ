@@ -38,7 +38,7 @@ class TestPulseCompilerBasics:
         c.x(0)
         
         compiler = PulseCompiler()
-        pulse_circuit = compiler.compile(
+        result = compiler.compile(
             c,
             device_params={
                 "qubit_freq": [5.0e9],
@@ -46,6 +46,7 @@ class TestPulseCompilerBasics:
             },
             mode="pulse_only"
         )
+        pulse_circuit = result["circuit"]
         
         # Check that circuit has pulse operations
         assert pulse_circuit is not None
@@ -90,7 +91,8 @@ class TestPulseCompilerBasics:
         c.measure_z(1)
         
         compiler = PulseCompiler()
-        pulse_circuit = compiler.compile(c, mode="hybrid")
+        result = compiler.compile(c, mode="hybrid")
+        pulse_circuit = result["circuit"]
         
         # Check that measurement gates are preserved
         measure_ops = [op for op in pulse_circuit.ops 
@@ -189,7 +191,7 @@ class TestPulseCompilerIntegration:
         c.measure_z(1)
         
         compiler = PulseCompiler(optimization_level=2)
-        pulse_circuit = compiler.compile(
+        result = compiler.compile(
             c,
             device_params={
                 "qubit_freq": [5.0e9, 5.1e9],
@@ -197,6 +199,7 @@ class TestPulseCompilerIntegration:
             },
             mode="hybrid"
         )
+        pulse_circuit = result["circuit"]
         
         # Verify compilation succeeded
         assert pulse_circuit is not None
@@ -219,7 +222,8 @@ class TestPulseCompilerIntegration:
         }
         
         compiler = PulseCompiler()
-        pulse_circuit = compiler.compile(c, device_params=device_params)
+        result = compiler.compile(c, device_params=device_params)
+        pulse_circuit = result["circuit"]
         
         # Verify device params are stored in metadata
         assert pulse_circuit.metadata["pulse_device_params"] == device_params

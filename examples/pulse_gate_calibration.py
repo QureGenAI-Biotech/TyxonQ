@@ -126,7 +126,8 @@ def example_2_virtual_z_gate():
     })
     
     result = compile(circuit_pulse, output="pulse_ir", options={"mode": "pulse_only"})
-    pulse_circuit = result["circuit"]
+    # compiled_source 是 pulse IR 对象
+    pulse_circuit = result["compiled_source"]
     
     # 分析脉冲序列
     print(f"\n脉冲序列分析:")
@@ -147,7 +148,8 @@ def example_2_virtual_z_gate():
     
     # 导出 TQASM 查看 Virtual-Z 实现
     tqasm_result = compile(circuit_pulse, output="tqasm", options={"mode": "pulse_only"})
-    tqasm_code = tqasm_result["circuit"]
+    # compiled_source 是 TQASM 字符串
+    tqasm_code = tqasm_result["compiled_source"]
     
     print(f"\n TQASM 中的 Virtual-Z 实现:")
     print(f"  (在 defcal 中表现为 shift_phase 指令)")
@@ -303,7 +305,8 @@ def example_5_gate_calibration_export():
     
     # 导出为 TQASM (包含优化后的 defcal)
     result = compile(circuit_pulse, output="tqasm", options={"mode": "pulse_only"})
-    tqasm_code = result["circuit"]
+    # compiled_source 是 TQASM 字符串
+    tqasm_code = result["compiled_source"]
     
     print(f"\n导出的 TQASM 校准文件:")
     print("=" * 70)

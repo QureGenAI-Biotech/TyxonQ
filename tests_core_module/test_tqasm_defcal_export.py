@@ -22,7 +22,7 @@ def test_tqasm_defcal_basic():
     
     # 编译为 TQASM
     result = compile(circuit_pulse, output="tqasm", options={"mode": "pulse_only"})
-    tqasm_code = result["circuit"]
+    tqasm_code = result["compiled_source"]
     
     print("\n生成的 TQASM 代码:")
     print("-" * 70)
@@ -101,7 +101,7 @@ def test_tqasm_defcal_cx_gate():
     
     # 编译为 TQASM
     result = compile(circuit_pulse, output="tqasm", options={"mode": "pulse_only"})
-    tqasm_code = result["circuit"]
+    tqasm_code = result["compiled_source"]
     
     print("\n生成的 TQASM 代码:")
     print("-" * 70)
@@ -171,7 +171,7 @@ def test_tqasm_syntax_compliance():
     })
     
     result = compile(circuit_pulse, output="tqasm", options={"mode": "pulse_only"})
-    tqasm_code = result["circuit"]
+    tqasm_code = result["compiled_source"]
     
     print("\n规范符合性检查:")
     print("-" * 70)

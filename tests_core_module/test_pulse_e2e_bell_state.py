@@ -36,8 +36,8 @@ def test_bell_state_pulse_compilation():
         "cr_echo": True
     })
     
-    result = compile(bell_circuit_pulse, output="pulse_ir")
-    compiled_circuit = result["circuit"]
+    compiled_circuit = bell_circuit_pulse.compile(output="pulse_ir")
+    # compile() returns self with compiled_source stored in _compiled_pulse_schedule
     
     print(f"   原始门数: {len(bell_circuit.ops)}")
     # 检查 compiled_circuit 的类型
@@ -75,7 +75,7 @@ def test_bell_state_pulse_compilation():
         warnings.simplefilter("always")
         
         # 不提供任何参数，依赖智能推断
-        result_auto = compile(bell_circuit, output="tqasm")
+        result_auto = bell_circuit.compile(output="tqasm")
         
         # 检查警告
         tqasm_warnings = [warning for warning in w if "tqasm" in str(warning.message).lower()]
@@ -84,8 +84,8 @@ def test_bell_state_pulse_compilation():
         print(f"   ⚠️  TQASM 警告: {len(tqasm_warnings)} 条")
         print(f"   ⚠️  参数警告: {len(param_warnings)} 条")
         
-        if isinstance(result_auto["circuit"], str):
-            tqasm_output = result_auto["circuit"]
+        if isinstance(result_auto._compiled_source, str):
+            tqasm_output = result_auto._compiled_source
             print(f"\n   ✅ TQASM 导出成功 ({len(tqasm_output)} 字符)")
             print(f"\n   TQASM 预览 (前 500 字符):")
             print("   " + "-" * 66)
@@ -94,7 +94,7 @@ def test_bell_state_pulse_compilation():
             if len(tqasm_output) > 500:
                 print("   ...")
         else:
-            print(f"   ⚠️  返回类型: {type(result_auto['circuit'])}")
+            print(f"   ⚠️  返回类型: {type(result_auto._compiled_source)}")
     
     # 4. 物理时间估算
     print("\n4️⃣  物理时间估算:")

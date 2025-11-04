@@ -62,14 +62,17 @@ Main Compilation Function
    circuit.cx(0, 1)
    circuit.cx(1, 2)
    
-   # Basic compilation
-   compiled = compile(circuit)
+   # Basic compilation (returns CompileResult dict)
+   result = compile(circuit)
+   circuit_ir = result["circuit"]       # IR object
+   compiled_source = result["compiled_source"]  # None or source string
    
    # Specify optimization
-   compiled = compile(
+   result = compile(
        circuit,
        options={'optimization_level': 2}
    )
+   circuit_ir = result["circuit"]
 
 **Example 2: Pulse Circuit Compilation**:
 
@@ -86,13 +89,15 @@ Main Compilation Function
        "anharmonicity": [-330e6, -320e6]
    })
    
-   # Compile to TQASM (auto-detects pulse operations)
-   result = compile(circuit, output="tqasm")
-   # Returns TQASM code as string
+   # Compile to QASM3 (returns CompileResult dict)
+   result = compile(circuit, output="qasm3")
+   qasm3_code = result["compiled_source"]  # QASM3 string with defcal
+   circuit_ir = result["circuit"]           # Original circuit IR
    
    # Or compile to pulse IR (preserves waveform objects)
    result = compile(circuit, output="pulse_ir")
-   # Returns Circuit with pulse operations
+   pulse_ir = result["compiled_source"]  # PulseProgram IR object
+   circuit_ir = result["circuit"]
 
 **Example 3: Cloud Submission (homebrew_s2)**:
 
@@ -111,10 +116,93 @@ Main Compilation Function
    })
    
    # Compile to TQASM (auto-converts to tyxonq_homebrew_tqasm for homebrew_s2)
-   tqasm_code = compile(circuit, output="tqasm")
+   result = compile(circuit, output="tqasm")
+   tqasm_code = result["compiled_source"]  # TQASM string (QASM2 compatible)
    
    # Submit to cloud
-   result = circuit.run()
+   result = circuit.run(shots=100)
+
+Pulse Compilation Function
+==========================
+
+.. autofunction:: tyxonq.compiler.compile_pulse
+
+**Signature**:
+
+.. code-block:: python
+
+   def compile_pulse(
+       pulse_program,                      # PulseProgram to compile
+       output: str = "pulse_ir",         # Output format: "pulse_ir", "tqasm", "openqasm3"
+       device_params: Dict = None,        # Device parameters (qubit_freq, anharmonicity, etc.)
+       calibrations: Dict = None,         # Custom pulse calibrations
+       device: str = None,                # Target device for format selection
+       options: Dict = None,              # Compilation options (inline_pulses, etc.)
+       **kwargs
+   ) -> PulseCompileResult
+
+**Returns**:
+
+``PulseCompileResult`` TypedDict with three fields:
+
+.. code-block:: python
+
+   {
+       "pulse_program": PulseProgram,              # Original PulseProgram IR
+       "compiled_pulse_schedule": Optional[str],   # Compiled schedule (TQASM/QASM3) or IR object
+       "metadata": Dict[str, Any]                  # Compilation metadata
+   }
+
+**Output Format Options**:
+
+- ``"pulse_ir"`` (default): TyxonQ native Pulse IR
+  - compiled_pulse_schedule: PulseProgram IR object
+- ``"tqasm"`` / ``"tqasm0.2"``: TQASM 0.2 format (cloud-ready)
+  - compiled_pulse_schedule: TQASM string with defcal
+- ``"openqasm3"``: OpenQASM 3.0 with pulse extensions
+  - compiled_pulse_schedule: QASM3 string with defcal
+
+**Example 1: Basic Pulse Compilation**:
+
+.. code-block:: python
+
+   from tyxonq.core.ir.pulse import PulseProgram
+   from tyxonq.compiler import compile_pulse
+   
+   # Create pulse program
+   prog = PulseProgram(1)
+   prog.drag(0, amp=1.0, duration=160, sigma=40, beta=0.2, qubit_freq=5.0e9)
+   
+   # Compile to Pulse IR (default)
+   result = compile_pulse(prog, device_params={
+       "qubit_freq": [5.0e9],
+       "anharmonicity": [-330e6]
+   })
+   pulse_ir = result["pulse_program"]           # PulseProgram IR
+   schedule = result["compiled_pulse_schedule"] # None (IR format)
+
+**Example 2: Compile to TQASM for Cloud**:
+
+.. code-block:: python
+
+   # Compile to TQASM with full defcal definitions
+   result = compile_pulse(
+       prog,
+       output="tqasm",
+       device_params={
+           "qubit_freq": [5.0e9],
+           "anharmonicity": [-330e6]
+       },
+       options={"inline_pulses": True}  # Include full defcal definitions
+   )
+   tqasm_code = result["compiled_pulse_schedule"]  # TQASM string with defcal
+   
+   # Submit to cloud
+   circuit = Circuit(1)
+   task = circuit.device(provider="tyxonq", device="homebrew_s2").run(
+       source=tqasm_code,
+       shots=100
+   )
 
 Optimization Levels
 ===================
@@ -563,6 +651,27 @@ See Also
 ========
 
 - :doc:`/user_guide/compiler/index` - Compiler User Guide
+- :doc:`/api/core/index` - Core API
+- :doc:`/api/devices/index` - Devices API
+- :doc:`/examples/basic_examples` - Compilation Examples
+   # Benchmark different levels
+   for level in [0, 1, 2, 3]:
+       start = time.time()
+       compiled = circuit.compile(optimization_level=level)
+       duration = time.time() - start
+       
+       print(f"Level {level}:")
+       print(f"  Time: {duration:.3f}s")
+       print(f"  Depth: {compiled.depth()}")
+       print(f"  Gates: {compiled.size()}")
+
+See Also
+========
+
+- :doc:`/user_guide/compiler/index` - Compiler User Guide
+- :doc:`/api/core/index` - Core API
+- :doc:`/api/devices/index` - Devices API
+- :doc:`/examples/basic_examples` - Compilation Examples
 - :doc:`/api/core/index` - Core API
 - :doc:`/api/devices/index` - Devices API
 - :doc:`/examples/basic_examples` - Compilation Examples

@@ -185,7 +185,8 @@ def example_mode_a_explicit_pulse_with_comparison():
         else:
             print(f"   ✅ 编译成功，无警告")
     
-    tqasm_code = result["circuit"]
+    # compiled_source 是 TQASM 字符串
+    tqasm_code = result["compiled_source"]
     
     print(f"\n   TQASM 代码长度: {len(tqasm_code)} 字符")
     
@@ -344,7 +345,8 @@ def example_mode_b_smart_inference():
             print(f"      2. 参数警告: 缺少 device_params → 自动补足默认值")
             print(f"         默认: qubit_freq=[5.0e9], anharmonicity=[-330e6]")
     
-    tqasm_code = result["circuit"]
+    # compiled_source 是 TQASM 字符串
+    tqasm_code = result["compiled_source"]
     
     print(f"\n   ✅ 智能推断成功!")
     print(f"   TQASM 代码长度: {len(tqasm_code)} 字符")

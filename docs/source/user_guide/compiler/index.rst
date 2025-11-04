@@ -68,16 +68,17 @@ Usage Examples
 
    import tyxonq as tq
    
-   circuit = tq.Circuit(2).h(0).cnot(0, 1)
+   circuit = tq.Circuit(2).h(0).cx(0, 1)
    
-   # Use default compiler
+   # Use default compiler (Circuit.compile() 返回 self)
    compiled = circuit.compile()
+   print(f"Compiled source: {compiled._compiled_source}")
    
    # Specify compiler engine
-   compiled_qiskit = circuit.compile(compile_engine='qiskit')
+   compiled = circuit.compile(compile_engine='qiskit')
    
    # Set optimization level
-   compiled_opt = circuit.compile(
+   compiled = circuit.compile(
        compile_engine='native',
        options={'optimization_level': 2}
    )
@@ -99,15 +100,18 @@ Decomposition Stage
 
    # RX gate decomposition: RX(θ) = H · RZ(θ) · H
    circuit = tq.Circuit(1).rx(0, 0.5)
-   decomposed = circuit.compile()
+   compiled = circuit.compile()  # 返回 Circuit 对象
+   decomposed_ir = compiled
    
    # RY gate decomposition: RY(θ) = S† · H · RZ(θ) · H · S
    circuit = tq.Circuit(1).ry(0, 0.5)
-   decomposed = circuit.compile()
+   compiled = circuit.compile()  # 返回 Circuit 对象
+   decomposed_ir = compiled
    
    # RZZ gate decomposition: RZZ(θ) = CNOT · RZ(θ) · CNOT
    circuit = tq.Circuit(2).rzz(0, 1, 0.5)
-   decomposed = circuit.compile()
+   compiled = circuit.compile()  # 返回 Circuit 对象
+   decomposed_ir = compiled
 
 Rewriting Stage
 ---------------
@@ -169,12 +173,13 @@ The shot scheduler manages measurement allocation and execution planning:
    # Circuit with measurement grouping
    circuit = (
        tq.Circuit(3)
-       .h(0).cnot(0, 1).cnot(1, 2)
+       .h(0).cx(0, 1).cx(1, 2)
        .measure_z(0).measure_z(1).measure_z(2)
    )
    
    # Automatic scheduling during execution
    result = circuit.run(shots=1000)
+   # result 是 list of unified results
 
 Gradient Processing Stage
 -------------------------

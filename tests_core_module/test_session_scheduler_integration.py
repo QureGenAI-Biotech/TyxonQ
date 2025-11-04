@@ -46,7 +46,7 @@ def test_compile_emits_execution_plan_and_session_consumes():
     res = compile_ir(circ, compile_engine="tyxonq", output="ir", options={"total_shots": 30})
     plan = res["metadata"].get("job_plan")
     assert plan is not None and isinstance(plan, dict)
-    assert plan["circuit"] is res["circuit"]
+    assert plan["circuit"] == res["circuit"]
     assert sum(seg.get("shots", 0) for seg in plan.get("segments", [])) == 30
 
     dev = _DummyDevice()

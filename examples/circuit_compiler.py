@@ -23,15 +23,17 @@ def qiskit_compile_levels():
     compiled = []
     for lvl in levels:
         try:
-            # output='ir' uses native compiler by default; request qiskit artifacts explicitly below
-            cc = c.compile(
+            # compile() returns Circuit object with compiled_source stored in _compiled_source
+            compiled_circuit = c.compile(
                 compile_engine="default",
                 output="ir",
                 options={"optimization_level": lvl, "basis_gates": ["cx", "cz", "h", "rz"]},
             )
+            # Extract circuit IR object
+            cc = compiled_circuit
             compiled.append((lvl, cc))
         except Exception as e:
-            print(f"qiskit compile failed at level {lvl}: {e}")
+            print(f"compile failed at level {lvl}: {e}")
     for lvl, cc in compiled:
         # Directly use our Circuit.draw() which compiles to qiskit under the hood
         print(f"level {lvl} drawing:")
@@ -42,10 +44,13 @@ def main():
     qiskit_compile_levels()
     try:
         c = build_demo_circuit()
-        qasm = c.compile(compile_engine="qiskit", output="qasm2", options={"basis_gates": ["cx", "cz", "h", "rz"]})
+        # compile() returns Circuit object with compiled_source stored in _compiled_source
+        compiled_circuit = c.compile(compile_engine="qiskit", output="qasm2", options={"basis_gates": ["cx", "cz", "h", "rz"]})
+        # Extract compiled source (QASM2 string)
+        qasm = compiled_circuit._compiled_source
         print("qasm2 length:", len(qasm))
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 if __name__ == "__main__":
