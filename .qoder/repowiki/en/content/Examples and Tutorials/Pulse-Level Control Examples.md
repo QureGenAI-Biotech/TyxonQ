@@ -7,7 +7,18 @@
 - [circuit.py](file://src/tyxonq/core/ir/circuit.py)
 - [pulse.py](file://src/tyxonq/core/ir/pulse.py)
 - [waveforms.py](file://src/tyxonq/waveforms.py)
+- [tqasm_exporter.py](file://src/tyxonq/compiler/pulse_compile_engine/native/tqasm_exporter.py) - *Updated with native gate QASM3 support*
+- [gate_qasm3_exporter.py](file://src/tyxonq/compiler/compile_engine/native/gate_qasm3_exporter.py) - *New QASM3 gate exporter implementation*
+- [pulse_waveforms.py](file://examples/pulse_waveforms.py) - *Enhanced waveform examples*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated documentation to reflect new pulse programming capabilities including Hermite and BlackmanSquare waveforms
+- Added information about native gate QASM3 exporter implementation
+- Enhanced interface description between high-level circuits and pulse-level instructions
+- Updated section sources to include newly modified files
+- Added references to advanced waveform examples and calibration tutorials
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -50,9 +61,6 @@ style Start fill:#f9f,stroke:#333
 style End fill:#f9f,stroke:#333
 ```
 
-**Diagram sources**
-- [pulse_demo.py](file://examples/pulse_demo.py#L25-L55)
-
 **Section sources**
 - [pulse_demo.py](file://examples/pulse_demo.py#L25-L55)
 - [waveforms.py](file://src/tyxonq/waveforms.py#L50-L57)
@@ -83,20 +91,19 @@ style Start fill:#f9f,stroke:#333
 style End fill:#f9f,stroke:#333
 ```
 
-**Diagram sources**
-- [pulse_demo_scan.py](file://examples/pulse_demo_scan.py#L10-L48)
-
 **Section sources**
 - [pulse_demo_scan.py](file://examples/pulse_demo_scan.py#L10-L48)
 - [waveforms.py](file://src/tyxonq/waveforms.py#L38-L43)
 
 ## Interface Between High-Level Circuits and Pulse-Level Instructions
 
-The interface between high-level quantum circuits and pulse-level instructions in TyxonQ is mediated through the Circuit class and its pulse calibration system. This architecture enables seamless integration of abstract quantum algorithms with low-level hardware control.
+The interface between high-level quantum circuits and pulse-level instructions in TyxonQ has been enhanced with new compiler capabilities, including the native gate QASM3 exporter implementation. This architecture enables seamless integration of abstract quantum algorithms with low-level hardware control.
 
 The core mechanism involves the `use_pulse()` method which switches the circuit to pulse mode, enabling calibration capabilities. The `calibrate()` method creates a builder pattern interface for constructing pulse sequences with parameterized waveforms. These calibrations are then linked to circuit operations through `add_calibration()`, establishing the connection between high-level circuit instructions and low-level pulse implementations.
 
-Underlying this interface are data structures defined in the pulse module, including `PulseInstruction` and `PulseSchedule`, which represent individual pulse operations and complete pulse sequences respectively. The waveform library provides various pulse shapes (Gaussian, Drag, Sine, Cosine, etc.) that can be parameterized and composed into complex pulse sequences.
+A significant update is the implementation of the native gate QASM3 exporter in `gate_qasm3_exporter.py`, which provides clean OpenQASM 3.0 output for gate-level circuits. This complements the existing TQASM exporter that handles pulse circuits with OpenPulse extensions. The `tqasm_exporter.py` has been updated to support both Circuit and PulseProgram input formats, enhancing flexibility in pulse programming workflows.
+
+The system now supports advanced waveforms such as Hermite and BlackmanSquare, which are defined in the waveforms module and can be used in pulse sequences. These waveforms provide improved spectral properties and reduced leakage compared to basic Gaussian pulses.
 
 ```mermaid
 classDiagram
@@ -125,6 +132,18 @@ class CosineDrag {
 +phase ParamType
 +alpha ParamType
 }
+class Hermite {
++amp ParamType
++duration int
++order ParamType
++phase ParamType
+}
+class BlackmanSquare {
++amp ParamType
++duration int
++width ParamType
++phase ParamType
+}
 class PulseSchedule {
 +float sampling_rate_hz
 +List[PulseInstruction] instructions
@@ -143,25 +162,26 @@ Circuit --> CalibrationBuilder : "creates"
 Circuit --> PulseSchedule : "generates"
 CalibrationBuilder --> Waveform : "uses"
 Waveform <|-- CosineDrag
+Waveform <|-- Hermite
+Waveform <|-- BlackmanSquare
 PulseSchedule --> PulseInstruction : "contains"
 Circuit --> Waveform : "references"
 ```
-
-**Diagram sources**
-- [circuit.py](file://src/tyxonq/core/ir/circuit.py#L100-L150)
-- [pulse.py](file://src/tyxonq/core/ir/pulse.py#L7-L66)
-- [waveforms.py](file://src/tyxonq/waveforms.py#L1-L97)
 
 **Section sources**
 - [circuit.py](file://src/tyxonq/core/ir/circuit.py#L100-L150)
 - [pulse.py](file://src/tyxonq/core/ir/pulse.py#L7-L66)
 - [waveforms.py](file://src/tyxonq/waveforms.py#L1-L97)
+- [tqasm_exporter.py](file://src/tyxonq/compiler/pulse_compile_engine/native/tqasm_exporter.py)
+- [gate_qasm3_exporter.py](file://src/tyxonq/compiler/compile_engine/native/gate_qasm3_exporter.py)
 
 ## Designing Custom Pulse Schedules
 
 Designing custom pulse schedules in TyxonQ involves creating parameterized waveforms and organizing them into timed sequences that respect hardware constraints. The framework provides a flexible system for defining pulse schedules that can be tailored to specific device characteristics and experimental requirements.
 
-The process begins with selecting appropriate waveform types from the available library, including Gaussian, Drag, Sine, Cosine, and specialized shapes like CosineDrag. These waveforms can be parameterized with variables that allow for dynamic adjustment during execution. The calibration builder interface enables the creation of frames (representing hardware channels) and the scheduling of waveforms on those frames with precise timing control.
+The process begins with selecting appropriate waveform types from the available library, including Gaussian, Drag, Sine, Cosine, and specialized shapes like CosineDrag, Hermite, and BlackmanSquare. These waveforms can be parameterized with variables that allow for dynamic adjustment during execution. The calibration builder interface enables the creation of frames (representing hardware channels) and the scheduling of waveforms on those frames with precise timing control.
+
+The Hermite waveform uses Hermite polynomials to create a smooth envelope with minimal frequency spectral leakage, making it particularly useful for high-fidelity quantum gates. The BlackmanSquare waveform combines a Blackman window with a flat-top plateau, providing excellent frequency domain properties and reduced spectral leakage and crosstalk.
 
 When designing custom schedules, considerations include sampling rate constraints, channel availability, and timing dependencies between operations. The PulseSchedule class manages the temporal organization of pulse instructions, ensuring that operations are properly sequenced and that timing constraints are respected. The end_time() and duration_seconds() methods provide utilities for analyzing schedule timing properties.
 
@@ -189,13 +209,16 @@ Implementing high-fidelity gates through pulse shaping leverages the parameteriz
 
 The CosineDrag waveform used in the examples combines a cosine envelope with a derivative component (alpha parameter) that helps mitigate leakage to higher energy states and reduce sensitivity to control errors. By parameterizing the pulse duration, amplitude, and shape parameters, researchers can optimize gate performance through systematic experimentation.
 
+The Hermite waveform provides higher-order corrections through Hermite polynomials, offering excellent spectral properties and minimal frequency spectral leakage. The BlackmanSquare waveform uses Blackman windowing to reduce sidebands and crosstalk, making it ideal for hardware-specific optimization.
+
 The parameter scanning approach enables comprehensive characterization of gate performance across different pulse configurations, facilitating the identification of optimal parameters that maximize fidelity. This methodology supports the development of robust quantum gates that maintain high performance across varying hardware conditions and environmental factors.
 
 **Section sources**
 - [pulse_demo.py](file://examples/pulse_demo.py#L25-L55)
 - [waveforms.py](file://src/tyxonq/waveforms.py#L50-L57)
 - [pulse_demo_scan.py](file://examples/pulse_demo_scan.py#L10-L48)
+- [pulse_waveforms.py](file://examples/pulse_waveforms.py)
 
 ## Conclusion
 
-The pulse-level control examples in TyxonQ demonstrate a comprehensive framework for low-level quantum control, enabling researchers to implement sophisticated pulse sequences and calibration workflows. The integration of high-level circuit abstractions with detailed pulse-level instructions provides a powerful platform for quantum experimentation and optimization. By leveraging parameterized waveforms, systematic scanning, and flexible scheduling capabilities, users can develop high-fidelity quantum gates tailored to specific hardware characteristics. These capabilities form a foundation for advanced quantum control techniques that are essential for pushing the boundaries of quantum computing performance.
+The pulse-level control examples in TyxonQ demonstrate a comprehensive framework for low-level quantum control, enabling researchers to implement sophisticated pulse sequences and calibration workflows. The integration of high-level circuit abstractions with detailed pulse-level instructions provides a powerful platform for quantum experimentation and optimization. By leveraging parameterized waveforms, systematic scanning, and flexible scheduling capabilities, users can develop high-fidelity quantum gates tailored to specific hardware characteristics. Recent updates including the Hermite and BlackmanSquare waveforms and the native gate QASM3 exporter implementation enhance the framework's capabilities for advanced quantum control. These capabilities form a foundation for advanced quantum control techniques that are essential for pushing the boundaries of quantum computing performance.
