@@ -231,7 +231,7 @@ def compile(
         result = NativeCompiler().compile(circuit = circuit,compile_plan= compile_plan, device_rule=device_rule, options = opts)  # type: ignore[arg-type]
         
         # 缓存编译源代码到 _source，避免重复编译
-        circuit._source = result["compiled_source"]
+        circuit._compiled_source = result["compiled_source"]
         
         return result
     if compile_engine == "pulse":
@@ -287,7 +287,7 @@ def compile(
         # 返回值已经是正确的 CompileResult 格式
         compiled_source = compiled_circuit.get("compiled_source")
         # 缓存编译源代码（TQASM/QASM3 等）
-        circuit._source = compiled_source
+        circuit._compiled_source = compiled_source
         return compiled_circuit
     if compile_engine == "qiskit":
         from .compile_engine.qiskit import QiskitCompiler
@@ -295,7 +295,7 @@ def compile(
         result = QiskitCompiler().compile(circuit= circuit, options = opts)  # type: ignore[arg-type]
         
         # 缓存编译源代码到 _source，避免重复编译
-        circuit._source = result["compiled_source"]
+        circuit._compiled_source = result["compiled_source"]
         
         return result
     # Fallback to native
@@ -303,7 +303,7 @@ def compile(
     result = NativeCompiler().compile(circuit = circuit,compile_plan=compile_plan, device_rule=device_rule,options = opts)  # type: ignore[arg-type]
     
     # 缓存编译源代码到 _source，避免重复编译
-    circuit._source = result["compiled_source"]
+    circuit._compiled_source = result["compiled_source"]
     
     return result
 

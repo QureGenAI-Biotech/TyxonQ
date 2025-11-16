@@ -16,9 +16,13 @@ class NativeCompiler:
     def compile(self,circuit: "Circuit", options:Dict[str, Any] = {},compile_plan=None,device_rule=None) -> "CompileResult":  # type: ignore[override]
         output: str = str(options.get("output", "ir")).lower()
         # Default basis_gates for native pipeline (can be overridden by options)
-        if not options.get("basis_gates",None):
+        basis_gates = options.get("basis_gates",None)
+        if basis_gates:
             basis_gates = ["h", "rx", "rz", "cx", "cz"]
             options['basis_gates'] = basis_gates
+        else:
+            basis_gates = []
+
         
         optimization_level = int(options.get("optimization_level", 0))
         options['optimization_level'] = optimization_level

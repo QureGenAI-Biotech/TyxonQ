@@ -132,7 +132,9 @@ class PulseProgram:
     # Compiled output cache (when .compile() is called explicitly)
     _compiled_output: Optional[Any] = field(default=None)
     # 关键：缓存编译后的 TQASM/QASM 字符串，防止重复编译
-    _source: Optional[str] = field(default=None)
+    _compiled_source: Optional[str] = field(default=None)
+    # 脚冲程序编译结果缓存（绑定输出格式）
+    _compiled_pulse_schedule: Optional[str] = field(default=None)
     
     def __post_init__(self):
         """Validate pulse program structure."""
@@ -355,7 +357,7 @@ class PulseProgram:
     
     # ---- 链式配置方法 (与 Circuit 对齐) ----
     
-    def compile(self, output: str = "pulse_ir", **options: Any) -> Any:
+    def compile(self, output: str = "pulse_ir", **options: Any) -> "PulseProgram":
         """Compile pulse program via compile_pulse() (平级 with Circuit.compile()).
         
         Args:
@@ -367,12 +369,13 @@ class PulseProgram:
                 - inline_pulses (bool): Inline pulse definitions
         
         Returns:
-            Compiled pulse schedule
+            PulseProgram: Self with compiled_pulse_schedule stored in _compiled_pulse_schedule
         
         Examples:
             >>> prog = PulseProgram(1)
             >>> prog.drag(0, amp=1.0, duration=160, sigma=40, beta=0.2)
             >>> compiled = prog.compile(output="tqasm", options={"inline_pulses": True})
+            >>> tqasm_code = compiled._compiled_pulse_schedule
         """
         # 调用独立的 compile_pulse() 函数 (平级架构)
         from ...compiler.api import compile_pulse
@@ -392,7 +395,9 @@ class PulseProgram:
             options=merged_opts
         )
         
-        return result["pulse_schedule"]
+        # 缓存编译结果到属性
+        self._compiled_pulse_schedule = result.get("compiled_pulse_schedule")
+        return self
     
     def device(self, **options: Any) -> "PulseProgram":
         """Configure device execution options.
@@ -460,8 +465,8 @@ class PulseProgram:
             from ...compiler.api import compile_pulse
             
             # 如果有缓存的 TQASM 源代码，直接使用
-            if self._source is not None:
-                source_to_submit = self._source
+            if self._compiled_source is not None:
+                source_to_submit = self._compiled_source
             else:
                 # 编译为 TQASM
                 compile_opts = dict(self._compile_opts)

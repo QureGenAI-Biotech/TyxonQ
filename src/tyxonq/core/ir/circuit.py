@@ -133,7 +133,7 @@ class Circuit:
             self._post_opts["method"] = postprocessing_method
 
         # Optional direct-execution source (e.g., QASM string or provider object)
-        self._source = source
+        self._compiled_source = source
         # Draw defaults (e.g., "text", "mpl", "latex")
         self._draw_output: Optional[str] = str(draw_output) if draw_output is not None else None
 
@@ -813,11 +813,11 @@ class Circuit:
     def to_openqasm(self) -> str:
         """Serialize this IR circuit to OpenQASM 2 using the compiler facade.
 
-        Delegates to compiler API (provider='qiskit', output='qasm2').
+        Delegates to compiler API (compile_engine='qiskit', output='qasm2').
         """
-
-        r = compile_api(self, provider="qiskit", output="qasm2")
-        return r["circuit"]  # type: ignore[return-value]
+        compiled = self.compile(compile_engine="qiskit", output="qasm2")
+        # compile() returns self with compiled_source stored in _compiled_source
+        return compiled._compiled_source  # type: ignore[return-value]
 
     @overload
     def compile(self, *, provider: None = ..., output: None = ..., target: Any | None = ..., options: Dict[str, Any] | None = ...) -> "Circuit": ...
@@ -842,9 +842,13 @@ class Circuit:
         if compile_engine is None and output is None and target is None and options is None:
             return self
 
-        # If a direct source is present, skip compilation entirely
-        if self._source is not None:
-            return self
+
+        # 这里需要判断一下 是不是已经编译过了。
+        if self._compile_engine == compile_engine and self._compile_output == output and \
+            self._compile_opts == options:
+            # If a direct source is present, skip compilation entirely 
+            if self._compiled_source is not None:
+                return self
 
         # Delegate to compiler facade exactly following its contract
         prov = compile_engine or "default"
@@ -857,8 +861,8 @@ class Circuit:
         
         # 关键优化：如果编译结果是字符串（TQASM/QASM），缓存到 _source 避免重复编译
         # 这样后续 .run() 时会直接使用缓存的 source，不会重新编译
-        self._source = res.get("compiled_source",None)
-        return res
+        self._compiled_source = res.get("compiled_source",None)
+        return self
     
 
     def run(
@@ -885,28 +889,26 @@ class Circuit:
         dev_shots = int(dev_opts.pop("shots", shots))
 
         # If pre-compiled/native source exists, submit directly
-        if self._source is not None:
+        if self._compiled_source is not None:
             tasks = device_base.run(
                 provider=dev_provider,
                 device=dev_device,
-                source=self._source,
+                source=self._compiled_source,
                 shots=dev_shots,
                 **dev_opts,
             )
         else:
             # Compile first using current defaults
-            # compile() 函数已经处理了所有的规则（homebrew_s2、脉冲编译、output 格式等）
-            # 直接使用编译结果的 compiled_source 字段
-            compiled_result = self.compile(
+            # compile() 返回 self，并将编译结果存储在 self._compiled_source 中
+            compiled_circuit = self.compile(
                 compile_engine=self._compile_engine,
                 output=self._compile_output,
                 target=self._compile_target,
                 options=self._compile_opts,
             )
             
-            # compiled_result 是 CompileResult 类型：{"circuit": ..., "compiled_source": ..., "metadata": ...}
-            source_to_submit = compiled_result.get("compiled_source")
-            circuit = compiled_result.get("circuit")
+            # compiled_circuit 是 Circuit 对象，编译结果存在 _compiled_source 属性中
+            source_to_submit = compiled_circuit._compiled_source
             if source_to_submit is not None:
                 # 有编译源代码（QASM2/QASM3/TQASM），提交给 device
                 tasks = device_base.run(
@@ -921,7 +923,7 @@ class Circuit:
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
-                    circuit=circuit,
+                    circuit=self,
                     shots=dev_shots,
                     **dev_opts,
                 )
