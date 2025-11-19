@@ -440,9 +440,22 @@ Error Handling
        hea = HEA(molecule=large_mol, layers=3, runtime="device")
        energy = hea.kernel(shots=2048)
 
+Advanced Topics
+===============
+
+.. toctree::
+   :maxdepth: 2
+
+   architecture
+   runtime_optimization
+   numerical_methods
+
 Related Resources
 =================
 
+- :doc:`architecture` - **Architecture Guide**: Visual overview of dual-path execution and caching strategy
+- :doc:`runtime_optimization` - **Runtime Optimization**: Caching strategies, RDM fixes, NumPy 2.0 compatibility
+- :doc:`numerical_methods` - **Numerical Methods**: Engine selection, gradient computation, performance optimization
 - :doc:`../fundamentals/index` - Quantum Chemistry Fundamentals
 - :doc:`../algorithms/index` - Quantum Chemistry Algorithms
 - :doc:`../molecule/index` - Molecule Class Guide
