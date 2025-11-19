@@ -49,6 +49,7 @@ class ArrayBackend(Protocol):
     float64: Any
     int32: Any
     int64: Any
+    int8: Any
     bool: Any
     # Common alias
     int: Any

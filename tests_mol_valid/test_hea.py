@@ -183,31 +183,31 @@ def test_rdm(mapping):
 
 
 
-# def test_open_shell():
+def test_open_shell():
 
-#     m = h_chain(3, charge=0, spin=1)
+    m = h_chain(3, charge=0, spin=1)
 
-#     hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="numeric")
-#     # try multiple times to avoid local minimum
-#     es = []
-#     for i in range(3):
-#         hea.init_guess = np.random.random(hea.init_guess.shape)
-#         es.append(hea.kernel(shots=0))
-#     e1 = min(es)
+    hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="numeric")
+    # try multiple times to avoid local minimum
+    es = []
+    for i in range(3):
+        hea.init_guess = np.random.random(hea.init_guess.shape)
+        es.append(hea.kernel(shots=0))
+    e1 = min(es)
 
-#     from tyxonq.applications.chem.algorithms.uccsd import ROUCCSD
-#     ucc = ROUCCSD(m,run_fci=True)
-#     e2 = ucc.kernel(shots=0)
+    from tyxonq.applications.chem.algorithms.uccsd import ROUCCSD
+    ucc = ROUCCSD(m,run_fci=True)
+    e2 = ucc.kernel(shots=0)
 
-#     # for debugging
-#     # ucc.print_summary()
+    # for debugging
+    # ucc.print_summary()
 
-#     # usually ROUCCSD is more accurate
-#     np.testing.assert_allclose(e2, ucc.e_fci, atol=1e-4)
-#     np.testing.assert_allclose(e1, ucc.e_fci, atol=2e-3)
+    # usually ROUCCSD is more accurate
+    np.testing.assert_allclose(e2, ucc.e_fci, atol=1e-4)
+    np.testing.assert_allclose(e1, ucc.e_fci, atol=2e-3)
 
-#     np.testing.assert_allclose(hea.make_rdm1(), ucc.make_rdm1(basis="MO"), atol=5e-3)
-#     np.testing.assert_allclose(hea.make_rdm2(), ucc.make_rdm2(basis="MO"), atol=5e-3)
+    np.testing.assert_allclose(hea.make_rdm1(), ucc.make_rdm1(basis="MO"), atol=5e-3)
+    np.testing.assert_allclose(hea.make_rdm2(), ucc.make_rdm2(basis="MO"), atol=5e-3)
 
 if __name__ == "__main__":
     # test_rdm(mapping="jordan-wigner")

@@ -6,7 +6,16 @@ from tyxonq.applications.chem.molecule import h4, h5p
 from pyscf import fci
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import random_integral
 from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
+
 import tyxonq as tq
+
+
+@pytest.fixture(autouse=True)
+def reset_backend():
+    """确保每个测试开始时使用 NumPy backend，避免跨测试文件的 backend 污染"""
+    tq.set_backend("numpy")
+    yield
+    tq.set_backend("numpy")
 
 
 def test_get_circuit():

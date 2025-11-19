@@ -129,7 +129,7 @@ class HEA:
     layers: int | None = None, 
     hamiltonian: Hamiltonian | None = None, 
     runtime: str = "device", 
-    numeric_engine: str | None = None, 
+    numeric_engine = 'statevector', 
     active_space=None, 
     mapping: str = "parity", 
     classical_provider: str = "local", 
@@ -160,7 +160,7 @@ class HEA:
         self.scipy_minimize_options: dict | None = None
         self._params: np.ndarray | None = None
         self.opt_res: dict | None = None
-        self.numeric_engine = kwargs.get('numeric_engine','statevector')
+        self.numeric_engine = numeric_engine
         
 
         # If atom is provided, construct PySCF Mole directly (PySCF style)

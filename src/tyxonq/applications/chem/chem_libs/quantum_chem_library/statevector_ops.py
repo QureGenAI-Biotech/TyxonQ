@@ -18,6 +18,7 @@ from tyxonq.libs.hamiltonian_encoding.pauli_io import ex_op_to_fop
 from .civector_ops import get_operator_tensors
 from .ci_state_mapping import get_ci_strings, civector_to_statevector
 from math import comb
+from tyxonq.numerics import NumericBackend as nb
 
 # from tyxonq.libs.circuits_library.qubit_state_preparation import get_init_circuit
 
@@ -28,7 +29,7 @@ def apply_excitation_statevector(statevector, n_qubits, f_idx, mode):
     - For fermion mode, apply JW Z-string phase vector with sign per qop coefficient
     """
     # 1) apply local fermionic unitary in the computational basis
-    psi = np.asarray(statevector, dtype=np.complex128).reshape(-1)
+    psi = nb.asarray(statevector, dtype=nb.complex128).reshape(-1)
     n = int(n_qubits)
     qubit_idx = [n - 1 - int(i) for i in f_idx]
     if len(qubit_idx) == 2:
@@ -51,12 +52,13 @@ def apply_excitation_statevector(statevector, n_qubits, f_idx, mode):
             continue
         z_indices.append(n - 1 - int(idx))
     sign = 1 if sorted(qop.terms.items())[0][1].real > 0 else -1
-    phase = np.array([sign], dtype=np.int8)
+    # Convert to float64 immediately to preserve gradient chain with PyTorch
+    phase = nb.array([sign], dtype=nb.float64)
     for i in range(n):
         if i in z_indices:
-            phase = np.kron(phase, np.array([1, -1], dtype=np.int8))
+            phase = nb.kron(phase, nb.array([1, -1], dtype=nb.float64))
         else:
-            phase = np.kron(phase, np.array([1, 1], dtype=np.int8))
+            phase = nb.kron(phase, nb.array([1, 1], dtype=nb.float64))
     psi = psi * phase
     return psi.reshape(-1)
 
@@ -64,7 +66,7 @@ def apply_excitation_statevector(statevector, n_qubits, f_idx, mode):
 
 
 def get_statevector(
-    params: np.ndarray,
+    params,  # Can be np.ndarray or torch.Tensor
     n_qubits: int,
     n_elec_s,
     ex_ops,
@@ -72,64 +74,83 @@ def get_statevector(
     *,
     mode: str = "fermion",
     init_state=None,
-) -> np.ndarray:
+):
+    """Get statevector with excitation evolution (backend-agnostic).
+    
+    Supports automatic differentiation:
+    - NumPy backend: params as np.ndarray
+    - PyTorch backend: params as torch.Tensor with requires_grad=True
+    
+    Returns:
+        Statevector in current backend format
+    """
     # TCC-style: prepare HF initial circuit, then evolve by excitations analytically
     n = int(n_qubits)
     
     if isinstance(init_state, Circuit):
-        eng = StatevectorEngine()
-        psi = np.asarray(eng.state(init_state), dtype=np.complex128).reshape(-1)
+        # 使用 Circuit.state() 方法，转换为 backend 数组
+        psi = nb.asarray(init_state.state(form="numpy"), dtype=nb.complex128).reshape(-1)
     elif isinstance(init_state, np.ndarray):
         # init_state is civector or statevector (TCC get_init_circuit semantics)
         ci_strings = get_ci_strings(n, n_elec_s, mode)
         arr = np.asarray(init_state)
         if arr.size == (1 << n):
-            psi = np.asarray(arr, dtype=np.complex128).reshape(-1)
+            psi = nb.asarray(arr, dtype=nb.complex128).reshape(-1)
         elif arr.size == len(ci_strings):
-            psi = np.asarray(civector_to_statevector(arr, n, ci_strings), dtype=np.complex128).reshape(-1)
+            psi = nb.asarray(civector_to_statevector(arr, n, ci_strings), dtype=nb.complex128).reshape(-1)
         else:
             raise ValueError(f"init_state size {arr.size} incompatible for n_qubits={n} or civector_size={len(ci_strings)}")
     else:
-        # c0 = get_init_circuit(n_qubits=n_qubits, n_elec_s=n_elec_s, mode=mode,init_state=init_state,runtime='numeric')
         c0 = get_init_circuit(n_qubits=n_qubits, n_elec_s=n_elec_s, mode=mode)
-        eng = StatevectorEngine()
-        psi = np.asarray(eng.state(c0), dtype=np.complex128).reshape(-1)
+        # 使用 Circuit.state() 方法
+        psi = nb.asarray(c0.state(form="numpy"), dtype=nb.complex128).reshape(-1)
 
     if ex_ops is None or len(ex_ops) == 0:
         return psi
     ids = param_ids if param_ids is not None else list(range(len(ex_ops)))
     for pid, f_idx in zip(ids, ex_ops):
-        theta = float(np.asarray(params[pid]))
+        # Convert theta to backend tensor/array for autograd support
+        theta = nb.asarray(params[pid])
         psi = evolve_excitation(psi, tuple(f_idx), theta, mode)
-    return psi.real.reshape(-1)
+    # 返回 backend 数组（保持 complex，不强制 .real）
+    return psi
 
 
-def _apply_kqubit_unitary(state: np.ndarray, unitary: np.ndarray, qubit_idx: list[int], n_qubits: int) -> np.ndarray:
-    """Apply k-qubit unitary to statevector.
+def _apply_kqubit_unitary(state, unitary, qubit_idx: list[int], n_qubits: int):
+    """Apply k-qubit unitary to statevector (backend-agnostic).
     
     This function now delegates to the unified implementation in quantum_library.kernels.
     Kept for backward compatibility with existing chem code.
     
     Args:
-        state: Statevector of shape (2^n_qubits,)
+        state: Statevector of shape (2^n_qubits,) - backend array/tensor
         unitary: Unitary matrix of shape (2^k, 2^k)
         qubit_idx: List of target qubit indices
         n_qubits: Total number of qubits
         
     Returns:
-        Updated statevector
+        Updated statevector in same backend format as input
     """
     from tyxonq.libs.quantum_library.kernels.statevector import apply_kqubit_unitary
-    from tyxonq.numerics import NumericBackend as nb
     
-    # Delegate to unified implementation
-    result = apply_kqubit_unitary(state, unitary, qubit_idx, n_qubits, backend=nb)
-    return np.asarray(result, dtype=np.complex128)
+    # Delegate to unified implementation，保持 backend 类型
+    return apply_kqubit_unitary(state, unitary, qubit_idx, n_qubits, backend=nb)
 
 
-def evolve_excitation(statevector: np.ndarray, f_idx: tuple[int, ...], theta: float, mode: str) -> np.ndarray:
+def evolve_excitation(statevector, f_idx: tuple[int, ...], theta: float, mode: str):
+    """Evolve excitation (backend-agnostic).
+    
+    Args:
+        statevector: Backend array/tensor
+        f_idx: Fermion indices
+        theta: Rotation angle
+        mode: Fermion mode
+    
+    Returns:
+        Updated statevector in same backend format
+    """
     # Follow TCC evolve_excitation: psi + (1-cos) * F2 psi + sin * F psi
-    n_qubits = round(np.log2(statevector.shape[0]))
+    n_qubits = round(float(np.log2(statevector.shape[0])))
     qubit_idx = [n_qubits - 1 - int(idx) for idx in f_idx]
     if len(qubit_idx) == 2:
         U2 = ad_a_hc2
@@ -139,9 +160,12 @@ def evolve_excitation(statevector: np.ndarray, f_idx: tuple[int, ...], theta: fl
         U2 = adad_aa_hc2
         U1 = adad_aa_hc
     f2ket = _apply_kqubit_unitary(statevector, U2, qubit_idx, n_qubits)
-    fket = apply_excitation_statevector(statevector, n_qubits,f_idx,mode)
+    fket = apply_excitation_statevector(statevector, n_qubits, f_idx, mode)
     # Match TCC sign convention: sin term carries a negative sign
-    return statevector + (1.0 - np.cos(theta)) * f2ket + np.sin(theta) * fket
+    # Use backend's cos/sin (supports PyTorch autograd for tensor theta)
+    cos_theta = nb.cos(theta)
+    sin_theta = nb.sin(theta)
+    return statevector + (1.0 - cos_theta) * f2ket + sin_theta * fket
 
 
 
@@ -187,18 +211,36 @@ def energy_and_grad_statevector(
     mode: str = "fermion",
     init_state=None,
 ) -> tuple[float, np.ndarray]:
-    # Use backend value_and_grad wrapper to match TCC style (torchlib.func.grad_and_value)
-    from tyxonq.numerics import NumericBackend as nb
-
-    # Precompute sparse operator once for grad loop (important for numpy backend fallback)
+    """Compute energy and gradient using backend value_and_grad.
     
-    def _f(p):
-        psi = get_statevector(p, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
-        e = np.vdot(psi, hamiltonian.dot(psi))
-        return float(np.real(e))
+    关键设计：
+    - _f() 返回 backend tensor/array（保持梯度链）
+    - 不在 _f 中转为 Python float（否则断开 autograd）
+    - 让 nb.value_and_grad 处理 float 转换和梯度计算
+    - 这样 PyTorch backend 就能使用 autograd，NumPy backend 使用有限差分
+    """
+    from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
 
+    def _f(p):
+        """计算能量（返回 tensor/array，保持梯度链）。"""
+        psi = get_statevector(p, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
+        # 使用新的 apply_op（支持 backend-agnostic）
+        hpsi = apply_op(hamiltonian, psi)
+        # 计算 <psi|H|psi> = sum(conj(psi) * hpsi)
+        # ⚠️ 关键：返回 tensor/array，NOT Python float
+        # 这样 PyTorch autograd 才能追踪梯度！
+        e = nb.sum(nb.conj(psi) * hpsi)
+        # 只取实部，但保持 tensor 类型
+        return nb.real(e)
+
+    # value_and_grad 会：
+    # - PyTorch backend: 使用 torch.autograd.grad() 自动计算梯度
+    # - NumPy backend: 使用有限差分计算梯度
     vag = nb.value_and_grad(_f, argnums=0)
-    e0, g = vag(np.asarray(params, dtype=np.float64))
+    
+    # 使用 nb.asarray() 自动处理类型转换和梯度保留
+    params_for_vag = nb.asarray(params, dtype=nb.float64)
+    e0, g = vag(params_for_vag)
     return float(e0), np.asarray(g, dtype=np.float64)
 
 
@@ -216,6 +258,10 @@ def energy_from_statevector(
     Returns:
         Real energy value
     """
+    from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
+    
     H = get_sparse_operator(qop, n_qubits=n_qubits)
-    e = np.vdot(psi, H.dot(psi))
-    return float(np.real(e))
+    # 使用新的 apply_op
+    hpsi = apply_op(H, psi)
+    e = nb.sum(nb.conj(psi) * hpsi)
+    return float(nb.real(e))

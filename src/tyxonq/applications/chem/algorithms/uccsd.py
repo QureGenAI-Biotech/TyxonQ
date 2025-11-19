@@ -376,7 +376,7 @@ class ROUCCSD(UCC):
         super().__init__(
             mol = mol,
             init_method=init_method,
-            activate_space = active_space,
+            active_space = active_space,
             active_orbital_indices=active_orbital_indices,
             mo_coeff= mo_coeff,
             numeric_engine=numeric_engine,

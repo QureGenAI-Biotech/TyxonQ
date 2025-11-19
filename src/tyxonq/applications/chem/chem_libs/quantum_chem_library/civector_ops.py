@@ -5,6 +5,7 @@ from functools import lru_cache
 
 import numpy as np
 from openfermion import QubitOperator
+from tyxonq.numerics import NumericBackend as nb
 
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
 from .ci_state_mapping import get_ci_strings, get_init_civector
@@ -97,6 +98,26 @@ def apply_h_qubit_to_ci(
     return np.asarray(mat.dot(np.asarray(civector, dtype=np.float64)), dtype=np.float64)
 
 def get_civector(params: np.ndarray, n_qubits: int, n_elec_s, ex_ops: List[Tuple[int, ...]], param_ids: List[int], *, mode: str = "fermion", init_state: np.ndarray | None = None) -> np.ndarray:
+    """Build CI vector by evolving excitations (NumPy/NumPy backends only).
+    
+    ⚠️ AUTOGRAD WARNING:
+    - This function uses fancy indexing civ[fperm[j]] which does NOT support PyTorch gradients
+    - Use statevector path for PyTorch autograd support
+    - Gradients are computed analytically using backward evolution (not autograd)
+    
+    Args:
+        params: Parameter vector (np.ndarray, not torch.Tensor)
+        n_qubits, n_elec_s, ex_ops, param_ids: Standard UCC parameters
+        mode: Fermionic mode
+        init_state: Optional initial CI vector
+    
+    Returns:
+        CI vector (np.ndarray)
+    """
+    # ⚠️ CRITICAL: Force NumPy conversion for all operations
+    # Civector path uses fancy indexing which doesn't work with PyTorch tensors
+    params = np.asarray(params, dtype=np.float64)
+    
     ci_strings, fperm, fphase, f2phase = get_operator_tensors(n_qubits, n_elec_s, ex_ops, mode)
     fperm = np.asarray(fperm, dtype=np.int64)
     theta_sin, theta_1mcos = get_theta_tensors(params, param_ids)
@@ -127,19 +148,46 @@ def energy_and_grad_civector(
     *,
     mode: str = "fermion",
     init_state: np.ndarray | None = None,
+    precomputed_tensors: tuple | None = None,
 ) -> Tuple[float, np.ndarray]:
-    ci_strings, fperm, fphase, f2phase = get_operator_tensors(n_qubits, n_elec_s, ex_ops, mode)
+    """Compute energy and gradient using cached operator tensors.
+    
+    Args:
+        params: Parameter vector
+        hamiltonian: Hamiltonian operator
+        n_qubits: Number of qubits
+        n_elec_s: Number of electrons (alpha, beta)
+        ex_ops: List of excitation operators
+        param_ids: Parameter IDs for each excitation
+        mode: Fermionic mode
+        init_state: Initial CI vector state
+        precomputed_tensors: Cached (ci_strings, fperm, fphase, f2phase) to avoid recomputation
+    
+    Returns:
+        (energy, gradient) tuple
+    """
+    # ⚠️ CRITICAL: Force NumPy conversion for civector path
+    # Civector uses fancy indexing which doesn't work with PyTorch tensors
+    params = np.asarray(params, dtype=np.float64)
+    
+    if precomputed_tensors:
+        ci_strings, fperm, fphase, f2phase = precomputed_tensors
+    else:
+        ci_strings, fperm, fphase, f2phase = get_operator_tensors(n_qubits, n_elec_s, ex_ops, mode)
     
     fperm = np.asarray(fperm, dtype=np.int64)
     theta_sin, theta_1mcos = get_theta_tensors(params, param_ids)
     # Ensure numpy array for civector to avoid mixing backend tensors with numpy ops
     ket = get_civector(params=params, n_qubits=n_qubits, n_elec_s=n_elec_s, ex_ops=ex_ops, param_ids=param_ids, mode=mode, init_state=init_state)
     bra = apply_op(hamiltonian,ket)
+    # ⚠️ Force explicit conversion to NumPy for np.dot() to avoid NumPy 2.0 __array__ issues
+    bra = np.asarray(bra, dtype=np.float64)
+    ket = np.asarray(ket, dtype=np.float64)
     energy = float(np.dot(bra, ket))
     grads_before: List[float] = []
     b = np.asarray(bra, dtype=np.float64)
     k = np.asarray(ket, dtype=np.float64)
-    for j in range(fperm.shape[0] - 1, -1, -1):
+    for j in range(len(fperm) - 1, -1, -1):
         k = k + theta_1mcos[j] * (k * f2phase[j]) - theta_sin[j] * (k[fperm[j]] * fphase[j])
         b = b + theta_1mcos[j] * (b * f2phase[j]) - theta_sin[j] * (b[fperm[j]] * fphase[j])
         fket = k[fperm[j]] * fphase[j]
@@ -183,6 +231,9 @@ def get_civector_nocache(
     mode: str = "fermion",
     init_state: np.ndarray | None = None,
 ) -> np.ndarray:
+    # ⚠️ CRITICAL: Force NumPy conversion for civector path
+    params = np.asarray(params, dtype=np.float64)
+    
     theta = np.asarray([params[i] for i in param_ids], dtype=np.float64)
     theta_sin = np.sin(theta)
     theta_1mcos = 1.0 - np.cos(theta)
@@ -210,13 +261,18 @@ def _get_gradients_civector_nocache(
     param_ids: List[int],
     mode: str,
 ) -> np.ndarray:
+    # ⚠️ CRITICAL: Force NumPy conversion for civector path
+    params = np.asarray(params, dtype=np.float64)
+    bra = np.asarray(bra, dtype=np.float64)
+    ket = np.asarray(ket, dtype=np.float64)
+    
     ci_strings, strs2addr = get_ci_strings(n_qubits, n_elec_s, mode, strs2addr=True)
     theta = np.asarray([params[i] for i in param_ids], dtype=np.float64)
     theta_sin = np.sin(theta)
     theta_1mcos = 1.0 - np.cos(theta)
     grads: List[float] = []
-    b = np.asarray(bra, dtype=np.float64)
-    k = np.asarray(ket, dtype=np.float64)
+    b = bra
+    k = ket
     for j in range(len(ex_ops) - 1, -1, -1):
         fperm, fphase, f2phase = get_operators(n_qubits, n_elec_s, strs2addr, tuple(ex_ops[j]), ci_strings, mode)
         k = k + theta_1mcos[j] * (k * f2phase) - theta_sin[j] * (k[fperm] * fphase)
@@ -236,10 +292,33 @@ def energy_and_grad_civector_nocache(
     param_ids: List[int],
     *,
     mode: str = "fermion",
-    init_state: np.ndarray | None = None
+    init_state: np.ndarray | None = None,
+    precomputed_tensors: tuple | None = None,
 ) -> Tuple[float, np.ndarray]:
+    """Compute energy and gradient (nocache version) with optional precomputed tensors.
+    
+    Args:
+        params: Parameter vector
+        hamiltonian: Hamiltonian operator
+        n_qubits: Number of qubits
+        n_elec_s: Number of electrons (alpha, beta)
+        ex_ops: List of excitation operators
+        param_ids: Parameter IDs for each excitation
+        mode: Fermionic mode
+        init_state: Initial CI vector state
+        precomputed_tensors: Currently unused for nocache version (for API consistency)
+    
+    Returns:
+        (energy, gradient) tuple
+    """
+    # ⚠️ CRITICAL: Force NumPy conversion for civector path
+    params = np.asarray(params, dtype=np.float64)
+    
     ket = get_civector_nocache(params, n_qubits, n_elec_s, ex_ops, param_ids, mode=mode, init_state=init_state)
     bra = apply_op(hamiltonian,ket)
+    # ⚠️ Force explicit conversion to NumPy for np.dot() to avoid NumPy 2.0 __array__ issues
+    bra = np.asarray(bra, dtype=np.float64)
+    ket = np.asarray(ket, dtype=np.float64)
     energy = float(np.dot(bra, ket))
     gbefore = _get_gradients_civector_nocache(bra, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)
     g = np.zeros_like(params, dtype=np.float64)
@@ -272,7 +351,10 @@ def evolve_civector_by_tensor(
 
 
 def get_theta_tensors(params, param_ids):
-    """Use θ (not 2θ) to match CI-space UCC evolution (TCC scheme)."""
+    """Use θ (not 2θ) to match CI-space UCC evolution (TCC scheme).
+    
+    ⚠️ CRITICAL: Always return NumPy arrays for civector operations
+    """
     theta = np.asarray([params[i] for i in param_ids], dtype=np.float64)
     theta_sin = np.sin(theta)
     theta_1mcos = 1.0 - np.cos(theta)

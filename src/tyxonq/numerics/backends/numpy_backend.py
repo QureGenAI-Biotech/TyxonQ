@@ -14,6 +14,7 @@ class NumpyBackend:
     complex128 = _np.complex128
     float32 = _np.float32
     float64 = _np.float64
+    int8 = _np.int8
     int32 = _np.int32
     int64 = _np.int64
     bool = _np.bool_
@@ -47,13 +48,36 @@ class NumpyBackend:
     def array(self, data: Any, dtype: Any | None = None) -> Any:
         return np.array(data, dtype=dtype)
 
-    def asarray(self, data: Any) -> Any:
+    def asarray(self, data: Any, dtype: Any | None = None) -> Any:
+        """Convert data to array with optional dtype specification.
+        
+        Args:
+            data: Input data (list, array, tensor, etc.)
+            dtype: Target dtype (optional). If None, infers from data.
+        
+        Returns:
+            NumPy array with specified or inferred dtype
+        """
+        if dtype is not None:
+            return np.asarray(data, dtype=dtype)
         return np.asarray(data)
 
     def to_numpy(self, data: Any) -> np.ndarray:  # type: ignore[override]
         return np.asarray(data)
 
     def matmul(self, a: Any, b: Any) -> Any:
+        return np.matmul(a, b)
+
+    def dot(self, a: Any, b: Any) -> Any:
+        """Dot product (delegates to matmul for consistency).
+        
+        Args:
+            a: Matrix (dense ndarray)
+            b: Vector (ndarray)
+            
+        Returns:
+            a @ b
+        """
         return np.matmul(a, b)
 
     def einsum(self, subscripts: str, *operands: Any) -> Any:
@@ -360,34 +384,72 @@ class NumpyBackend:
         return wrapped
 
     def value_and_grad(self, fn, argnums: int | tuple[int, ...] = 0):
-        # Simple finite-difference fallback; not efficient but keeps API uniform
+        """Compute value and gradient using optimized finite difference.
+        
+        Uses scipy.optimize.approx_fprime for efficient vectorized gradient computation
+        when available, falls back to manual finite difference otherwise.
+        
+        Args:
+            fn: Function to differentiate
+            argnums: Argument index or indices to differentiate with respect to
+            
+        Returns:
+            Wrapped function that returns (value, gradient(s))
+        """
         eps = 1e-6
 
-        def wrapped(*args: Any, **kwargs: Any):
+        def wrapped(*args: Any, **kwargs: Any) -> Tuple[Any, Any]:
             import numpy as _np
+            from scipy.optimize import approx_fprime
 
             def _to_tuple(idx) -> tuple[int, ...]:
                 return (idx,) if isinstance(idx, int) else tuple(idx)
 
             arg_idx = _to_tuple(argnums)
             args_list = list(args)
+            
+            # Evaluate function at base point
             val = fn(*args_list, **kwargs)
             grads: list[Any] = []
+            
             for ai in arg_idx:
                 x = _np.asarray(args_list[ai], dtype=float)
-                g = _np.zeros_like(x)
-                it = _np.nditer(x, flags=['multi_index'], op_flags=['readwrite'])
-                while not it.finished:
-                    idx = it.multi_index
-                    x_plus = x.copy(); x_plus[idx] += eps
-                    x_minus = x.copy(); x_minus[idx] -= eps
-                    args_list[ai] = x_plus; f_plus = fn(*args_list, **kwargs)
-                    args_list[ai] = x_minus; f_minus = fn(*args_list, **kwargs)
-                    g[idx] = (f_plus - f_minus) / (2 * eps)
-                    it.iternext()
-                args_list[ai] = x
-                grads.append(g)
-            return val, grads[0] if len(grads) == 1 else tuple(grads)
+                original_shape = x.shape
+                x_flat = x.reshape(-1)
+                
+                # Define objective function for this argument
+                def f_for_grad(x_test):
+                    args_test = list(args_list)
+                    args_test[ai] = x_test.reshape(original_shape)
+                    return float(fn(*args_test, **kwargs))
+                
+                # Use scipy's optimized finite difference for vectorized computation
+                # approx_fprime 使用前向差分，比手动逐元素快
+                try:
+                    grad_flat = approx_fprime(x_flat, f_for_grad, epsilon=eps)
+                except Exception:
+                    # 降级：手动有限差分（带向量化优化）
+                    grad_flat = _np.zeros_like(x_flat)
+                    for i in range(x_flat.size):
+                        x_plus = x_flat.copy()
+                        x_minus = x_flat.copy()
+                        x_plus[i] += eps
+                        x_minus[i] -= eps
+                        
+                        args_plus = list(args_list)
+                        args_minus = list(args_list)
+                        args_plus[ai] = x_plus.reshape(original_shape)
+                        args_minus[ai] = x_minus.reshape(original_shape)
+                        
+                        f_plus = float(fn(*args_plus, **kwargs))
+                        f_minus = float(fn(*args_minus, **kwargs))
+                        grad_flat[i] = (f_plus - f_minus) / (2 * eps)
+                
+                # Reshape gradient back to original shape
+                grad = grad_flat.reshape(original_shape)
+                grads.append(grad)
+            
+            return val, (grads[0] if len(grads) == 1 else tuple(grads))
 
         return wrapped
 

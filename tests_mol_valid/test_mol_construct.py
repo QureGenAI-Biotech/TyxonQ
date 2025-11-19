@@ -9,6 +9,15 @@ from tyxonq.applications.chem import UCCSD, KUPCCGSD, ROUCCSD,HEA
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_integral_from_hf, random_integral
 from tyxonq.applications.chem.molecule import _random, h4, h8, h_chain, c4h4,h2
 from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import canonical_mo_coeff
+import tyxonq as tq
+
+
+@pytest.fixture(autouse=True)
+def reset_backend():
+    """确保每个测试开始时使用 NumPy backend，避免跨测试文件的 backend 污染"""
+    tq.set_backend("numpy")
+    yield
+    tq.set_backend("numpy")
 
 
 def get_random_integral_and_fci(n):
@@ -220,14 +229,13 @@ def test_pyscf_solver(method):
         hf = m.ROHF()
 
     hf.kernel()
-    e_ref = ROUCCSD(hf, active_space=(nelecas, ncas)).kernel(shots=0,runtime='numeric')
+    e_ref = ROUCCSD(hf, active_space=(nelecas, ncas),runtime='numeric').kernel()
     # e_ref =ROUCCSD(hf, active_space=(nelecas, ncas),run_fci=True)
     # e_ref.kernel(shots=0)
     mc = CASCI(hf, ncas, nelecas)
-    mc.fcisolver = method.as_pyscf_solver()
+    mc.fcisolver = method.as_pyscf_solver(runtime='numeric')
     mc.kernel()
-    np.testing.assert_allclose(mc.e_tot, e_ref, atol=1e-2)
-    # np.testing.assert_allclose(mc.e_tot, e_ref.e_fci, atol=1e-4)
+    np.testing.assert_allclose(mc.e_tot, e_ref, atol=1e-4)
 
 @pytest.mark.parametrize("method", [HEA, UCCSD, ROUCCSD])
 def test_pyscf_solver_small_h2(method):
@@ -261,4 +269,4 @@ def test_pyscf_solver_small_h2(method):
 
 if __name__ == "__main__":
     # test_ucc('H2', 'kUpCCGSD')
-    test_pyscf_solver('ROUCCSD')
+    test_pyscf_solver(UCCSD)

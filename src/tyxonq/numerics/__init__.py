@@ -138,6 +138,10 @@ class NumericBackend:
     @_classproperty
     def float64(cls):  # type: ignore[override]
         return get_backend(None).float64
+    
+    @_classproperty
+    def int8(cls):  # type: ignore[override]
+        return get_backend(None).int8
 
     @_classproperty
     def int32(cls):  # type: ignore[override]
@@ -181,8 +185,18 @@ class NumericBackend:
         return get_backend(None).array(data, dtype=dtype)
 
     @classmethod
-    def asarray(cls, data):
-        return get_backend(None).asarray(data)
+    def asarray(cls, data, dtype=None):
+        """Convert data to backend array/tensor with optional dtype.
+        
+        Args:
+            data: Input data (list, array, tensor, etc.)
+            dtype: Target dtype (optional). Can be backend dtype constant.
+                   Example: nb.asarray(data, dtype=nb.complex128)
+        
+        Returns:
+            Backend array/tensor with specified or inferred dtype
+        """
+        return get_backend(None).asarray(data, dtype=dtype)
 
     @classmethod
     def to_numpy(cls, data):
@@ -194,12 +208,45 @@ class NumericBackend:
         return get_backend(None).matmul(a, b)
 
     @classmethod
+    def dot(cls, a, b):
+        """Unified dot product supporting dense, sparse, and callable operators.
+        
+        Automatically handles scipy sparse matrices, callables, and dense arrays.
+        Backend-agnostic and preserves gradient information for PyTorch.
+        
+        Args:
+            a: Matrix (dense array/tensor, scipy sparse)
+            b: Vector (array/tensor)
+            
+        Returns:
+            a @ b or a(b) in the same backend as b
+        """
+        return get_backend(None).dot(a, b)
+
+    @classmethod
     def einsum(cls, subscripts: str, *operands):
         return get_backend(None).einsum(subscripts, *operands)
 
     @classmethod
     def reshape(cls, a, shape):
         return get_backend(None).reshape(a, shape)
+    
+    @classmethod
+    def shape(cls, a):
+        """Get shape of array/tensor.
+        
+        Args:
+            a: Input array/tensor
+            
+        Returns:
+            Tuple of dimensions
+        """
+        backend = get_backend(None)
+        # Check if backend has explicit shape method
+        if hasattr(backend, 'shape'):
+            return backend.shape(a)
+        # Fallback: use .shape attribute
+        return a.shape
 
     @classmethod
     def moveaxis(cls, a, source, destination):
@@ -368,6 +415,18 @@ class NumericBackend:
     @classmethod
     def sqrt(cls, a):
         return get_backend(None).sqrt(a)
+    
+    @classmethod
+    def log2(cls, a):
+        """Compute base-2 logarithm.
+        
+        Args:
+            a: Input array/tensor
+            
+        Returns:
+            log2(a)
+        """
+        return get_backend(None).log2(a)
 
     # Random
     @classmethod

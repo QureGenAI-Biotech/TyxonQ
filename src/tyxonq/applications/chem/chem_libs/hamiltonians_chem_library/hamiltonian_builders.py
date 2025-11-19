@@ -13,6 +13,9 @@ from pyscf import ao2mo
 from tyxonq.libs.hamiltonian_encoding.pauli_io import hcb_to_coo, fop_to_coo, reverse_qop_idx, canonical_mo_coeff
 from openfermion.transforms import jordan_wigner as _jw_transform
 
+import tyxonq as tq
+from tyxonq.numerics import NumericBackend as nb
+
 
 class _MPOWrapper:
     """Lightweight wrapper to mimic MPO interface used in tests.
@@ -277,21 +280,40 @@ def symmetrize_int2e(int2e):
 from scipy.sparse import issparse  # type: ignore
 from inspect import isfunction
 
-def apply_op(hamiltonian, ket: np.ndarray) -> np.ndarray:
-    """Apply Hamiltonian to ket"""
-    try:
-        if issparse is not None and issparse(hamiltonian):
-            return np.asarray(hamiltonian.dot(ket), dtype=ket.dtype)
-        if hasattr(hamiltonian, "eval_matrix") and callable(getattr(hamiltonian, "eval_matrix")):
-            mat = np.asarray(hamiltonian.eval_matrix())
-            return np.asarray(mat.dot(ket), dtype=ket.dtype)
-        if hasattr(hamiltonian, "dot"):
-            return np.asarray(hamiltonian.dot(ket), dtype=ket.dtype)
-    except Exception:
-        pass
-    if isfunction (hamiltonian):
-        # CI engine callable expects CI-shaped input; keep float64
-        return np.asarray(hamiltonian(np.asarray(ket, dtype=np.float64)), dtype=np.float64)
-    else:
-        return np.asarray(np.dot(hamiltonian,ket), dtype=ket.dtype)
+def apply_op(hamiltonian, ket):
+    """Apply Hamiltonian to ket (backend-agnostic for NumPy/PyTorch)
+    
+    Args:
+        hamiltonian: Sparse matrix, dense matrix, callable, or object with eval_matrix()
+        ket: State vector (NumPy array or PyTorch tensor)
+    
+    Returns:
+        H|ket> in the same backend as ket
+    """
+    K = tq.get_backend()
+
+    # 1. Handle scipy sparse matrices: convert to dense BEFORE passing to backend
+    if issparse(hamiltonian):
+        hamiltonian_dense = hamiltonian.toarray()  # Convert to NumPy dense
+        # Now use backend's matmul (let backend handle NumPy → PyTorch conversion if needed)
+        return K.dot(hamiltonian_dense, ket)
+    
+    # 2. Handle callable (e.g., CI Hamiltonian functions from PySCF)
+    if callable(hamiltonian):
+        # Callable expects NumPy array, convert if needed
+        ket_np = nb.to_numpy(ket)
+        result_np = np.asarray(hamiltonian(ket_np), dtype=ket_np.dtype)
+        # Convert back to original backend
+        return K.asarray(result_np)
+    
+    # 3. Handle objects with eval_matrix method (MPO-like wrappers)
+    if hasattr(hamiltonian, 'eval_matrix') and callable(getattr(hamiltonian, 'eval_matrix')):
+        hamiltonian = K.asarray(hamiltonian.eval_matrix())
+        # Fall through to dense matrix case
+    
+
+    
+    # 4. Handle dense matrices (NumPy array or PyTorch tensor)
+    # Let backend handle any necessary type alignment
+    return K.dot(hamiltonian, ket)
 

@@ -654,6 +654,131 @@ def print_summary(results_tyxonq, results_qiskit, results_pennylane):
 
 
 # ==============================================================================
+# UCCSD Backend Performance Comparison (额外对比)
+# ==============================================================================
+
+def run_uccsd_backend_comparison():
+    """对比 UCCSD 在不同后端下的性能"""
+    import tyxonq as tq
+    
+    print("\n" + "="*70)
+    print("[Extra] UCCSD Backend Performance Comparison")
+    print("对比 UCCSD 在 NumPy/PyTorch 后端的性能")
+    print("="*70)
+    
+    try:
+        from tyxonq.applications.chem import UCCSD
+        from tyxonq.applications.chem.molecule import h4
+    except ImportError:
+        print("\n  ⚠️  UCCSD not available. Skipping UCCSD benchmark.")
+        return None
+    
+    results = {}
+    
+    # ================================================================
+    # Mode 1: NumPy Backend (有限差分梯度)
+    # ================================================================
+    print("\n[Mode 1] NumPy Numeric Runtime (Finite Difference Gradient)")
+    print("-" * 70)
+    
+    try:
+        tq.set_backend("numpy")
+        uccsd = UCCSD(h4)
+        params = np.array(uccsd.init_guess, dtype=np.float64)
+        n_params = len(params)
+        
+        times_numpy = []
+        energies_numpy = []
+        
+        print(f"  Parameters: {n_params}")
+        print(f"  Gradient method: Finite Difference (O(2n) evaluations)")
+        print(f"  {'Step':<8} {'Energy':<15} {'Time':<10}")
+        print(f"  {'-'*35}")
+        
+        for step in range(3):  # 3 steps for quick demo
+            t0 = time.time()
+            e, g = uccsd.energy_and_grad(
+                params,
+                runtime='numeric',
+                numeric_engine='statevector'
+            )
+            t1 = time.time()
+            times_numpy.append(t1 - t0)
+            energies_numpy.append(e)
+            params = params - 0.01 * g
+            
+            print(f"  {step:<8} {e:<15.8f} {(t1-t0):<10.4f}s")
+        
+        avg_time_numpy = np.mean(times_numpy)
+        print(f"\n  Avg step time: {avg_time_numpy:.4f}s")
+        results['numpy'] = {'time': avg_time_numpy, 'energy': energies_numpy[-1]}
+        
+    except Exception as ex:
+        print(f"  ❌ NumPy mode failed: {str(ex)[:60]}")
+        results['numpy'] = None
+    
+    # ================================================================
+    # Mode 2: PyTorch Backend (Autograd 梯度)
+    # ================================================================
+    print("\n[Mode 2] PyTorch Numeric Runtime (Autograd Gradient)")
+    print("-" * 70)
+    
+    try:
+        tq.set_backend("pytorch")
+        uccsd = UCCSD(h4)
+        params = np.array(uccsd.init_guess, dtype=np.float64)
+        
+        times_pytorch = []
+        energies_pytorch = []
+        
+        print(f"  Parameters: {n_params}")
+        print(f"  Gradient method: PyTorch Autograd (optimized)")
+        print(f"  {'Step':<8} {'Energy':<15} {'Time':<10}")
+        print(f"  {'-'*35}")
+        
+        for step in range(3):
+            t0 = time.time()
+            e, g = uccsd.energy_and_grad(
+                params,
+                runtime='numeric',
+                numeric_engine='statevector'
+            )
+            t1 = time.time()
+            times_pytorch.append(t1 - t0)
+            energies_pytorch.append(e)
+            params = params - 0.01 * g
+            
+            print(f"  {step:<8} {e:<15.8f} {(t1-t0):<10.4f}s")
+        
+        avg_time_pytorch = np.mean(times_pytorch)
+        print(f"\n  Avg step time: {avg_time_pytorch:.4f}s")
+        results['pytorch'] = {'time': avg_time_pytorch, 'energy': energies_pytorch[-1]}
+        
+    except Exception as ex:
+        print(f"  ❌ PyTorch mode failed: {str(ex)[:60]}")
+        results['pytorch'] = None
+    
+    # ================================================================
+    # Performance Summary
+    # ================================================================
+    if results['numpy'] and results['pytorch']:
+        print("\n" + "-" * 70)
+        print("UCCSD Performance Summary")
+        print("-" * 70)
+        
+        speedup = results['numpy']['time'] / results['pytorch']['time']
+        print(f"  NumPy avg:        {results['numpy']['time']:.4f}s per step")
+        print(f"  PyTorch avg:      {results['pytorch']['time']:.4f}s per step")
+        print(f"  Speedup:          {speedup:.2f}x (PyTorch faster)")
+        print(f"\n  💡 Key insights:")
+        print(f"     • PyTorch autograd 充分利用现代计算框架优化")
+        print(f"     • 适合中等规模分子 (6-12 原子)")
+        print(f"     • GPU 加速需求时优先使用 PyTorch backend")
+    
+    return results
+
+
+# ==============================================================================
 # Main
 # ==============================================================================
 
@@ -666,6 +791,9 @@ def main():
     results_pennylane = run_pennylane()
     
     print_summary(results_tyxonq, results_qiskit, results_pennylane)
+    
+    # 额外的 UCCSD 对比
+    results_uccsd = run_uccsd_backend_comparison()
     
     print("\n" + "="*70)
     print("Framework Performance Comparison Complete!")

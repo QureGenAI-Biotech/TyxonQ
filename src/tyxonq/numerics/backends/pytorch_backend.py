@@ -22,6 +22,7 @@ class PyTorchBackend:
         complex128 = torch.complex128
         float32 = torch.float32
         float64 = torch.float64
+        int8 = torch.int8
         int32 = torch.int32
         int64 = torch.int64
         bool = torch.bool
@@ -93,18 +94,37 @@ class PyTorchBackend:
         # IMPORTANT: Use torch.as_tensor which shares data when possible
         return torch.as_tensor(data, dtype=td)
 
-    def asarray(self, data: Any) -> Any:
-        """Convert to tensor, preserving autograd chain.
+    def asarray(self, data: Any, dtype: Any | None = None) -> Any:
+        """Convert to tensor with optional dtype, preserving autograd chain.
         
         CRITICAL: This method MUST preserve requires_grad for autograd support.
         This is called extensively in statevector operations and gate functions.
         If gradient chain is broken here, VQE optimization will fail!
+        
+        Args:
+            data: Input data (array, tensor, list, etc.)
+            dtype: Target dtype (optional). If None, infers from data.
+                   Can be PyTorch dtype or NumPy dtype (auto-converted).
+        
+        Returns:
+            PyTorch tensor with specified or inferred dtype
         """
-        # If already a tensor, return as-is (preserves requires_grad)
+        # If already a tensor
         if torch.is_tensor(data):
+            if dtype is not None:
+                td = self._to_torch_dtype(dtype)
+                result = data.to(td) if td is not None else data
+                # Preserve requires_grad
+                if hasattr(data, 'requires_grad') and data.requires_grad:
+                    if not result.requires_grad:
+                        result = result.requires_grad_(True)
+                return result
             return data
+        
         # For non-tensor data, convert to tensor
-        # NOTE: Cannot set requires_grad on integer/bool tensors
+        if dtype is not None:
+            td = self._to_torch_dtype(dtype)
+            return torch.as_tensor(data, dtype=td)
         return torch.as_tensor(data)
 
     def to_numpy(self, data: Any):  # type: ignore[override]
@@ -112,6 +132,30 @@ class PyTorchBackend:
 
     def matmul(self, a: Any, b: Any) -> Any:
         return a @ b
+
+    def dot(self, a: Any, b: Any) -> Any:
+        """Dot product with automatic conversion to PyTorch tensors.
+        
+        Args:
+            a: Matrix (array or tensor)
+            b: Vector (array or tensor)
+            
+        Returns:
+            a @ b as PyTorch tensor
+        """
+        # Convert to tensors if needed
+        if not torch.is_tensor(a):
+            a = torch.as_tensor(a)
+        if not torch.is_tensor(b):
+            b = torch.as_tensor(b)
+        
+        # Ensure same dtype and device
+        if a.dtype != b.dtype:
+            a = a.to(b.dtype)
+        if a.device != b.device:
+            a = a.to(b.device)
+        
+        return torch.matmul(a, b)
 
     def einsum(self, subscripts: str, *operands: Any) -> Any:
         return torch.einsum(subscripts, *operands)

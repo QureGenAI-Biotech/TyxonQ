@@ -628,7 +628,14 @@ class UCC:
         return cls(m, classical_provider=classical_provider, classical_device=classical_device, **kwargs)
 
     # ---- Helpers mirrored from static for compatibility ----
-    def _check_params_argument(self, params: Sequence[float] | None, *, strict: bool = False) -> np.ndarray:
+    def _check_params_argument(self, params: Sequence[float] | None, *, strict: bool = False):
+        """Check and normalize params using backend-aware conversion.
+        
+        Uses NumericBackend.asarray() which intelligently handles different types:
+        - PyTorch tensor: preserves gradient chain
+        - NumPy array: converts to appropriate format
+        - Lists/other: delegates to backend for conversion
+        """
         if params is None:
             if hasattr(self, "params") and self.params is not None:
                 params = self.params
@@ -638,9 +645,12 @@ class UCC:
                 if self.n_params == 0:
                     return np.zeros(0, dtype=np.float64)
                 params = np.zeros(self.n_params, dtype=np.float64)
+        
         if len(params) != self.n_params:
             raise ValueError(f"Incompatible parameter shape. {self.n_params} is desired. Got {len(params)}")
-        return np.asarray(params, dtype=np.float64)
+        
+        # Use backend-aware conversion that handles all types intelligently
+        return nb.asarray(params, dtype=nb.float64)
 
     @property
     def n_params(self) -> int:
@@ -948,7 +958,15 @@ class UCC:
 
     # ---- PySCF solver adapter (minimal, aligned with HEA style) ----
     @classmethod
-    def as_pyscf_solver(cls, config_function = None,runtime: str = "numeric", **kwargs):  # pragma: no cover
+    def as_pyscf_solver(cls, config_function = None, runtime: str = "numeric", **kwargs):  # pragma: no cover
+        """Create a PySCF-compatible FCI solver using UCC/ROUCCSD ansatz.
+        
+        Args:
+            config_function: Optional function to configure UCC instance before kernel
+            runtime: Runtime to use ("numeric" for analytic, "device" for simulation)
+                    Default is "numeric" for maximum accuracy in PySCF workflows
+            **kwargs: Other arguments passed to UCC constructor
+        """
         class _FCISolver:
             def __init__(self):
                 self.instance: UCC | None = None  # type: ignore[name-defined]
@@ -959,20 +977,38 @@ class UCC:
                     self.instance_kwargs[arg] = False
 
             def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0, **kwargs):
+                """Compute the ground state energy for given integrals.
+                
+                This is called by PySCF's CASCI/CASSCF. We optimize the UCC ansatz
+                and return the final energy.
+                
+                Args:
+                    h1, h2: One- and two-body integrals
+                    norb: Number of orbitals
+                    nelec: Number of electrons (int or tuple)
+                    ci0: Initial CI guess (not used)
+                    ecore: Core energy
+                    **kwargs: Additional options (shots, runtime, etc.)
+                
+                Returns:
+                    (energy, params): Final energy and optimized parameters
+                """
                 self.instance = cls.from_integral(h1, h2, nelec, **self.instance_kwargs)
                 if self.config_function is not None:
                     self.config_function(self.instance)
-                e = self.instance.kernel(shots=kwargs.get("shots",0),runtime=kwargs.get('runtime','numeric'))
-                return e + ecore, self.instance.params
+                # Call kernel with explicit runtime parameter (use class-level default if not provided by PySCF)
+                # PySCF typically doesn't pass runtime, so we use our class default
+                e_opt = self.instance.kernel(shots=kwargs.get("shots", 0), runtime=runtime)
+                return e_opt + ecore, self.instance.params
 
             def make_rdm1(self,params, norb, nelec):
                 civector = self.instance.civector(params)
-                return self.instance.make_rdm1(civector)
+                return self.instance.make_rdm1(statevector=civector)
 
             def make_rdm12(self,params,norb, nelec):
                 civector = self.instance.civector(params)
-                rdm1 = self.instance.make_rdm1(civector)
-                rdm2 = self.instance.make_rdm2(civector)
+                rdm1 = self.instance.make_rdm1(statevector=civector)
+                rdm2 = self.instance.make_rdm2(statevector=civector)
                 return rdm1, rdm2
 
             def spin_square(self, ci, norb, nelec):

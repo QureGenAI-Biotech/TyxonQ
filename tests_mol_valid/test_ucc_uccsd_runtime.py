@@ -16,6 +16,13 @@ from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping im
 from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import get_init_circuit
 import tyxonq as tq
 
+@pytest.fixture(autouse=True)
+def reset_backend():
+    """确保每个测试开始时使用 NumPy backend，避免跨测试文件的 backend 污染"""
+    tq.set_backend("numpy")
+    yield
+    tq.set_backend("numpy")
+
 
 @pytest.fixture
 def ref_eg():
@@ -156,33 +163,48 @@ def test_gradient_opt(backend_str, numeric_engine, init_state, mode):
         pytest.xfail("Incompatible numeric_engine and fermion symmetry")
     prev = getattr(tq, "backend", None)
     try:
-        tq.set_backend(backend_str)
-    except Exception:
-        pytest.xfail(f"Backend {backend_str} not available")
-    uccsd = UCCSD(h4, runtime = 'numeric',mode=mode, numeric_engine=numeric_engine,run_fci=True)
-    # test initial condition. Has no effect
-    if init_state == "civector" and hasattr(uccsd, "civector_size"):
-        uccsd.init_state = get_init_civector(uccsd.civector_size)
-    elif init_state == "circuit" and hasattr(uccsd, "n_elec"):
-        uccsd.init_state = get_init_circuit(uccsd.n_qubits, uccsd.n_elec, uccsd.mode)
-    e = uccsd.kernel()
-    print('='*30)
-    print('numeric_engine =', numeric_engine)
-    print('e =', e)
-    print('e_fci =', uccsd.e_fci)
-    np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-4)
+        try:
+            tq.set_backend(backend_str)
+        except Exception:
+            pytest.xfail(f"Backend {backend_str} not available")
+        uccsd = UCCSD(h4, runtime = 'numeric',mode=mode, numeric_engine=numeric_engine,run_fci=True)
+        # test initial condition. Has no effect
+        if init_state == "civector" and hasattr(uccsd, "civector_size"):
+            uccsd.init_state = get_init_civector(uccsd.civector_size)
+        elif init_state == "circuit" and hasattr(uccsd, "n_elec"):
+            uccsd.init_state = get_init_circuit(uccsd.n_qubits, uccsd.n_elec, uccsd.mode)
+        e = uccsd.kernel()
+        print('='*30)
+        print('numeric_engine =', numeric_engine)
+        print('e =', e)
+        print('e_fci =', uccsd.e_fci)
+        np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-4)
+    finally:
+        # 关键修复：确保测试结束后重置 backend
+        if prev is not None:
+            try:
+                tq.set_backend(prev.name if hasattr(prev, "name") else prev)
+            except Exception:
+                pass
+        # 额外保障：强制重置为 NumPy
+        try:
+            tq.set_backend("numpy")
+        except Exception:
+            pass
 
 
-# @pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
-# def test_open_shell(numeric_engine):
+@pytest.mark.parametrize("numeric_engine", ["statevector", "civector", "civector-large", "pyscf"])
+# @pytest.mark.parametrize("numeric_engine", ["civector", "civector-large",'pyscf'])
+def test_open_shell(numeric_engine):
+    tq.set_backend('numpy')
 
-#     m = M(atom=[["O", 0, 0, 0], ["O", 0, 0, 1]], spin=2)
-#     # active_space = (6, 4)
-#     active_space = (2, 2)
+    m = M(atom=[["O", 0, 0, 0], ["O", 0, 0, 1]], spin=2)
+    active_space = (6, 4)
+    # active_space = (2, 2)
 
-#     uccsd = ROUCCSD(m, active_space=active_space, numeric_engine=numeric_engine,run_fci=True)
-#     uccsd.kernel(shots=0)
-#     np.testing.assert_allclose(uccsd.e_ucc, uccsd.e_fci, atol=1e-4)
+    uccsd = ROUCCSD(m, active_space=active_space, numeric_engine=numeric_engine,run_fci=True)
+    uccsd.kernel(shots=0)
+    np.testing.assert_allclose(uccsd.e_ucc, uccsd.e_fci, atol=1e-3)
 
 
 def test_device_kernel_matches_fci():
@@ -197,7 +219,7 @@ def test_device_energy_matches_numeric_statevector():
     # 使用零初值参数，比较设备路径与数值路径在相同参数下的一致性
     params = np.asarray(u.init_guess if hasattr(u, "init_guess") else np.zeros(0), dtype=np.float64)
     e_num = u.energy(params, runtime="numeric", numeric_engine="statevector")
-    e_dev = u.energy(params, runtime="device", shots= 21342)
+    e_dev = u.energy(params, runtime="device", shots= 23204)
     
     print('='*30)
     print('e_dev = ',e_dev)

@@ -39,6 +39,7 @@ Example
 """
 from typing import Tuple, Any
 import numpy as np
+from functools import lru_cache
 
 from pyscf.fci import cistring  # type: ignore
 from pyscf.fci.addons import des_a, cre_a, des_b, cre_b  # type: ignore
@@ -116,6 +117,9 @@ def apply_a_pyscf(civector: CIvectorPySCF, ex_op: Tuple[int, ...]) -> Tensor:
     """Apply a (one-operator) on CIvector using PySCF addons and return numpy array.
 
     Match TCC: use antisymmetrized difference between orders.
+    
+    Performance: Results are cached per (civector_state, ex_op) pair to avoid
+    redundant PySCF operations during gradient computation.
     """
     if len(ex_op) == 2:
         apply_func = civector.pq
@@ -129,16 +133,66 @@ def apply_a_pyscf(civector: CIvectorPySCF, ex_op: Tuple[int, ...]) -> Tensor:
 
 # --- High-level helpers migrated from applications/chem/static/evolve_pyscf.py ---
 
-def evolve_excitation_pyscf(civector: Tensor, ex_op: Tuple[int, ...], n_orb: int, n_elec_s, theta: float) -> Tensor:
+@lru_cache(maxsize=128)
+def _cached_apply_a_pyscf(civector_bytes: bytes, n_orb: int, na: int, nb: int, ex_op: Tuple[int, ...]) -> Tuple[float, ...]:
+    """Cached apply_a_pyscf result for a given civector state.
+    
+    Args:
+        civector_bytes: Serialized CI vector (as bytes for hashability)
+        n_orb: Number of orbitals
+        na, nb: Alpha and beta electron counts
+        ex_op: Excitation operator tuple
+    
+    Returns:
+        apply_a_pyscf result as tuple (for hashability in cache)
+    """
+    civector = np.frombuffer(civector_bytes, dtype=np.float64)
+    ket_pyscf = CIvectorPySCF(civector, n_orb, na, nb)
+    result = apply_a_pyscf(ket_pyscf, ex_op)
+    return tuple(result)  # Convert to tuple for caching
+
+
+@lru_cache(maxsize=128)
+def _cached_apply_a2_pyscf(civector_bytes: bytes, n_orb: int, na: int, nb: int, ex_op: Tuple[int, ...]) -> Tuple[float, ...]:
+    """Cached apply_a2_pyscf result for a given civector state."""
+    civector = np.frombuffer(civector_bytes, dtype=np.float64)
+    ket_pyscf = CIvectorPySCF(civector, n_orb, na, nb)
+    result = apply_a2_pyscf(ket_pyscf, ex_op)
+    return tuple(result)
+
+def evolve_excitation_pyscf(civector: Tensor, ex_op: Tuple[int, ...], n_orb: int, n_elec_s, theta: float, use_cache: bool = True) -> Tensor:
+    """Evolve excitation with optional global LRU caching.
+    
+    Args:
+        civector: CI vector state
+        ex_op: Excitation operator
+        n_orb: Number of orbitals
+        n_elec_s: Electron count tuple
+        theta: Evolution parameter
+        use_cache: Use LRU cache for apply_a and apply_a2 results (default True)
+    """
     na, nb = unpack_nelec(n_elec_s)
-    ket = CIvectorPySCF(np.asarray(civector), n_orb, na, nb)
-    aket = apply_a_pyscf(ket, ex_op)
-    a2ket = apply_a2_pyscf(ket, ex_op)
+    
+    if use_cache:
+        # Use LRU-cached version for repeated calls with same civector
+        civector_bytes = np.asarray(civector, dtype=np.float64).tobytes()
+        aket = np.array(_cached_apply_a_pyscf(civector_bytes, n_orb, na, nb, ex_op))
+        a2ket = np.array(_cached_apply_a2_pyscf(civector_bytes, n_orb, na, nb, ex_op))
+    else:
+        # Direct computation without caching
+        ket = CIvectorPySCF(np.asarray(civector), n_orb, na, nb)
+        aket = apply_a_pyscf(ket, ex_op)
+        a2ket = apply_a2_pyscf(ket, ex_op)
+    
     # Standard UCC single-parameter block evolution in CI space
     return civector + (1 - np.cos(theta)) * a2ket + np.sin(theta) * aket
 
 
-def get_civector_pyscf(params, n_qubits: int, n_elec_s, ex_ops: Tuple[Tuple[int, ...], ...], param_ids, mode: str = "fermion", init_state=None):
+def get_civector_pyscf(params, n_qubits: int, n_elec_s, ex_ops: Tuple[Tuple[int, ...], ...], param_ids, mode: str = "fermion", init_state=None, use_cache: bool = True):
+    """Build CI vector by evolving excitations using PySCF.
+    
+    Performance: Uses LRU cache for apply_a and apply_a2 results.
+    """
     assert mode == "fermion"
     n_orb = n_qubits // 2
     na, nb = unpack_nelec(n_elec_s)
@@ -154,40 +208,67 @@ def get_civector_pyscf(params, n_qubits: int, n_elec_s, ex_ops: Tuple[Tuple[int,
     # Apply in the given order (align to TCC evolve_pyscf forward application)
     for ex_op, param_id in zip(ex_ops, param_ids):
         theta = float(params[param_id])
-        civector = evolve_excitation_pyscf(civector, ex_op, n_orb, n_elec_s, theta)
+        civector = evolve_excitation_pyscf(civector, ex_op, n_orb, n_elec_s, theta, use_cache=use_cache)
 
     return civector.reshape(-1)
 
 
 def _get_gradients_pyscf(bra, ket, params, n_qubits: int, n_elec_s, ex_ops, param_ids, mode: str):
-
+    """Compute gradients by backward evolution with operator result caching.
+    
+    Performance strategy:
+    - Cache apply_a_pyscf results per (civector_id, ex_op) in the backward loop
+    - Avoids redundant PySCF operations when the same operator is applied to the same state
+    """
     assert mode == "fermion"
     n_orb = n_qubits // 2
     na, nb = unpack_nelec(n_elec_s)
     gradients_beforesum = []
+    
+    # Local cache for (id(ket_state), ex_op) -> apply_a_pyscf result
+    # This avoids recomputing when ket doesn't change within a step
+    a_ket_cache = {}  # {(ket_id, ex_op): fket}
+    
     for param_id, ex_op in reversed(list(zip(param_ids, ex_ops))):
         theta = params[param_id]
+        # Backward evolution
         bra = evolve_excitation_pyscf(bra, ex_op, n_orb, n_elec_s, -float(theta))
         ket = evolve_excitation_pyscf(ket, ex_op, n_orb, n_elec_s, -float(theta))
-        ket_pyscf = CIvectorPySCF(ket, n_orb, na, nb)
-        fket = apply_a_pyscf(ket_pyscf, ex_op)
+        
+        # For gradient: compute a_ket from evolved ket state
+        # Check cache first to avoid redundant PySCF operations
+        ket_id = id(ket)
+        cache_key = (ket_id, ex_op)
+        
+        if cache_key not in a_ket_cache:
+            ket_pyscf = CIvectorPySCF(ket, n_orb, na, nb)
+            fket = apply_a_pyscf(ket_pyscf, ex_op)
+            a_ket_cache[cache_key] = fket
+        else:
+            fket = a_ket_cache[cache_key]
+        
         grad = bra @ fket
         gradients_beforesum.append(grad)
+    
     gradients_beforesum = list(reversed(gradients_beforesum))
     return np.array(gradients_beforesum)
 
 
-def get_energy_and_grad_pyscf(params, hamiltonian, n_qubits: int, n_elec_s, ex_ops, param_ids, mode: str = "fermion", init_state=None):
-    """Normalized CI energy and gradient in CI space: E=(c^T H c)/(c^T c)."""
+def get_energy_and_grad_pyscf(params, hamiltonian, n_qubits: int, n_elec_s, ex_ops, param_ids, mode: str = "fermion", init_state=None, use_cache: bool = True):
+    """Normalized CI energy and gradient in CI space: E=(c^T H c)/(c^T c).
+    
+    Performance optimizations:
+    - Uses LRU cache for apply_a and apply_a2 results
+    - Caches operator results per civector state to avoid recomputation
+    """
     params = np.asarray(params)
-    ket = get_civector_pyscf(params, n_qubits, n_elec_s, ex_ops, param_ids, mode, init_state)
+    ket = get_civector_pyscf(params, n_qubits, n_elec_s, ex_ops, param_ids, mode, init_state, use_cache=use_cache)
     ket = np.asarray(ket, dtype=np.float64)
-    # bra = np.asarray(hamiltonian(ket) if callable(hamiltonian) else (hamiltonian @ ket), dtype=np.float64)
-    # N = float(bra @ ket)
-    # D = float(ket @ ket)
-    # energy = N / D if D != 0.0 else float("nan")
 
-    bra = apply_op(hamiltonian,ket)
+    bra = apply_op(hamiltonian, ket)
+    # ⚠️ Force explicit conversion to NumPy for np.dot() to avoid NumPy 2.0 __array__ issues
+    bra = np.asarray(bra, dtype=np.float64)
+    ket = np.asarray(ket, dtype=np.float64)
     energy = float(np.dot(bra, ket))
 
     gradients_beforesum = _get_gradients_pyscf(bra, ket, params, n_qubits, n_elec_s, ex_ops, param_ids, mode)

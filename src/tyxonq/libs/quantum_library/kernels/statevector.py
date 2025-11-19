@@ -97,8 +97,8 @@ def apply_kqubit_unitary(state: Any, unitary: Any, qubit_indices: Sequence[int],
         return state
     
     # Convert inputs to backend arrays
-    psi = K.asarray(state)
-    U = K.asarray(unitary)  # Keep tensor type to preserve autograd
+    psi = K.asarray(state,dtype=K.complex128)
+    U = K.asarray(unitary,dtype=K.complex128)  # Keep tensor type to preserve autograd
     
     # Reshape unitary to proper shape
     dim = 1 << k  # 2^k

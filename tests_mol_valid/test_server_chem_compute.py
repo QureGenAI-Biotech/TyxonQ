@@ -8,6 +8,16 @@ from tyxonq.applications.chem.algorithms.uccsd import UCCSD
 from tyxonq.applications.chem.algorithms.hea import HEA
 
 
+import tyxonq as tq
+
+
+@pytest.fixture(autouse=True)
+def reset_backend():
+    """确保每个测试开始时使用 NumPy backend，避免跨测试文件的 backend 污染"""
+    tq.set_backend("numpy")
+    yield
+    tq.set_backend("numpy")
+
 def _mol_data(atom: str = "H 0 0 0; H 0 0 0.74", basis: str = "cc-pvdz", charge: int = 0, spin: int = 0) -> dict:
     return {
         "atom": atom,
@@ -52,7 +62,17 @@ def test_cpu_classical_methods_smoke():
     assert abs(res["dft"]["energy"] - gold_results["dft(b3lyp)"]) < 1e-6
 
 
+@pytest.mark.skipif(
+    not pytest.importorskip("cupy", reason="CuPy not available"),
+    reason="GPU tests require CuPy"
+)
 def test_gpu_classical_methods_smoke():
+    """GPU 经典化学计算测试（需要 CuPy 和 GPU）"""
+    try:
+        import cupy
+    except ImportError:
+        pytest.skip("CuPy not installed, skipping GPU test")
+    
     payload_base = {"molecule_data": _mol_data(), "classical_device": "gpu"}
 
     # batch compute: request multiple methods at once to match new cpu_chem API

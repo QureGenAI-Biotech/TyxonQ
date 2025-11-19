@@ -1710,6 +1710,31 @@ class Circuit:
             # Default: statevector expectation
             return self._expectation_statevector(pauli_ops, nb, n)
     
+    def expval(self, *pauli_ops: Any) -> Any:
+        """Convenient alias for expectation() (PennyLane-style short name).
+        
+        Computes expectation value of Pauli operator product: ⟨ψ|O|ψ⟩
+        
+        This is a thin forwarding wrapper for expectation(), providing
+        a shorter method name consistent with industry frameworks
+        (PennyLane, TensorCircuit, etc.).
+        
+        Args:
+            *pauli_ops: Pauli operator tuples (gate, qubits)
+            
+        Returns:
+            Expectation value (real number for Hermitian operators)
+            
+        Examples:
+            >>> c = Circuit(2).h(0).cx(0,1)
+            >>> exp_z0 = c.expval((gate_z(), [0]))  # Equivalent to expectation()
+            >>> exp_zz = c.expval((gate_z(), [0]), (gate_z(), [1]))
+            
+        See Also:
+            expectation(): Full method with comprehensive documentation
+        """
+        return self.expectation(*pauli_ops)
+    
     def _expectation_statevector(self, pauli_ops: tuple, nb: Any, n: int) -> Any:
         """Compute expectation using statevector simulator."""
         from ...libs.quantum_library.kernels.statevector import (

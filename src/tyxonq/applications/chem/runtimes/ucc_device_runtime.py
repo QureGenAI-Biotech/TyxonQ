@@ -88,28 +88,83 @@ class UCCDeviceRuntime:
         self._prefix_cache[bases] = ops
         return ops
 
-        # TODO (device-runtime backlog):
-        # 1) Add adjoint differentiation for simulator shots=0 to replace finite-difference (faster, exact on statevector)
-        # 2) Support SPSA/gradient-free optimizers for hardware shots>0 to reduce evaluations
-        # 3) Batch/parallel parameter shifts and group evaluations; reuse compiled prefixes/suffixes
-        # 4) Adaptive shots allocation per parameter/group based on variance/sensitivity
-        # 5) Optional low-rank/commuting-group Hamiltonian transforms to reduce measurement cost
-        # 6) Caching of expectation terms across close parameters during local line-search
+    # TODO (device-runtime backlog):
+    # 1) Add adjoint differentiation for simulator shots=0 to replace finite-difference (faster, exact on statevector)
+    # 2) Support SPSA/gradient-free optimizers for hardware shots>0 to reduce evaluations
+    # 3) Batch/parallel parameter shifts and group evaluations; reuse compiled prefixes/suffixes
+    # 4) Adaptive shots allocation per parameter/group based on variance/sensitivity
+    # 5) Optional low-rank/commuting-group Hamiltonian transforms to reduce measurement cost
+    # 6) Caching of expectation terms across close parameters during local line-search
+
+
+    def _execute_circuits(
+        self,
+        circuits: List[Circuit],
+        provider: str,
+        device: str,
+        shots: int,
+        pauli_items_list: List[List[Tuple]] | None = None,
+        postprocessing: dict | None = None,
+        noise: dict | None = None,
+        **device_kwargs,
+    ) -> List[Dict]:
+        """Execute a batch of circuits using device_base.run() with proper Pauli postprocessing.
+        
+        Args:
+            circuits: List of Circuit objects to execute
+            provider: Device provider (e.g., "simulator")
+            device: Device name (e.g., "statevector")
+            shots: Number of measurement shots
+            pauli_items_list: List of Pauli items for each circuit (for postprocessing)
+            postprocessing: Optional postprocessing configuration
+            noise: Optional noise configuration
+            **device_kwargs: Additional device options
+            
+        Returns:
+            List of processed result dictionaries with extracted energies
+        """
+        from tyxonq.devices import base as device_base
+        from tyxonq.postprocessing import apply_postprocessing
+        
+        # Use device_base.run() for proper device support
+        tasks = device_base.run(
+            provider=provider,
+            device=device,
+            circuit=circuits,
+            shots=shots,
+            noise=noise,
+            **device_kwargs
+        )
+        
+        results = []
+        for k, t in enumerate(tasks):
+            rr = t.get_result(wait=False)
+            # Apply Pauli-based postprocessing with per-circuit Pauli items
+            pp_opts = dict(postprocessing or {})
+            if pauli_items_list and k < len(pauli_items_list):
+                pp_opts.update({
+                    "method": "expval_pauli_sum",
+                    "identity_const": 0.0,
+                    "items": pauli_items_list[k]
+                })
+            post = apply_postprocessing(rr, pp_opts)
+            results.append(post)
+        return results
+
+    @staticmethod
+    def _extract_energy_from_postprocessing(post: Dict) -> float:
+        """Extract energy value from postprocessing result.
+        
+        Args:
+            post: Postprocessing result dict
+            
+        Returns:
+            Energy value as float, or 0.0 if extraction fails
+        """
+        payload = post.get("result", {})
+        return float((payload or {}).get("energy", 0.0))
 
     def _build_hf_circuit(self) -> Circuit:
-        # c = Circuit(self.n_qubits, ops=[])
-        # if self.mode in ["fermion", "qubit"]:
-        #     na, nb = self.n_elec_s
-        #     # 与 circuits_library.ucc._hf_init_ops 保持一致：先置 alpha（高位半区），再置 beta（低位半区）
-        #     for i in range(na):
-        #         c.ops.append(("x", self.n_qubits - 1 - i))
-        #     for i in range(nb):
-        #         c.ops.append(("x", self.n_qubits // 2 - 1 - i))
-        # else:
-        #     na = sum(self.n_elec_s) // 2
-        #     for i in range(na):
-        #         c.ops.append(("x", self.n_qubits - 1 - i))
-        # return c
         n = int(self.n_qubits)
         c = Circuit(n, ops=[])
         if isinstance(self.n_elec_s, (tuple, list)):
@@ -160,9 +215,23 @@ class UCCDeviceRuntime:
         noise: dict | None = None,
         **device_kwargs,
     ) -> float:
+        """Compute energy using batched circuits and unified postprocessing.
+        
+        Args:
+            c_builder: Callable that returns a Circuit object
+            shots: Number of measurement shots
+            provider: Device provider
+            device: Device name
+            postprocessing: Postprocessing options
+            noise: Noise configuration
+            **device_kwargs: Additional device options
+            
+        Returns:
+            Energy value as float
+        """
         # Use cached grouping and measurement prefixes
         energy_val = float(self._identity_const)
-        # 仅构建一次基电路；将各分组电路合并为一批提交
+        # Build base circuit once; batch all grouped circuits for single submission
         base_circuit = c_builder()
         circuits: List[Circuit] = []
         items_by_idx: List[List[Tuple]] = []  # type: ignore[type-arg]
@@ -170,21 +239,22 @@ class UCCDeviceRuntime:
             circuits.append(base_circuit.extended(self._prefix_ops_for_bases(bases)))
             items_by_idx.append(items)
 
-        # 设备层批量执行，保持顺序一致
-        tasks = device_base.run(provider=provider, device=device, circuit=circuits, shots=shots, noise=noise, **device_kwargs)
-
-        # 手动应用与原先一致的后处理，累加每组能量
-        for k, t in enumerate(tasks):
-            rr = t.get_result(wait=False)
-            pp_opts = dict(postprocessing or {})
-            pp_opts.update({
-                "method": "expval_pauli_sum",
-                "identity_const": 0.0,
-                "items": items_by_idx[k],
-            })
-            post = apply_postprocessing(rr, pp_opts)
-            payload = post.get("result", {})
-            energy_val += float((payload or {}).get("energy", 0.0))
+        # Execute batch with unified postprocessing
+        results = self._execute_circuits(
+            circuits=circuits,
+            provider=provider,
+            device=device,
+            shots=shots,
+            pauli_items_list=items_by_idx,
+            postprocessing=postprocessing,
+            noise=noise,
+            **device_kwargs
+        )
+        
+        # Aggregate energy from postprocessed results
+        for result in results:
+            energy_contrib = self._extract_energy_from_postprocessing(result)
+            energy_val += energy_contrib
         return float(energy_val)
 
     def energy(
@@ -221,35 +291,48 @@ class UCCDeviceRuntime:
         gradient_method: str = "fd",
         **device_kwargs,
     ) -> Tuple[float, np.ndarray]:
+        """Compute energy and gradient using batched parameter shifts.
+        
+        Args:
+            params: Parameter vector
+            shots: Number of measurement shots
+            provider: Device provider
+            device: Device name
+            postprocessing: Postprocessing options
+            noise: Noise configuration
+            gradient_method: "fd" (finite difference) or "ps" (parameter shift)
+            **device_kwargs: Additional device options
+            
+        Returns:
+            Tuple of (energy, gradient)
+        """
         if self.n_params == 0:
             e0 = self.energy(None, shots=shots, provider=provider, device=device, postprocessing=postprocessing)
             return e0, np.zeros(0, dtype=np.float64)
 
         base = np.asarray(params if params is not None else np.zeros(self.n_params, dtype=np.float64), dtype=np.float64)
-        def _builder_with(pv: np.ndarray):
-            def _b():
-                return self._build_ucc_circuit(pv)
-            return _b
-
-        # ---- Batch energy and gradients in one device submission ----
-        # Prepare circuits for base and all ± shifts across all groups
+        
+        # ---- Build all circuit variants: base + parameter shifts ----
         groups_seq = list(self._groups.items())
         circuits_all: List[Circuit] = []
         items_by_circuit: List[List[Tuple]] = []  # type: ignore[type-arg]
         tags: List[Tuple[str, int]] = []  # (variant, param_index)
 
         def _append_variant(pvec: np.ndarray, tag: Tuple[str, int]):
+            """Build all basis-rotated circuits for a given parameter vector."""
             c0 = self._build_ucc_circuit(pvec)
             for bases, items in groups_seq:
                 circuits_all.append(c0.extended(self._prefix_ops_for_bases(bases)))
                 items_by_circuit.append(items)
                 tags.append(tag)
 
-        # base
+        # Base energy evaluation
         _append_variant(base, ("base", -1))
 
+        # Parameter shift evaluations
         method = str(gradient_method).lower()
         if method == "fd":
+            # Finite difference with π/2 shift (standard PSR)
             shift = float(np.pi / 2.0)
             for i in range(len(base)):
                 p_plus = base.copy(); p_plus[i] += shift
@@ -257,6 +340,7 @@ class UCCDeviceRuntime:
                 _append_variant(p_plus, ("plus", i))
                 _append_variant(p_minus, ("minus", i))
         else:
+            # Parameter shift with smaller step (numerical gradient)
             step = float(np.pi / 90.0)
             for i in range(len(base)):
                 p_plus = base.copy(); p_plus[i] += step
@@ -264,39 +348,48 @@ class UCCDeviceRuntime:
                 _append_variant(p_plus, ("plus_s", i))
                 _append_variant(p_minus, ("minus_s", i))
 
-        tasks = device_base.run(provider=provider, device=device, circuit=circuits_all, shots=shots, noise=noise, **device_kwargs)
+        # Execute batch with unified postprocessing
+        results = self._execute_circuits(
+            circuits=circuits_all,
+            provider=provider,
+            device=device,
+            shots=shots,
+            pauli_items_list=items_by_circuit,
+            postprocessing=postprocessing,
+            noise=noise,
+            **device_kwargs
+        )
 
+        # Aggregate results: extract energies and accumulate by parameter shift type
         e0 = float(self._identity_const)
         n_params = len(base)
         plus_energy = np.zeros(n_params, dtype=np.float64)
         minus_energy = np.zeros(n_params, dtype=np.float64)
 
-        for k, t in enumerate(tasks):
-            rr = t.get_result(wait=False)
-            pp_opts = dict(postprocessing or {})
-            pp_opts.update({
-                "method": "expval_pauli_sum",
-                "identity_const": 0.0,
-                "items": items_by_circuit[k],
-            })
-            post = apply_postprocessing(rr, pp_opts)
-            e = float((post.get("result", {}) or {}).get("energy", 0.0))
+        for k, result in enumerate(results):
+            # Extract energy from postprocessed result
+            energy_contrib = self._extract_energy_from_postprocessing(result)
+            
+            # Accumulate energy by shift type
             tag, idx = tags[k]
             if tag == "base":
-                e0 += e
+                e0 += energy_contrib
             elif tag.startswith("plus"):
                 if 0 <= idx < n_params:
-                    plus_energy[idx] += e
+                    plus_energy[idx] += energy_contrib
             elif tag.startswith("minus"):
                 if 0 <= idx < n_params:
-                    minus_energy[idx] += e
+                    minus_energy[idx] += energy_contrib
 
+        # Compute gradients using appropriate rule
         g = np.zeros_like(base)
         if method == "fd":
+            # Finite difference: (E[+π/2] - E[-π/2]) / 2
             for i in range(n_params):
                 g[i] = 0.5 * (plus_energy[i] - minus_energy[i])
             return float(e0), g
         else:
+            # Numerical gradient: (E[+δ] - E[-δ]) / (2δ)
             step = float(np.pi / 90.0)
             for i in range(n_params):
                 g[i] = (plus_energy[i] - minus_energy[i]) / (2.0 * step)
