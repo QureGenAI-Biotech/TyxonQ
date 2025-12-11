@@ -47,8 +47,9 @@ def example_block(c: Circuit, params: Any, *, nlayers: int) -> Circuit:
             c.cx(q, q + 1)
         # Parameterized 1q rotations
         for q in range(n):
-            theta_rz = float(flat[base + q])
-            theta_rx = float(flat[base + n + q])
+            # Don't convert to float to preserve autograd chain
+            theta_rz = flat[base + q]
+            theta_rx = flat[base + n + q]
             c.rz(q, theta_rz)
             c.rx(q, theta_rx)
 
@@ -70,14 +71,16 @@ def build_hwe_ry_ops(n_qubits: int, n_layers: int, params) -> Circuit:
         mat = [flat[i * n_qubits : (i + 1) * n_qubits] for i in range(n_layers + 1)]
     # initial RY layer
     for i in range(n_qubits):
-        c.ry(i, theta=float(mat[0][i]))
+        # Don't convert to float to preserve autograd chain
+        c.ry(i, theta=mat[0][i])
     c = c.add_barrier(*range(n_qubits))
     # entangling + RY layers
     for l in range(n_layers):
         for i in range(n_qubits - 1):
             c.cnot(i, i + 1)
         for i in range(n_qubits):
-            c.ry(i, theta=float(mat[l + 1][i]))
+            # Don't convert to float to preserve autograd chain
+            c.ry(i, theta=mat[l + 1][i])
         c = c.add_barrier(*range(n_qubits))
     return c
 

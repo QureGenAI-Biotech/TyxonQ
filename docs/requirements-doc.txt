@@ -1,0 +1,36 @@
+# Sphinx and Core Dependencies
+sphinx>=7.0.0
+sphinx-autobuild>=2021.3.14
+
+# Sphinx Extensions
+sphinx-design>=0.5.0
+sphinx-copybutton>=0.5.2
+sphinxcontrib-mermaid>=0.9.2
+sphinx-togglebutton>=0.3.2
+
+# API Documentation
+sphinx-autodoc-typehints>=1.24.0
+autodoc-pydantic>=2.0.0
+
+# Code Examples and Notebooks
+nbsphinx>=0.9.3
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# Source Code
+tyxonq >=0.9
+
+# Theme
+pydata-sphinx-theme>=0.14.0
+
+# Internationalization
+sphinx-intl>=2.1.0
+
+# Note: sphinx.ext.intersphinx and sphinx.ext.mathjax are built-in Sphinx extensions
+
+# Documentation Quality Tools
+sphinx-lint>=0.6.0
+doc8>=1.1.0
+
+# Build Tools
+myst-parser>=2.0.0  # Optional: for Markdown support

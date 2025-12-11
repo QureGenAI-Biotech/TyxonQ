@@ -31,7 +31,7 @@ class TyxonQTask:
                 start = _t.perf_counter()
                 while True:
                     info = get_task_details(self, token)
-                    state = str(info.get("state", "")).lower()
+                    state = str(info.get("uni_status", "completed")).lower()
                     if state in ("done", "completed", "success", "finished"):
                         break
                     if (_t.perf_counter() - start) >= timeout:
@@ -89,10 +89,26 @@ def submit_task(
     lang: str = "OPENQASM",
     **kws: Any,
 ) -> List[TyxonQTask]:
+    # Type and content validation for homebrew_s2
+    dev = device.split("::")[-1]
+    
+    if dev == "homebrew_s2":
+        # Normalize source to list for uniform validation
+        sources_to_validate = source if isinstance(source, (list, tuple)) else [source]
+        
+        for src in sources_to_validate:
+            if not isinstance(src, str):
+                raise TypeError(
+                    f"homebrew_s2 requires QASM2 source code (str), got {type(src).__name__}"
+                )
+            if not ("qreg" in src or "creg" in src):
+                raise ValueError(
+                    f"homebrew_s2 source must be valid QASM2 format (must contain qreg/creg)"
+                )
+    
     # Minimal pass-through; compilation handled elsewhere
     url = _endpoint("tasks/submit_task")
     payload: Any
-    dev = device.split("::")[-1]
     if isinstance(source, (list, tuple)):
         if not isinstance(shots, (list, tuple)):
             shots = [shots for _ in source]
@@ -131,10 +147,6 @@ def get_task_details(task: TyxonQTask, token: Optional[str] = None) -> Dict[str,
     r = requests.post(url, json={"task_id": task.id}, headers=_headers(token), timeout=15)
     r.raise_for_status()
     data = r.json()
-    if 'uni_status' not in data:
-        task_detail = data.get('task',{})
-        data['uni_status'] = task_detail.get('state', 'completed')
-        data['result'] = task_detail.get('result',{})
     """
     https://github.com/QureGenAI-Biotech/TyxonQ/blob/main/docs/tyxonq_cloud_api.md
     {
@@ -168,6 +180,23 @@ def get_task_details(task: TyxonQTask, token: Optional[str] = None) -> Dict[str,
         }
     }
     """
+    #homebrew pulse return
+    """
+    {'success': True, 
+    'task': 
+        {'id': '<JOB_ID>', 
+        'queue': 'quregenai.lab', 
+        'device': 'homebrew_s2', 
+        'qubits': 1, 
+        'state': 'failed', 
+        'shots': 1024, 
+        'at': 1762078708941334, 
+        'ts': {...}, 
+        'err': "QOS: 0: GRAMMARERROR[0000]: syntax error: {1016}  , got '/...ion environment\n      | ^\n    4 | CAL {\n\n\n', 
+        'md5': '2e1f8c79edd5ae8344c231699f614ea9', 
+        'task_type': 'quantum_api'}
+    }
+    """
     # Normalize to unified structure expected downstream
     task_detail = data.get('task', {})
     counts = task_detail.get('result', {}) or data.get('result', {})
@@ -179,6 +208,8 @@ def get_task_details(task: TyxonQTask, token: Optional[str] = None) -> Dict[str,
             'device': task_detail.get('device') or task.device,
             'raw': data,
         },
+        'uni_status':task_detail.get('state', 'failed'),
+        'error':task_detail.get('err','')
     }
     return out
 

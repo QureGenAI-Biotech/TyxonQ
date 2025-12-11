@@ -26,6 +26,7 @@ from ....libs.quantum_library.kernels.matrix_product_state import (
     apply_2q as mps_apply_2q,
     MPSState,
     to_statevector as mps_to_statevector,
+    expectation_pauli_native,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -200,6 +201,108 @@ class MatrixProductStateEngine:
 
     def expval(self, circuit: "Circuit", obs: Any, **kwargs: Any) -> float:
         return 0.0
+
+    def state(self, circuit: "Circuit", **kwargs: Any) -> MPSState:
+        """Execute circuit and return MPS representation directly.
+        
+        Returns the MPS state object without converting to statevector,
+        preserving O(nχ) memory complexity.
+        
+        Args:
+            circuit: Circuit to execute
+            **kwargs: Additional options
+            
+        Returns:
+            MPSState object with list of site tensors
+        """
+        n = int(getattr(circuit, "num_qubits", 0))
+        state = self._init_state(n)
+        
+        for op in circuit.ops:
+            if not isinstance(op, (list, tuple)) or not op:
+                continue
+            name = op[0]
+            
+            if name == "h":
+                state = self._apply_1q(state, gate_h(), int(op[1]), n)
+            elif name == "rz":
+                state = self._apply_1q(state, gate_rz(float(op[2])), int(op[1]), n)
+            elif name == "rx":
+                state = self._apply_1q(state, gate_rx(float(op[2])), int(op[1]), n)
+            elif name == "ry":
+                state = self._apply_1q(state, gate_ry(float(op[2])), int(op[1]), n)
+            elif name == "cx":
+                state = self._apply_2q(state, gate_cx_4x4(), int(op[1]), int(op[2]), n)
+            elif name == "cry":
+                state = self._apply_2q(state, gate_cry_4x4(float(op[3])), int(op[1]), int(op[2]), n)
+            elif name == "cz":
+                state = self._apply_2q(state, gate_cz_4x4(), int(op[1]), int(op[2]), n)
+            elif name == "x":
+                state = self._apply_1q(state, gate_x(), int(op[1]), n)
+            elif name == "s":
+                state = self._apply_1q(state, gate_s(), int(op[1]), n)
+            elif name == "sdg":
+                state = self._apply_1q(state, gate_sd(), int(op[1]), n)
+                
+        return state
+
+    def expectation_pauli(self, circuit: "Circuit", pauli_ops: list, **kwargs: Any) -> Any:
+        """Compute Pauli expectation value directly on MPS (O(nχ³)).
+        
+        This avoids converting MPS to statevector, maintaining efficient
+        memory scaling for large systems with low entanglement.
+        
+        Args:
+            circuit: Circuit to execute
+            pauli_ops: List of (gate_matrix, [qubits]) tuples
+            **kwargs: Additional options (use_native=True to force native MPS computation)
+            
+        Returns:
+            Complex expectation value ⟨ψ|O|ψ⟩
+            
+        Example:
+            >>> from tyxonq.libs.quantum_library.kernels.gates import gate_x, gate_z
+            >>> # Compute ⟨X_0⟩
+            >>> exp = eng.expectation_pauli(circuit, [(gate_x(), [0])])
+            >>> # Compute ⟨Z_0 Z_1⟩ (requires two separate entries)
+            >>> exp = eng.expectation_pauli(circuit, [(gate_z(), [0]), (gate_z(), [1])])
+        """
+        # Get MPS representation
+        mps_state = self.state(circuit, **kwargs)
+        
+        # Use native MPS computation if requested or for large systems
+        use_native = kwargs.get("use_native", True)
+        n = len(mps_state.tensors)
+        
+        if use_native or n > 15:  # Use native for n>15 to save memory
+            return expectation_pauli_native(mps_state, pauli_ops)
+        else:
+            # Fallback to statevector for small systems (easier debugging)
+            psi = mps_to_statevector(mps_state)
+            # Apply Pauli operators and compute ⟨ψ|O|ψ⟩
+            # (This is the old statevector path, kept for compatibility)
+            from ....numerics.api import get_backend
+            nb = get_backend(None)
+            psi_transformed = nb.copy(psi) if hasattr(nb, 'copy') else nb.asarray(psi)
+            
+            for gate, qubits in pauli_ops:
+                if len(qubits) == 1:
+                    q = qubits[0]
+                    from ....libs.quantum_library.kernels.statevector import apply_1q_statevector
+                    psi_transformed = apply_1q_statevector(nb, psi_transformed, gate, q, n)
+                elif len(qubits) == 2:
+                    q1, q2 = qubits
+                    from ....libs.quantum_library.kernels.statevector import apply_2q_statevector
+                    # Reshape to 4x4 matrix for 2-qubit gate
+                    gate_matrix = nb.asarray(gate)
+                    if gate_matrix.shape == (2, 2):
+                        # Single Pauli, need to kron with identity for second qubit
+                        # This branch shouldn't happen with proper API usage
+                        pass
+                    psi_transformed = apply_2q_statevector(nb, psi_transformed, gate_matrix, q1, q2, n)
+            
+            result = nb.tensordot(nb.conj(psi), psi_transformed, axes=([0], [0]))
+            return nb.real(result)
 
     def _attenuate(self, noise: Any, z_atten: list[float], wires: list[int]) -> None:
         ntype = str(noise.get("type", "")).lower() if noise else ""

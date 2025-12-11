@@ -14,14 +14,90 @@ __all__ = ["apply_postprocessing"]
 
 
 def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Apply postprocessing to a single task result dict.
+    """Apply postprocessing techniques to quantum computation results.
 
-    Parameters:
-        result: 单个任务的结果字典，期望包含 `result` 与可选的 `metadata`（含 shots）。
-        options: 后处理选项，至少包含 `method`，其余参数根据方法不同而不同。
+    This function provides a unified interface for applying various postprocessing
+    methods to quantum circuit execution results, including error mitigation,
+    expectation value computation, and result analysis.
+
+    Args:
+        result (Dict[str, Any]): Single task result dictionary containing:
+            - "result" or "counts": Measurement counts dictionary
+            - "metadata": Optional metadata including shots count
+            - "statevector": Optional statevector for analytic computation
+            - "expectations": Optional precomputed expectation values
+            
+        options (Optional[Dict[str, Any]]): Postprocessing configuration:
+            - "method" (str): Required. Postprocessing method to apply
+            - Additional method-specific parameters (see below)
 
     Returns:
-        一个形如 {"method": str|None, "result": Any|None} 的后处理产物。
+        Dict[str, Any]: Postprocessing result with structure:
+            {
+                "method": str | None,  # Applied method name
+                "result": Any | None   # Method-specific result data
+            }
+
+    Supported Methods:
+        **readout_mitigation**: Mitigate measurement readout errors
+            - "cals" (dict): Calibration data for readout error correction
+            - "mitigation" (str): Mitigation method, default "inverse"
+            
+        **expval_pauli_term**: Compute single Pauli term expectation value
+            - "idxs" or "indices" (list): Qubit indices for the Pauli term
+            
+        **expval_pauli_terms**: Compute multiple Pauli terms expectations
+            - "terms" (list): List of Pauli term specifications
+            
+        **expval_pauli_sum**: Aggregate Pauli sum expectation value
+            - "items" or "group_items" (list): Pauli terms with coefficients
+            - "identity_const" (float): Identity term coefficient, default 0.0
+            - "readout_cals" or "cals" (dict): Optional readout calibration
+            - "mitigation" (str): Readout mitigation method, default "inverse"
+
+    Examples:
+        >>> # Basic readout error mitigation
+        >>> result = {"result": {"00": 480, "11": 520}, "metadata": {"shots": 1000}}
+        >>> cals = {"0": [[0.95, 0.05], [0.02, 0.98]], "1": [[0.97, 0.03], [0.01, 0.99]]}
+        >>> options = {"method": "readout_mitigation", "cals": cals}
+        >>> mitigated = apply_postprocessing(result, options)
+        >>> mitigated["result"]["mitigated_counts"]
+        {'00': 502, '11': 498}
+        
+        >>> # Pauli expectation value computation
+        >>> counts = {"00": 400, "01": 100, "10": 300, "11": 200}
+        >>> options = {"method": "expval_pauli_term", "idxs": [0]}  # Z_0 expectation
+        >>> expectation = apply_postprocessing({"result": counts}, options)
+        >>> expectation["result"]  # <Z_0> value
+        0.2
+        
+        >>> # Full Hamiltonian expectation (with readout mitigation)
+        >>> hamiltonian_items = [
+        ...     {"coeff": 0.5, "pauli_terms": [("Z", 0)]},
+        ...     {"coeff": 0.3, "pauli_terms": [("X", 0), ("X", 1)]}
+        ... ]
+        >>> options = {
+        ...     "method": "expval_pauli_sum",
+        ...     "items": hamiltonian_items,
+        ...     "identity_const": -1.0,
+        ...     "cals": cals
+        ... }
+        >>> energy = apply_postprocessing(result, options)
+        >>> energy["result"]  # Total energy expectation
+        -0.85
+
+    Notes:
+        - Failed postprocessing operations return gracefully with partial results
+        - Readout mitigation is applied automatically in expval_pauli_sum when calibrations provided
+        - Statevector results enable analytic expectation value computation
+        - Shot count is inferred from metadata or counts sum when missing
+        
+    Raises:
+        No exceptions are raised; failures result in partial results with diagnostic information.
+        
+    See Also:
+        tyxonq.postprocessing.readout.ReadoutMit: Readout error mitigation implementation.
+        tyxonq.postprocessing.counts_expval: Expectation value computation utilities.
     """
     opts = dict(options or {})
     method = opts.get("method")

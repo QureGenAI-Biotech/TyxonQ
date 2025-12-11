@@ -1,0 +1,127 @@
+{
+  "hf_integrals_request": {
+    "method": "hf_integrals",
+    "molecule_data": {
+      "atom": "H 0 0 0; H 0 0 0.74",
+      "basis": "cc-pvdz",
+      "charge": 0,
+      "spin": 0
+    },
+    "active_space": null,
+    "active_orbital_indices": null,
+    "classical_device": "auto",
+    "verbose": true
+  },
+  "hf_integrals_response": {
+    "int1e": [[0.0, 0.0], [0.0, 0.0]],
+    "int2e": [[[[0.0]]]],
+    "e_core": -1.1203,
+    "e_hf": -1.1327,
+    "mo_coeff": [[0.7, 0.7], [0.7, -0.7]],
+    "nelectron": 2,
+    "nao": 2,
+    "spin": 0,
+    "basis": "cc-pvdz",
+    "artifacts": {
+      "hf_chkfile_b64": "<base64>",
+      "hf_chkfile_name": "tyxonq_hf_xxx.chk"
+    }
+  },
+  "fci_request": {
+    "method": "fci",
+    "molecule_data": {
+      "atom": "H 0 0 0; H 0 0 0.74",
+      "basis": "cc-pvdz",
+      "charge": 0,
+      "spin": 0
+    },
+    "method_options": {},
+    "classical_device": "gpu",
+    "verbose": false
+  },
+  "fci_response": {
+    "energy": -1.13727,
+    "classical_device": "gpu",
+    "verbose": {
+      "e_hf": -1.1327,
+      "mo_coeff": [[0.7, 0.7], [0.7, -0.7]],
+      "mo_energy": [-0.5, 0.5]
+    }
+  },
+  "ccsd_request": {
+    "method": "ccsd",
+    "molecule_data": {
+      "atom": "H 0 0 0; H 0 0 0.74",
+      "basis": "cc-pvdz",
+      "charge": 0,
+      "spin": 0
+    },
+    "method_options": {},
+    "classical_device": "cpu",
+    "verbose": true
+  },
+  "ccsd_response": {
+    "energy": -0.048,
+    "classical_device": "cpu",
+    "verbose": {
+      "e_hf": -1.1327,
+      "mo_coeff": [[0.7, 0.7], [0.7, -0.7]]
+    }
+  },
+  "mp2_request": {
+    "method": "mp2",
+    "molecule_data": {
+      "atom": "H 0 0 0; H 0 0 0.74",
+      "basis": "cc-pvdz",
+      "charge": 0,
+      "spin": 0
+    },
+    "method_options": {},
+    "classical_device": "auto",
+    "verbose": false
+  },
+  "mp2_response": {
+    "energy": -0.05,
+    "classical_device": "auto"
+  },
+  "dft_request": {
+    "method": "dft",
+    "molecule_data": {
+      "atom": "H 0 0 0; H 0 0 0.74",
+      "basis": "cc-pvdz",
+      "charge": 0,
+      "spin": 0
+    },
+    "method_options": {"functional": "b3lyp"},
+    "classical_device": "auto",
+    "verbose": true
+  },
+  "dft_response": {
+    "energy": -1.15,
+    "classical_device": "auto",
+    "verbose": {
+      "e_hf": -1.1327
+    }
+  },
+  "casscf_request": {
+    "method": "casscf",
+    "molecule_data": {
+      "atom": "H 0 0 0; H 0 0 0.74",
+      "basis": "cc-pvdz",
+      "charge": 0,
+      "spin": 0
+    },
+    "method_options": {"ncas": 2, "nelecas": 2},
+    "classical_device": "gpu",
+    "verbose": true
+  },
+  "casscf_response": {
+    "energy": -1.135,
+    "classical_device": "gpu",
+    "verbose": {
+      "e_hf": -1.1327
+    }
+  }
+}
+
+

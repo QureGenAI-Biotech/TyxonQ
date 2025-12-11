@@ -41,15 +41,34 @@ def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
 def _qasm_to_ir_if_needed(circuit: Any, source: Any) -> Any:
     if source is None:
         return circuit
+    
+    # 如果 source 不是字符串（即是 IR/PulseIR 对象），直接返回
+    if not isinstance(source, str):
+        return source
+    
     try:
+        # Import native QASM3 importer (TyxonQ's own implementation)
+        from ...compiler.pulse_compile_engine.native.qasm3_importer import qasm3_to_circuit  # type: ignore
+        # Fall back to Qiskit for QASM2
         from ...compiler.compile_engine.qiskit.dialect import qasm_to_ir  # type: ignore
 
+        # Helper to detect and parse a single QASM string
+        def parse_qasm(qasm_str: str) -> Any:
+            # Detect QASM version: OPENQASM 3 or TQASM 0.2 → native, else → Qiskit QASM2
+            qasm_str_stripped = qasm_str.strip()
+            if qasm_str_stripped.startswith(("OPENQASM 3", "TQASM 0.2")):
+                return qasm3_to_circuit(qasm_str)
+            else:
+                return qasm_to_ir(qasm_str)
+        
+        # 判断是 list 格式还是单个字符串
         if isinstance(source, (list, tuple)):
-            return [qasm_to_ir(s) for s in source]
-        return qasm_to_ir(source)
+            return [parse_qasm(s) for s in source]
+        return parse_qasm(source)
     except Exception as exc:
         raise ValueError(
-            "OpenQASM support requires qiskit; please install qiskit or pass an IR circuit"
+            "OpenQASM support requires TyxonQ native QASM3 importer or Qiskit for QASM2; "
+            "please pass an IR circuit or valid QASM code"
         ) from exc
 
 
@@ -80,7 +99,11 @@ def run(
     from uuid import uuid4
 
     def _one(c: Any) -> Any:
-        out = eng.run(c, shots=shots, **opts)
+        error = ''
+        try:
+            out = eng.run(c, shots=shots, **opts)
+        except Exception as e:
+            error = str(e)  
         # Normalize simulator outputs:
         # - shots>0: counts in 'result'
         # - shots==0: analytic expectations in 'expectations'; also provide probabilities for exact multi-Z
@@ -97,7 +120,8 @@ def run(
                 prob = _np.abs(_np.asarray(psi)) ** 2
                 meta.setdefault("num_qubits", int(getattr(c, "num_qubits", 0)))
                 statevec = _np.asarray(psi)
-            except Exception:
+            except Exception as e:
+                error = str(e)
                 prob = None
                 statevec = None
         result = {
@@ -105,7 +129,9 @@ def run(
             'expectations': expectations,
             'probabilities': prob,
             'statevector': statevec,
-            'metadata': meta,
+            'result_meta': meta,
+            'uni_status': 'completed',
+            'error': error
         }
         return SimTask(id=str(uuid4()), device=device, result=result)
 

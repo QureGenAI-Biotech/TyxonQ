@@ -1,0 +1,422 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: a85d6f9ff95b40d994e042f53421248d
+msgid "基本概念"
+msgstr ""
+
+#: b38f067b76974a73a5df319f5a3c8fcc
+msgid "欢迎学习量子计算和TyxonQ框架的基础概念！本页面将为您介绍量子计算的核心概念以及TyxonQ的架构设计。"
+msgstr ""
+
+#: 201f4f280a0e41eaa83f9a92f6c0cf66
+msgid "本页内容"
+msgstr ""
+
+#: c4b1e32a11754e51b48dd43861ea906c
+msgid "量子计算基础"
+msgstr ""
+
+#: 24fd3a5fdee2462eb88e0d64455a9111
+msgid "量子比特"
+msgstr ""
+
+#: 12f5f34850544635a48514c89962c099
+msgid "量子比特（Qubit）是量子信息的基本单位，类似于经典计算中的比特。但与经典比特不同，量子比特可以处于叠加态。"
+msgstr ""
+
+#: 7880246ff8d24477a48a5d33ffa50956
+msgid "**数学表示**"
+msgstr ""
+
+#: 8ebde9923a794bed9f3656de59996cd5
+msgid "一个量子比特的状态可以表示为："
+msgstr ""
+
+#: a689fb3335494ba487b8706a386b6ada
+msgid "|\\psi\\rangle = \\alpha|0\\rangle + \\beta|1\\rangle"
+msgstr ""
+
+#: 519eb6e76191451a941e3bd8ec64d758
+msgid "其中 $\\alpha$ 和 $\\beta$ 是复数振幅，满足归一化条件 $|\\alpha|^2 + |\\beta|^2 = 1$。"
+msgstr ""
+
+#: a7c37ef7fa4d49f38259f686cefeed0c
+msgid "**TyxonQ中的表示**"
+msgstr ""
+
+#: a47769302b7140d2af6bb95d95252d80
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"# 创建单个量子比特电路\n"
+"circuit = tq.Circuit(1)\n"
+"\n"
+"# 查看初始状态 |0⟩\n"
+"result = circuit.device('statevector').run()\n"
+"print(\"初始状态:\", result.statevector)\n"
+"# 输出: [1.+0.j, 0.+0.j]"
+msgstr ""
+
+#: 7e9338cea7f04051b9c4121b7dd30ca8
+msgid "量子叠加"
+msgstr ""
+
+#: 2a411b49278b457fa7a208ec0d325658
+msgid "量子叠加允许量子比特同时处于多个经典状态，这是量子计算力量的源泉。"
+msgstr ""
+
+#: b6e6622126a94e8791f2d28ffd601b49
+msgid ""
+"# 创建叠加态\n"
+"circuit = tq.Circuit(1).h(0)  # 应用Hadamard门\n"
+"\n"
+"result = circuit.device('statevector').run()\n"
+"print(\"叠加态:\", result.statevector)\n"
+"# 输出: [0.707+0.j, 0.707+0.j] （近似1/√2）"
+msgstr ""
+
+#: 8ed4fbc0437c42cfaef7048ce8356bea 9b103e17bb9746d69dbbfdf955d2e322
+msgid "量子纠缠"
+msgstr ""
+
+#: d3e5365880d14885a7d9f96cc0bef0f3
+msgid "量子纠缠是多个量子比特之间的非经典关联，无法用经典概率论解释。"
+msgstr ""
+
+#: ac27ec59223340b9bada83f22ade8b62
+msgid ""
+"# 创建Bell态（最大纠缠态）\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"result = circuit.device('statevector').run()\n"
+"print(\"Bell态:\", result.statevector)\n"
+"# 输出: [0.707+0.j, 0.+0.j, 0.+0.j, 0.707+0.j]\n"
+"# 表示 (|00⟩ + |11⟩)/√2"
+msgstr ""
+
+#: d3b635944a3f47edae9491f837447887
+msgid "量子测量"
+msgstr ""
+
+#: c1ac63a314cc4db6981ea729feeab064
+msgid "测量是从量子态中提取经典信息的过程，会导致量子态坍缩。"
+msgstr ""
+
+#: 8ff07f924d354fd39db0d1a396feacf6
+msgid ""
+"# 测量Bell态\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"circuit.measure_z(0).measure_z(1)\n"
+"\n"
+"result = circuit.run(shots=1000)\n"
+"print(\"测量结果:\", result)\n"
+"# 期望看到约50% '00' 和 50% '11'"
+msgstr ""
+
+#: 75a74ccbc62b4ae69a7201428f6b7500
+msgid "TyxonQ核心架构"
+msgstr ""
+
+#: 2f22390b385e4749a90e43364a840442
+msgid "整体架构"
+msgstr ""
+
+#: d521faaa9e604be49e3efd6866f1f281
+msgid "TyxonQ采用分层架构设计，提供从高层算法到底层硬件的完整抽象："
+msgstr ""
+
+#: 49cbccec432e40a3a42abf0da9899621
+msgid "中间表示（IR）"
+msgstr ""
+
+#: 28353281abbf4e948df87898c5890df7
+msgid "TyxonQ使用中间表示来统一处理量子电路："
+msgstr ""
+
+#: 5f3e46f5e28045be9eb73978fb089a6c
+#, python-brace-format
+msgid ""
+"# 电路中间表示\n"
+"circuit = tq.Circuit(2)\n"
+"circuit.h(0)\n"
+"circuit.cnot(0, 1)\n"
+"\n"
+"# 查看IR结构\n"
+"print(f\"量子比特数: {circuit.num_qubits}\")\n"
+"print(f\"操作列表: {circuit.ops}\")\n"
+"print(f\"指令序列: {circuit.instructions}\")"
+msgstr ""
+
+#: 34aacffd4d01488485554f59dcd779c9
+msgid "编译流程"
+msgstr ""
+
+#: 69650f9e9ae74ec3bcb335d8c62333a5
+msgid "TyxonQ的编译器将高层电路转换为设备可执行的形式："
+msgstr ""
+
+#: 7d815520113d451a98cc51bd76f4cccd
+msgid "设备抽象"
+msgstr ""
+
+#: 3da1ac710f164594bdeeb265993e6ef7
+msgid "TyxonQ提供统一的设备接口，支持多种执行后端："
+msgstr ""
+
+#: bfa9109695c2400dbeafab16acd7fcd0
+msgid "设备类型对比"
+msgstr ""
+
+#: 5dd282309dd44bc5b084b8a48ad9dd48
+msgid "设备类型"
+msgstr ""
+
+#: 9588e6f1628d4a2ea0d097c9088ef76c
+msgid "适用场景"
+msgstr ""
+
+#: 65c25bc27fed4e85934f26f805da015f
+msgid "优势"
+msgstr ""
+
+#: 70521d3a2d894da197290075c0526229
+msgid "限制"
+msgstr ""
+
+#: 101a215e843d4573ba4f007de676a6d5
+msgid "statevector"
+msgstr ""
+
+#: 0246965059634a28916c71a59a947106
+msgid "小规模精确模拟"
+msgstr ""
+
+#: ee6e6135b4914775a9bdceb520a0590b
+msgid "完全精确"
+msgstr ""
+
+#: 616add0893a347a28faf2141116407c9
+msgid "内存指数增长"
+msgstr ""
+
+#: 3cb712ce4fe54901b81f9464c5844baf
+msgid "density_matrix"
+msgstr ""
+
+#: 239ecb28326e487fbe912d5f63e4235b
+msgid "噪声模拟"
+msgstr ""
+
+#: 69c4e5feef314f46898856bddc84f13c
+msgid "支持混态"
+msgstr ""
+
+#: a8ef267da1d04a2d92caff9bd168eff6
+msgid "内存需求更大"
+msgstr ""
+
+#: 7b2d3291486746f7aef3ff75c95fa2ef
+msgid "mps"
+msgstr ""
+
+#: 27209e49eeea4222870904b7daa9c94f
+msgid "大规模近似模拟"
+msgstr ""
+
+#: 24ad4f1443e14d1f86d8d6dbd7ea263e
+msgid "内存线性增长"
+msgstr ""
+
+#: 4e14ced5c16a4d80bbf34578bb1f448d
+msgid "适用于低纠缠系统"
+msgstr ""
+
+#: 1123a8a1ed3b4cc59eb7f0db6029d25a
+msgid "执行模型"
+msgstr ""
+
+#: 0e7551179cc441c3a4096c74b34f07a8
+msgid "链式API"
+msgstr ""
+
+#: bf9565d84f87497daff7c73f8677684a
+msgid "TyxonQ支持链式调用，提供简洁的编程接口："
+msgstr ""
+
+#: 4ed3b53a1e1a450288169b4fc8fa091b
+msgid ""
+"# 完整的链式执行\n"
+"result = (\n"
+"    tq.Circuit(2)\n"
+"    .h(0).cnot(0, 1)           # 构建电路\n"
+"    .compile()                  # 编译优化\n"
+"    .device(shots=1024)         # 设备配置\n"
+"    .run()                      # 执行\n"
+")"
+msgstr ""
+
+#: 13c6f6f4bed24ab58fe0d5646199ca07
+msgid "Shots概念"
+msgstr ""
+
+#: 716f7827ff534b10aefef18491192ece
+msgid "Shots表示电路的重复执行次数，用于统计测量结果："
+msgstr ""
+
+#: d9ec769c306d4f64ae80e7172017a8d2
+msgid ""
+"# 不同shots数的影响\n"
+"circuit = tq.Circuit(1).h(0).measure_z(0)\n"
+"\n"
+"# 少量shots - 结果可能不稳定\n"
+"result_10 = circuit.device(shots=10).run()\n"
+"\n"
+"# 大量shots - 结果更稳定\n"
+"result_1000 = circuit.device(shots=1000).run()\n"
+"\n"
+"print(\"10次测量:\", result_10)\n"
+"print(\"1000次测量:\", result_1000)"
+msgstr ""
+
+#: 2368329fca9b48a385f2f744319e0dc4
+msgid "数值后端系统"
+msgstr ""
+
+#: 3858f8a4eeb446d3bc9d058edfbd3399
+msgid "TyxonQ支持多种数值计算后端，用户可以根据需求选择："
+msgstr ""
+
+#: 9d812931892a47cea45936270304fe8e
+msgid ""
+"# NumPy后端（默认）\n"
+"tq.set_backend('numpy')\n"
+"result_numpy = circuit.run()\n"
+"\n"
+"# PyTorch后端（支持自动微分）\n"
+"tq.set_backend('pytorch')\n"
+"result_torch = circuit.run()\n"
+"\n"
+"# CuPy后端（GPU加速）\n"
+"tq.set_backend('cupy')\n"
+"result_gpu = circuit.run()"
+msgstr ""
+
+#: 3346a50f9e154efeb8bf9dc0741ae025
+msgid "下一步学习"
+msgstr ""
+
+#: 9f51897e104d489e812841549fa07ea5
+msgid "现在您已经了解了基本概念，建议继续学习："
+msgstr ""
+
+#: 55dcfe2f9d484f9890e6ded7ecc1a34f
+msgid ":doc:`first_circuit` - 创建您的第一个量子电路"
+msgstr ""
+
+#: 40e3cb9e33be41558a9a0f5a0503fcd9
+msgid ":doc:`first_chemistry` - 量子化学应用入门"
+msgstr ""
+
+#: 4ffc9b6696ce4a379cb10a712b5abc32
+msgid ":doc:`../user_guide/core/index` - 深入核心模块"
+msgstr ""
+
+#: 04595461d4544a13bd58c55a5a11df73
+msgid ":doc:`../examples/basic_examples` - 查看更多示例"
+msgstr ""
+
+#: d4511d63723948879bfa411fe09a246f
+msgid "常见概念对照表"
+msgstr ""
+
+#: 3b190769c30b4be19e870287610765ad
+msgid "经典计算 vs 量子计算"
+msgstr ""
+
+#: c320bc741c6a42e88bc9fa4d694c2252
+msgid "概念"
+msgstr ""
+
+#: f14e4895a4ff44388f5a871e9e712648
+msgid "经典计算"
+msgstr ""
+
+#: 909840bbeb5d4dfdab62fc29e80df460
+msgid "量子计算"
+msgstr ""
+
+#: 8043ea7390af4c769a1cf4a6736acc77
+msgid "信息单位"
+msgstr ""
+
+#: 9486afe335784b72ad698d2459df748b
+msgid "比特（0或1）"
+msgstr ""
+
+#: 0db2c83f882d4beabb9754f06beed824
+msgid "量子比特（叠加态）"
+msgstr ""
+
+#: 135cd0552d514baabf3511a9c7e361d4
+msgid "逻辑门"
+msgstr ""
+
+#: 7404e316a83348c08b6d733d2ca7abd2
+msgid "布尔门（AND, OR, NOT）"
+msgstr ""
+
+#: cfbf38b988f542aa8796bd73ee3c32cc
+msgid "量子门（H, CNOT, RX等）"
+msgstr ""
+
+#: 31b4942d5e3e418c82688982d9672a02
+msgid "并行性"
+msgstr ""
+
+#: ddff556ce28540efbe448561e7ecbccf
+msgid "空间并行（多处理器）"
+msgstr ""
+
+#: aea7348374164d2c96ee204b9ac25921
+msgid "量子并行（叠加态）"
+msgstr ""
+
+#: c1a536c91d5c44d9b0a61ff12e71f31b
+msgid "关联性"
+msgstr ""
+
+#: 0e7b8211c28d4bb9807de046b7553ec2
+msgid "经典关联"
+msgstr ""
+
+#: fee4b97cbac24c3d8691c3d1785cb921
+msgid "信息提取"
+msgstr ""
+
+#: eff9f9ae649545b0a14b8ecdaeaf8a1b
+msgid "直接读取"
+msgstr ""
+
+#: b8aa899c992e4a95bc87085cb7a2b29d
+msgid "量子测量（概率性）"
+msgstr ""
+

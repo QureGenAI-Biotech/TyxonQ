@@ -16,9 +16,13 @@ class NativeCompiler:
     def compile(self,circuit: "Circuit", options:Dict[str, Any] = {},compile_plan=None,device_rule=None) -> "CompileResult":  # type: ignore[override]
         output: str = str(options.get("output", "ir")).lower()
         # Default basis_gates for native pipeline (can be overridden by options)
-        if not options.get("basis_gates",None):
+        basis_gates = options.get("basis_gates",None)
+        if basis_gates:
             basis_gates = ["h", "rx", "rz", "cx", "cz"]
             options['basis_gates'] = basis_gates
+        else:
+            basis_gates = []
+
         
         optimization_level = int(options.get("optimization_level", 0))
         options['optimization_level'] = optimization_level
@@ -66,7 +70,13 @@ class NativeCompiler:
         }
         # 输出格式选择：
         if output in ("ir","tyxonq"):
-            return {"circuit": lowered, "metadata": metadata}
+            return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}
+        if output in ("qasm3", "qasm3.0", "openqasm3", "openqasm3.0"):
+            # Export gate-level circuit to OpenQASM 3.0 format
+            from .gate_qasm3_exporter import GateQASM3Exporter
+            exporter = GateQASM3Exporter()
+            qasm3_code = exporter.export(lowered)
+            return {"circuit": circuit, "compiled_source": qasm3_code, "metadata": metadata}
         if output in ("qasm", "qasm2"):
             # 若本地未实现 QASM 降级，薄转发到 qiskit 实现
             # output = tyxonq equals to qasm2
@@ -82,7 +92,7 @@ class NativeCompiler:
                 return QiskitCompiler().compile({"circuit": lowered, "options": qk_opts})  # type: ignore[arg-type]
             except Exception:
                 # 降级失败则仍返回 IR
-                return {"circuit": lowered, "metadata": metadata}
+                return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}
         if output == "qiskit":
             try:
                 from ..qiskit import QiskitCompiler  # type: ignore
@@ -94,8 +104,8 @@ class NativeCompiler:
                 qk_opts["output"] = "qiskit"
                 return QiskitCompiler().compile({"circuit": lowered, "options": qk_opts})  # type: ignore[arg-type]
             except Exception:
-                return {"circuit": lowered, "metadata": metadata}
-        # 未识别：返回 IR
-        return {"circuit": lowered, "metadata": metadata}
+                return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}
+        # 未识别的 output：返回 IR
+        return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}
 
 

@@ -1,0 +1,263 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 89ca03753b2c4f12abec7aff5018f37d
+msgid "tyxonq.core"
+msgstr ""
+
+#: 58d437db3cf8422d87c0ff57d0133fb1
+msgid "Core package exposing IR, operations, and measurement primitives."
+msgstr ""
+
+#: bd242005b0864ba285a98781d245df2c
+msgid ""
+"At this stage of the refactor, only `ir` is provided. Operations and "
+"measurements will be added in subsequent increments."
+msgstr ""
+
+#: 6511668638c948c3bbbb530142fe291b be1b3024ac664e729696f146f62d9d65
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 109714f7437a4d6198845e127ae8b8eb
+msgid "Minimal intermediate representation (IR) for a quantum circuit."
+msgstr ""
+
+#: 271128235e0c423b82307762b2c2593c becb0d4f518c4208896c8f9b44d4386f
+msgid "Number of qubits in the circuit."
+msgstr ""
+
+#: 5367270e2980471a862b1930daa642b5 e97c336094c94eef934b797913bcaa97
+msgid "type"
+msgstr ""
+
+#: a5ceacda9a364c6a9ccdd2ad8d5c053e
+msgid "int"
+msgstr ""
+
+#: 30d54807da2f4361a3d38a4e2c0061ea
+msgid ""
+"A sequence of operation descriptors. The concrete type is left open for "
+"backends/compilers to interpret (e.g., gate tuples, IR node objects). "
+"Keeping this generic allows the IR to evolve while tests exercise the "
+"structural contract."
+msgstr ""
+
+#: 6b9ba9e03a58463ea602cf35d540d509
+msgid "List[Any]"
+msgstr ""
+
+#: 5274d08013e04665858093c43c23d7fe
+msgid "Initialize a Circuit."
+msgstr ""
+
+#: 4156826da54248b8a41c97c081716b9b
+msgid "Parameters"
+msgstr ""
+
+#: b912594f7e69411b9c0fdfda8cd1481b
+msgid "List of operations. Defaults to empty list if not provided."
+msgstr ""
+
+#: dadbc92bea8c4bc49be0afc107de4b4b
+msgid "Circuit metadata. Defaults to empty dict if not provided."
+msgstr ""
+
+#: 96229ab1f9a14124bd5f2f936cd89040
+msgid "List of instructions. Defaults to empty list if not provided."
+msgstr ""
+
+#: 9f76d03e2870409d94604bfc19ff2ebb
+msgid "Return a new Circuit with merged metadata (shallow merge)."
+msgstr ""
+
+#: a306c848c2b849ffa943050c55883275
+msgid "Set device options for chainable configuration."
+msgstr ""
+
+#: 24c44928f3d046e38d0875e80e1cd351
+msgid "Set postprocessing options for chainable configuration."
+msgstr ""
+
+#: 5f25254cf6854553a157e4e96cfc762d
+msgid ""
+"Count ops by name. If gate_list is provided, count only those (case-"
+"insensitive)."
+msgstr ""
+
+#: 60278263f30f446cb62a917e1fa33519
+msgid "Return a mapping of op name (lower-case) to frequency."
+msgstr ""
+
+#: 987d86d4787a48c0a952f51235e28ef4
+msgid "Return a heuristic FLOP estimate for statevector simulation."
+msgstr ""
+
+#: 58bbbe7df1474e29a40a3d866ddf209c
+msgid ""
+"This avoids tensor network dependencies. The estimate is coarse: - 1q "
+"gate ~ O(2^n) - 2q gate ~ O(2^(n+1)) - other gates ignored Returns None "
+"if n is not available."
+msgstr ""
+
+#: 8c6fe9e313974416b1f09f6a91122236
+msgid "Return a dict summarizing the circuit if pandas is available."
+msgstr ""
+
+#: 913a7ea0d158488b9e244855bd0266ce
+msgid ""
+"Columns: #qubits, #gates, #CNOT, #multicontrol, depth (if qiskit "
+"available), #FLOP (heuristic)."
+msgstr ""
+
+#: 62b1471e6afb41bb8e5f4b4394d213d5
+msgid "Return a new Circuit with ops extended by extra_ops (no mutation)."
+msgstr ""
+
+#: 1cdd2caeb6fc4bde862260b2a1e52f38
+msgid ""
+"Append another Circuit's ops. If `indices` given, remap other's qubits by"
+" indices[i]."
+msgstr ""
+
+#: 1a150608747f4639a4c6ae3021fe6faa
+msgid "Return a new Circuit with qubit indices remapped according to `mapping`."
+msgstr ""
+
+#: a28858c734744f5da819c74c7d4bfe62
+msgid ""
+"All int arguments in ops are treated as qubit indices and must be present"
+" in mapping."
+msgstr ""
+
+#: df1ee64492ac48bba55b763387703d33
+msgid ""
+"Return positional->logical mapping from explicit instructions or "
+"measure_z ops."
+msgstr ""
+
+#: 63ffcbec32da4087a3fae030bdffc48c
+msgid "Return a unitary inverse circuit for supported ops (h, cx, rz)."
+msgstr ""
+
+#: 6c8e459cc27447ada1d93769a0b40dbf
+msgid ""
+"Non-unitary ops like measure/reset/barrier are skipped unless strict=True"
+" (then error). Unknown ops raise if strict=True, else skipped."
+msgstr ""
+
+#: c87bdb0e66e64e359819a3575c511657
+msgid "Serialize this IR circuit to OpenQASM 2 using the compiler facade."
+msgstr ""
+
+#: aee2a1f713c74e2fbdb955328560a796
+msgid "Delegates to compiler API (provider='qiskit', output='qasm2')."
+msgstr ""
+
+#: 1299b24717ae4b7faabc4452f8434d10
+msgid "Delegate to compiler.api.compile or act as chainable setter when no args."
+msgstr ""
+
+#: 32cc90b9ee8344729477675dfdaeee66
+msgid "Chainable模式：若 provider/output/target/options 全为 None，则返回 self（不触发编译）。"
+msgstr ""
+
+#: 8bebf41d1078406dae198fc5c7b535aa
+msgid "编译模式：转发到 compiler.api.compile，options 与已记录的 _compile_opts 合并。"
+msgstr ""
+
+#: 9fab9c8439a045d9b9d0723366567d52
+msgid ""
+"执行电路： - 若构造时提供了 source，则直接按 source 提交给设备层； - 否则，先按 "
+"compile_engine/output/target 进行编译，再根据产物类型提交。 注意：不在此处补测量或发出告警；该逻辑归属编译阶段。"
+msgstr ""
+
+#: 1f752de8c5b6469a84b141fbdce1900d
+msgid ""
+"Warning: reset operation is typically not supported by hardware in "
+"logical circuits. This is a simulation-only operation that projects qubit"
+" to |0⟩ state."
+msgstr ""
+
+#: 6036e1e5a3c24ebc9c517d9befae83c1
+msgid "Render the circuit using Qiskit if available."
+msgstr ""
+
+#: def68f8d76ea47dda2aaea50c7d29b28
+msgid ""
+"Behavior: - Convert IR → Qiskit QuantumCircuit directly (no intermediate "
+"qasm2 dump),"
+msgstr ""
+
+#: 76397635d5fa4bb8a140588b7d872e70
+msgid "auto-adding measurements if none present."
+msgstr ""
+
+#: 8b857f78c9b140988ceff2ad7148b2b4
+msgid "Delegate all args/kwargs to `QuantumCircuit.draw`."
+msgstr ""
+
+#: 7f232af739d740c4a97d17f6945ab9ef
+msgid ""
+"If Qiskit is not installed, return a minimal textual `gate_summary()` "
+"string."
+msgstr ""
+
+#: cdd631452a1143ae8e61580884598bab
+msgid "IR for a Hamiltonian."
+msgstr ""
+
+#: 793558c658f54996839fb679e8804caf
+msgid ""
+"The `terms` field may contain a backend-specific structure, such as a "
+"Pauli-sum, sparse representation, or dense matrix. The type is "
+"intentionally loose at this stage and will be specialized by compiler "
+"stages or devices."
+msgstr ""
+
+#: 152e1215bc63420897718de695d97fa6
+msgid "Modules"
+msgstr ""
+
+#: e057f686afb544a1aaedc647810d69bc
+msgid ":py:obj:`errors <tyxonq.core.errors>`\\"
+msgstr ""
+
+#: 40f2749c1685475aa7e6afd5e8a7e727
+msgid ":py:obj:`ir <tyxonq.core.ir>`\\"
+msgstr ""
+
+#: 4ac4b3796f034e3ebdfdb948a4fe40b0
+msgid "Core intermediate representation (IR) package."
+msgstr ""
+
+#: 03d677d7075a424c9b14147b237d93ae
+msgid ":py:obj:`measurements <tyxonq.core.measurements>`\\"
+msgstr ""
+
+#: 3806cf3dc19c45408e8b40dfc928523d
+msgid ":py:obj:`operations <tyxonq.core.operations>`\\"
+msgstr ""
+
+#: 61c22bdcf6bd4687b4ca883997c0e072
+msgid ":py:obj:`types <tyxonq.core.types>`\\"
+msgstr ""
+

@@ -69,12 +69,13 @@ class QiskitCompiler:
         }
 
         if output == "qiskit":
-            return {"circuit": compiled_qc, "metadata": metadata}
+            return {"circuit": compiled_qc, "compiled_source": compiled_qc, "metadata": metadata}
         if output in ("qasm", "qasm2"):
-            return {"circuit": qasm2_dumps_compat(compiled_qc), "metadata": metadata}
+            qasm2_str = qasm2_dumps_compat(compiled_qc)
+            return {"circuit": circuit, "compiled_source": qasm2_str, "metadata": metadata}
         if output == "ir":
-            return {"circuit": circuit, "metadata": metadata}
-        return {"circuit": compiled_qc, "metadata": metadata}
+            return {"circuit": circuit, "compiled_source": circuit, "metadata": metadata}
+        return {"circuit": circuit, "compiled_source": compiled_qc, "metadata": metadata}
 
 
 # Convenience exports

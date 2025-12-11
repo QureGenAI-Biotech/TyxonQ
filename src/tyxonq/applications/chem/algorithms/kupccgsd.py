@@ -7,16 +7,7 @@ from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 
 from .ucc import UCC as _UCCBase
-from openfermion.transforms import jordan_wigner
-from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
-    get_hop_from_integral,
-)
-from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_kupccgsd import (
-    generate_kupccgsd_ex1_ops,
-    generate_kupccgsd_ex2_ops,
-    generate_kupccgsd_ex_ops,
-)
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +20,24 @@ class KUPCCGSD(_UCCBase):
 
     def __init__(
         self,
-        mol: Union[Mole, RHF],
+        mol = None,
         active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
+        active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
         k: int = 3,
         n_tries: int = 1,
-        runtime: str = None,
-        run_hf: bool = True,
-        run_fci: bool = True,
+        runtime: str = 'device',
+        run_fci: bool = False,
+        numeric_engine: str | None = None,
+        classical_provider: str = 'local',
+        classical_device: str = 'auto',
+        # Optional PySCF-style direct molecule construction
+        atom: object | None = None,
+        basis: str = "sto-3g",
+        unit: str = "Angstrom",
+        charge: int = 0,
+        spin: int = 0,
+        **kwargs
     ):
         r"""
         Initialize the class with molecular input.
@@ -49,7 +49,7 @@ class KUPCCGSD(_UCCBase):
         active_space: Tuple[int, int], optional
             Active space approximation. The first integer is the number of electrons and the second integer is
             the number or spatial-orbitals. Defaults to None.
-        aslst: List[int], optional
+        active_orbital_indices: List[int], optional
             Pick orbitals for the active space. Defaults to None which means the orbitals are sorted by energy.
             The orbital index is 0-based.
 
@@ -81,80 +81,42 @@ class KUPCCGSD(_UCCBase):
 
         See Also
         --------
-        tencirchem.UCCSD
-        tencirchem.PUCCD
-        tencirchem.UCC
+        tyxonq.UCCSD
+        tyxonq.PUCCD
+        tyxonq.UCC
         """
-        # ---- RHF setup ----
-        if hasattr(mol, "mol") and hasattr(mol, "kernel"):
-            hf = mol
-        else:
-            hf = RHF(mol)
-        if mo_coeff is not None:
-            hf.mo_coeff = np.asarray(mo_coeff)
-        hf.chkfile = None
-        hf.verbose = 0
-        if run_hf:
-            hf.kernel()
 
-        # ---- Integrals and core energy ----
-        from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
-            get_integral_from_hf,
+
+
+        super().__init__(
+            mol=mol,
+            active_space=active_space,
+            active_orbital_indices=active_orbital_indices,
+            init_method=None,
+            mo_coeff=mo_coeff,
+            runtime=runtime,
+            numeric_engine=numeric_engine,
+            run_fci=run_fci,
+            atom=atom,
+            basis=basis,
+            unit=unit,
+            charge=charge,
+            spin=spin,
+            classical_provider=classical_provider,
+            classical_device=classical_device,
+            **kwargs
         )
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
-
-        # Active space size and electrons
-        if active_space is None:
-            n_elec = int(getattr(hf.mol, "nelectron"))
-            n_cas = int(getattr(hf.mol, "nao"))
-        else:
-            n_elec, n_cas = int(active_space[0]), int(active_space[1])
-
-        no = n_elec // 2
-        nv = n_cas - no
-
-        # Build qubit Hamiltonian
-        n_qubits = 2 * n_cas
-        fop = get_hop_from_integral(int1e, int2e)
-        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
-
-        # ---- Initialize UCC base ----
-        _UCCBase.__init__(
-            self,
-            n_qubits=n_qubits,
-            n_elec_s=(no, n_elec - no),
-            h_qubit_op=hq,
-            runtime=(runtime or "device"),
-            mode="fermion",
-            ex_ops=None,
-            param_ids=None,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
-        )
-        # the number of layers
+                # the number of layers
         self.k = k
         # the number of different initialization
         self.n_tries = n_tries
-        # For generalized k-UpCCGSD, generate ex-ops independent of CC amplitudes
-        ex_ops, param_ids, init_guess = generate_kupccgsd_ex_ops(no, nv, self.k)
-        # param ids are contiguous starting at 0; init_guess sized accordingly
-        self.ex_ops = ex_ops
-        self.param_ids = param_ids
-        self.init_guess = np.asarray(init_guess, dtype=np.float64)
+        self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
         self.init_guess_list = [self.init_guess]
         for _ in range(self.n_tries - 1):
             self.init_guess_list.append(np.random.rand(self.n_params) - 0.5)
         self.e_tries_list = []
         self.opt_res_list = []
         self.staging_time = self.opt_time = None
-        self.e_core = float(e_core)
-        if run_fci:
-            try:
-                from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-                self.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (no, n_elec - no))[0] + self.e_core)
-            except Exception:
-                self.e_fci = float("nan")
 
     def kernel(self, **opts):
         _, stating_time = self.get_opt_function(with_time=True)
@@ -217,8 +179,8 @@ class KUPCCGSD(_UCCBase):
 
         Examples
         --------
-        >>> from tencirchem import KUPCCGSD
-        >>> from tencirchem.molecule import h2
+        >>> from tyxonq.chem import KUPCCGSD
+        >>> from tyxonq.chem.molecule import h2
         >>> kupccgsd = KUPCCGSD(h2)
         >>> ex_op, param_ids, init_guess = kupccgsd.get_ex_ops()
         >>> ex_op
@@ -228,8 +190,17 @@ class KUPCCGSD(_UCCBase):
         >>> init_guess  # doctest:+ELLIPSIS
         array([...])
         """
-        ex_op, param_ids, init_guess = generate_kupccgsd_ex_ops(self.no, self.nv, self.k)
-        return ex_op, param_ids, init_guess
+        ex1_ops, ex1_param_id, _ = self.get_ex1_ops()
+        ex2_ops, ex2_param_id, _ = self.get_ex2_ops()
+
+        ex_op = []
+        param_ids = [-1]
+        for _ in range(self.k):
+            ex_op.extend(ex2_ops + ex1_ops)
+            param_ids.extend([i + param_ids[-1] + 1 for i in ex2_param_id])
+            param_ids.extend([i + param_ids[-1] + 1 for i in ex1_param_id])
+        init_guess = np.random.rand(max(param_ids) + 1) - 0.5
+        return ex_op, param_ids[1:], init_guess
 
     def get_ex1_ops(self, t1: np.ndarray = None) -> Tuple[List[Tuple], List[int], np.ndarray]:
         """
@@ -255,7 +226,22 @@ class KUPCCGSD(_UCCBase):
         get_ex_ops: Get one-body and two-body excitation operators for :math:`k`-UpCCGSD ansatz.
         """
         assert t1 is None
-        return generate_kupccgsd_ex1_ops(self.no, self.nv)
+        no, nv = self.no, self.nv
+
+        ex1_ops = []
+        ex1_param_id = [-1]
+
+        for a in range(no + nv):
+            for i in range(a):
+                # alpha to alpha
+                ex_op_a = (no + nv + a, no + nv + i)
+                # beta to beta
+                ex_op_b = (a, i)
+                ex1_ops.extend([ex_op_a, ex_op_b])
+                ex1_param_id.extend([ex1_param_id[-1] + 1] * 2)
+
+        ex1_init_guess = np.zeros(max(ex1_param_id) + 1)
+        return ex1_ops, ex1_param_id[1:], ex1_init_guess
 
     def get_ex2_ops(self, t2: np.ndarray = None) -> Tuple[List[Tuple], List[int], np.ndarray]:
         """
@@ -282,7 +268,22 @@ class KUPCCGSD(_UCCBase):
         """
 
         assert t2 is None
-        return generate_kupccgsd_ex2_ops(self.no, self.nv)
+        no, nv = self.no, self.nv
+
+        ex2_ops = []
+        ex2_param_id = [-1]
+
+        for a in range(no + nv):
+            for i in range(a):
+                # i correspond to a and j correspond to b, as in PySCF convention
+                # otherwise the t2 amplitude has incorrect phase
+                # paired
+                ex_op_ab = (a, no + nv + a, no + nv + i, i)
+                ex2_ops.append(ex_op_ab)
+                ex2_param_id.append(ex2_param_id[-1] + 1)
+
+        ex2_init_guess = np.zeros(max(ex2_param_id) + 1)
+        return ex2_ops, ex2_param_id[1:], ex2_init_guess
 
     @property
     def e_kupccgsd(self):
@@ -290,89 +291,3 @@ class KUPCCGSD(_UCCBase):
         Returns :math:`k`-UpCCGSD energy
         """
         return self.energy()
-
-    @classmethod
-    def from_integral(
-        cls,
-        int1e: np.ndarray,
-        int2e: np.ndarray,
-        n_elec: Union[int, Tuple[int, int]],
-        e_core: float | None = None,
-        ovlp: np.ndarray | None = None,
-        *,
-        mode: str = "fermion",
-        runtime: str = "device",
-        k: int = 3,
-        n_tries: int = 1,
-        **kwargs,
-    ) -> "KUPCCGSD":
-        # Build qubit Hamiltonian from integrals
-        if isinstance(n_elec, int):
-            assert n_elec % 2 == 0
-            n_elec_s = (n_elec // 2, n_elec // 2)
-        else:
-            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
-        n_cas = int(len(int1e))
-        n_qubits = 2 * n_cas
-        fop = get_hop_from_integral(int1e, int2e)
-        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
-
-        # Manually construct instance without requiring a Mole object
-        inst = cls.__new__(cls)
-        # Initialize via UCCSD constructor path to ensure UCCSD helpers exist
-        # Use base UCC constructor (numeric/molecule-independent)
-        _UCCBase.__init__(
-            inst,
-            n_qubits=n_qubits,
-            n_elec_s=n_elec_s,
-            h_qubit_op=hq,
-            runtime=runtime,
-            mode=mode,
-            ex_ops=None,
-            param_ids=None,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
-        )
-        # Record minimal CAS metadata used by KUPCCGSD helpers
-        no = int(sum(n_elec_s)) // 2
-        nv = int(n_cas) - no
-        inst.no = no
-        inst.nv = nv
-        inst.active_space = (int(sum(n_elec_s)), int(n_cas))
-        # Set algorithm-specific knobs
-        inst.k = int(k)
-        inst.n_tries = int(n_tries)
-        # Generate generalized UpCCGSD excitations and init guess
-        ex_op, param_ids, _init_guess = generate_kupccgsd_ex_ops(inst.no, inst.nv, inst.k)
-        # Normalize ids to contiguous range and set zero init guess of correct size
-        import numpy as _np
-        max_id = max(param_ids) if len(param_ids) > 0 else -1
-        id_map = {old: idx for idx, old in enumerate(range(max_id + 1))}
-        param_ids = [id_map[int(i)] for i in param_ids]
-        init_vec = _np.zeros((max_id + 1,), dtype=_np.float64)
-        inst.ex_ops = ex_op
-        inst.param_ids = param_ids
-        inst.init_guess = _np.asarray(init_vec, dtype=_np.float64)
-        # Core energy if provided
-        try:
-            inst.e_core = float(e_core) if e_core is not None else 0.0
-        except Exception:
-            inst.e_core = 0.0
-        # init_guess_list
-        inst.init_guess_list = [inst.init_guess]
-        for _ in range(inst.n_tries - 1):
-            inst.init_guess_list.append(_np.random.rand(inst.init_guess.size) - 0.5)
-        # Initialize optimization bookkeeping like TCC
-        inst.e_tries_list = []
-        inst.opt_res_list = []
-        inst.staging_time = None
-        inst.opt_time = None
-        # Reference FCI energy for assertions (optional)
-        try:
-            from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-            na, nb = n_elec_s
-            inst.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (na, nb))[0] + (float(e_core) if e_core is not None else 0.0))
-        except Exception:
-            inst.e_fci = float('nan')
-        return inst

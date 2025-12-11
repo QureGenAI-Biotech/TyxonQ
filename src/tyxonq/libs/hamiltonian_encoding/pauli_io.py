@@ -167,7 +167,7 @@ FERMION_PHASE_MASK_CACHE = {}
 
 
 def get_fermion_phase(f_idx: tuple, n_qubits: int, ci_strings: np.ndarray) -> np.ndarray:
-    if f_idx in FERMION_PHASE_MASK_CACHE:
+    if (f_idx, n_qubits) in FERMION_PHASE_MASK_CACHE:
         mask, sign = FERMION_PHASE_MASK_CACHE[(f_idx, n_qubits)]
     else:
         from openfermion import FermionOperator

@@ -1,0 +1,179 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 636403426070442286fad9ce362a7cfc
+msgid "tyxonq.libs.quantum\\_library.dynamics"
+msgstr ""
+
+#: b5cc35726c60414bbacefbf4b567bf05
+msgid "Functions"
+msgstr ""
+
+#: 343064d2d04a4ab5b6466b8bf32253f7
+msgid ""
+":py:obj:`evolve_state "
+"<tyxonq.libs.quantum_library.dynamics.evolve_state>`\\ "
+"\\(H\\_or\\_terms\\, psi0\\, t\\, \\*\\[\\, ...\\]\\)"
+msgstr ""
+
+#: 058ecefcded74c0a910e527940a6fc02 2d8635dc26924cc1bcf6ad07b6e1af4c
+#: 60761088f1364374af9783b22dba6cae 78edee9f5cb04e62ba5970b931b8e66c
+msgid "Integrate Schrödinger dynamics for small statevectors."
+msgstr ""
+
+#: a8000841808b42dc810ce79d1c9ee045
+msgid ""
+":py:obj:`evolve_state_numeric "
+"<tyxonq.libs.quantum_library.dynamics.evolve_state_numeric>`\\ "
+"\\(H\\_or\\_terms\\, psi0\\, t\\, \\*\\)"
+msgstr ""
+
+#: 7c2e1495ae40457c87dc9c86ee3ec144
+msgid ""
+":py:obj:`expectation "
+"<tyxonq.libs.quantum_library.dynamics.expectation>`\\ \\(psi\\, H\\, "
+"\\*\\[\\, backend\\]\\)"
+msgstr ""
+
+#: 9933905e41ca47c8aa2009e08831624c c3793619bc60463b8fdc346bad4abb1c
+#: eb3977d0f26c46e1bf442928c4f38419 fcef6077bf8749b1986ca670e06a77ba
+msgid "Compute the dense expectation value ⟨ψ|H|ψ⟩."
+msgstr ""
+
+#: ee7676b06f5942cd82117c65914c0fc5
+msgid ""
+":py:obj:`expval_dense "
+"<tyxonq.libs.quantum_library.dynamics.expval_dense>`\\ \\(psi\\, H\\, "
+"\\*\\[\\, backend\\]\\)"
+msgstr ""
+
+#: 0cce2859fff9468a9e1348ad016e2326
+msgid "Classes"
+msgstr ""
+
+#: 74474647eb5143059559606ecf15a95e
+msgid ""
+":py:obj:`PauliStringSum2COO "
+"<tyxonq.libs.quantum_library.dynamics.PauliStringSum2COO>`\\"
+msgstr ""
+
+#: 002180920ce24b8fa709ff2d35b4f435
+msgid "alias of :py:class:`~tyxonq.libs.quantum_library.dynamics.PauliSumCOO`"
+msgstr ""
+
+#: 69a76021c9c0476dbc613900350e7efb
+msgid ""
+":py:obj:`PauliSumCOO "
+"<tyxonq.libs.quantum_library.dynamics.PauliSumCOO>`\\ \\(terms\\[\\, "
+"weights\\]\\)"
+msgstr ""
+
+#: 240651516d8f41bc84ea3dbfdeee73e4 d0d8f8bccc234d9e9f47a9ff0458f254
+msgid "Lightweight adapter for a Pauli-sum Hamiltonian."
+msgstr ""
+
+#: edc4b904f90b4e9aa339680214a50735
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 4accbc8059414b528d7c4e77bbc892ec bb973b8b07714756aafdc0d314ad0082
+#: e32676c614e94f1492b5f0d411e69546
+msgid "Parameters"
+msgstr ""
+
+#: b99e263340dc4420ade8a273a8f2dc5c
+#, python-brace-format
+msgid ""
+"Iterable of Pauli term encodings, each length-n with entries in {0,1,2,3}"
+" denoting I,X,Y,Z."
+msgstr ""
+
+#: c968548c1dd349b3827f6734e79c9a67
+msgid "Optional coefficients w_j. If omitted, assumed 1.0 for each term."
+msgstr ""
+
+#: 524cdffc12274427a4d629a9043416e5
+msgid "Construct a dense matrix H (2^n by 2^n) for small n."
+msgstr ""
+
+#: 3693786624b44ca880fd724680e0cea5
+msgid "Return a COO-like tuple compatible with simple sparse workflows."
+msgstr ""
+
+#: 1d55e8ce098d4814bb1f645d6c2fc503 cdb6042066bb45f2b4c27731eb87b1de
+msgid "Solves dψ/dt = -i H(t) ψ using a simple fixed-step scheme."
+msgstr ""
+
+#: 822c42cde7954f68a9216679fae99ae8 886d6840f9dc47f0818a2e0a73896b6c
+msgid ""
+"- Dense Hamiltonian matrix H (for small n) - Or Pauli-term list "
+"([[p_00,...,p_0n], ...]) with optional weights - Or a callable H(t) "
+"returning the instantaneous dense Hamiltonian"
+msgstr ""
+
+#: 82460b612cad494480ce46673dfcd995 d1103958359c4de7a6ee22283d58f8a7
+msgid "Dense Hamiltonian matrix H (for small n)"
+msgstr ""
+
+#: 4aabd18a906e4ac7bd7c14cbb70f3451 51eb8657e9174d14b98d252c254f03e2
+msgid "Or Pauli-term list ([[p_00,...,p_0n], ...]) with optional weights"
+msgstr ""
+
+#: 6c5496c1fc77462f9d659a1460227100 dadfcf856945466fb09bdadca2bb7573
+msgid "Or a callable H(t) returning the instantaneous dense Hamiltonian"
+msgstr ""
+
+#: 0d63485e7da54c09b1b79744e8e760e9 43b152ef45da458d9a598e9acbc606a6
+msgid "Initial statevector of shape (2^n,)."
+msgstr ""
+
+#: 0f709c1c5c1c4fad8be292c1068306fa bae836a39b5748b8ac0c308cccf9d1c6
+msgid "Total evolution time."
+msgstr ""
+
+#: 07858e93f7d04485a31536c9376c24de d6ee186078d542cdb8f2de98bc5f0328
+msgid "Number of integration steps (fixed step). More steps -> higher accuracy."
+msgstr ""
+
+#: 0019cf9f09ba42ec8b86cf126d331994 f3209ef81d1a4d2c8e75b11837e356bc
+msgid "Coefficients for Pauli terms if H_or_terms is a term list."
+msgstr ""
+
+#: 1a87608b0c53402fb8b199d80d79c15c d7f6190258bb4fabaeec2379cfbe388b
+msgid "Currently only \"euler\" is implemented."
+msgstr ""
+
+#: a426959fe35947cb8298582572f5d9a6 c0f4d6f97f5c466888ce164e4a80f181
+msgid "Returns"
+msgstr ""
+
+#: 14d0976ae2f646fe956a7d749ea6bbdc 74c2050d742a492a9fc3e254ad298578
+msgid "The evolved, normalized statevector ψ(t)."
+msgstr ""
+
+#: 19bb702100a64143a2dce406d6e5cab2 8f872ad323544499861888f182adc9c7
+msgid "Return type"
+msgstr ""
+
+#: 242bed3d0a8040cf8bc85f943b5b5d42 adc987551b5f47e087a4cf95ee7d28b0
+msgid "For small systems where H is explicitly dense."
+msgstr ""
+

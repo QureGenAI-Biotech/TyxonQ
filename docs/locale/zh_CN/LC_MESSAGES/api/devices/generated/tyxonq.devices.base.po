@@ -1,0 +1,244 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: e065616415f24cd1be4c6f95aa088a3e
+msgid "tyxonq.devices.base"
+msgstr ""
+
+#: f675222395284bc69fe706a324375ca1
+msgid "Functions"
+msgstr ""
+
+#: c3e8775dcf3e4bc997c0c6caf779b600
+msgid ""
+":py:obj:`device_descriptor <tyxonq.devices.base.device_descriptor>`\\ "
+"\\(\\[name\\, provider\\, id\\, shots\\]\\)"
+msgstr ""
+
+#: 1406c35a09a84d79b6c71022c94729a1
+msgid ""
+":py:obj:`enable_noise <tyxonq.devices.base.enable_noise>`\\ "
+"\\(\\[enabled\\, config\\]\\)"
+msgstr ""
+
+#: bfeee807ee814d539b0dd46cc32cbef8
+msgid ""
+":py:obj:`expval <tyxonq.devices.base.expval>`\\ \\(\\*\\[\\, provider\\, "
+"device\\, circuit\\, ...\\]\\)"
+msgstr ""
+
+#: 52b0782b4663412bab5a15e4649b23d0 a8ad7e0185334169a944ab57e9f51ba8
+msgid "Unified analytic expectation for simulator/local (shots==0 fast path)."
+msgstr ""
+
+#: ea4843240cb64fdeb5f3d80175d80535
+msgid ":py:obj:`get_noise_config <tyxonq.devices.base.get_noise_config>`\\ \\(\\)"
+msgstr ""
+
+#: b566e85373ae4df8afc0b994dd3e0397
+msgid ""
+":py:obj:`get_task_details <tyxonq.devices.base.get_task_details>`\\ "
+"\\(task\\, \\*\\[\\, wait\\, ...\\]\\)"
+msgstr ""
+
+#: af9a2b897f2749039ff0cc32b00b64f9 de1f4d95f9eb4e8eb8e1529359fdd3ab
+msgid "Get task details with optional polling, and unify result format."
+msgstr ""
+
+#: d28fa47f0cd7404a9305b7af9b12e711
+msgid ""
+":py:obj:`init <tyxonq.devices.base.init>`\\ \\(\\*\\[\\, provider\\, "
+"device\\, token\\]\\)"
+msgstr ""
+
+#: 22ec8bf45eae4622bd655e6f2a55cf86 b52ebcdbffbb41b99ae17e676004b81b
+msgid "Initialize default provider/device and optionally set token."
+msgstr ""
+
+#: 20da9602a3fc4d2c884336664d8b560b
+msgid ":py:obj:`is_noise_enabled <tyxonq.devices.base.is_noise_enabled>`\\ \\(\\)"
+msgstr ""
+
+#: 5183f6459d8245618edcb3b4544c9cfa
+msgid ""
+":py:obj:`list_all_devices <tyxonq.devices.base.list_all_devices>`\\ "
+"\\(\\*\\[\\, provider\\, token\\]\\)"
+msgstr ""
+
+#: fb15c0a60c944bbfb372251032c00777
+msgid ":py:obj:`remove_task <tyxonq.devices.base.remove_task>`\\ \\(task\\)"
+msgstr ""
+
+#: bc4d7cdf578b49be806d128a017b91d4
+msgid ""
+":py:obj:`resolve_driver <tyxonq.devices.base.resolve_driver>`\\ "
+"\\(provider\\, device\\)"
+msgstr ""
+
+#: a9346b2861cb4bff8e1a94f5d369a548
+msgid ""
+":py:obj:`run <tyxonq.devices.base.run>`\\ \\(\\*\\[\\, provider\\, "
+"device\\, circuit\\, source\\, ...\\]\\)"
+msgstr ""
+
+#: 2f086d2920eb484b9f9adfc88f3c1b47 558e6c45e9714f718a9b6c5ccfdb6ad5
+msgid "Unified device-level selector to execute circuits or sources."
+msgstr ""
+
+#: 6adc7c98fdff4459a15f553373d083e0
+msgid "Classes"
+msgstr ""
+
+#: 02f04866e594436aa989ec5000de101e
+msgid ""
+":py:obj:`Device <tyxonq.devices.base.Device>`\\ \\(\\*args\\, "
+"\\*\\*kwargs\\)"
+msgstr ""
+
+#: db768dab4b064631b38d707e944f35c3 f3086a82d9714d64a770f57d3db59e24
+msgid "Execution device protocol."
+msgstr ""
+
+#: 86148443a4594582948d8b4ec557e5b7
+msgid ":py:obj:`DeviceRule <tyxonq.devices.base.DeviceRule>`\\"
+msgstr ""
+
+#: 2a661cb381df48cfad9a696a25f5157a 77cf9a5a453b44698ee9948373a0104b
+msgid "Declarative device capabilities description."
+msgstr ""
+
+#: 12121a74c386457f85ea4b17662314a2
+msgid ""
+":py:obj:`DeviceTask <tyxonq.devices.base.DeviceTask>`\\ \\(provider\\, "
+"device\\, handle\\, ...\\)"
+msgstr ""
+
+#: 1848ac4ada934421aa4401e73ef6d4b9
+msgid ":py:obj:`RunResult <tyxonq.devices.base.RunResult>`\\"
+msgstr ""
+
+#: 30f8e8d7f63548b9bc6411fe1fe96fb3 d70fd91c2b284ec2bb704f5760a25eeb
+msgid "Structured run result returned by `Device.run`."
+msgstr ""
+
+#: 8d63b7c1febb40f48dc55aaa30c16fff
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 8e559ad2114c4f9287665672f650f58d 9593efb78a6245daa0ba89f521a6c70c
+msgid "Bases: :py:class:`~typing.TypedDict`"
+msgstr ""
+
+#: 9726ad3a651341d3b28d0bf3d6dc8015
+msgid ""
+"Keys are optional to keep forward compatibility. Concrete devices may "
+"expose additional metadata fields as needed."
+msgstr ""
+
+#: 59dbc9a6737e43b8a56322175afd3ece
+msgid ""
+"Optional keys allow devices to report varying levels of detail while "
+"preserving a common contract for downstream processing."
+msgstr ""
+
+#: e37ab84299264e8ab5a3907a74097e95
+msgid "Bases: :py:class:`~typing.Protocol`"
+msgstr ""
+
+#: 60e337ee2f654b7698fea88bb6397c04
+msgid ""
+"A device is responsible for running compiled circuits, sampling, and "
+"computing expectation values."
+msgstr ""
+
+#: 04b5dee271554eaaa1a7696dc5d23ce9
+msgid "This is a light wrapper around hardware.config helpers."
+msgstr ""
+
+#: 049bba08a13f417c85f93f36dc0263fc
+msgid ""
+"Responsibilities: - Choose driver via provider/device defaults - If "
+"`source` provided, submit directly (no compilation here) - If `circuit` "
+"provided:"
+msgstr ""
+
+#: 6f0f40d41259465d945a2a085dcf6c6d
+msgid "simulator/local: call simulator driver run"
+msgstr ""
+
+#: 96aa961668344b2dbfc042ba404e6080
+msgid "hardware: require caller to have compiled to `source`"
+msgstr ""
+
+#: aa722e5e4fd44095846c81dc22a06a51
+msgid "Normalize return: single submission -> single task; batch -> list of tasks"
+msgstr ""
+
+#: c049c4cb86a944649ebf09885cd8e9e3
+msgid "Returns"
+msgstr ""
+
+#: 0b9ffe7b740346ea88828dc6ad25e0de
+msgid ""
+"- task.async_result=False (simulator): get_results() returns final result"
+" immediately - task.async_result=True (hardware): get_results(wait=True) "
+"polls until completion"
+msgstr ""
+
+#: b269c018fae44a128967bcb8ffc44460
+msgid ""
+"task.async_result=False (simulator): get_results() returns final result "
+"immediately"
+msgstr ""
+
+#: 460a17995d0e469f8f4a4347f45f1200
+msgid ""
+"task.async_result=True (hardware): get_results(wait=True) polls until "
+"completion"
+msgstr ""
+
+#: 37f30bea9027446dba8e9ba80f0ae08c
+msgid "Return type"
+msgstr ""
+
+#: 0bd78e2f953c4634a893f6d3915f898f
+msgid "Routes to specific simulator driver which calls engine.expval."
+msgstr ""
+
+#: 77701f71cb87492aaf312f05a70f50ee
+msgid "Unified return format:"
+msgstr ""
+
+#: 315daab1198f4cd39cade9865308916e
+msgid "{"
+msgstr ""
+
+#: efe2d166b4654f5bafe3a6094ec2b0e7
+#, python-brace-format
+msgid ""
+"'result': Dict[str, int],      # normalized counts like {'00': 51, '11': "
+"49} 'result_meta': Dict[str, Any], # original driver payload"
+msgstr ""
+
+#: b1321a010ea241e3b1971ce7592e7ea7
+msgid "}"
+msgstr ""
+

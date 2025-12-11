@@ -1,0 +1,416 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 878a83b3eb39488bae33681fa21c789f
+msgid "Postprocessing"
+msgstr ""
+
+#: 06a05087574744c1b0a2e7b2872d8f59
+msgid ""
+"The Postprocessing module provides tools for analyzing measurement "
+"results, including expectation value calculation, error mitigation, "
+"classical shadows, and metrics analysis."
+msgstr ""
+
+#: 7e7c6f4e80c043c7bf34b9f6140d8672
+msgid "Contents"
+msgstr ""
+
+#: 99a07971c9d8408ba34d0d2959404d40
+msgid "Overview"
+msgstr ""
+
+#: 336020a2ced849b9af5fa56fd04dee08
+msgid "TyxonQ postprocessing capabilities include:"
+msgstr ""
+
+#: 7b5ca602f3d4436d837bd907202140ea
+msgid "**Expectation Values**: Convert measurement counts to expectation values"
+msgstr ""
+
+#: 44fe93e852854befaebe550a5073f631
+msgid "**Error Mitigation**: Readout error correction and noise mitigation"
+msgstr ""
+
+#: 1d5b7eeb45224f0f9a7673c5d8066dd2
+msgid "**Classical Shadows**: Scalable quantum state tomography"
+msgstr ""
+
+#: d3c168220185462bac3a8d88afafb53e
+msgid "**Metrics and Analysis**: Fidelity, entropy, and other quantum metrics"
+msgstr ""
+
+#: 1ae033e0cf90472f83f95a1084d092da
+msgid "**Noise Simulation**: Classical noise modeling on count data"
+msgstr ""
+
+#: 32d93b55d6e24120b54df5dd566a37ff
+msgid "Expectation Value Calculation"
+msgstr ""
+
+#: 7bef5cad94464c2bb3e033aac960620d
+msgid "Basic Usage"
+msgstr ""
+
+#: feb0a1cf685c4f569926b1810a47529d
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"from tyxonq.postprocessing import counts_to_expval\n"
+"\n"
+"# Run circuit and get counts\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"counts = circuit.run(shots=1000)\n"
+"\n"
+"# Calculate expectation value\n"
+"expval = counts_to_expval(counts)\n"
+"print(f\"Expectation value: {expval}\")"
+msgstr ""
+
+#: 1f6f930117394185b5af23301f5c3b0d
+msgid "Pauli Observable Expectations"
+msgstr ""
+
+#: 6cfc3eeef0cb40d1b121c8faf4ac5122
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import pauli_expval\n"
+"\n"
+"# Define Pauli observable (e.g., Z0*Z1)\n"
+"observable = \"ZZ\"\n"
+"\n"
+"# Calculate expectation\n"
+"expval = pauli_expval(counts, observable)\n"
+"print(f\"<{observable}>: {expval}\")"
+msgstr ""
+
+#: b7626ee37e19445b9dee8e91ad751db9
+msgid "Error Mitigation"
+msgstr ""
+
+#: 80f57c9648bf4329a43abdd1bf25bb79
+msgid "Readout Error Mitigation"
+msgstr ""
+
+#: ad6718977a454014ad64dde34776bbce
+msgid "**Purpose**: Correct systematic errors in qubit readout"
+msgstr ""
+
+#: cf67f602e12f43f895c2789e1797f05d
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import ReadoutMitigator\n"
+"\n"
+"# Create calibration circuits\n"
+"mitigator = ReadoutMitigator(num_qubits=3)\n"
+"\n"
+"# Run calibration\n"
+"calibration_results = mitigator.calibrate(device='statevector', "
+"shots=1000)\n"
+"\n"
+"# Apply mitigation to measurement results\n"
+"raw_counts = circuit.run(shots=1000)\n"
+"mitigated_counts = mitigator.apply(raw_counts)\n"
+"\n"
+"print(f\"Raw counts: {raw_counts}\")\n"
+"print(f\"Mitigated counts: {mitigated_counts}\")"
+msgstr ""
+
+#: ff123cb31dd8417eb155394c243d2e68
+msgid "**How it works**:"
+msgstr ""
+
+#: 79e0f0d6681045de807087ba8a0e305f
+msgid "Noise-Adaptive Processing"
+msgstr ""
+
+#: beafe669b4cd46e58395e0b6630712fe
+msgid "Apply noise models to count data for what-if analysis:"
+msgstr ""
+
+#: bee9e63608c54b46a85ee1b9c8fcafcd
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import apply_bitflip_counts, "
+"apply_depolarizing_counts\n"
+"\n"
+"# Simulate bit-flip noise\n"
+"noisy_counts_bitflip = apply_bitflip_counts(counts, p_flip=0.01)\n"
+"\n"
+"# Simulate depolarizing noise\n"
+"noisy_counts_depol = apply_depolarizing_counts(counts, p_depol=0.05)\n"
+"\n"
+"print(f\"Original: {counts}\")\n"
+"print(f\"With bit-flip: {noisy_counts_bitflip}\")\n"
+"print(f\"With depolarizing: {noisy_counts_depol}\")"
+msgstr ""
+
+#: afb420869bbd4319b6699fbab53ab7b2
+msgid "Classical Shadows"
+msgstr ""
+
+#: 00fdbd957dd4433696c57058d3193a78
+msgid ""
+"**Purpose**: Efficient quantum state property estimation without full "
+"tomography"
+msgstr ""
+
+#: 20873a41918148aaac82ef7f346dceb1
+msgid "Basic Workflow"
+msgstr ""
+
+#: a447de1f2ba04bb1851246fdb56c76c9
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import random_pauli_basis, "
+"estimate_expectation_pauli_product\n"
+"\n"
+"# Generate random measurement bases\n"
+"num_shots = 1000\n"
+"bases = random_pauli_basis(num_qubits=3, num_shots=num_shots)\n"
+"\n"
+"# Measure circuit in random bases\n"
+"results = []\n"
+"for basis in bases:\n"
+"    # Apply basis rotation and measure\n"
+"    measured_circuit = "
+"circuit.copy().rotate_to_basis(basis).measure_all()\n"
+"    result = measured_circuit.run(shots=1)\n"
+"    results.append(result)\n"
+"\n"
+"# Estimate expectation of target observable\n"
+"target_observable = \"ZZI\"  # Z_0 * Z_1 * I_2\n"
+"expval_estimate = estimate_expectation_pauli_product(\n"
+"    results, bases, target_observable\n"
+")\n"
+"\n"
+"print(f\"Estimated <{target_observable}>: {expval_estimate}\")"
+msgstr ""
+
+#: 8ced0afe79904888935d24332c564f34
+msgid "Advantages"
+msgstr ""
+
+#: e61fd7f3d441457ebad323d0ca825f3b
+msgid "**Scalability**: Works for large systems"
+msgstr ""
+
+#: 44232aaea47242318112055ce868fe6a
+msgid "**Sample efficiency**: Fewer measurements for low-weight observables"
+msgstr ""
+
+#: b6c423152d1e4407a5486ac864a50940
+msgid "**Unbiased**: Provides unbiased estimates"
+msgstr ""
+
+#: 4fe3adb754b84533a5d55e468de0bbd3
+msgid "**Flexible**: Can estimate many observables from same data"
+msgstr ""
+
+#: 142685da0a3f485db224bfd4b20a79d9
+msgid "Metrics and Analysis"
+msgstr ""
+
+#: f20012d313e542eb9fdb4a4af9640c80
+msgid "Fidelity Calculation"
+msgstr ""
+
+#: 8eaeaa575dbe44f4b97e725698432ff9
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import state_fidelity\n"
+"\n"
+"# Calculate fidelity between two states\n"
+"state1 = circuit1.device('statevector').run()\n"
+"state2 = circuit2.device('statevector').run()\n"
+"\n"
+"fidelity = state_fidelity(state1, state2)\n"
+"print(f\"Fidelity: {fidelity}\")"
+msgstr ""
+
+#: 49608fe54e23492888b37007d5ea82d4
+msgid "Entropy Measures"
+msgstr ""
+
+#: 17ea9d35e31e43488e6d68956831856e
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import von_neumann_entropy\n"
+"\n"
+"# Calculate von Neumann entropy\n"
+"density_matrix = circuit.device('density_matrix').run()\n"
+"entropy = von_neumann_entropy(density_matrix)\n"
+"\n"
+"print(f\"Entropy: {entropy}\")"
+msgstr ""
+
+#: 5dab2901ed62426dbaa26f7f23e17aa0
+msgid "Count Statistics"
+msgstr ""
+
+#: 776f1241848148df9dd6b73df8e8c14a
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import counts_statistics\n"
+"\n"
+"counts = circuit.run(shots=10000)\n"
+"stats = counts_statistics(counts)\n"
+"\n"
+"print(f\"Total shots: {stats['total_shots']}\")\n"
+"print(f\"Unique outcomes: {stats['num_outcomes']}\")\n"
+"print(f\"Most probable: {stats['most_probable']}\")\n"
+"print(f\"Entropy: {stats['shannon_entropy']}\")"
+msgstr ""
+
+#: 77a89c719a1540cabcb82fe3310dc537
+msgid "Advanced Techniques"
+msgstr ""
+
+#: 4ff2a21acd5b4c4ebf3f70c07e7a0664
+msgid "Zero-Noise Extrapolation"
+msgstr ""
+
+#: bae1e94b51844d2d9336f0afb2dba912
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import zero_noise_extrapolation\n"
+"\n"
+"# Run at different noise levels\n"
+"noise_levels = [0.0, 0.01, 0.02, 0.03]\n"
+"expvals = []\n"
+"\n"
+"for noise in noise_levels:\n"
+"    result = circuit.device(\n"
+"        'density_matrix',\n"
+"        noise_model={'depolarizing': {'p': noise}}\n"
+"    ).run(shots=1000)\n"
+"    expval = counts_to_expval(result)\n"
+"    expvals.append(expval)\n"
+"\n"
+"# Extrapolate to zero noise\n"
+"zne_expval = zero_noise_extrapolation(noise_levels, expvals)\n"
+"print(f\"Zero-noise extrapolated value: {zne_expval}\")"
+msgstr ""
+
+#: cbb67ec0faa84d00a3712b202523e4c3
+msgid "Probabilistic Error Cancellation"
+msgstr ""
+
+#: e496bb68760c44698f4018a312c34c7e
+#, python-brace-format
+msgid ""
+"from tyxonq.postprocessing import probabilistic_error_cancellation\n"
+"\n"
+"# Define ideal and noisy operations\n"
+"ideal_circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"noisy_circuit = ideal_circuit.device(\n"
+"    'density_matrix',\n"
+"    noise_model={'depolarizing': {'p': 0.01}}\n"
+")\n"
+"\n"
+"# Apply PEC\n"
+"mitigated_result = probabilistic_error_cancellation(\n"
+"    noisy_circuit,\n"
+"    num_samples=1000\n"
+")"
+msgstr ""
+
+#: e90239dbd7fe47c780ea1c7f086e8abe
+msgid "Best Practices"
+msgstr ""
+
+#: 0531e385685b4464a91cc72177588b21
+msgid "Error Mitigation Guidelines"
+msgstr ""
+
+#: 16bb212a6bf14ae4a134c05e56e6128d
+msgid "**Calibrate regularly**: Readout errors drift over time"
+msgstr ""
+
+#: b3e1ca0c8be246f8a60149b0b93e31d1
+msgid "**Use appropriate shots**: More shots for better mitigation"
+msgstr ""
+
+#: e0327e3feebe4488933e34a0fd01bef3
+msgid "**Validate mitigation**: Compare with ideal simulations"
+msgstr ""
+
+#: 7b9b2248c7b64cc9811d222d9e379e3f
+msgid "**Combine techniques**: Use multiple mitigation methods together"
+msgstr ""
+
+#: 38491f1f11a24993830a96aa1fd6eb7f
+msgid "Performance Tips"
+msgstr ""
+
+#: 991d6fdebb574de9a22ece16435037ca
+msgid "**Batch processing**:"
+msgstr ""
+
+#: 50d337d490ba4d38bff15bd4a39f6351
+msgid ""
+"# Process multiple count dictionaries efficiently\n"
+"all_expvals = [counts_to_expval(c) for c in count_list]"
+msgstr ""
+
+#: b958fce1b5854e5ca47ffd4b3bb7ef56
+msgid "**Caching calibration**:"
+msgstr ""
+
+#: f09b81a31f1041f68c992b50b5a3ab91
+msgid ""
+"# Save and load calibration data\n"
+"mitigator.save_calibration('calibration.json')\n"
+"mitigator.load_calibration('calibration.json')"
+msgstr ""
+
+#: a8e50d0b4955475ea2ee65cd1c9ad1b5
+msgid "**Parallel processing**:"
+msgstr ""
+
+#: cd63eb6a997247f991ca180e6f3078de
+msgid ""
+"from concurrent.futures import ProcessPoolExecutor\n"
+"\n"
+"with ProcessPoolExecutor() as executor:\n"
+"    results = list(executor.map(process_counts, count_list))"
+msgstr ""
+
+#: 7e74e0263b694740bc59b22061f20c3c
+msgid "Related Resources"
+msgstr ""
+
+#: 38c108cae07548389eddd6f4c98a3daf
+msgid ":doc:`/api/postprocessing/index` - Postprocessing API Reference"
+msgstr ""
+
+#: 32540021c7234d859681573780782133
+msgid ":doc:`../devices/index` - Device Execution Guide"
+msgstr ""
+
+#: e260ac2884954cd2aa65ffdd361db67a
+msgid ":doc:`/examples/readout_mitigation` - Error Mitigation Examples"
+msgstr ""
+
+#: c0d0440d712840e7ad1146a772bf785a
+msgid ":doc:`/examples/noise_controls_demo` - Noise Modeling Examples"
+msgstr ""
+

@@ -7,55 +7,174 @@ import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 from pyscf.scf import ROHF
+from pyscf.fci import direct_spin1 
+from pyscf import gto,scf
 
 import warnings as _warnings
 from .ucc import UCC
-from openfermion.transforms import jordan_wigner
-from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
-    get_integral_from_hf,
-    get_hop_from_integral,
-)
-from tyxonq.applications.chem.chem_libs.circuit_chem_library.ansatz_uccsd import (
-    generate_uccsd_ex1_ops,
-    generate_uccsd_ex2_ops,
-)
 from ..constants import DISCARD_EPS
 
 
 class UCCSD(UCC):
-    """
-    Run UCCSD calculation. For a comprehensive tutorial see :doc:`/tutorial_jupyter/ucc_functions`.
+    """Unitary Coupled Cluster Singles and Doubles (UCCSD) quantum algorithm.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from tencirchem import UCCSD
-    >>> from tencirchem.molecule import h2
-    >>> uccsd = UCCSD(h2)
-    >>> e_ucc = uccsd.kernel()
-    >>> np.testing.assert_allclose(e_ucc, uccsd.e_fci, atol=1e-10)
-    >>> e_hf = uccsd.energy(np.zeros(uccsd.n_params))
-    >>> np.testing.assert_allclose(e_hf, uccsd.e_hf, atol=1e-10)
-    """
+    UCCSD implements the quantum analog of classical Coupled Cluster Singles and Doubles
+    (CCSD) theory using a unitary ansatz suitable for quantum computers. The method combines
+    single and double excitation operators in an exponential form to approximate the
+    ground state wavefunction of molecular systems.
 
+    Mathematical Foundation:
+        The UCCSD ansatz is defined as:
+        |ψ⟩ = exp(T̂ - T̂†) |HF⟩
+        where T̂ = T̂₁ + T̂₂ includes:
+        - T̂₁: Single excitation operators (orbital → virtual transitions)
+        - T̂₂: Double excitation operators (pair excitations)
+
+    Key Features:
+        - **Variational optimization**: Parameters optimized to minimize energy expectation
+        - **Amplitude screening**: Automatically filters insignificant excitations
+        - **Flexible initialization**: Supports MP2, CCSD, or zero initial guesses
+        - **Active space support**: Reduces computational cost via orbital selection
+        - **Runtime adaptivity**: Supports both device and numeric execution
+        - **Chemical accuracy**: Provides systematic improvement over HF theory
+
+    Algorithm Workflow:
+        1. **Hartree-Fock calculation**: Obtain molecular orbitals and integrals
+        2. **Excitation generation**: Create single and double excitation operators
+        3. **Amplitude initialization**: Use MP2/CCSD for initial parameter guess
+        4. **Screening and sorting**: Filter excitations by amplitude significance
+        5. **Variational optimization**: Minimize energy via quantum circuit execution
+        6. **Convergence analysis**: Achieve chemical accuracy within tolerance
+
+    Args:
+        mol (Union[Mole, RHF], optional): PySCF molecule object or RHF calculation result.
+        init_method (str, optional): Initial amplitude guess method.
+            - "mp2": Møller-Plesset 2nd order perturbation theory (default)
+            - "ccsd": Classical coupled cluster singles and doubles
+            - "fe": Frozen natural orbitals
+            - "zeros": Zero initialization (disables screening)
+        active_space (Tuple[int, int], optional): Active space (n_electrons, n_orbitals)
+            for reduced computational cost.
+        active_orbital_indices (List[int], optional): Explicit orbital selection
+            (0-based indexing). If None, orbitals are selected by energy.
+        mo_coeff (ndarray, optional): Pre-computed molecular orbital coefficients.
+            If provided, skips RHF calculation.
+        pick_ex2 (bool, optional): Enable two-body excitation screening based on
+            amplitude significance. Default True.
+        epsilon (float, optional): Threshold for discarding small excitations.
+            Default 1e-12.
+        sort_ex2 (bool, optional): Sort excitations by amplitude magnitude for
+            systematic truncation. Default True.
+        mode (str, optional): Symmetry handling mode:
+            - "fermion": Fermionic representation (default)
+            - "qubit": Direct qubit representation
+        runtime (str, optional): Execution backend:
+            - "device": Quantum device execution (default)
+            - "numeric": Classical simulation
+        numeric_engine (str, optional): Numerical backend ("statevector", "pytorch", etc.).
+        run_fci (bool, optional): Compute exact FCI reference for benchmarking.
+            Default False.
+        classical_provider (str, optional): Provider for classical calculations.
+            Default "local".
+        classical_device (str, optional): Device for classical calculations.
+            Default "auto".
+        atom (object, optional): Direct molecular specification (alternative to mol).
+        basis (str, optional): Basis set for quantum chemistry. Default "sto-3g".
+        unit (str, optional): Coordinate units. Default "Angstrom".
+        charge (int, optional): Molecular charge. Default 0.
+        spin (int, optional): Molecular spin multiplicity. Default 0.
+
+    Attributes:
+        n_params (int): Total number of variational parameters.
+        ex_ops (List[Tuple]): Excitation operators as index tuples.
+        param_ids (List[int]): Parameter mapping for excitations.
+        init_guess (List[float]): Initial parameter guess from classical methods.
+        pick_ex2 (bool): Two-body excitation screening flag.
+        sort_ex2 (bool): Excitation sorting flag.
+        t2_discard_eps (float): Amplitude threshold for screening.
+
+    Examples:
+        >>> # Basic UCCSD calculation for H2
+        >>> from tyxonq.chem import UCCSD
+        >>> from tyxonq.chem.molecule import h2
+        >>> uccsd = UCCSD(h2)
+        >>> ground_state_energy = uccsd.kernel()
+        >>> print(f"UCCSD energy: {ground_state_energy:.8f} Hartree")
+        
+        >>> # Verify against exact results
+        >>> import numpy as np
+        >>> np.testing.assert_allclose(ground_state_energy, uccsd.e_fci, atol=1e-10)
+        
+        >>> # Active space calculation for larger molecules
+        >>> from pyscf import gto
+        >>> h2o = gto.M(atom='O 0 0 0; H 0 0 0.96; H 0.93 0 0.24', basis='sto-3g')
+        >>> uccsd_cas = UCCSD(h2o, active_space=(4, 4))  # 4 electrons in 4 orbitals
+        >>> cas_energy = uccsd_cas.kernel()
+        
+        >>> # Custom initialization and screening
+        >>> uccsd_custom = UCCSD(h2, init_method="ccsd", epsilon=1e-8)
+        >>> custom_energy = uccsd_custom.kernel()
+        
+        >>> # Direct molecular specification
+        >>> uccsd_direct = UCCSD(
+        ...     atom="H 0 0 0; H 0 0 0.74",
+        ...     basis="6-31g",
+        ...     runtime="device"
+        ... )
+        >>> direct_energy = uccsd_direct.kernel()
+        
+        >>> # Analyze excitation operators
+        >>> ex_ops, param_ids, init_params = uccsd.get_ex_ops()
+        >>> print(f"Number of excitations: {len(ex_ops)}")
+        >>> print(f"Excitation operators: {ex_ops[:3]}")
+        
+        >>> # Access reference energies
+        >>> print(f"HF energy: {uccsd.e_hf:.8f}")
+        >>> print(f"FCI energy: {uccsd.e_fci:.8f}")
+        >>> print(f"Correlation energy: {uccsd.e_uccsd - uccsd.e_hf:.8f}")
+
+    Performance Notes:
+        - Amplitude screening significantly reduces parameter count for large molecules
+        - Active space approximation enables treatment of systems with 10+ orbitals
+        - Device runtime supports both simulators and quantum hardware
+        - Classical reference calculations provide benchmarking and initialization
+        
+    Theoretical Background:
+        UCCSD provides a systematic improvement over Hartree-Fock theory by including
+        electron correlation effects through excitations from occupied to virtual orbitals.
+        The unitary formulation ensures the wavefunction remains normalized and is suitable
+        for implementation on quantum computers.
+        
+    See Also:
+        UCC: Base class for unitary coupled cluster methods.
+        HEA: Hardware-efficient ansatz alternative.
+        KUPCCGSD: k-UpCCGSD variant with generalized excitations.
+        PUCCD: Pair-unitary coupled cluster doubles.
+        tyxonq.chem.molecule: Predefined molecular systems.
+    """
     def __init__(
         self,
-        mol: Union[Mole, RHF],
+        mol: Union[Mole, scf.hf.RHF] = None,
         init_method: str = "mp2",
         active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
+        active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
         pick_ex2: bool = True,
         epsilon: float = DISCARD_EPS,
         sort_ex2: bool = True,
         mode: str = "fermion",
-        runtime: str = None,
+        runtime: str = 'device',
         numeric_engine: str | None = None,
-        run_hf: bool = True,
-        run_mp2: bool = True,
-        run_ccsd: bool = True,
-        run_fci: bool = True,
+        run_fci: bool = False,
+        classical_provider: str = "local",
+        classical_device: str = "auto",
+        # Optional PySCF-style direct molecule construction
+        atom: object | None = None,
+        basis: str = "sto-3g",
+        unit: str = "Angstrom",
+        charge: int = 0,
+        spin: int = 0,
+        **kwargs
     ):
         r"""
         Initialize the class with molecular input.
@@ -70,7 +189,7 @@ class UCCSD(UCC):
         active_space: Tuple[int, int], optional
             Active space approximation. The first integer is the number of electrons and the second integer is
             the number or spatial-orbitals. Defaults to None.
-        aslst: List[int], optional
+        active_orbital_indices: List[int], optional
             Pick orbitals for the active space. Defaults to None which means the orbitals are sorted by energy.
             The orbital index is 0-based.
 
@@ -110,156 +229,41 @@ class UCCSD(UCC):
 
         See Also
         --------
-        tencirchem.KUPCCGSD
-        tencirchem.PUCCD
-        tencirchem.UCC
+        tyxonq.chem.KUPCCGSD
+        tyxonq.chem.PUCCD
+        tyxonq.chem.UCC
         """
-        # --- RHF setup ---
-        # Avoid fragile isinstance on PySCF factories; detect by attributes
-        if hasattr(mol, "mol") and hasattr(mol, "kernel"):
-            hf = mol
-        else:
-            hf = RHF(mol)
-        if mo_coeff is not None:
-            hf.mo_coeff = np.asarray(mo_coeff)
-        hf.chkfile = None
-        hf.verbose = 0
-        if run_hf:
-            hf.kernel()
-        self.hf = hf
-
-        # --- Integrals and core energy ---
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
-        # Active space electron/orbital counts
-        if active_space is None:
-            n_elec = int(getattr(hf.mol, "nelectron"))
-            n_cas = int(getattr(hf.mol, "nao"))
-        else:
-            n_elec, n_cas = int(active_space[0]), int(active_space[1])
-        self.active_space = (n_elec, n_cas)
-        self.inactive_occ = 0
-        self.inactive_vir = 0
-        self.no = n_elec // 2
-        self.nv = n_cas - self.no
-
-        # --- Reference energies ---
-        try:
-            self.e_hf = float(getattr(hf, "e_tot", 0.0))
-        except Exception:
-            self.e_hf = float("nan")
-        try:
-            if run_fci:
-                from pyscf import fci as _fci  # type: ignore
-
-                self.e_fci = float(_fci.FCI(hf).kernel()[0])
-            else:
-                self.e_fci = float("nan")
-        except Exception:
-            self.e_fci = float("nan")
-
-        # --- Initial amplitudes t1/t2 according to init_method ---
-        t1 = np.zeros((self.no, self.nv))
-        t2 = np.zeros((self.no, self.no, self.nv, self.nv))
-        method = (init_method or "mp2").lower()
-        mp2_amp = None
-        if method in ("mp2", "ccsd", "fe") and (run_mp2 or method == "mp2"):
-            try:
-                from pyscf.mp import MP2  # type: ignore
-
-                _mp = MP2(hf)
-                _mp.kernel()
-                mp2_full = np.asarray(getattr(_mp, "t2", None))
-                if mp2_full is not None and mp2_full.ndim >= 4:
-                    mp2_amp = np.abs(mp2_full[: self.no, : self.no, : self.nv, : self.nv])
-            except Exception:
-                mp2_amp = None
-        if method in ("ccsd", "fe") and run_ccsd:
-            try:
-                from pyscf.cc import ccsd as _cc  # type: ignore
-
-                cc = _cc.CCSD(hf)
-                cc.kernel()
-                cc_t1 = np.asarray(getattr(cc, "t1", None))
-                if cc_t1 is not None and cc_t1.shape[0] >= self.no and cc_t1.shape[1] >= self.nv:
-                    t1 = np.asarray(cc_t1[: self.no, : self.nv], dtype=float)
-                cc_t2 = np.asarray(getattr(cc, "t2", None))
-                if cc_t2 is not None and cc_t2.ndim >= 4:
-                    t2 = np.abs(cc_t2[: self.no, : self.no, : self.nv, : self.nv])
-                elif mp2_amp is not None:
-                    t2 = np.asarray(mp2_amp, dtype=float)
-            except Exception:
-                if mp2_amp is not None:
-                    t2 = np.asarray(mp2_amp, dtype=float)
-        elif method == "mp2" and mp2_amp is not None:
-            t2 = np.asarray(mp2_amp, dtype=float)
-        # zeros: keep t1/t2 as zeros
-
-        # --- Ex-ops & init guesses ---
-        self.t2_discard_eps = epsilon
-        if method == "zeros":
-            self.pick_ex2 = self.sort_ex2 = False
-        else:
-            self.pick_ex2 = bool(pick_ex2)
-            self.sort_ex2 = bool(sort_ex2)
-        ex1_ops, ex1_param_ids, ex1_init_guess = generate_uccsd_ex1_ops(self.no, self.nv, t1, mode=mode)
-        ex2_ops, ex2_param_ids, ex2_init_guess = generate_uccsd_ex2_ops(self.no, self.nv, t2, mode=mode)
-        ex2_ops, ex2_param_ids, ex2_init_guess = self.pick_and_sort(ex2_ops, ex2_param_ids, ex2_init_guess, self.pick_ex2, self.sort_ex2)
-        ex_ops = ex1_ops + ex2_ops
-        param_ids = ex1_param_ids + [i + max(ex1_param_ids) + 1 for i in ex2_param_ids]
-        init_guess = ex1_init_guess + ex2_init_guess
-
-        # --- Map to QubitOperator ---
-        n_qubits = 2 * n_cas
-        fop = get_hop_from_integral(int1e, int2e)
-        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
-        na = self.no
-        nb = n_elec - na
-
-        # --- Initialize internal UCC (new signature) ---
-        # If numeric_engine is specified and runtime not provided, default to numeric path
-        _runtime = str(runtime or ("numeric" if numeric_engine is not None else "device"))
 
         super().__init__(
-            n_qubits=n_qubits,
-            n_elec_s=(na, nb),
-            h_qubit_op=hq,
-            runtime=_runtime,
-            mode=str(mode),
-            ex_ops=ex_ops,
-            param_ids=param_ids,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
+            mol=mol,
+            init_method=init_method,
+            active_space=active_space,
+            active_orbital_indices=active_orbital_indices,
+            mo_coeff=mo_coeff,
+            mode=mode,
+            runtime=runtime,
+            numeric_engine=numeric_engine,
+            run_fci=run_fci,
+            atom=atom,
+            basis=basis,
+            unit=unit,
+            charge=charge,
+            spin=spin,
+            classical_provider=classical_provider,
+            classical_device=classical_device,
+            **kwargs
         )
-        self.e_core = float(e_core)
-        # adopt generated init guesses
-        self.init_guess = np.asarray(init_guess, dtype=np.float64) if len(init_guess) > 0 else np.zeros(0, dtype=np.float64)
-        # remember preferred numeric engine if provided
-        self.numeric_engine = numeric_engine
-        # Store integrals for later runtime construction
-        self._int1e = np.asarray(int1e)
-        self._int2e = np.asarray(int2e)
-        # Back-compat attributes used by tests
-        self.n_elec = int(n_elec)
-        self.civector_size = int(self.n_qubits if hasattr(self, 'n_qubits') else (2 * n_cas))
 
-    # ---- Compatibility: expose FermionOperator Hamiltonian (electronic part, without e_core) ----
-    @property
-    def h_fermion_op(self):
-        """Return FermionOperator for total Hamiltonian (electronic + e_core).
+        if self.init_method == "zeros":
+            self.pick_ex2 = self.sort_ex2 = False
+        else:
+            self.pick_ex2 = pick_ex2
+            self.sort_ex2 = sort_ex2
+        # screen out excitation operators based on t2 amplitude
+        self.t2_discard_eps = epsilon
+        self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
 
-        Older tests expect using this with a mapping (e.g., parity) to produce
-        a qubit Hamiltonian including the constant energy shift.
-        """
-        from openfermion import FermionOperator as _FOP  # lazy import
-        hop = get_hop_from_integral(self._int1e, self._int2e)
-        try:
-            core = float(getattr(self, "e_core", 0.0))
-        except Exception:
-            core = 0.0
-        if abs(core) > 0:
-            hop += _FOP((), core)
-        return hop
+
 
     def get_ex_ops(self, t1: np.ndarray = None, t2: np.ndarray = None) -> Tuple[List[Tuple], List[int], List[float]]:
         """
@@ -289,8 +293,8 @@ class UCCSD(UCC):
 
         Examples
         --------
-        >>> from tencirchem import UCCSD
-        >>> from tencirchem.molecule import h2
+        >>> from tyxonq.chem import UCCSD
+        >>> from tyxonq.chem.molecule import h2
         >>> uccsd = UCCSD(h2)
         >>> ex_op, param_ids, init_guess = uccsd.get_ex_ops()
         >>> ex_op
@@ -301,8 +305,8 @@ class UCCSD(UCC):
         [0.0, ...]
         """
         # Delegate ex-op generation to libs to keep one source of truth
-        ex1_ops, ex1_param_ids, ex1_init_guess = generate_uccsd_ex1_ops(self.no, self.nv, t1, mode=self.mode)
-        ex2_ops, ex2_param_ids, ex2_init_guess = generate_uccsd_ex2_ops(self.no, self.nv, t2, mode=self.mode)
+        ex1_ops, ex1_param_ids, ex1_init_guess = self.get_ex1_ops(t1)
+        ex2_ops, ex2_param_ids, ex2_init_guess = self.get_ex2_ops(t2)
 
         # screen out symmetrically not allowed excitation
         ex2_ops, ex2_param_ids, ex2_init_guess = self.pick_and_sort(
@@ -343,94 +347,6 @@ class UCCSD(UCC):
         """
         return self.energy()
 
-    # ---- Convenience builders from integrals ----
-    @classmethod
-    def from_integral(
-        cls,
-        int1e: np.ndarray,
-        int2e: np.ndarray,
-        n_elec: Union[int, Tuple[int, int]],
-        e_core: float | None = None,
-        ovlp: np.ndarray | None = None,
-        *,
-        mode: str = "fermion",
-        runtime: str = "device",
-        pick_ex2: bool = False,
-        sort_ex2: bool = False,
-        epsilon: float = DISCARD_EPS,
-        numeric_engine: str | None = None,
-    ) -> "UCCSD":
-        # Derive CAS sizes
-        n_cas = int(len(int1e))
-        if isinstance(n_elec, int):
-            assert n_elec % 2 == 0
-            n_elec_s = (n_elec // 2, n_elec // 2)
-        else:
-            n_elec_s = (int(n_elec[0]), int(n_elec[1]))
-        na, nb = int(n_elec_s[0]), int(n_elec_s[1])
-        no = na
-        nv = n_cas - no
-
-        # Build qubit Hamiltonian
-        from openfermion.transforms import jordan_wigner as _jw
-        from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx as _rev
-        from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_hop_from_integral as _hop
-
-        fop = _hop(int1e, int2e)
-        n_qubits = 2 * n_cas
-        hq = _rev(_jw(fop), n_qubits)
-
-        # Create bare instance bypassing __init__ and initialize UCC base
-        inst = cls.__new__(cls)
-        UCC.__init__(
-            inst,
-            n_qubits=n_qubits,
-            n_elec_s=(na, nb),
-            h_qubit_op=hq,
-            runtime=("numeric" if numeric_engine is not None else runtime),
-            mode=mode,
-            ex_ops=None,
-            param_ids=None,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
-        )
-        # Record energies and preferences
-        inst.e_core = float(e_core) if e_core is not None else 0.0
-        inst.numeric_engine = numeric_engine
-        inst._int1e = np.asarray(int1e)
-        inst._int2e = np.asarray(int2e)
-        inst.n_elec = int(na + nb)
-        inst.civector_size = int(inst.n_qubits)
-
-        # Generate UCCSD excitations and init guess (T1/T2 zeros if no CC info)
-        inst.t2_discard_eps = epsilon
-        inst.pick_ex2 = bool(pick_ex2)
-        inst.sort_ex2 = bool(sort_ex2)
-        t1 = np.zeros((no, nv))
-        t2 = np.zeros((no, no, nv, nv))
-        ex1_ops, ex1_param_ids, ex1_init_guess = generate_uccsd_ex1_ops(no, nv, t1, mode=mode)
-        ex2_ops, ex2_param_ids, ex2_init_guess = generate_uccsd_ex2_ops(no, nv, t2, mode=mode)
-        ex2_ops, ex2_param_ids, ex2_init_guess = inst.pick_and_sort(ex2_ops, ex2_param_ids, ex2_init_guess, inst.pick_ex2, inst.sort_ex2)
-        ex_ops = ex1_ops + ex2_ops
-        param_ids = ex1_param_ids + [i + max(ex1_param_ids) + 1 for i in ex2_param_ids]
-        init_guess = ex1_init_guess + ex2_init_guess
-        # Normalize param ids to contiguous range and align init guess
-        unique_ids = np.unique(param_ids)
-        id_map = {int(old): idx for idx, old in enumerate(unique_ids)}
-        param_ids = [id_map[int(i)] for i in param_ids]
-        init_vec = np.array(init_guess)[unique_ids]
-        inst.ex_ops = ex_ops
-        inst.param_ids = param_ids
-        inst.init_guess = np.asarray(init_vec, dtype=np.float64)
-        # Reference FCI energy for assertions
-        try:
-            from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-            inst.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (na, nb))[0] + (float(e_core) if e_core is not None else 0.0))
-        except Exception:
-            inst.e_fci = float('nan')
-        return inst
-
     # Use base class numeric path; runtime construction now injects CI Hamiltonian centrally
 
 
@@ -439,71 +355,53 @@ class ROUCCSD(UCC):
         self,
         mol: Union[Mole, ROHF],
         active_space: Tuple[int, int] = None,
-        aslst: List[int] = None,
+        active_orbital_indices: List[int] = None,
         mo_coeff: np.ndarray = None,
-        numeric_engine: str | None = None,
-        run_hf: bool = True,
-        # for API consistency with UCC
-        run_mp2: bool = False,
-        run_ccsd: bool = False,
-        run_fci: bool = True,
+        numeric_engine: str ='civector',
+        init_method: str = "zeros",
+        runtime = 'device',
+        run_fci: bool = False,
+        classical_provider: str = "local",
+        classical_device: str = "auto",
+        # Optional PySCF-style direct molecule construction
+        atom: object | None = None,
+        basis: str = "sto-3g",
+        unit: str = "Angstrom",
+        charge: int = 0,
+        spin: int = 0,
+        **kwargs
     ):
-        # --- ROHF setup (open-shell) ---
-        if hasattr(mol, "mol") and hasattr(mol, "kernel"):
-            hf = mol  # already an SCF object (expecting ROHF)
-        else:
-            hf = ROHF(mol)
-        if mo_coeff is not None:
-            hf.mo_coeff = np.asarray(mo_coeff)
-        hf.chkfile = None
-        hf.verbose = 0
-        if run_hf:
-            hf.kernel()
 
-        # --- Integrals and core energy ---
-        int1e, int2e, e_core = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+        
+        super().__init__(
+            mol = mol,
+            init_method=init_method,
+            active_space = active_space,
+            active_orbital_indices=active_orbital_indices,
+            mo_coeff= mo_coeff,
+            numeric_engine=numeric_engine,
+            run_fci=run_fci,
+            classical_provider = classical_provider,
+            classical_device = classical_device,
+            atom=atom,
+            basis=basis,
+            unit=unit,
+            charge=charge,
+            spin=spin,
+            **kwargs
+        )
 
-        # Active space: electrons and spatial orbitals
-        if active_space is None:
-            n_elec = int(getattr(hf.mol, "nelectron"))
-            n_cas = int(getattr(hf.mol, "nao"))
-        else:
-            n_elec, n_cas = int(active_space[0]), int(active_space[1])
-        self.active_space = (n_elec, n_cas)
 
-        # Derive CAS occupations from (n_elec, spin) to avoid dependence on MO ordering
-        # spin = N_alpha - N_beta in PySCF Mole
-        spin = int(getattr(getattr(hf, "mol", None), "spin", 0))
-        n_alpha = (int(n_elec) + spin) // 2
-        n_beta = (int(n_elec) - spin) // 2
-        # Doubly occupied spatial orbitals in CAS equals n_beta; singly occupied equals spin
-        no = int(n_beta)
-        ns = int(spin)
-        nv = int(n_cas) - (no + ns)
-        if nv < 0:
-            # Fallback: clamp to zero and adjust no to keep counts valid in small CAS
-            nv = 0
-            no = max(0, int(n_cas) - ns)
-        assert no >= 0 and ns >= 0 and nv >= 0 and (no + ns + nv) == int(n_cas)
+        no = int(np.sum(self.hf.mo_occ == 2)) - self.inactive_occ
+        ns = int(np.sum(self.hf.mo_occ == 1))
+        nv = int(np.sum(self.hf.mo_occ == 0)) - self.inactive_vir
+        assert no + ns + nv == self.active_space[1]
+        # assuming single electrons in alpha
+        noa = no + ns
+        nva = nv
+        nob = no
+        nvb = ns + nv
 
-        # alpha/beta occupied and virtual counts in CAS
-        noa = no + ns  # alpha occupied count (doubles + singles)
-        nob = no       # beta occupied count (doubles only)
-        nva = nv       # alpha virtual count
-        nvb = ns + nv  # beta virtual count (beta has fewer occupied)
-
-        # --- Reference energies (optional FCI) ---
-        try:
-            if run_fci:
-                from pyscf.fci import direct_spin1 as _fci_ds1  # type: ignore
-                # CAS FCI on (int1e, int2e) with (na, nb) in CAS, then add core energy
-                self.e_fci = float(_fci_ds1.FCI().kernel(int1e, int2e, n_cas, (noa, nob))[0] + e_core)
-            else:
-                self.e_fci = float("nan")
-        except Exception:
-            self.e_fci = float("nan")
-
-        # --- Ex-ops (open-shell mapping) ---
         def alpha_o(_i):
             return self.active_space[1] + _i
 
@@ -516,14 +414,18 @@ class ROUCCSD(UCC):
         def beta_v(_i):
             return nob + _i
 
-        ex_ops: list[tuple] = []
         # single excitations
+        self.ex_ops = []
         for i in range(noa):
             for a in range(nva):
-                ex_ops.append((alpha_v(a), alpha_o(i)))  # alpha→alpha
+                # alpha to alpha
+                ex_op_a = (alpha_v(a), alpha_o(i))
+                self.ex_ops.append(ex_op_a)
         for i in range(nob):
             for a in range(nvb):
-                ex_ops.append((beta_v(a), beta_o(i)))    # beta→beta
+                # beta to beta
+                ex_op_b = (beta_v(a), beta_o(i))
+                self.ex_ops.append(ex_op_b)
 
         # double excitations
         # 2 alphas
@@ -531,47 +433,23 @@ class ROUCCSD(UCC):
             for j in range(i):
                 for a in range(nva):
                     for b in range(a):
-                        ex_ops.append((alpha_v(b), alpha_v(a), alpha_o(i), alpha_o(j)))
+                        ex_op_aa = (alpha_v(b), alpha_v(a), alpha_o(i), alpha_o(j))
+                        self.ex_ops.append(ex_op_aa)
         # 2 betas
         for i in range(nob):
             for j in range(i):
                 for a in range(nvb):
                     for b in range(a):
-                        ex_ops.append((beta_v(b), beta_v(a), beta_o(i), beta_o(j)))
+                        ex_op_bb = (beta_v(b), beta_v(a), beta_o(i), beta_o(j))
+                        self.ex_ops.append(ex_op_bb)
+
         # 1 alpha + 1 beta
         for i in range(noa):
             for j in range(nob):
                 for a in range(nva):
                     for b in range(nvb):
-                        ex_ops.append((beta_v(b), alpha_v(a), alpha_o(i), beta_o(j)))
+                        ex_op_ab = (beta_v(b), alpha_v(a), alpha_o(i), beta_o(j))
+                        self.ex_ops.append(ex_op_ab)
 
-        param_ids = list(range(len(ex_ops)))
-        init_guess = np.zeros_like(param_ids)
-
-        # --- Build qubit Hamiltonian ---
-        n_qubits = 2 * n_cas
-        fop = get_hop_from_integral(int1e, int2e)
-        hq = reverse_qop_idx(jordan_wigner(fop), n_qubits)
-
-        # --- Initialize base UCC with open-shell (na, nb) ---
-        super().__init__(
-            n_qubits=n_qubits,
-            n_elec_s=(noa, nob),
-            h_qubit_op=hq,
-            runtime=("numeric" if numeric_engine is not None else "device"),
-            mode="fermion",
-            ex_ops=ex_ops,
-            param_ids=param_ids,
-            init_state=None,
-            decompose_multicontrol=False,
-            trotter=False,
-        )
-
-        # record energies and preferences
-        self.e_core = float(e_core)
-        self.init_guess = np.asarray(init_guess, dtype=np.float64)
-        self.numeric_engine = numeric_engine
-        self._int1e = np.asarray(int1e)
-        self._int2e = np.asarray(int2e)
-        # For CI engines, provide ci_hamiltonian via algorithms.UCC.energy/energy_and_grad
-        self.n_elec = int(n_elec)
+        self.param_ids = list(range(len(self.ex_ops)))
+        self.init_guess = np.zeros_like(self.param_ids)

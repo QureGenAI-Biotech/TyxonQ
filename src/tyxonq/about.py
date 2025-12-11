@@ -32,51 +32,6 @@ def about() -> None:
         print(f"Pandas is not installed")
 
     try:
-        import tensornetwork as tn
-
-        print(f"TensorNetwork version: {tn.__version__}")
-    except ModuleNotFoundError:
-        print(f"TensorNetwork is not installed")
-
-    try:
-        import cotengra
-
-        try:
-            print(f"Cotengra version: {cotengra.__version__}")
-        except AttributeError:
-            print(f"Cotengra: installed")
-    except ModuleNotFoundError:
-        print(f"Cotengra is not installed")
-
-    try:
-        import tensorflow as tf
-
-        print(f"TensorFlow version: {tf.__version__}")
-        print(f"TensorFlow GPU: {tf.config.list_physical_devices('GPU')}")
-        print(f"TensorFlow CUDA infos: {dict(tf.sysconfig.get_build_info())}")
-    except ModuleNotFoundError:
-        print(f"TensorFlow is not installed")
-
-    try:
-        import jax
-
-        print(f"Jax version: {jax.__version__}")
-        try:
-            device = jax.devices("gpu")
-            print(f"Jax GPU: {device}")
-        except RuntimeError:
-            print(f"Jax installation doesn't support GPU")
-    except ModuleNotFoundError:
-        print(f"Jax is not installed")
-
-    try:
-        import jaxlib
-
-        print(f"JaxLib version: {jaxlib.__version__}")
-    except ModuleNotFoundError:
-        print(f"JaxLib is not installed")
-
-    try:
         import torch
 
         print(f"PyTorch version: {torch.__version__}")
@@ -103,12 +58,6 @@ def about() -> None:
     except ModuleNotFoundError:
         print(f"Qiskit is not installed")
 
-    try:
-        import cirq
-
-        print(f"Cirq version: {cirq.__version__}")
-    except ModuleNotFoundError:
-        print(f"Cirq is not installed")
 
     from tyxonq import __version__
 

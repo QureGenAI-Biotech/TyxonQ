@@ -1,0 +1,75 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 661a0c271fac4310bf67c37281ba7517
+msgid "tyxonq.core.errors"
+msgstr ""
+
+#: 4d96f3baa2634638a2a8b1fb3cdaba9f
+msgid "Exceptions"
+msgstr ""
+
+#: aa61564793304c13930231ecd211db1a
+msgid ":py:obj:`CompilationError <tyxonq.core.errors.CompilationError>`\\"
+msgstr ""
+
+#: c64d148346ec421391018ae18d5d8e37 d000dda3ca64483184bd15ca855f73c8
+msgid "Raised when compilation fails or produces invalid output."
+msgstr ""
+
+#: 7dc6dd9713934d079545633cb5c9bedb
+msgid ":py:obj:`DeviceExecutionError <tyxonq.core.errors.DeviceExecutionError>`\\"
+msgstr ""
+
+#: 3c3ffb347d3840718884d3ab1d70685e 5193f54ebaa047a5bdfe55628882aa8f
+msgid "Raised when device execution fails (timeouts, connectivity, etc.)."
+msgstr ""
+
+#: cff2af5395b341a8896801903c766920
+msgid ":py:obj:`TyxonQError <tyxonq.core.errors.TyxonQError>`\\"
+msgstr ""
+
+#: 056610245195491182c708674e1aea36 d736137f0eb248b9bd2dc50474af2f5f
+msgid "Base exception for TyxonQ."
+msgstr ""
+
+#: b527f6e9ca444a6a96f1731333639dd1
+msgid ""
+":py:obj:`VectorizationFallbackWarning "
+"<tyxonq.core.errors.VectorizationFallbackWarning>`\\"
+msgstr ""
+
+#: 8df04631d83f493daa1990e6d7500375 d2b882c6f66b4efca18369156969ff88
+msgid "Warning indicating vectorization was disabled or fell back to eager."
+msgstr ""
+
+#: 74939ab7ab9e4ec380697968813d7fc4
+msgid "Bases: :py:class:`Exception`"
+msgstr ""
+
+#: a86dbe434f3e4c4791d147b42b741a87 daf0e29412f744a7af1e32a72937b235
+msgid "Bases: :py:class:`~tyxonq.core.errors.TyxonQError`"
+msgstr ""
+
+#: 2c9a358a95264962bebd90253f9cc0a7
+msgid "Bases: :py:class:`Warning`"
+msgstr ""
+

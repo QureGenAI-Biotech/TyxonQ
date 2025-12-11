@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tyxonq.postprocessing.metrics import (
+from tyxonq.libs.quantum_library.kernels.quantum_info import (
     taylorlnm,
     truncated_free_energy,
     reduced_wavefunction,

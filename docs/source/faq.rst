@@ -1,170 +1,450 @@
+===
+FAQ
+===
+
+===========================
 Frequently Asked Questions
-============================
+===========================
 
-How can I run TyxonQ on GPU?
------------------------------------------
+Installation and Setup
+======================
 
-This is done directly through the ML backend. GPU support is determined by whether ML libraries are can run on GPU, we don't handle this within tyxonQ.
-It is the users' responsibility to configure a GPU-compatible environment for these ML packages. Please refer to the installation documentation for these ML packages and directly use the official dockerfiles provided by TyxonQ.
-With GPU compatible environment, we can switch the use of GPU or CPU by a backend agnostic environment variable ``CUDA_VISIBLE_DEVICES``.
+How do I install TyxonQ?
+-------------------------
 
+TyxonQ can be installed via pip:
 
-When should I use GPU for the quantum simulation?
-----------------------------------------------------
+.. code-block:: bash
 
-In general, for a circuit with qubit count larger than 16 or for circuit simulation with large batch dimension more than 16, GPU simulation will be faster than CPU simulation.
-That is to say, for very small circuits and the very small batch dimensions of vectorization, GPU may show worse performance than CPU.
-But one have to carry out detailed benchmarks on the hardware choice, since the performance is determined by the hardware and task details.
+   pip install tyxonq
 
+For development installation:
 
-When should I jit the function?
-----------------------------------------------------
+.. code-block:: bash
 
-For a function with "tensor in and tensor out", wrapping it with jit will greatly accelerate the evaluation. Since the first time of evaluation takes longer time (staging time), jit is only good for functions which have to be evaluated frequently.
+   git clone https://github.com/QureGenAI-Biotech/TyxonQ.git
+   cd TyxonQ
+   pip install -e .
 
+What are the dependencies?
+---------------------------
 
-.. Warning::
+**Required dependencies**:
 
-    Be caution that jit can be easily misused if the users are not familiar with jit mechanism, which may lead to:
-    
-        1. very slow performance due to recompiling/staging for each run, 
-        2. error when run function with jit, 
-        3. or wrong results without any warning.
-    
-    The most possible reasons for each problem are:
-    
-        1. function input are not all in the tensor form,
-        2. the output shape of all ops in the function may require the knowledge of the input value more than the input shape, or use mixed ops from numpy and ML framework
-        3. subtle interplay between random number generation and jit (see :ref:`advance:Randoms, Jit, Their Interplay` for the correct solution), respectively.
+- Python 3.8+
+- NumPy
+- SciPy
+- NetworkX
 
+**Optional dependencies**:
 
-Which ML framework backend should I use?
---------------------------------------------
+- **Qiskit**: For Qiskit compiler backend and transpilation
+- **PyTorch**: For PyTorch numeric backend and GPU acceleration
+- **CuPy/CuPyNumeric**: For GPU-accelerated tensor operations
+- **PySCF**: For quantum chemistry calculations
+- **Matplotlib**: For visualization
 
-Since the Numpy backend has no support for AD, if you want to evaluate the circuit gradient, you must set the backend as PyTorch. TyxonQ is designed to integrate deeply with the PyTorch ecosystem, leveraging its capabilities for automatic differentiation, GPU acceleration, and building complex models. While other backends might be available, PyTorch is the recommended and best-supported choice for most applications, especially those involving variational circuits and quantum machine learning.
+See ``pyproject.toml`` for complete dependency list.
 
+How do I configure the numeric backend?
+----------------------------------------
 
-What is the counterpart of ``QuantumLayer`` for PyTorch?
-----------------------------------------------------------------------------
+TyxonQ supports three numeric backends:
 
-For PyTorch, we have built-in support for wrapping a quantum function into a PyTorch module as ``tq.TorchLayer``. This allows for seamless integration of quantum circuits into larger classical machine learning models. Jit and vmap are automatically handled within the ``TorchLayer``, simplifying the process of creating hybrid quantum-classical models.
+.. code-block:: python
 
-When do I need to customize the contractor and how?
+   import tyxonq as tq
+   
+   # NumPy backend (default, CPU)
+   tq.set_backend("numpy")  # or "cpu"
+   
+   # PyTorch backend (GPU support)
+   tq.set_backend("pytorch")  # or "torch", "pt"
+   
+   # CuPyNumeric backend (distributed GPU)
+   tq.set_backend("cupynumeric")  # or "gpu"
+
+Backends are configured in ``src/tyxonq/config.py``.
+
+Circuit Construction
+====================
+
+How do I create a quantum circuit?
+-----------------------------------
+
+Use the ``Circuit`` class:
+
+.. code-block:: python
+
+   import tyxonq as tq
+   
+   # Create 2-qubit circuit
+   c = tq.Circuit(2)
+   c.h(0)        # Hadamard on qubit 0
+   c.cx(0, 1)    # CNOT from qubit 0 to 1
+   c.measure_all()  # Measure all qubits
+
+See :doc:`user_guide/core` for detailed circuit construction.
+
+What gates are supported?
+--------------------------
+
+**Single-qubit gates**:
+
+- Pauli: ``x()``, ``y()``, ``z()``
+- Hadamard: ``h()``
+- Rotations: ``rx()``, ``ry()``, ``rz()``
+- Phase: ``s()``, ``sdg()``, ``t()``, ``tdg()``
+- Others: ``sx()``, ``sxdg()``
+
+**Two-qubit gates**:
+
+- CNOT: ``cx()``
+- Controlled-Y: ``cy()``
+- Controlled-Z: ``cz()``
+- SWAP: ``swap()``
+- Controlled-Phase: ``cp()``
+
+**Multi-qubit gates**:
+
+- Toffoli: ``ccx()``
+- Multi-controlled gates: ``mcx()``, ``mcy()``, ``mcz()``
+
+See ``src/tyxonq/core/ir/circuit.py`` for complete gate set.
+
+How do I use parameterized gates?
+----------------------------------
+
+.. code-block:: python
+
+   from tyxonq import Circuit, Param
+   
+   # Create parameter
+   theta = Param("theta")
+   
+   # Use in circuit
+   c = Circuit(1)
+   c.rx(theta, 0)
+   c.ry(2 * theta, 0)
+
+See :doc:`user_guide/core` for parameterized circuits.
+
+Compilation
+===========
+
+How do I compile a circuit?
+----------------------------
+
+TyxonQ supports two compilation backends:
+
+.. code-block:: python
+
+   # Native compiler (default)
+   compiled = c.compile()
+   
+   # Qiskit compiler (requires Qiskit)
+   compiled = c.compile(engine="qiskit", optimization_level=3)
+
+See :doc:`user_guide/compiler` for compilation details.
+
+What optimization passes are available?
+---------------------------------------
+
+**Native compiler passes**:
+
+- ``measurement_rewrite``: Optimize measurement operations
+- ``shot_scheduler``: Schedule shot-based execution
+- ``auto_measure``: Automatically add measurements
+
+**Qiskit compiler**:
+
+- Full Qiskit transpilation with optimization levels 0-3
+- Hardware-aware compilation
+- Gate basis transformation
+
+See ``src/tyxonq/compiler/`` for implementation.
+
+Why do I get "Missing Qiskit Dependency" error?
+-------------------------------------------------
+
+The native compiler tries to delegate to Qiskit for certain operations. Install Qiskit:
+
+.. code-block:: bash
+
+   pip install qiskit
+
+Or use the native compiler without Qiskit features.
+
+Execution
+=========
+
+How do I run a circuit on a simulator?
+---------------------------------------
+
+.. code-block:: python
+
+   from tyxonq.runtime.simulator import run
+   
+   # Statevector simulation
+   result = run(c, shots=1000)
+   
+   # With specific backend
+   result = run(c, shots=1000, method="statevector")
+
+See :doc:`user_guide/devices` for execution details.
+
+How do I run on cloud hardware?
+--------------------------------
+
+.. code-block:: python
+
+   from tyxonq.cloud import apis
+   import getpass
+   
+   # Configure API key
+   API_KEY = getpass.getpass("API Key: ")
+   apis.set_token(API_KEY)
+   apis.set_provider("tyxonq")
+   
+   # Submit to Homebrew_S2
+   task = apis.submit_task(
+       circuit=c,
+       shots=100,
+       device="homebrew_s2?o=7"
+   )
+   
+   result = task.results()
+
+See :doc:`cloud_services/getting_started` for cloud access.
+
+What does "o=7" mean in device names?
+---------------------------------------
+
+Optimization flags for Homebrew_S2 (additive):
+
+- ``o=1``: Qubit mapping
+- ``o=2``: Gate decomposition
+- ``o=4``: Initial mapping
+- ``o=7``: All optimizations (1+2+4)
+
+Example: ``device="homebrew_s2?o=3"`` means qubit mapping + gate decomposition.
+
+See :doc:`cloud_services/device_management` for details.
+
+Quantum Chemistry
+=================
+
+How do I run VQE for molecules?
+--------------------------------
+
+.. code-block:: python
+
+   from tyxonq.applications.chem import UCCSD
+   from tyxonq.applications.chem.molecule import h2
+   
+   # Create UCCSD instance
+   uccsd = UCCSD(h2)
+   
+   # Run VQE
+   energy = uccsd.kernel(runtime="numeric")
+   print(f"Ground state energy: {energy} Ha")
+
+See :doc:`quantum_chemistry/algorithms` for quantum chemistry algorithms.
+
+What molecules are predefined?
+-------------------------------
+
+Predefined molecules in ``tyxonq.applications.chem.molecule``:
+
+- ``h2``: Hydrogen molecule
+- ``lih``: Lithium hydride
+- ``h2o``: Water
+- ``nh3``: Ammonia
+- ``ch4``: Methane
+- ``n2``: Nitrogen molecule
+
+See :doc:`quantum_chemistry/molecule` for molecule definitions.
+
+How do I use custom molecules?
+-------------------------------
+
+.. code-block:: python
+
+   from tyxonq.applications.chem.molecule import Molecule
+   
+   # Define custom molecule
+   my_mol = Molecule(
+       atom="C 0 0 0; H 0.63 0.63 0.63; H -0.63 -0.63 0.63; H -0.63 0.63 -0.63; H 0.63 -0.63 -0.63",
+       basis="sto-3g",
+       charge=0,
+       spin=0
+   )
+
+See :doc:`quantum_chemistry/molecule` for custom molecules.
+
+Pulse-Level Programming
+=======================
+
+How do I use pulse-level control?
+----------------------------------
+
+.. code-block:: python
+
+   from tyxonq import Circuit, Param, waveforms
+   
+   # Enable pulse mode
+   qc = Circuit(1)
+   qc.use_pulse()
+   
+   # Define pulse calibration
+   param = Param("q[0]")
+   builder = qc.calibrate("rabi_test", [param])
+   builder.new_frame("drive_frame", param)
+   builder.play("drive_frame", waveforms.CosineDrag(50, 0.2, 0.0, 0.0))
+   builder.build()
+   
+   # Add calibration call
+   qc.add_calibration('rabi_test', ['q[0]'])
+   qc.measure_z(0)
+   
+   # Generate TQASM 0.2 code
+   tqasm = qc.to_tqasm()
+
+See :doc:`cloud_services/hardware_access` for pulse programming.
+
+What waveforms are supported?
+------------------------------
+
+**Supported waveforms**:
+
+- ``CosineDrag(duration, amp, sigma, beta)``
+- ``Gaussian(duration, amp, sigma)``
+- ``Sine(duration, amp, phase, freq, angle)``
+- ``Flattop(duration, amp, sigma)``
+- ``Constant(duration, amp)``
+- ``GaussianSquare(duration, amp, sigma, width)``
+- ``Cosine(duration, amp, freq, phase)``
+- ``Drag(duration, amp, sigma, beta)``
+
+See ``src/tyxonq/waveforms.py`` and ``docs/pulse_support_en.md`` for details.
+
+Do I need to disable optimization for pulse circuits?
 ------------------------------------------------------
 
-As a rule of thumb, for the circuit with qubit counts larger than 16 and circuit depth larger than 8, customized contraction may outperform the default built-in greedy contraction strategy.
-
-To set up or not set up the customized contractor is about a trade-off between the time on contraction pathfinding and the time on the real contraction via matmul.
-
-The customized contractor costs much more time than the default contractor in terms of contraction path searching, and via the path it finds, the real contraction can take less time and space.
-
-If the circuit simulation time is the bottleneck of the whole workflow, one can always try customized contractors to see whether there is some performance improvement.
-
-We recommend to using `cotengra library <https://cotengra.readthedocs.io/en/latest/index.html>`_ to set up the contractor, since there are lots of interesting hyperparameters to tune, we can achieve a better trade-off between the time on contraction path search and the time on the real tensor network contraction.
-
-It is also worth noting that for jitted function which we usually use, the contraction path search is only called at the first run of the function, which further amortizes the time and favors the use of a highly customized contractor.
-
-In terms of how-to on contractor setup, please refer to :ref:`quickstart:Setup the Contractor`.
-
-Is there some API less cumbersome than ``expectation`` for Pauli string?
-----------------------------------------------------------------------------
-
-Say we want to measure something like :math:`\langle X_0Z_1Y_2Z_4 \rangle` for a six-qubit system, the general ``expectation`` API may seem to be cumbersome.
-So one can try one of the following options:
-
-* ``c.expectation_ps(x=[0], y=[2], z=[1, 4])`` 
-
-* ``tq.templates.measurements.parameterized_measurements(c, np.array([1, 3, 2, 0, 3, 0]), onehot=True)``
-
-Can I apply quantum operation based on previous classical measurement results in TyxonQ?
-----------------------------------------------------------------------------------------------------
-
-Try the following: (the pipeline is even fully jittable!)
+**Yes, absolutely critical!** Pulse-level circuits must disable optimization:
 
 .. code-block:: python
 
-    c = tq.Circuit(2)
-    c.H(0)
-    r = c.cond_measurement(0)
-    c.conditional_gate(r, [tq.gates.i(), tq.gates.x()], 1)
+   task = apis.submit_task(
+       circuit=pulse_circuit,
+       shots=100,
+       device="homebrew_s2",  # No ?o= flag
+       enable_qos_gate_decomposition=False,
+       enable_qos_qubit_mapping=False
+   )
 
-``cond_measurement`` will return 0 or 1 based on the measurement result on z-basis, and ``conditional_gate`` applies gate_list[r] on the circuit.
+Optimization will destroy pulse-level programming.
 
-How to understand the difference between different measurement methods for ``Circuit``?
-----------------------------------------------------------------------------------------------------
+Troubleshooting
+===============
 
-* :py:meth:`tyxonq.circuit.Circuit.measure` : used at the end of the circuit execution, return bitstring based on quantum amplitude probability (can also with the probability), the circuit and the output state are unaffected (no collapse). The jittable version is ``measure_jit``.
+Why is my circuit not running?
+-------------------------------
 
-* :py:meth:`tyxonq.circuit.Circuit.cond_measure`: also with alias ``cond_measurement``, usually used in the middle of the circuit execution. Apply a POVM on z basis on the given qubit, the state is collapsed and nomarlized based on the measurement projection. The method returns an integer Tensor indicating the measurement result 0 or 1 based on the quantum amplitude probability. 
+**Common issues**:
 
-* :py:meth:`tyxonq.circuit.Circuit.post_select`: also with alia ``mid_measurement``, usually used in the middle of the circuit execution. The measurement result is fixed as given from ``keep`` arg of this method. The state is collapsed but unnormalized based on the given measurement projection.
+1. **No measurements**: Add ``c.measure_all()`` before execution
+2. **Missing backend**: Install required backend (Qiskit, PyTorch, etc.)
+3. **Invalid gate basis**: Check if gates are supported by target device
+4. **Token not set**: Configure API token for cloud execution
 
-Please refer to the following demos:
-
-.. code-block:: python
-
-    c = tq.Circuit(2)
-    c.H(0)
-    c.H(1)
-    print(c.measure(0, 1))
-    # ('01', -1.0)
-    print(c.measure(0, with_prob=True))
-    # ('0', (0.4999999657714588+0j))
-    print(c.state()) # unaffected
-    # [0.49999998+0.j 0.49999998+0.j 0.49999998+0.j 0.49999998+0.j]
-
-    c = tq.Circuit(2)
-    c.H(0)
-    c.H(1)
-    print(c.cond_measure(0))  # measure the first qubit return +z
-    # 0
-    print(c.state())  # collapsed and normalized
-    # [0.70710678+0.j 0.70710678+0.j 0.        +0.j 0.        +0.j]
-
-    c = tq.Circuit(2)
-    c.H(0)
-    c.H(1)
-    print(c.post_select(0, keep=1))  # measure the first qubit and it is guranteed to return -z
-    # 1
-    print(c.state())  # collapsed but unnormalized
-    # [0.        +0.j 0.        +0.j 0.49999998+0.j 0.49999998+0.j]
-
-
-How to understand difference between ``tq.array_to_tensor`` and ``tq.backend.convert_to_tensor``?
-------------------------------------------------------------------------------------------------------
-
-``tq.array_to_tensor`` convert array to tensor as well as automatically cast the type to the default dtype of TyxonQ,
-i.e. ``tq.dtypestr`` and it also support to specify dtype as ``tq.array_to_tensor( , dtype="complex128")``.
-Instead, ``tq.backend.convert_to_tensor`` keeps the dtype of the input array, and to cast it as complex dtype, we have to
-explicitly call ``tq.backend.cast`` after conversion. Besides, ``tq.array_to_tensor`` also accepts multiple inputs as
-``a_tensor, b_tensor = tq.array_to_tensor(a_array, b_array)``.
-
-
-How to arrange the circuit gate placement in the visualization from ``c.tex()``?
-----------------------------------------------------------------------------------------------------
-
-Try ``lcompress=True`` or ``rcompress=True`` option in :py:meth:`tyxonq.circuit.Circuit.tex` API to make the circuit align from the left or from the right.
-
-Or try ``c.unitary(0, unitary=tq.backend.eye(2), name="invisible")`` to add placeholder on the circuit which is invisible for circuit visualization.
-
-How to get the entanglement entropy from the circuit output?
---------------------------------------------------------------------
-
-Try the following:
+How do I enable debug logging?
+-------------------------------
 
 .. code-block:: python
 
-    c = tq.Circuit(4)
-    # omit circuit construction
+   import logging
+   
+   logging.basicConfig(level=logging.DEBUG)
 
-    rho = tq.quantum.reduced_density_matrix(s, cut=[0, 1, 2])
-    # get the redueced density matrix, where cut list is the index to be traced out
+Where can I find examples?
+---------------------------
 
-    rho.shape
-    # (2, 2)
+Examples are in the ``examples/`` directory:
 
-    ee = tq.quantum.entropy(rho)
-    # get the entanglement entropy
+- ``circuit_chain_demo.py``: Circuit construction and execution
+- ``cloud_api_task.py``: Cloud API usage
+- ``pulse_demo.py``: Pulse-level programming
+- VQE and quantum chemistry examples
 
-    renyi_ee = tq.quantum.renyi_entropy(rho, k=2)
-    # get the k-th order renyi entropy
+See :doc:`examples/index` for documented examples.
+
+How do I report bugs?
+----------------------
+
+Report issues on GitHub:
+
+- **Repository**: https://github.com/QureGenAI-Biotech/TyxonQ
+- **Issues**: https://github.com/QureGenAI-Biotech/TyxonQ/issues
+
+Include:
+
+- Python version
+- TyxonQ version
+- Minimal reproducible example
+- Error traceback
+
+Performance
+===========
+
+How can I speed up simulations?
+--------------------------------
+
+**Strategies**:
+
+1. **Use GPU backend**: ``tq.set_backend("pytorch")`` or ``"cupynumeric"``
+2. **Reduce shot count**: Use fewer shots for testing
+3. **Optimize circuits**: Use ``optimization_level=3`` in compilation
+4. **MPS backend**: For low-entanglement circuits
+
+See :doc:`technical_references/performance` for optimization techniques.
+
+Why is PyTorch backend slower than NumPy?
+------------------------------------------
+
+PyTorch has overhead for small circuits. GPU acceleration benefits appear for:
+
+- Large circuits (>15 qubits)
+- Many shots (>10000)
+- Gradient computation
+- Batched execution
+
+For small circuits, NumPy is usually faster.
+
+Further Help
+============
+
+Where can I learn more?
+-----------------------
+
+- **User Guide**: :doc:`user_guide/index`
+- **Tutorials**: :doc:`tutorials/index`
+- **API Reference**: :doc:`api/index`
+- **Examples**: :doc:`examples/index`
+- **Cloud Services**: :doc:`cloud_services/index`
+
+How do I contact support?
+--------------------------
+
+For questions and support:
+
+- **GitHub Discussions**: https://github.com/QureGenAI-Biotech/TyxonQ/discussions
+- **Email**: Support information on https://www.tyxonq.com/
+
+Is there a community?
+---------------------
+
+Join the TyxonQ community:
+
+- **GitHub**: https://github.com/QureGenAI-Biotech/TyxonQ
+- **Website**: https://www.tyxonq.com/

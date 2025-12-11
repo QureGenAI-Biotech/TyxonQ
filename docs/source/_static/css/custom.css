@@ -1,0 +1,75 @@
+/* Custom CSS for TyxonQ Documentation */
+
+/* Improve code block styling */
+div.highlight {
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+/* Better spacing for admonitions */
+.admonition {
+    margin: 1.5em 0;
+    padding: 1em;
+    border-radius: 4px;
+}
+
+/* Improve table readability */
+table.docutils {
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+table.docutils th {
+    background-color: var(--pst-color-surface);
+    font-weight: 600;
+}
+
+/* Better navigation sidebar */
+.bd-sidebar {
+    font-size: 0.9rem;
+}
+
+/* Mermaid diagram container */
+.mermaid {
+    text-align: center;
+    margin: 2em 0;
+}
+
+/* API documentation improvements */
+dl.py {
+    margin: 1.5em 0;
+}
+
+dl.py dt {
+    font-weight: 600;
+    background-color: var(--pst-color-surface);
+    padding: 0.5em;
+    border-left: 3px solid var(--pst-color-primary);
+}
+
+/* Improve parameter lists */
+.field-list dt {
+    font-weight: 600;
+}
+
+/* Better footnote styling */
+.footnote {
+    font-size: 0.9em;
+    border-top: 1px solid var(--pst-color-border);
+    padding-top: 0.5em;
+    margin-top: 2em;
+}
+
+/* Responsive images */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Code inline styling */
+code.literal {
+    background-color: var(--pst-color-surface);
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.9em;
+}

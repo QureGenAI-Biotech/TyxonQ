@@ -176,6 +176,8 @@ except Exception:
 try:
     from .numerics.context import set_backend as _set_backend  # type: ignore
     from .numerics.api import get_backend as _get_backend  # type: ignore
+    from .numerics import NumericBackend as _NumericBackend  # type: ignore
+    from .numerics import set_dtype as _set_dtype  # type: ignore
 
     def set_backend(name_or_instance: Any):
         """Set global/default numerics backend (e.g., 'numpy' | 'pytorch').
@@ -183,14 +185,17 @@ try:
         Also exposes ``tyxonq.backend`` and ``tyxonq.rdtypestr`` for legacy helpers.
         """
 
-        def _assign_backend_alias(fetch_name: Any | None) -> Any:
+        def _assign_backend_alias(bk: Any) -> Any:
             try:
-                bk = _get_backend(fetch_name)
                 globals()["backend"] = bk
                 try:
                     globals()["rdtypestr"] = getattr(bk, "rdtypestr", "float64")
                 except Exception:
                     globals()["rdtypestr"] = "float64"
+                try:
+                    globals()["dtypestr"] = getattr(bk, "dtypestr", "complex128")
+                except Exception:
+                    globals()["dtypestr"] = "complex128"
                 return bk
             except Exception:
                 return None
@@ -200,23 +205,26 @@ try:
             name = str(name_or_instance).lower()
             if name == "cupynumeric":
                 try:
-                    _set_backend(name)
-                    return _assign_backend_alias(name)
+                    bk = _get_backend(name)
+                    _set_backend(bk)  # Store instance, not name
+                    return _assign_backend_alias(bk)
                 except Exception:
                     try:
                         import warnings as _warnings
                         _warnings.warn("cupynumeric not installed, falling back to numpy backend", UserWarning)
                     except Exception:
                         pass
-                    _set_backend("numpy")
-                    return _assign_backend_alias("numpy")
+                    bk = _get_backend("numpy")
+                    _set_backend(bk)
+                    return _assign_backend_alias(bk)
             else:
-                _set_backend(name)
-                return _assign_backend_alias(name)
+                bk = _get_backend(name)
+                _set_backend(bk)  # Store instance, not name
+                return _assign_backend_alias(bk)
 
         # Instance path
         _set_backend(name_or_instance)
-        return _assign_backend_alias(None)
+        return _assign_backend_alias(name_or_instance)
 
     def get_backend(name: Any | None = None):
         """Get an ArrayBackend instance.
@@ -226,25 +234,51 @@ try:
         """
 
         return _get_backend(name)
+    
+    def set_dtype(dtype_str: str):
+        """Set default dtype for the current backend.
+        
+        Args:
+            dtype_str: One of "complex64" or "complex128"
+            
+        Returns:
+            Tuple of (complex_dtype, real_dtype) from the current backend
+            
+        Example:
+            >>> import tyxonq as tq
+            >>> tq.set_backend("pytorch")
+            >>> ctype, rtype = tq.set_dtype("complex64")
+            >>> # Now backend uses complex64 for states, float32 for parameters
+        """
+        result = _set_dtype(dtype_str)
+        # Update global attributes
+        try:
+            bk = _get_backend(None)
+            globals()["dtypestr"] = getattr(bk, "dtypestr", "complex128")
+            globals()["rdtypestr"] = getattr(bk, "rdtypestr", "float64")
+        except Exception:
+            pass
+        return result
 
     # expose in module namespace and __all__
-    __all__.extend(["set_backend", "get_backend"])
+    __all__.extend(["set_backend", "get_backend", "set_dtype"])
 except Exception:
     pass
 
-# --- Thin forwarding for missing attributes: backend / rdtypestr ---
+# --- Thin forwarding for missing attributes: backend / rdtypestr / array_to_tensor / dtypestr ---
 def __getattr__(name: str):
     """Lazy attribute bridge.
 
-    If `backend` or `rdtypestr` is not initialized via set_backend(),
-    fetch current backend via get_backend(None) and expose both symbols.
+    If `backend`, `rdtypestr`, `array_to_tensor`, or `dtypestr` is not initialized,
+    fetch current backend via get_backend(None) and expose these symbols.
     """
-    if name in ("backend", "rdtypestr"):
+    if name in ("backend", "rdtypestr", "dtypestr", "array_to_tensor"):
         try:
             # get current or default backend lazily
             bk = get_backend(None)  # type: ignore[name-defined]
         except Exception:
             bk = None
+        
         if name == "backend":
             globals()["backend"] = bk
             # also try to expose rdtypestr along the way
@@ -252,14 +286,39 @@ def __getattr__(name: str):
                 globals()["rdtypestr"] = getattr(bk, "rdtypestr", "float64")
             except Exception:
                 globals()["rdtypestr"] = "float64"
+            # expose dtypestr
+            try:
+                globals()["dtypestr"] = getattr(bk, "dtypestr", "complex128")
+            except Exception:
+                globals()["dtypestr"] = "complex128"
             return bk
-        # name == "rdtypestr"
-        try:
-            rd = getattr(bk, "rdtypestr", "float64")
-        except Exception:
-            rd = "float64"
-        globals()["rdtypestr"] = rd
-        return rd
+        
+        if name == "rdtypestr":
+            try:
+                rd = getattr(bk, "rdtypestr", "float64")
+            except Exception:
+                rd = "float64"
+            globals()["rdtypestr"] = rd
+            return rd
+        
+        if name == "dtypestr":
+            try:
+                dt = getattr(bk, "dtypestr", "complex128")
+            except Exception:
+                dt = "complex128"
+            globals()["dtypestr"] = dt
+            return dt
+        
+        if name == "array_to_tensor":
+            # Expose array_to_tensor from NumericBackend
+            try:
+                from .numerics import NumericBackend as _NB
+                array_to_tensor_fn = _NB.array_to_tensor
+                globals()["array_to_tensor"] = array_to_tensor_fn
+                return array_to_tensor_fn
+            except Exception:
+                raise AttributeError(f"module '{__name__}' could not load 'array_to_tensor'")
+    
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 # --- Top-level noise controls (simulator) ---

@@ -1,0 +1,423 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 0c00e929f3254574b03aa6b16cff9127
+msgid "Compiler Pipeline"
+msgstr ""
+
+#: 6b886ceebb504de3839caaf6eb6eb8e2
+msgid ""
+"The TyxonQ compiler transforms high-level quantum circuits into low-level"
+" representations that can execute on target devices. Through multi-stage "
+"optimization and transformation, the compiler ensures circuits run "
+"efficiently on various quantum devices."
+msgstr ""
+
+#: 5643171391f145c18362fb0dfe7afaf1
+msgid "Contents"
+msgstr ""
+
+#: 13bc9b84395347458a605cdaa3ceba60
+msgid "Overview"
+msgstr ""
+
+#: fbd421c8369b4c898965fa435085be33
+msgid ""
+"The TyxonQ compiler uses a multi-stage pipeline architecture, with each "
+"stage responsible for specific optimization and transformation tasks:"
+msgstr ""
+
+#: c6d11071eb24481182496ad01d268f21
+msgid ""
+"**Decomposition Stage**: Decomposes high-level quantum gates into basic "
+"gate sets"
+msgstr ""
+
+#: 7e30f876cfbc49bca34083d241e3b325
+msgid ""
+"**Rewriting Stage**: Optimizes circuit structure and measurement "
+"strategies"
+msgstr ""
+
+#: ebeadf2dfc834cf5a08c050b5f05eb2c
+msgid ""
+"**Simplification Stage**: Eliminates redundant operations and reduces "
+"circuit complexity"
+msgstr ""
+
+#: 916ccad016d4473590471b00edab3638
+msgid "**Scheduling Stage**: Manages measurement allocation and shot budgets"
+msgstr ""
+
+#: 1e2939619d7745b1a427be50ead155d2
+msgid ""
+"**Gradient Processing**: Generates parameter shift circuits for gradient "
+"optimization"
+msgstr ""
+
+#: 86cf20ee24524f94b9eaadfd74a13546
+msgid "Compiler Architecture"
+msgstr ""
+
+#: deca109a460743e7817fd91bb9c48852
+msgid "Pipeline Framework"
+msgstr ""
+
+#: 5530c2fc886c4aca80a36f380eb43af9
+msgid "Compiler Engines"
+msgstr ""
+
+#: 8dd8f3aada0748daaead24abecbe4f2a
+msgid "TyxonQ supports multiple compiler engines:"
+msgstr ""
+
+#: 5eeb2f24c4844b4c9085a42f29460cd6
+msgid "Compiler Engine Comparison"
+msgstr ""
+
+#: 1e1da7a16662477687bec3a47296c930
+msgid "Engine Name"
+msgstr ""
+
+#: 8be28b849af44e02af9bb175ff1f58c9
+msgid "Target Format"
+msgstr ""
+
+#: c0918db95775472d8ca94ea27c9c5d88
+msgid "Use Cases"
+msgstr ""
+
+#: d48b628ce2a144c0a746d2b4cfa5ee2f
+msgid "Features"
+msgstr ""
+
+#: fd88b641723543bc9c560c5da19ae22a
+msgid "native"
+msgstr ""
+
+#: 618b03850f374f549b47a7dcc8314e2e
+msgid "TyxonQ IR"
+msgstr ""
+
+#: f9bc4e299b794592b69f10cf8e18358e
+msgid "Native simulators"
+msgstr ""
+
+#: 34e042671c9643f9a9a48bbd2027878c
+msgid "Complete optimization pipeline"
+msgstr ""
+
+#: cef8c39f48ca42edb7542f95189851cf
+msgid "qiskit"
+msgstr ""
+
+#: debdfb41d9da467ca8b118bd0783cbc1
+msgid "Qiskit QuantumCircuit"
+msgstr ""
+
+#: d6a3571e778549aa9338ed2d210e9ebe
+msgid "IBM hardware/Qiskit integration"
+msgstr ""
+
+#: 457c1fa337d6441784b988007385c0f4
+msgid "Qiskit ecosystem compatibility"
+msgstr ""
+
+#: 98f1c5666dd44cf8bf2e48fc8f45e710
+msgid "openqasm"
+msgstr ""
+
+#: 799662a7fd2a4e889606d14747e4d816
+msgid "OpenQASM 2.0"
+msgstr ""
+
+#: 325da30eb2b84317904ec3e2ebfe648b
+msgid "Universal quantum hardware"
+msgstr ""
+
+#: 42a0d151943b43218f026999d11273bd
+msgid "Cross-platform compatibility"
+msgstr ""
+
+#: a5637fbf60784b918219ca6aab10857e
+msgid "Usage Examples"
+msgstr ""
+
+#: 85beb2f81832429f882b3dfe1cddd3f1
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"circuit = tq.Circuit(2).h(0).cnot(0, 1)\n"
+"\n"
+"# Use default compiler\n"
+"compiled = circuit.compile()\n"
+"\n"
+"# Specify compiler engine\n"
+"compiled_qiskit = circuit.compile(compile_engine='qiskit')\n"
+"\n"
+"# Set optimization level\n"
+"compiled_opt = circuit.compile(\n"
+"    compile_engine='native',\n"
+"    options={'optimization_level': 2}\n"
+")\n"
+"\n"
+"print(f\"Original circuit gates: {len(circuit.ops)}\")\n"
+"print(f\"Compiled gates: {len(compiled.ops)}\")"
+msgstr ""
+
+#: e49326549d6144e8bb19b8ff526afbf1
+msgid "Compilation Stages"
+msgstr ""
+
+#: fe2ebf201e8a49269c7f721298d6a681
+msgid "Decomposition Stage"
+msgstr ""
+
+#: 2c5622f7358845bdad28dac568c375e8
+msgid ""
+"**Purpose**: Decompose high-level quantum gates into basic gate sets "
+"supported by the target device."
+msgstr ""
+
+#: dd58eba5c0544f84b67c5141d924f8c4
+msgid "**Supported Decompositions**"
+msgstr ""
+
+#: ac14e6ca2a2e4a2bab8d5b0c2127ec9d
+msgid ""
+"# RX gate decomposition: RX(θ) = H · RZ(θ) · H\n"
+"circuit = tq.Circuit(1).rx(0, 0.5)\n"
+"decomposed = circuit.compile()\n"
+"\n"
+"# RY gate decomposition: RY(θ) = S† · H · RZ(θ) · H · S\n"
+"circuit = tq.Circuit(1).ry(0, 0.5)\n"
+"decomposed = circuit.compile()\n"
+"\n"
+"# RZZ gate decomposition: RZZ(θ) = CNOT · RZ(θ) · CNOT\n"
+"circuit = tq.Circuit(2).rzz(0, 1, 0.5)\n"
+"decomposed = circuit.compile()"
+msgstr ""
+
+#: 302d0b82f4a54b809b64ddc4918963b5
+msgid "Rewriting Stage"
+msgstr ""
+
+#: c5a1b874ad484269b27c8409f666448b
+msgid "**Purpose**: Optimize circuit structure and measurement strategies."
+msgstr ""
+
+#: baa959dfa50c4c838b1179280ce61434
+msgid "**Main Rewriting Rules**"
+msgstr ""
+
+#: 56d6e08e03604d768c9e4947afe43ec4
+msgid "**Measurement Optimization**: Automatically group compatible measurements"
+msgstr ""
+
+#: 5b9f7be1fbc34c579c5f0f7db29fe16e
+msgid ""
+"**Gate Transformation**: Standardize gate representation and apply "
+"algebraic identities"
+msgstr ""
+
+#: 826512ab3e3245cf9557b405eb465b60
+msgid "**Auto-Measurement Insertion**: Add measurements to circuits lacking them"
+msgstr ""
+
+#: 789c514a3e24480582430a8beb8381da
+msgid ""
+"**Gate Merging and Pruning**: Merge adjacent gates and remove redundant "
+"operations"
+msgstr ""
+
+#: e8d9ae3a3daf472ebd5ea51afaf7e20c
+#, python-brace-format
+msgid ""
+"# Gate merging example\n"
+"circuit = (\n"
+"    tq.Circuit(2)\n"
+"    .rz(0, 0.1).rz(0, 0.2)  # Mergeable RZ gates\n"
+"    .x(1).x(1)              # Canceling X gates\n"
+")\n"
+"\n"
+"compiled = circuit.compile()\n"
+"print(f\"Optimized gate count: {len(compiled.ops)}\")"
+msgstr ""
+
+#: d13c898571aa42c7b6dca7a2891acf8e
+msgid "Simplification Stage"
+msgstr ""
+
+#: 2c765fe0f7df46a1aeb30fea0ca8d314
+msgid "**Light Cone Simplification**"
+msgstr ""
+
+#: 737f8f39318d47168db8f39773f2b305
+msgid ""
+"Light cone simplification removes operations that don't affect "
+"measurement results through backward analysis:"
+msgstr ""
+
+#: 437daa33b3474cdea608ad3ad1f97b11
+#, python-brace-format
+msgid ""
+"# Circuit with redundant operations\n"
+"circuit = (\n"
+"    tq.Circuit(4)\n"
+"    .h(0).h(1).h(2).h(3)        # Apply H gates to all qubits\n"
+"    .cnot(0, 1).cnot(2, 3)       # Entangling operations\n"
+"    .measure_z(0).measure_z(1)   # Only measure first two qubits\n"
+")\n"
+"\n"
+"# Compilation automatically applies light cone simplification\n"
+"simplified = circuit.compile()\n"
+"\n"
+"print(f\"Original circuit gates: {len(circuit.ops)}\")\n"
+"print(f\"Simplified gates: {len(simplified.ops)}\")\n"
+"# Expected to remove operations related to qubits 2, 3"
+msgstr ""
+
+#: 64f188c883da4ad3b775f3a1860a6ae1
+msgid "Scheduling Stage"
+msgstr ""
+
+#: b6403ac5ec9b4655b0610beb6090102c
+msgid "**Shot Scheduler**"
+msgstr ""
+
+#: d7fdd43423bb4e669cd5e160a5c7a609
+msgid "The shot scheduler manages measurement allocation and execution planning:"
+msgstr ""
+
+#: d6d03dc52c0b4609a2b9e11ff7393344
+msgid ""
+"# Circuit with measurement grouping\n"
+"circuit = (\n"
+"    tq.Circuit(3)\n"
+"    .h(0).cnot(0, 1).cnot(1, 2)\n"
+"    .measure_z(0).measure_z(1).measure_z(2)\n"
+")\n"
+"\n"
+"# Automatic scheduling during execution\n"
+"result = circuit.run(shots=1000)"
+msgstr ""
+
+#: 676dc656aebb48f9bf9096f8db829965
+msgid "Gradient Processing Stage"
+msgstr ""
+
+#: a008610c3ad2417485128332e58b3418
+msgid "**Parameter Shift Rule**"
+msgstr ""
+
+#: 5e5f208dd6574abb8a6a61c7e2c93891
+msgid "The parameter shift rule computes gradients through finite differences:"
+msgstr ""
+
+#: 6a8d386e3d6c4c4b953854f50430e0d3
+msgid ""
+"import numpy as np\n"
+"\n"
+"# Parameterized circuit\n"
+"theta = np.array([0.1, 0.2, 0.3])\n"
+"circuit = (\n"
+"    tq.Circuit(2)\n"
+"    .ry(0, theta[0])\n"
+"    .cnot(0, 1)\n"
+"    .rz(1, theta[1])\n"
+"    .ry(1, theta[2])\n"
+")\n"
+"\n"
+"# Gradient computation is automatically handled during optimization"
+msgstr ""
+
+#: 67ec31cd093b4dabba52281eb27964d8
+msgid "Best Practices"
+msgstr ""
+
+#: 521ca5f168b34171adb5fd1d82034131
+msgid "Compilation Options"
+msgstr ""
+
+#: 73b1a7a655ac40fea2b43b16d363f4e5
+msgid "**Choose Appropriate Optimization Level**"
+msgstr ""
+
+#: 77244cf18c044fe7a40608a52dbc247d
+#, python-brace-format
+msgid ""
+"# Debugging phase: low optimization\n"
+"debug_compiled = circuit.compile(options={'optimization_level': 0})\n"
+"\n"
+"# Production environment: high optimization\n"
+"prod_compiled = circuit.compile(options={'optimization_level': 3})"
+msgstr ""
+
+#: eda1e926eea347a3b80cbea3c83fd0fd
+msgid "**Target Device Adaptation**"
+msgstr ""
+
+#: 62d52beab8f549e08ced49d82d59d8dd
+msgid ""
+"# Optimize for specific device\n"
+"ibm_compiled = circuit.compile(\n"
+"    compile_engine='qiskit',\n"
+"    target='ibm_cairo'\n"
+")"
+msgstr ""
+
+#: 8e290da2d5cc432f954e5996f464aacd
+msgid "Performance Optimization"
+msgstr ""
+
+#: e25df193cf504d91a56c3aaac15403b2
+msgid "**Compilation Caching**: Reuse compilation results"
+msgstr ""
+
+#: b8f89473667c4bcaa67cf2729907644b
+msgid "**Batch Compilation**: Compile multiple similar circuits at once"
+msgstr ""
+
+#: 7239abb1e6734e5ca2e5ccddf699e44f
+msgid "**Incremental Optimization**: Start debugging from low optimization levels"
+msgstr ""
+
+#: 5c50cb108fb944f48fa1eba96bb689f3
+msgid "Related Resources"
+msgstr ""
+
+#: 9d61b5c9a7b4460f98e6a5dcee8429b4
+msgid ":doc:`/api/compiler/index` - Compiler API Reference"
+msgstr ""
+
+#: 2564224419f242c6a92b35f0f7f70c46
+msgid ":doc:`../devices/index` - Device Execution Guide"
+msgstr ""
+
+#: 8abea232b21f4120904a39deb46cfa29
+msgid ":doc:`../core/index` - Core Module Introduction"
+msgstr ""
+
+#: 474aee64a277434a9742c1fdf009966d
+msgid ":doc:`/examples/optimization_examples` - Optimization Examples"
+msgstr ""
+

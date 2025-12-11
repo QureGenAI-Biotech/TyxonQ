@@ -1,0 +1,151 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 33d76dbf420544cb900224cee512c071
+msgid "tyxonq.utils"
+msgstr ""
+
+#: c6ebcabacd3f4d96bb0b2b45d8bcf3c5
+msgid "Helper functions"
+msgstr ""
+
+#: 18cfef69297346ec9751c8595c5e58ad
+msgid "Functions"
+msgstr ""
+
+#: cfa6c254a5e349199c10efaa32b2f611
+msgid ":py:obj:`append <tyxonq.utils.append>`\\ \\(f\\, \\*op\\)"
+msgstr ""
+
+#: 177c8b66daa94bb09097657dd001c481 b3ec394b621f487f99be2fc59e5fd061
+msgid "Functional programming paradigm to build function pipeline"
+msgstr ""
+
+#: aff652170cf74870a7e448200ff75c92
+msgid ""
+":py:obj:`arg_alias <tyxonq.utils.arg_alias>`\\ \\(f\\, alias\\_dict\\[\\,"
+" fix\\_doc\\]\\)"
+msgstr ""
+
+#: 3fea5a42cb9d4a4db100f9dbc6e50520 f15f1536bd2147b599b285583496bd58
+msgid "function argument alias decorator with new docstring"
+msgstr ""
+
+#: c0af719ef8c44b5fb2ef23e24e45e5a7
+msgid ""
+":py:obj:`benchmark <tyxonq.utils.benchmark>`\\ \\(f\\, \\*args\\[\\, "
+"tries\\, verbose\\]\\)"
+msgstr ""
+
+#: 78b4195b5a5e454091832cad4c79e336 f059239b05c94a17a43968494172ee6a
+msgid "benchmark jittable function with staging time and running time"
+msgstr ""
+
+#: 767fe40bd8bc42378e1db14bcbf22ed4
+msgid ":py:obj:`is_number <tyxonq.utils.is_number>`\\ \\(x\\)"
+msgstr ""
+
+#: 0b6870a6d15f428db71383fbc4fb3814
+msgid ":py:obj:`is_sequence <tyxonq.utils.is_sequence>`\\ \\(x\\)"
+msgstr ""
+
+#: e35e0e231a444e2fb5a566d7277131dc
+msgid ""
+":py:obj:`return_partial <tyxonq.utils.return_partial>`\\ \\(f\\[\\, "
+"return\\_argnums\\]\\)"
+msgstr ""
+
+#: 9104a625fc8f40a0a149e88b995c0ad8
+msgid ""
+"Return a callable function for output ith parts of the original output "
+"along the first axis."
+msgstr ""
+
+#: 564c9e95fac94a85bf695a459379d7a8
+msgid ""
+"Return a callable function for output ith parts of the original output "
+"along the first axis. Original output supports List and Tensor."
+msgstr ""
+
+#: 67fa1e204ec04cd3ae2785ba9625b678 ad42d0fb0e0643c3a05b80bf77d9c83b
+msgid "Example"
+msgstr ""
+
+#: 35ccdc1f920e412cbdf8a78d123a5494 789282e5dd464a59947663bab033bf22
+#: b6108fa463104a68b9217dcdf4ba4f0e ea49baaa494345cf8949a396d8bcd7c0
+msgid "Parameters"
+msgstr ""
+
+#: 4aca09df7dbc49eba6dd0fa9152ef685
+msgid "The function to be applied this method"
+msgstr ""
+
+#: 2c8e882349324b16b878c8d1ef4fed92
+msgid "The ith parts of original output along the first axis (axis=0 or dim=0)"
+msgstr ""
+
+#: 2af65c6c33a1447fac0cf2c03b0319e4 58b94210d0c3472aa45e7297e0cd483e
+#: 5fb0e7eb6d65475fa17b175b8d68dbe5 fd5d4a817a2542ecb73a38e2f293f672
+msgid "Returns"
+msgstr ""
+
+#: cc6096978d9440a3a09e5fc701b7de9d
+msgid "The modified callable function"
+msgstr ""
+
+#: 44b9b4d5721846d09a5765e7fe531a53 46f8b6a6cc7246c587900cce7316fe33
+#: 8f4e53c4409d4e0da5f94daf7790a3ee eeca9d6ea97e4f83adaba6ece39f7985
+msgid "Return type"
+msgstr ""
+
+#: 9bf6cc10756c4b2fbf00288c2560b7b9
+msgid "The function which are attached with other functions"
+msgstr ""
+
+#: 568670a538c54a329e9b44fb253e0296
+msgid "Function to be attached"
+msgstr ""
+
+#: 7236c1d8b20741bd935a18c47ac80717
+msgid "The final results after function pipeline"
+msgstr ""
+
+#: 3e3f6d78ec4a42df9e3d69710af70d2e c2adb2d9cb9940fe875adea2da99e112
+#: c2b1d3e9bc1c4a39acc45ca62aa9f93b ea2ecf38f5bd4608be619accda0c94bb
+msgid "_description_"
+msgstr ""
+
+#: fd986c3c4bfe42ff8fc5164db8bbfb99
+msgid "whether to add doc for these new alias arguments, defaults True"
+msgstr ""
+
+#: b16f289b4c934163be40565436248229
+msgid "the decorated function"
+msgstr ""
+
+#: 0046b24e3cd240ab81b088fe47835402
+msgid "_description_, defaults to 5"
+msgstr ""
+
+#: 808e19c42739403e96faaa92b43ebf17
+msgid "_description_, defaults to True"
+msgstr ""
+

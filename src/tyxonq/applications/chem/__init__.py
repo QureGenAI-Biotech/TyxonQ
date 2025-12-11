@@ -8,6 +8,7 @@ __author__ = "TyxonQ"
 
 import os
 import logging
+import numpy as np
 
 # for debugging
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -73,6 +74,20 @@ def clear_cache() -> None:
                 c.clear()
     except Exception:
         pass
+
+# Extend OpenFermion numeric coefficient acceptance to include NumPy scalars
+try:
+    from openfermion.ops.operators import symbolic_operator as _sym
+    if hasattr(_sym, "COEFFICIENT_TYPES"):
+        _numpy_num_types = (np.number, np.integer, np.floating, np.complexfloating)
+        try:
+            # Merge without duplicates
+            _sym.COEFFICIENT_TYPES = tuple({*tuple(_sym.COEFFICIENT_TYPES), *_numpy_num_types})  # type: ignore[attr-defined]
+        except Exception:
+            _sym.COEFFICIENT_TYPES = tuple(list(_sym.COEFFICIENT_TYPES) + list(_numpy_num_types))  # type: ignore[attr-defined]
+except Exception:
+    pass
+
 
 __all__ = [
     "set_backend",

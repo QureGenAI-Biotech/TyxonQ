@@ -25,15 +25,6 @@ def unpack_nelec(n_elec_s):
     return na, nb
 
 
-def reverse_qop_idx(op: QubitOperator, n_qubits: int) -> QubitOperator:
-    # Deprecated here; use operator_library.pauli_io.reverse_qop_idx
-    return _reverse_qop_idx(op, n_qubits)
-
-
-def ex_op_to_fop(ex_op: Tuple[int, ...], with_conjugation: bool = False) -> FermionOperator:
-    # Deprecated here; use operator_library.pauli_io.ex_op_to_fop
-    return _ex_op_to_fop(ex_op, with_conjugation)
-
 
 def evolve_pauli_ops(pauli_string: Tuple[Tuple[int, str], ...], theta: float) -> List[Tuple]:
     ops: List[Tuple] = []
@@ -182,8 +173,6 @@ def multicontrol_ry(theta):
 
 __all__ = [
     "unpack_nelec",
-    "reverse_qop_idx",
-    "ex_op_to_fop",
     "evolve_pauli_ops",
 ]
 

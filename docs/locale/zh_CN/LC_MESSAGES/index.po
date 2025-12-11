@@ -1,0 +1,276 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+msgid "Getting Started"
+msgstr ""
+
+msgid "User Guide"
+msgstr ""
+
+msgid "Quantum Chemistry"
+msgstr ""
+
+msgid "Libraries & Components"
+msgstr ""
+
+msgid "Cloud Services"
+msgstr ""
+
+msgid "Tutorials"
+msgstr ""
+
+msgid "Examples"
+msgstr ""
+
+msgid "API Reference"
+msgstr ""
+
+msgid "Developer Guide"
+msgstr ""
+
+msgid "Technical References"
+msgstr ""
+
+msgid "Additional Resources"
+msgstr ""
+
+#: 69f379d8101b4f9b9de5d3899ae8db2d
+msgid "TyxonQ: Quantum Computing Framework"
+msgstr ""
+
+#: d2a6586e817d43ce9beb4a626fd1aebb
+msgid ""
+"**TyxonQ** is a powerful, flexible quantum computing framework designed "
+"for researchers and developers working on quantum algorithms, quantum "
+"chemistry applications, and AI-driven drug discovery (AIDD). Built with "
+"performance and extensibility in mind, TyxonQ provides a complete "
+"ecosystem for quantum circuit design, compilation, simulation, and "
+"execution on real quantum hardware."
+msgstr ""
+
+#: f5d1d8304fce4c54bbee125b6d602bda
+msgid "🚀 Getting Started"
+msgstr ""
+
+#: 8e17b71f83f647c0aa084a22cf5441a8
+msgid ""
+"New to TyxonQ? Start here with installation guides, quickstart tutorials,"
+" and basic concepts."
+msgstr ""
+
+#: 793febd6bdaa43da98708f69e513937e
+msgid "📚 User Guide"
+msgstr ""
+
+#: c11e51b6e11f489fad866ee240e13eb9
+msgid ""
+"Comprehensive guides covering core concepts, compiler pipeline, devices, "
+"and advanced features."
+msgstr ""
+
+#: b3d71ec55d4b495e8a9ba66468242f28
+msgid "🧬 Quantum Chemistry"
+msgstr ""
+
+#: f10437cf1ded495094fa9121ae490ef0
+msgid ""
+"Specialized documentation for quantum chemistry applications, including "
+"VQE, UCCSD, and molecular simulations."
+msgstr ""
+
+#: 20a47ca34cc94fedb6a5b2fa4867d70a
+msgid "🎓 Tutorials"
+msgstr ""
+
+#: c4902f313f6648cb84924e724c1abf6c
+msgid ""
+"Step-by-step tutorials from beginner to advanced topics with executable "
+"examples."
+msgstr ""
+
+#: cc1754091ea74ec6a0e5ba76a4536991
+msgid "📖 API Reference"
+msgstr ""
+
+#: cc8a2cc1028f4f8fa3aedb2fce9bcc69
+msgid "Complete API documentation with detailed class and function references."
+msgstr ""
+
+#: 0abc122c76444cc890dad17a436c9f44
+msgid "☁️ Cloud Services"
+msgstr ""
+
+#: 166dce2b0a934349892315d6cf43178f
+msgid ""
+"Access quantum hardware and cloud computing resources through TyxonQ's "
+"cloud API."
+msgstr ""
+
+#: c5a28c3c585c4e329e0a9c8870234cb9
+msgid "Key Features"
+msgstr ""
+
+#: eacaf1d13cfb4a36af3b9b2d6ca05355
+msgid "🎯 **Comprehensive Framework**"
+msgstr ""
+
+#: b7204145cacb43958519b4aaa93d05d4
+msgid ""
+"Full-stack quantum computing solution from circuit design to hardware "
+"execution"
+msgstr ""
+
+#: 7e7f30c49ec744db9b54476fede77e3d
+msgid "⚡ **High Performance**"
+msgstr ""
+
+#: a705b65357db4562a84edca3c1aa4a63
+msgid ""
+"Optimized compilation pipeline with support for GPU acceleration and "
+"distributed computing"
+msgstr ""
+
+#: 15e90e3948dc45af9234a216faa1ca0d
+msgid "🔧 **Flexible Backend System**"
+msgstr ""
+
+#: 82d56d493268482dab7d3a330b4cde6a
+msgid ""
+"Multiple numerical backends (NumPy, PyTorch, CuPyNumeric) for different "
+"use cases"
+msgstr ""
+
+#: 6fb741556b704d39b3e15b780cf70443
+msgid "🧪 **Quantum Chemistry Focus**"
+msgstr ""
+
+#: 45160ea542b74056869da50231babe8a
+msgid ""
+"Specialized tools for molecular simulations, VQE, UCCSD, and drug "
+"discovery applications"
+msgstr ""
+
+#: 451422a1c0a04bd382878765419d558f
+msgid "🌐 **Cloud Integration**"
+msgstr ""
+
+#: f791e9e2c99e413fa2f1fc53cd1aeadf
+msgid ""
+"Seamless access to quantum hardware including the Homebrew_S2 quantum "
+"processor"
+msgstr ""
+
+#: b817dfa3abbf4b7697b71d7ea1dad610
+msgid "🎨 **Extensible Architecture**"
+msgstr ""
+
+#: 012bb386944942d59070df0365bc2de9
+msgid ""
+"Plugin system and clean abstractions for custom devices, backends, and "
+"algorithms"
+msgstr ""
+
+#: 90545428a23d4e71a18920499e4339fb
+msgid "Quick Example"
+msgstr ""
+
+#: fc70a0f9412c4610bd8d1fb8fe5d9a8d
+msgid "Here's a simple example of creating and running a quantum circuit:"
+msgstr ""
+
+#: 9d6c659f478c4397bcd8e2daabb9e59d
+#, python-brace-format
+msgid ""
+"import tyxonq as tq\n"
+"\n"
+"# Create a 2-qubit circuit\n"
+"circuit = tq.Circuit(2)\n"
+"circuit.h(0)\n"
+"circuit.cnot(0, 1)\n"
+"circuit.measure_all()\n"
+"\n"
+"# Compile and execute\n"
+"compiled = circuit.compile()\n"
+"result = compiled.device('statevector').run(shots=1000)\n"
+"\n"
+"print(result.counts)\n"
+"# Output: {'00': 500, '11': 500} (approximately)"
+msgstr ""
+
+#: 0c27160af41249b48992aaa6ec10bfc4
+msgid "For more examples, see the :doc:`getting_started/quickstart` guide."
+msgstr ""
+
+#: a73b4f22f1df4d778b01fa4ba0735f01
+msgid "Documentation Structure"
+msgstr ""
+
+#: 51225473e5fc451a99f71fa16d4d8fab
+msgid "Community & Support"
+msgstr ""
+
+#: 4c2445ce1e5e4ab7a6fc7f5662d73b32
+msgid ""
+"**GitHub Repository**: `QureGenAI-Biotech/TyxonQ <https://github.com"
+"/QureGenAI-Biotech/TyxonQ>`_"
+msgstr ""
+
+#: 8c6ce4916d82413495e148c9fc1600bf
+msgid ""
+"**Issue Tracker**: Report bugs and request features on `GitHub Issues "
+"<https://github.com/QureGenAI-Biotech/TyxonQ/issues>`_"
+msgstr ""
+
+#: 125687fb318946ffb43c453ee26c4c8c
+msgid "**PyPI Package**: `tyxonq <https://pypi.org/project/tyxonq>`_"
+msgstr ""
+
+#: 557163c2dda84b2bbf2cf18e7441c629
+msgid "**Contributing**: See our :doc:`developer_guide/contributing` guide"
+msgstr ""
+
+#: 558e3daa99774cc3b23c25c44ed38179
+msgid "License"
+msgstr ""
+
+#: 74ba2ac1661241f78e306b9427dafc4f
+msgid ""
+"TyxonQ is released under the Apache License 2.0. See the `LICENSE "
+"<https://github.com/QureGenAI-Biotech/TyxonQ/blob/main/LICENSE>`_ file "
+"for details."
+msgstr ""
+
+#: 7245b0cb2ae544878f0b08d8a5e32764
+msgid "Indices and tables"
+msgstr ""
+
+#: 291afffe14c944a890e5111bb44c8bdd
+msgid ":ref:`genindex`"
+msgstr ""
+
+#: a5bcfc1445d44654ac9b997245cf52d9
+msgid ":ref:`modindex`"
+msgstr ""
+
+#: 954d06192853448ab07961cb2b698aaa
+msgid ":ref:`search`"
+msgstr ""
+

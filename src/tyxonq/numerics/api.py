@@ -49,6 +49,7 @@ class ArrayBackend(Protocol):
     float64: Any
     int32: Any
     int64: Any
+    int8: Any
     bool: Any
     # Common alias
     int: Any
@@ -67,6 +68,7 @@ class ArrayBackend(Protocol):
     def mean(self, a: Any, axis: int | None = None) -> Any: ...
     def abs(self, a: Any) -> Any: ...
     def real(self, a: Any) -> Any: ...
+    def imag(self, a: Any) -> Any: ...
     def conj(self, a: Any) -> Any: ...
     def diag(self, a: Any) -> Any: ...
     def zeros(self, shape: Tuple[int, ...], dtype: Any | None = None) -> Any: ...
@@ -76,6 +78,17 @@ class ArrayBackend(Protocol):
     def eye(self, n: int, dtype: Any | None = None) -> Any: ...
     def kron(self, a: Any, b: Any) -> Any: ...
     def square(self, a: Any) -> Any: ...
+    
+    # Additional array operations
+    def stack(self, arrays: Any, axis: int = 0) -> Any: ...
+    def concatenate(self, arrays: Any, axis: int = 0) -> Any: ...
+    def arange(self, start: Any, stop: Any | None = None, step: Any = 1) -> Any: ...
+    def linspace(self, start: Any, stop: Any, num: int = 50) -> Any: ...
+    def transpose(self, a: Any, axes: Any | None = None) -> Any: ...
+    def norm(self, a: Any, ord: Any | None = None, axis: Any | None = None) -> Any: ...
+    def cast(self, a: Any, dtype: Any) -> Any: ...
+    def sign(self, a: Any) -> Any: ...
+    def outer(self, a: Any, b: Any) -> Any: ...
 
     # Elementary math
     def exp(self, a: Any) -> Any: ...
@@ -92,6 +105,12 @@ class ArrayBackend(Protocol):
 
     # Linear algebra
     def svd(self, a: Any, full_matrices: bool = False) -> Tuple[Any, Any, Any]: ...
+    def eigh(self, a: Any) -> Tuple[Any, Any]: ...
+    def eig(self, a: Any) -> Tuple[Any, Any]: ...
+    def solve(self, a: Any, b: Any, assume_a: str = 'gen') -> Any: ...
+    def inv(self, a: Any) -> Any: ...
+    def expm(self, a: Any) -> Any: ...
+    def tensordot(self, a: Any, b: Any, axes: Any = 2) -> Any: ...
 
     # Random
     def rng(self, seed: int | None = None) -> Any: ...
@@ -157,13 +176,54 @@ def vectorize_or_fallback(
     return _generic_vectorized_call
 
 
-def get_backend(name: str | None) -> ArrayBackend:
-    """Factory returning an ArrayBackend by canonical name.
+def get_backend(name: str | None = None) -> ArrayBackend:
+    """Factory function that returns an ArrayBackend instance by canonical name.
 
-    Supported:
-        - 'numpy'
-        - 'pytorch' (requires torch)
-        - 'cupynumeric' (requires cunumeric)
+    This function provides the primary interface for accessing TyxonQ's numerical
+    backends. It supports automatic backend selection, configuration-based defaults,
+    and explicit backend specification.
+
+    Args:
+        name (str | None): Canonical name of the backend to retrieve.
+            Supported values:
+            - "numpy": CPU-based NumPy backend (always available)
+            - "pytorch": PyTorch backend with GPU support (requires torch)
+            - "cupynumeric": CUDA-accelerated backend (requires cunumeric)
+            - None: Use configured default or fallback to NumPy
+
+    Returns:
+        ArrayBackend: An instance of the requested backend that provides
+            a unified array interface for numerical computations.
+
+    Raises:
+        RuntimeError: If the requested backend is not available or its
+            dependencies are not installed.
+
+    Examples:
+        >>> # Get the default backend (usually NumPy)
+        >>> backend = get_backend(None)
+        >>> arr = backend.array([1, 2, 3])
+        
+        >>> # Explicitly request NumPy backend
+        >>> numpy_backend = get_backend("numpy")
+        >>> x = numpy_backend.zeros((2, 3))
+        
+        >>> # Request PyTorch backend (if available)
+        >>> try:
+        ...     torch_backend = get_backend("pytorch")
+        ...     tensor = torch_backend.array([1.0, 2.0])
+        ... except RuntimeError as e:
+        ...     print(f"PyTorch not available: {e}")
+        
+    Notes:
+        - The function first checks for a globally configured backend instance
+        - If no explicit name is provided, it falls back to the configured name
+        - NumPy backend is used as the final fallback for all requests
+        - Backend availability is checked before instantiation
+        
+    See Also:
+        NumericBackend: Class-level proxy for accessing the current backend.
+        set_backend: Function for configuring the global backend.
     """
 
     # If no explicit name is provided, try global configuration first

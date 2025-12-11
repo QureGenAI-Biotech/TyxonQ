@@ -1,0 +1,305 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025, QureGenAI Biotech
+# This file is distributed under the same license as the TyxonQ package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TyxonQ 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-11 17:47+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh_CN\n"
+"Language-Team: zh_CN <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: 5df84a5242f342e9ab51474e70d15da9
+msgid "tyxonq.core.ir"
+msgstr ""
+
+#: c8fd59f1ae504983bbdacfe546525177
+msgid "Core intermediate representation (IR) package."
+msgstr ""
+
+#: 88e03b74ce8e460d87e4bd8c71b2d258
+msgid "Expose essential IR data structures used across the compiler and devices."
+msgstr ""
+
+#: 60774d87eab74855918f6cee3da28339 9d95b016aec241eeab0f084dc8f2f1a3
+#: ba1c96aaf95f4652986461055fe216c0 d3f18120d94a4a2abfc7afda9c9cca38
+msgid "Bases: :py:class:`object`"
+msgstr ""
+
+#: 9033361d440a42e698f5167f636f1346
+msgid "Minimal intermediate representation (IR) for a quantum circuit."
+msgstr ""
+
+#: 5eacd835706a4964974d0baa62a57c65 fb65bba05f5f4a34aae55106269bd952
+msgid "Number of qubits in the circuit."
+msgstr ""
+
+#: c8c05302d4cf4a68a150c55e05f3d46c fdcf31532bd945d8aa29ddbf16d930d0
+msgid "type"
+msgstr ""
+
+#: fc89823de627472f8bf345cb004325b4
+msgid "int"
+msgstr ""
+
+#: a52506b477744c9cb3670abbdcf015a8
+msgid ""
+"A sequence of operation descriptors. The concrete type is left open for "
+"backends/compilers to interpret (e.g., gate tuples, IR node objects). "
+"Keeping this generic allows the IR to evolve while tests exercise the "
+"structural contract."
+msgstr ""
+
+#: 59d91b1699c84fed916c22b24f0edc99
+msgid "List[Any]"
+msgstr ""
+
+#: 5fba8d2a75664f75ad85dccc2f954dde
+msgid "Initialize a Circuit."
+msgstr ""
+
+#: 8af20fc2b48047679eabdd05e0b89668
+msgid "Parameters"
+msgstr ""
+
+#: d8e6e278798c4dd0b980b52ed2c54895
+msgid "List of operations. Defaults to empty list if not provided."
+msgstr ""
+
+#: 5a9688b9d5b04b04b1bfeeaae4345653
+msgid "Circuit metadata. Defaults to empty dict if not provided."
+msgstr ""
+
+#: a28898ef27dd481bb367598e6d7b5f06
+msgid "List of instructions. Defaults to empty list if not provided."
+msgstr ""
+
+#: 7c0b86dbeb9d4a6fa57145293a948344
+msgid "Return a new Circuit with merged metadata (shallow merge)."
+msgstr ""
+
+#: 300bb3f219544f298afe0cea5f9c82b9
+msgid "Set device options for chainable configuration."
+msgstr ""
+
+#: f4d8bc6e084e4e0da0766776c86eabb0
+msgid "Set postprocessing options for chainable configuration."
+msgstr ""
+
+#: c802e9f8557949fa87656645842e6068
+msgid ""
+"Count ops by name. If gate_list is provided, count only those (case-"
+"insensitive)."
+msgstr ""
+
+#: e802b2cbf2f34fa8a053d9f0e101dea5
+msgid "Return a mapping of op name (lower-case) to frequency."
+msgstr ""
+
+#: 38a95ba961654a3ca34a807361451501
+msgid "Return a heuristic FLOP estimate for statevector simulation."
+msgstr ""
+
+#: 6228ca7c57a64c7a8b8e47b7f55c1ded
+msgid ""
+"This avoids tensor network dependencies. The estimate is coarse: - 1q "
+"gate ~ O(2^n) - 2q gate ~ O(2^(n+1)) - other gates ignored Returns None "
+"if n is not available."
+msgstr ""
+
+#: bbc24fe29da74121b63319936821c810
+msgid "Return a dict summarizing the circuit if pandas is available."
+msgstr ""
+
+#: 335a342eda094324a79458a12995e3f5
+msgid ""
+"Columns: #qubits, #gates, #CNOT, #multicontrol, depth (if qiskit "
+"available), #FLOP (heuristic)."
+msgstr ""
+
+#: 3928743a88a141579c0dcb353cee78f3
+msgid "Return a new Circuit with ops extended by extra_ops (no mutation)."
+msgstr ""
+
+#: 5b49e90324624e1aaabad427c3e04dd8
+msgid ""
+"Append another Circuit's ops. If `indices` given, remap other's qubits by"
+" indices[i]."
+msgstr ""
+
+#: 174fccde7f7b493dad4477360f23d2c5
+msgid "Return a new Circuit with qubit indices remapped according to `mapping`."
+msgstr ""
+
+#: 31631012735a4bc08ded60a8269c1a91
+msgid ""
+"All int arguments in ops are treated as qubit indices and must be present"
+" in mapping."
+msgstr ""
+
+#: 7e0e45eb4ec64224bd25c6f3276bb0bb
+msgid ""
+"Return positional->logical mapping from explicit instructions or "
+"measure_z ops."
+msgstr ""
+
+#: 2aa19bcbac4345e2bb2d329e2c7cde07
+msgid "Return a unitary inverse circuit for supported ops (h, cx, rz)."
+msgstr ""
+
+#: be75310d9b4c447f800c8c580074c439
+msgid ""
+"Non-unitary ops like measure/reset/barrier are skipped unless strict=True"
+" (then error). Unknown ops raise if strict=True, else skipped."
+msgstr ""
+
+#: e1c5e8739593495cb07b7c9fc1883e2d
+msgid "Serialize this IR circuit to OpenQASM 2 using the compiler facade."
+msgstr ""
+
+#: d7ac3eed5e6f42acaa682838c155a376
+msgid "Delegates to compiler API (provider='qiskit', output='qasm2')."
+msgstr ""
+
+#: 137dfb88a080456f920ac5eddde261f8
+msgid "Delegate to compiler.api.compile or act as chainable setter when no args."
+msgstr ""
+
+#: 3e82f72a2ff246d782274ecc60f49c35
+msgid "Chainable模式：若 provider/output/target/options 全为 None，则返回 self（不触发编译）。"
+msgstr ""
+
+#: 31b6c89f731443e8a8ae94a0a80d9ace
+msgid "编译模式：转发到 compiler.api.compile，options 与已记录的 _compile_opts 合并。"
+msgstr ""
+
+#: 9b79399b17cf48d298de604aacde17bb
+msgid ""
+"执行电路： - 若构造时提供了 source，则直接按 source 提交给设备层； - 否则，先按 "
+"compile_engine/output/target 进行编译，再根据产物类型提交。 注意：不在此处补测量或发出告警；该逻辑归属编译阶段。"
+msgstr ""
+
+#: 1cd0a358bb414096acd0670327a4e1a3
+msgid ""
+"Warning: reset operation is typically not supported by hardware in "
+"logical circuits. This is a simulation-only operation that projects qubit"
+" to |0⟩ state."
+msgstr ""
+
+#: fba29e7b13e44330b85bd1c56370a982
+msgid "Render the circuit using Qiskit if available."
+msgstr ""
+
+#: dd780fa7060e44359a0521326720e41b
+msgid ""
+"Behavior: - Convert IR → Qiskit QuantumCircuit directly (no intermediate "
+"qasm2 dump),"
+msgstr ""
+
+#: f84e4ee6ec50445b850a4771d21f47a8
+msgid "auto-adding measurements if none present."
+msgstr ""
+
+#: 4dcbbd9f6f1f41c28dd1965dbb9b964c
+msgid "Delegate all args/kwargs to `QuantumCircuit.draw`."
+msgstr ""
+
+#: c43144da5d684b898c63bb61bcfe2cc1
+msgid ""
+"If Qiskit is not installed, return a minimal textual `gate_summary()` "
+"string."
+msgstr ""
+
+#: fae55760ab124f26b84c42a84821984b
+msgid "IR for a Hamiltonian."
+msgstr ""
+
+#: 820428c3d0744d72a7cbc7e7e194e28c
+msgid ""
+"The `terms` field may contain a backend-specific structure, such as a "
+"Pauli-sum, sparse representation, or dense matrix. The type is "
+"intentionally loose at this stage and will be specialized by compiler "
+"stages or devices."
+msgstr ""
+
+#: 75a0f4649e694534a24b597414cd3481
+msgid "A single pulse instruction targeting a hardware channel."
+msgstr ""
+
+#: 3d51ce1c81424678b129affd0839c651 915f9f90f1794187a29c510d7583ddb6
+msgid "Fields:"
+msgstr ""
+
+#: bbf076e307384f86af99dae7441b0e7c
+msgid ""
+"channel: Hardware channel identifier (e.g., \"d0\", \"u1\"). start: Start"
+" time in sample units (integer ticks). duration: Duration in sample units"
+" (ticks). waveform: Real or complex amplitude samples. Concrete "
+"dtype/shape is"
+msgstr ""
+
+#: b07a4fdf16f245578fa36b34b201799e
+msgid "backend-specific; a Python list is accepted here for simplicity."
+msgstr ""
+
+#: 65d4a43ae19d4225868dd167037cd6a6
+msgid "metadata: Arbitrary metadata describing the pulse (shape, amp, sigma)."
+msgstr ""
+
+#: 91a4a6d1f0344fbc9db8a00eba370225
+msgid ""
+"The unit convention follows sample counts to remain backend-agnostic. "
+"Conversion to seconds uses the schedule's sampling_rate_hz."
+msgstr ""
+
+#: 218f3cdbbbd54875adf25d64fcff7604
+msgid "A collection of timed pulse instructions with a sampling rate."
+msgstr ""
+
+#: 4e4fecc6363643978ef135bf34a0702f
+msgid ""
+"sampling_rate_hz: Sampling frequency in Hertz for time conversion. "
+"instructions: Ordered list of pulse instructions. globals: Optional "
+"global parameters for template expansion or backends."
+msgstr ""
+
+#: 829aaff889d94e299e5eb4f2616d8296
+msgid "Append an instruction to the schedule."
+msgstr ""
+
+#: ff7bea60ed1644b2809cc1bb44c458e6
+msgid "Return the schedule end time in sample units."
+msgstr ""
+
+#: 088c3ad557f545e3b0c3363ccd824809
+msgid ""
+"Defined as max over `start + duration` across all instructions, or 0 when"
+" the schedule is empty."
+msgstr ""
+
+#: 4977f95648444c58922ac75d54e8735f
+msgid "Return the schedule duration in seconds based on sampling_rate_hz."
+msgstr ""
+
+#: 7c6164818b164190aed6b7ec93ada8f0
+msgid "Modules"
+msgstr ""
+
+#: d73ee9eacdf049d3abfc3b591677f747
+msgid ":py:obj:`circuit <tyxonq.core.ir.circuit>`\\"
+msgstr ""
+
+#: aa2898a821e144b1a8ef1c305ea4880b
+msgid ":py:obj:`pulse <tyxonq.core.ir.pulse>`\\"
+msgstr ""
+

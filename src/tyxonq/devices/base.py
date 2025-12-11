@@ -115,6 +115,85 @@ def device_descriptor(
 
 
 def resolve_driver(provider: str, device: str):
+    """Resolve and return the appropriate device driver for a given provider.
+
+    This function provides a factory interface for accessing different quantum
+    device drivers based on the provider and device specification. It abstracts
+    the complexity of driver instantiation and enables uniform access to
+    simulators, local devices, and cloud-based quantum hardware.
+
+    Args:
+        provider (str): The quantum computing provider identifier.
+            Supported providers:
+            - "simulator" or "local": Local quantum simulators
+            - "tyxonq": TyxonQ quantum hardware platform
+            - "ibm": IBM Quantum devices and simulators
+            
+        device (str): Specific device identifier within the provider.
+            The device string format depends on the provider:
+            - Simulator: "statevector", "density_matrix", "qasm_simulator"
+            - TyxonQ: "homebrew_s2", "homebrew_s1", etc.
+            - IBM: "ibm_brisbane", "ibm_kyoto", "simulator_mps", etc.
+
+    Returns:
+        DeviceDriver: A driver instance that implements the quantum device
+            interface for circuit execution, task management, and result retrieval.
+            The driver provides methods such as:
+            - run_circuit(): Execute quantum circuits
+            - get_task_details(): Retrieve execution status
+            - cancel_task(): Cancel running jobs
+            - get_device_properties(): Hardware specifications
+
+    Raises:
+        ValueError: If the specified provider is not supported or available.
+        ImportError: If the required driver module cannot be imported
+            (e.g., missing dependencies for IBM Quantum).
+
+    Examples:
+        >>> # Get local simulator driver
+        >>> sim_driver = resolve_driver("simulator", "statevector")
+        >>> result = sim_driver.run_circuit(circuit, shots=1000)
+        
+        >>> # Access TyxonQ hardware
+        >>> hw_driver = resolve_driver("tyxonq", "homebrew_s2")
+        >>> task = hw_driver.run_circuit(circuit, shots=4096)
+        >>> status = hw_driver.get_task_details(task)
+        
+        >>> # Connect to IBM Quantum
+        >>> ibm_driver = resolve_driver("ibm", "ibm_brisbane")
+        >>> properties = ibm_driver.get_device_properties()
+        >>> print(f"Device qubits: {properties['n_qubits']}")
+
+    Provider Details:
+        **Simulator/Local Provider**:
+            - Provides high-performance local simulation
+            - Supports statevector, density matrix, and sampling methods
+            - No network connectivity required
+            - Ideal for algorithm development and testing
+        
+        **TyxonQ Provider**:
+            - Access to TyxonQ quantum hardware platform
+            - Supports pulse-level control via TQASM
+            - Includes device-specific optimization flags
+            - Requires valid authentication tokens
+        
+        **IBM Provider**:
+            - Integration with IBM Quantum Network
+            - Access to real quantum hardware and cloud simulators
+            - Requires IBM Quantum account and qiskit-ibm-provider
+            - Supports advanced device features and error mitigation
+
+    Notes:
+        - Driver selection affects execution performance and capabilities
+        - Some providers require additional authentication setup
+        - Device availability may vary based on maintenance schedules
+        - Driver interfaces are standardized for cross-provider compatibility
+        
+    See Also:
+        tyxonq.devices.simulators: Local simulator implementations.
+        tyxonq.devices.hardware: Hardware device drivers.
+        tyxonq.cloud.api: High-level cloud execution interface.
+    """
     if provider in ("simulator", "local"):
         from .simulators import driver as drv
 
@@ -164,8 +243,8 @@ def run(
     *,
     provider: Optional[str] = None,
     device: Optional[str] = None,
-    circuit: Optional["Circuit"] = None,
-    source: Optional[Union[str, Sequence[str]]] = None,
+    circuit: Optional["Circuit"]| None = None,
+    source: Optional[Union[str, "Circuit"]] = None,
     shots: Union[int, Sequence[int]] = 1024,
     **opts: Any,
 ) -> Any:
@@ -178,6 +257,12 @@ def run(
       - simulator/local: call simulator driver run
       - hardware: require caller to have compiled to `source`
     - Normalize return: single submission -> single task; batch -> list of tasks
+
+    Args:
+        source: Compilation source code or IR object. Can be:
+            - str: QASM2 (homebrew_s2), QASM3 (simulator), TQASM 0.2 (pulse)
+            - Circuit: IR object (pulse_ir or circuit IR) for local execution
+            Both str and Circuit types are supported depending on driver capabilities.
 
     Returns:
         List[DeviceTask] Unified task-handle wrapper:
@@ -225,48 +310,65 @@ def run(
     # direct source path (already compiled or raw program)
     if source is not None:
         if prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
-            if circuit is not None:
-                raw = _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
-            else:
-                raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
+            # if circuit is not None:
+            #     raw = _normalize(drv.run(dev, tok, circuit=circuit, source=None, shots=shots, **_inject_noise(opts)))
+            # else:
+            #if source is not none, just use compiled source code 
+            raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
         else:
+            #hardware just send source to cloud hardware
             raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
     else:
-        # circuit path
+        # circuit path (simulator/local only). Support single or batched circuits uniformly.
         if circuit is None:
             raise ValueError("run requires either circuit or source")
-        
+
         if prov not in ("simulator", "local"):
             # hardware path requires source (compilation should have been done by caller)
             raise ValueError("hardware run without source is not supported at device layer; compile in circuit layer")
-        # shots==0 + observable → use analytic expval path for testing convenience
-        try:
-            _shots_int = int(shots)  # type: ignore[arg-type]
-        except Exception:
-            _shots_int = 0
-        if _shots_int == 0 and ("observable" in opts):
-            # Compute exact expectation value via simulator engine
-            obs = opts.get("observable")
-            # Use simulator driver's expval API
-            e = expval(provider=prov, device=dev, circuit=circuit, observable=obs, **_inject_noise(opts))
-            # Wrap in a simulator task object to align with get_task_details
+
+        # Normalize to list of circuits for unified batch handling
+        circuits = list(circuit) if isinstance(circuit, (list, tuple)) else [circuit]
+
+        # shots==0 + observable → use analytic expval path (only valid for single circuit)
+        if len(circuits) == 1:
             try:
-                from .simulators.driver import SimTask  # type: ignore
-                task_like = SimTask(id="expval", device=dev, result={
-                    'result': {},
-                    'expectations': {'expval': float(e)},
-                    'probabilities': None,
-                    'statevector': None,
-                    'metadata': {'shots': 0, 'backend': 'analytic', 'provider': prov, 'device': dev},
-                })
-                raw = _normalize(task_like)
+                _shots_int = int(shots)  # type: ignore[arg-type]
             except Exception:
-                # Fallback: call through regular simulator run to keep shape
-                raw = _normalize(resolve_driver(prov, dev).run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
-        elif prov in ("simulator", "local") and device in ('mps','density_matrix','statevector','matrix_product_state'):
-            raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **_inject_noise(opts)))
+                _shots_int = 0
+            if _shots_int == 0 and ("observable" in opts):
+                obs = opts.get("observable")
+                e = expval(provider=prov, device=dev, circuit=circuits[0], observable=obs, **_inject_noise(opts))
+                try:
+                    from .simulators.driver import SimTask  # type: ignore
+                    task_like = SimTask(id="expval", device=dev, result={
+                        'result': {},
+                        'expectations': {'expval': float(e)},
+                        'probabilities': None,
+                        'statevector': None,
+                        'metadata': {'shots': 0, 'backend': 'analytic', 'provider': prov, 'device': dev},
+                    })
+                    raw = _normalize(task_like)
+                except Exception:
+                    raw = _normalize(resolve_driver(prov, dev).run(dev, tok, circuit=circuits[0], shots=shots, **_inject_noise(opts)))
+            else:
+                # Single circuit standard path
+                raw = _normalize(drv.run(dev, tok, circuit=circuits[0], shots=shots, **_inject_noise(opts)))
         else:
-            raw = _normalize(drv.run(dev, tok, circuit=circuit, shots=shots, **opts))
+            # Batched circuits path: order-preserving submission and collection
+            # Support shots as scalar or list aligned with circuits
+            if isinstance(shots, (list, tuple)):
+                shots_list = [int(s) for s in shots]
+                if len(shots_list) != len(circuits):
+                    raise ValueError("shots list length must match number of circuits")
+            else:
+                shots_list = [int(shots)] * len(circuits)
+
+            raw = []
+            for c_obj, s_val in zip(circuits, shots_list):
+                # Always inject noise settings consistently for simulators
+                per_opts = _inject_noise(opts)
+                raw.extend(_normalize(drv.run(dev, tok, circuit=c_obj, shots=s_val, **per_opts)))
 
     # Wrap into unified DeviceTask objects
 
@@ -337,34 +439,43 @@ def get_task_details(task: Any, *, wait: bool = False, poll_interval: float = 2.
         {
           'result': Dict[str, int],      # normalized counts like {'00': 51, '11': 49}
           'result_meta': Dict[str, Any], # original driver payload
+          'uni_status': str,            # unified status string
+          'error': str                  # error message if any
         }
     """
     if not isinstance(task, DeviceTask):
         raise TypeError("Task handle should be a DeviceTask type")
 
     drv = resolve_driver(task.provider, task.device)
-
-    def _fetch() -> Dict[str, Any]:
-        return drv.get_task_details(task.handle, None)
-
-    def _wrap(info: Dict[str, Any]) -> Dict[str, Any]:
-        src = info.get('result') or info.get('results') or {}
-        return {'result': src, 'result_meta': info}
-
-    if not wait:
-        return _wrap(_fetch())
-
-    start = time.perf_counter()
+    start_time = time.perf_counter()
+    
     while True:
-        info = _fetch()
-        if not task.async_result:
-            return _wrap(info)
-        uni_status = str(info.get("uni_status", "completed")).lower()
-        if uni_status in ("done", "completed", "success", "finished"):
-            return _wrap(info)
-        if (time.perf_counter() - start) >= timeout:
-            return _wrap(info)
-        time.sleep(max(0.05, poll_interval))
+        # 获取驱动返回的原始数据
+        info = drv.get_task_details(task.handle, None)
+        
+        # 统一格式：提取测量结果
+        result_counts = info.get('result') or info.get('results') or {}
+        
+        # 构建统一返回格式
+        unified = {
+            'result': result_counts,
+            'result_meta': info,
+            'uni_status': str(info.get('uni_status', 'unknown')).lower(),
+            'error': info.get('error', None)
+        }
+        
+        # 异步任务：检查是否完成
+        uni_status = unified['uni_status']
+        if uni_status in ('done', 'completed', 'success', 'finished'):
+            return unified
+        if wait and (time.perf_counter() - start_time) >= timeout:
+            return unified
+        if wait:
+            time.sleep(max(0.05, poll_interval))
+            continue
+        
+        # 同步任务或不等待：直接返回
+        return unified
 
 
 

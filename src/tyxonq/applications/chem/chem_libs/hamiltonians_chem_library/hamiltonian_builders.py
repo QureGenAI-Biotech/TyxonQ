@@ -11,6 +11,10 @@ from pyscf.fci import direct_nosym, direct_spin1, cistring
 from pyscf import ao2mo
 
 from tyxonq.libs.hamiltonian_encoding.pauli_io import hcb_to_coo, fop_to_coo, reverse_qop_idx, canonical_mo_coeff
+from openfermion.transforms import jordan_wigner as _jw_transform
+
+import tyxonq as tq
+from tyxonq.numerics import NumericBackend as nb
 
 
 class _MPOWrapper:
@@ -39,7 +43,7 @@ def mpo_to_quoperator(mpo_like):
     return _MPOWrapper(mpo_like)
 
 
-def get_integral_from_hf(hf: RHF, active_space: Tuple = None, aslst: List[int] = None):
+def get_integral_from_hf(hf: RHF, active_space: Tuple = None, active_orbital_indices: List[int] = None):
     if not isinstance(hf, RHF):
         raise TypeError(f"hf object must be RHF class, got {type(hf)}")
     m = hf.mol
@@ -53,11 +57,11 @@ def get_integral_from_hf(hf: RHF, active_space: Tuple = None, aslst: List[int] =
         nelecas, ncas = active_space
 
     casci = CASCI(hf, ncas, nelecas)
-    if aslst is None:
+    if active_orbital_indices is None:
         int1e, e_core = casci.get_h1eff()
         int2e = ao2mo.restore("s1", casci.get_h2eff(), ncas)
     else:
-        mo = casci.sort_mo(aslst, base=0)
+        mo = casci.sort_mo(active_orbital_indices, base=0)
         int1e, e_core = casci.get_h1eff(mo)
         int2e = ao2mo.restore("s1", casci.get_h2eff(mo), ncas)
 
@@ -119,6 +123,8 @@ def qubit_operator(string: str, coeff: float) -> QubitOperator:
 
 
 def get_hop_hcb_from_integral(int1e, int2e):
+    # Hard core boson Hamiltonian
+    # https://arxiv.org/pdf/2002.00035.pdf
     n_orb = int1e.shape[0]
     qop = QubitOperator()
     for p in range(n_orb):
@@ -162,24 +168,11 @@ def get_h_fcifunc_from_integral(int1e, int2e, n_elec):
     This matches the alpha/beta-separated CI basis order we construct via get_ci_strings.
     """
     n_orb = len(int1e)
-    # Ensure (na, nb) tuple
-    if isinstance(n_elec, int):
-        assert n_elec % 2 == 0, "total electron number must be even to split into (na, nb)"
-        nelec_ab = (n_elec // 2, n_elec // 2)
-    else:
-        nelec_ab = (int(n_elec[0]), int(n_elec[1]))
-
-    # Absorb one-electron integrals into two-electron tensor (PySCF handles symmetry internally)
-    h2e = direct_spin1.absorb_h1e(int1e, int2e, n_orb, nelec_ab, 0.5)
-    na, nb = nelec_ab
-    nA = cistring.num_strings(n_orb, na)
-    nB = cistring.num_strings(n_orb, nb)
-
+    h2e = direct_nosym.absorb_h1e(int1e, int2e, n_orb, n_elec, 0.5)
     def fci_func(civector):
-        civector = np.asarray(civector, dtype=np.float64).reshape((nA, nB))
-        out = direct_spin1.contract_2e(h2e, civector, norb=n_orb, nelec=nelec_ab)
-        return np.asarray(out, dtype=np.float64).reshape(-1)
-
+        civector = np.asarray(civector, dtype=np.float64)
+        out = direct_nosym.contract_2e(h2e, civector, norb=n_orb, nelec=n_elec)
+        return np.asarray(out, dtype=np.float64)
     return fci_func
 
 
@@ -224,12 +217,27 @@ def get_h_from_integral(int1e, int2e, n_elec_s, mode: str, htype: str):
     return get_h_fcifunc_hcb_from_integral(int1e, int2e, n_elec)
 
 
-def get_h_from_hf(hf: RHF, *, mode: str = "fermion", htype: str = "sparse", active_space: Tuple[int, int] | None = None, aslst: List[int] | None = None):
+def pauli_sum_to_qubit_operator(pauli_items: list[tuple[float, list[tuple[str, int]]]], n_qubits: int) -> QubitOperator:
+    """Build OpenFermion QubitOperator from internal pauli sum representation.
+
+    Each item is (coeff, [(P, q), ...]) where P in {'X','Y','Z'} and q is int (big-endian handled upstream).
+    """
+    qop = QubitOperator()
+    for coeff, ops in pauli_items:
+        if not ops:
+            qop += float(coeff)
+            continue
+        term = tuple((int(q), str(P).upper()) for (P, q) in ops)
+        qop += QubitOperator(term, float(coeff))
+    return qop
+
+
+def get_h_from_hf(hf: RHF, *, mode: str = "fermion", htype: str = "sparse", active_space: Tuple[int, int] | None = None, active_orbital_indices: List[int] | None = None):
     """Thin wrapper to preserve legacy import path used in tests.
 
     Delegates to get_integral_from_hf + get_h_from_integral.
     """
-    int1e, int2e, _ = get_integral_from_hf(hf, active_space=active_space, aslst=aslst)
+    int1e, int2e, _ = get_integral_from_hf(hf, active_space=active_space, active_orbital_indices=active_orbital_indices)
     if active_space is None:
         n_elec = int(getattr(hf.mol, "nelectron"))
     else:
@@ -246,6 +254,7 @@ __all__ = [
     "get_h_fcifunc_from_integral",
     "get_h_fcifunc_hcb_from_integral",
     "get_h_from_integral",
+    "pauli_sum_to_qubit_operator",
 ]
 
 
@@ -268,5 +277,43 @@ def symmetrize_int2e(int2e):
     int2e = 0.5 * (int2e + int2e.transpose(3, 2, 1, 0))
     return int2e
 
+from scipy.sparse import issparse  # type: ignore
+from inspect import isfunction
 
+def apply_op(hamiltonian, ket):
+    """Apply Hamiltonian to ket (backend-agnostic for NumPy/PyTorch)
+    
+    Args:
+        hamiltonian: Sparse matrix, dense matrix, callable, or object with eval_matrix()
+        ket: State vector (NumPy array or PyTorch tensor)
+    
+    Returns:
+        H|ket> in the same backend as ket
+    """
+    K = tq.get_backend()
+
+    # 1. Handle scipy sparse matrices: convert to dense BEFORE passing to backend
+    if issparse(hamiltonian):
+        hamiltonian_dense = hamiltonian.toarray()  # Convert to NumPy dense
+        # Now use backend's matmul (let backend handle NumPy → PyTorch conversion if needed)
+        return K.dot(hamiltonian_dense, ket)
+    
+    # 2. Handle callable (e.g., CI Hamiltonian functions from PySCF)
+    if callable(hamiltonian):
+        # Callable expects NumPy array, convert if needed
+        ket_np = nb.to_numpy(ket)
+        result_np = np.asarray(hamiltonian(ket_np), dtype=ket_np.dtype)
+        # Convert back to original backend
+        return K.asarray(result_np)
+    
+    # 3. Handle objects with eval_matrix method (MPO-like wrappers)
+    if hasattr(hamiltonian, 'eval_matrix') and callable(getattr(hamiltonian, 'eval_matrix')):
+        hamiltonian = K.asarray(hamiltonian.eval_matrix())
+        # Fall through to dense matrix case
+    
+
+    
+    # 4. Handle dense matrices (NumPy array or PyTorch tensor)
+    # Let backend handle any necessary type alignment
+    return K.dot(hamiltonian, ket)
 

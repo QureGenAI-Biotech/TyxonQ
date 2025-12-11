@@ -1,235 +1,191 @@
-TyxonQ Documentation
-===========================================================
+==========================================
+TyxonQ: Quantum Computing Framework
+==========================================
 
-.. image:: https://github.com/QureGenAI-Biotech/TyxonQ/blob/master/docs/source/statics/logov2.jpg?raw=true
-    :target: https://github.com/QureGenAI-Biotech/TyxonQ
+**TyxonQ** is a powerful, flexible quantum computing framework designed for researchers and developers working on quantum algorithms, quantum chemistry applications, and AI-driven drug discovery (AIDD). Built with performance and extensibility in mind, TyxonQ provides a complete ecosystem for quantum circuit design, compilation, simulation, and execution on real quantum hardware.
 
+.. grid:: 3
+   :gutter: 3
 
-**Welcome and congratulations! You have found TyxonQ.** 👏 
+   .. grid-item-card:: 🚀 Getting Started
+      :link: getting_started/index
+      :link-type: doc
 
-Introduction
----------------
+      New to TyxonQ? Start here with installation guides, quickstart tutorials, and basic concepts.
 
-TyxonQ is an open-source high-performance quantum computing software framework in Python.
+   .. grid-item-card:: 📚 User Guide
+      :link: user_guide/index
+      :link-type: doc
 
-* It is built for humans. 👽
+      Comprehensive guides covering core concepts, compiler pipeline, devices, and advanced features.
 
-* It is designed for speed, flexibility and elegance. 🚀
+   .. grid-item-card:: 🧬 Quantum Chemistry
+      :link: quantum_chemistry/index
+      :link-type: doc
 
-* It is empowered by advanced tensor network simulator engine. 🔋
+      Specialized documentation for quantum chemistry applications, including VQE, UCCSD, and molecular simulations.
 
-* It is ready for quantum hardware access with CPU/GPU/QPU (local/cloud) hybrid solutions. 🖥
+   .. grid-item-card:: 🎓 Tutorials
+      :link: tutorials/index
+      :link-type: doc
 
-* It is implemented with industry-standard machine learning framework: PyTorch. 🤖
+      Step-by-step tutorials from beginner to advanced topics with executable examples.
 
-* It is compatible with machine learning engineering paradigms: automatic differentiation, just-in-time compilation, vectorized parallelism and GPU acceleration. 🛠
+   .. grid-item-card:: 📖 API Reference
+      :link: api/index
+      :link-type: doc
 
-With the help of TyxonQ, now get ready to efficiently and elegantly solve interesting and challenging quantum computing problems: from academic research prototype to industry application deployment.
+      Complete API documentation with detailed class and function references.
 
+   .. grid-item-card:: ☁️ Cloud Services
+      :link: cloud_services/index
+      :link-type: doc
 
+      Access quantum hardware and cloud computing resources through TyxonQ's cloud API.
 
+   .. grid-item-card:: 📚 Libraries
+      :link: libraries/index
+      :link-type: doc
 
-Relevant Links
---------------------
+      Reusable components including circuit templates, quantum kernels, and optimization tools.
 
-TyxonQ is created and maintained by `Shi-Xin Zhang <https://github.com/refraction-ray>`_.
+   .. grid-item-card:: 💡 Examples
+      :link: examples/index
+      :link-type: doc
 
-The current core authors of TyxonQ are `Shi-Xin Zhang <https://github.com/refraction-ray>`_ and `Yu-Qin Chen <https://github.com/yutuer21>`_.
-We also thank `contributions <https://github.com/QureGenAI-Biotech/TyxonQ/graphs/contributors>`_ from the open source community.
+      Practical examples demonstrating quantum algorithms, chemistry calculations, and real-world applications.
 
-If you have any further questions or collaboration ideas, please use the issue tracker or forum below.
+   .. grid-item-card:: 🔧 Developer Guide
+      :link: developer_guide/index
+      :link-type: doc
 
+      Contributing guidelines, architecture overview, and extending TyxonQ with custom components.
 
-.. card-carousel:: 2
+   .. grid-item-card:: 📄 Technical References
+      :link: technical_references/index
+      :link-type: doc
 
-   .. card:: Source code
-      :link: https://github.com/QureGenAI-Biotech/TyxonQ
-      :shadow: md
+      Whitepapers, architecture design, performance optimization, and research publications.
 
-      GitHub
+Key Features
+============
 
+🎯 **Comprehensive Framework**
+   Full-stack quantum computing solution from circuit design to hardware execution
 
-   .. card:: Documentation
-      :link: https://tyxonq.readthedocs.io
-      :shadow: md
+⚡ **High Performance**
+   Optimized compilation pipeline with support for GPU acceleration and distributed computing
 
-      Readthedocs
+🔧 **Flexible Backend System**
+   Multiple numerical backends (NumPy, PyTorch, CuPyNumeric) for different use cases
 
+🧪 **Quantum Chemistry Focus**
+   Specialized tools for molecular simulations, VQE, UCCSD, and drug discovery applications
 
-   .. card:: Whitepaper
-      :link: https://quantum-journal.org/papers/q-2023-02-02-912/
-      :shadow: md
+🌐 **Cloud Integration**
+   Seamless access to quantum hardware including the Homebrew_S2 quantum processor
 
-      *Quantum* journal
+🎨 **Extensible Architecture**
+   Plugin system and clean abstractions for custom devices, backends, and algorithms
 
+Quick Example
+=============
 
-   .. card:: Issue Tracker
-      :link: https://github.com/QureGenAI-Biotech/TyxonQ/issues
-      :shadow: md
+Here are simple examples showing both quantum circuit construction and quantum chemistry applications:
 
-      GitHub Issues
+**Basic Quantum Circuit**
 
+.. code-block:: python
 
-   .. card:: Forum
-      :link: https://github.com/QureGenAI-Biotech/TyxonQ/discussions
-      :shadow: md
+   import tyxonq as tq
 
-      GitHub Discussions
-
-
-   .. card:: PyPI
-      :link:  https://pypi.org/project/tyxonq
-      :shadow: md
-
-      ``pip install``
-
-
-   .. card:: DockerHub
-      :link: https://hub.docker.com/repository/docker/tyxonq/tyxonq
-      :shadow: md
-
-      ``docker pull``
-      
-
-   .. card:: Application
-      :link: https://github.com/QureGenAI-Biotech/TyxonQ#research-and-applications
-      :shadow: md
-
-      Research using TQ
-
-
-
-
-
-
-
-..
-   * Source code: https://github.com/QureGenAI-Biotech/TyxonQ
-
-   * Documentation: https://tyxonq.readthedocs.io
-
-   * Software Whitepaper (published in Quantum): https://quantum-journal.org/papers/q-2023-02-02-912/
-
-   * Issue Tracker: https://github.com/QureGenAI-Biotech/TyxonQ/issues
-
-   * Forum: https://github.com/QureGenAI-Biotech/TyxonQ/discussions
-
-   * PyPI page: https://pypi.org/project/tyxonq
-
-   * DockerHub page: https://hub.docker.com/repository/docker/tyxonq/tyxonq
-
-   * Research and projects based on TyxonQ: https://github.com/QureGenAI-Biotech/TyxonQ#research-and-applications
-
-
-
-Unified Quantum Programming
-------------------------------
-
-TyxonQ is unifying infrastructures and interfaces for quantum computing.
-
-.. grid:: 1 2 4 4
-   :margin: 0
-   :padding: 0
-   :gutter: 2
-
-   .. grid-item-card:: Unified Backends
-      :columns: 12 6 3 3
-      :shadow: md
-
-      PyTorch/Numpy/Cupy
-
-   .. grid-item-card:: Unified Devices
-      :columns: 12 6 3 3
-      :shadow: md
-
-      CPU/GPU/TPU
-
-   .. grid-item-card:: Unified Providers
-      :columns: 12 6 3 3
-      :shadow: md
-
-      QPUs from different vendors
-
-   .. grid-item-card:: Unified Resources
-      :columns: 12 6 3 3
-      :shadow: md
-
-      local/cloud/HPC
-
-
-.. grid:: 1 2 4 4
-   :margin: 0
-   :padding: 0
-   :gutter: 2
-
-   .. grid-item-card:: Unified Interfaces
-      :columns: 12 6 3 3
-      :shadow: md
-
-      numerical sim/hardware exp
-
-   .. grid-item-card:: Unified Engines
-      :columns: 12 6 3 3
-      :shadow: md
-
-      ideal/noisy/approximate simulation
-
-   .. grid-item-card:: Unified Representations
-      :columns: 12 6 3 3
-      :shadow: md
-
-      from/to_IR/qiskit/openqasm/json
-
-   .. grid-item-card:: Unified Pipelines
-      :columns: 12 6 3 3
-      :shadow: md
-
-      stateless functional programming/stateful ML models
-
-
-
-
-Reference Documentation
-----------------------------
-
-The following documentation sections briefly introduce TyxonQ to the users and developers.
+   # Create a 2-qubit circuit
+   circuit = tq.Circuit(2)
+   circuit.h(0)
+   circuit.cnot(0, 1)
+   circuit.measure_all()
+
+   # Compile and execute
+   compiled = circuit.compile()
+   result = compiled.device('statevector').run(shots=1000)
+   
+   print(result.counts)
+   # Output: {'00': 500, '11': 500} (approximately)
+
+**Quantum Chemistry Calculation**
+
+.. code-block:: python
+
+   from tyxonq.applications.chem import UCCSD, HEA
+   from tyxonq.applications.chem.molecule import h2
+
+   # UCCSD calculation for H2 molecule
+   uccsd = UCCSD(h2, run_fci=True)
+   uccsd_energy = uccsd.kernel(runtime="numeric")
+   
+   # Hardware Efficient Ansatz (HEA) calculation
+   hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 
+                layers=3, runtime="device")
+   hea_energy = hea.kernel(shots=0, provider="simulator", device="statevector")
+   
+   print(f"HF energy:    {h2.hf_energy:.6f} Hartree")
+   print(f"UCCSD energy: {uccsd_energy:.6f} Hartree")
+   print(f"HEA energy:   {hea_energy:.6f} Hartree")
+   # Expected output shows correlation energy capture
+
+For more examples, see the :doc:`getting_started/quickstart` guide.
+
+Main Navigation
+===============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :caption: Core Documentation
 
-   quickstart.rst
-   advance.rst
-   faq.rst
-   sharpbits.rst
-   infras.rst
-   contribution.rst
-
-Tutorials
----------------------
-
-The following documentation sections include integrated examples in the form of Jupyter Notebook.
-
-.. toctree-filt::
-   :maxdepth: 2
-
-   :zh:tutorial.rst
-   :zh:whitepapertoc.rst
-   :en:tutorial_cn.rst
-   :en:whitepapertoc_cn.rst
-   :en:textbooktoc.rst
-
-
-
-API References
-=======================
+   getting_started/index
+   user_guide/index
+   quantum_chemistry/index
+   tutorials/index
 
 .. toctree::
-   :maxdepth: 2
-    
-   modules.rst
-    
+   :maxdepth: 1
+   :caption: Libraries & Tools
 
-Indices and Tables
+   libraries/index
+   cloud_services/index
+   examples/index
+   api/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development & References
+
+   developer_guide/index
+   technical_references/index
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   faq
+   glossary
+   changelog
+   bibliography
+
+Community & Support
+===================
+
+- **GitHub Repository**: `QureGenAI-Biotech/TyxonQ <https://github.com/QureGenAI-Biotech/TyxonQ>`_
+- **Issue Tracker**: Report bugs and request features on `GitHub Issues <https://github.com/QureGenAI-Biotech/TyxonQ/issues>`_
+- **PyPI Package**: `tyxonq <https://pypi.org/project/tyxonq>`_
+- **Contributing**: See our :doc:`developer_guide/contributing` guide
+
+License
+=======
+
+TyxonQ is released under the Apache License 2.0. See the `LICENSE <https://github.com/QureGenAI-Biotech/TyxonQ/blob/main/LICENSE>`_ file for details.
+
+Indices and tables
 ==================
 
 * :ref:`genindex`
