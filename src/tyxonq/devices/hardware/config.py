@@ -12,7 +12,10 @@ ENDPOINTS: Dict[str, Dict[str, str]] = {
     "tyxonq": {
         "base_url": os.getenv("TYXONQ_BASE_URL", "https://api.tyxonq.com/qau-cloud/tyxonq/"),
         "api_version": os.getenv("TYXONQ_API_VERSION", "v1"),
-    }
+    },
+    "qcos": {
+        "base_url": "https://ecloud.10086.cn",
+    },
 }
 
 
