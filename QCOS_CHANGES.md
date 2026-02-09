@@ -1,6 +1,6 @@
 # TyxonQ QCOS Integration - Change Log
 
-Connects TyxonQ directly to 移动云量子真机 via `wuyue_plugin.runner.Runner`.
+Connects TyxonQ directly to quantum hardware on China Mobile ecloud via `wuyue_plugin.runner.Runner`.
 No local QCOS Docker required.
 
 ---
@@ -69,17 +69,19 @@ TyxonQ Circuit
 Qiskit QuantumCircuit
      |  wuyue_plugin.Runner.run(qc, ...)
      v
-移动云 cloud API (ecloud.10086.cn)
+China Mobile ecloud API (ecloud.10086.cn)
      |
      v
-量子真机 / 模拟器
+Quantum hardware
 ```
 
 ---
 
 ## Usage
 
-To use wuyue and connect to 移动云量子真机, firstly we need to install wuyue_open and wuyue_plugin via
+To use wuyue and connect to quantum hardware on China Mobile ecloud, we need to install wuyue_open and wuyue_plugin.
+
+Firstly go to [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home), setup your China Mobile ecloud account. Then go to 编程框架本地部署 (Deploy SDK locally), download WuYue_SDK and get your SDK code. From the SDK, you will need to install two packages via 
 
 ```
 pip install wuyue_open-0.5-py3-none-any.whl
