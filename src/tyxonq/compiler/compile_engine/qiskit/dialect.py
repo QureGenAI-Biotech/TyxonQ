@@ -171,7 +171,7 @@ def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
         if measure_indices:
             if ClassicalRegister is None:
                 raise RuntimeError("qiskit classical register not available")
-            creg = ClassicalRegister(len(measure_indices))
+            creg = ClassicalRegister(len(measure_indices), 'c')
             qc.add_register(creg)
             for i, q in enumerate(measure_indices):
                 qc.measure(q, creg[i])

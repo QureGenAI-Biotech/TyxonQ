@@ -206,6 +206,10 @@ def resolve_driver(provider: str, device: str):
         from .hardware.ibm import driver as drv
 
         return drv
+    if provider == "qcos":
+        from .hardware.qcos import driver as drv
+        
+        return drv
     raise ValueError(f"Unsupported provider: {provider}")
 
 

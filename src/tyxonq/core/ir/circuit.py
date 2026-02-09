@@ -882,14 +882,30 @@ class Circuit:
         from ...devices import base as device_base
         from ...devices.hardware import config as hwcfg
 
-        # Merge device options with call-time overrides and extract reserved keys
+        # Merge device options with call-time overrides and extract reserved keys.
+        # Explicit parameters take precedence over _device_opts defaults.
         dev_opts = {**self._device_opts, **opts}
-        dev_provider = dev_opts.pop("provider", provider)
-        dev_device = dev_opts.pop("device", device)
-        dev_shots = int(dev_opts.pop("shots", shots))
+        dev_provider = provider if provider is not None else dev_opts.pop("provider", None)
+        dev_device = device if device is not None else dev_opts.pop("device", None)
+        dev_shots = int(shots if shots is not None else dev_opts.pop("shots", 1024))
+        # Remove these keys from dev_opts to avoid passing them twice
+        dev_opts.pop("provider", None)
+        dev_opts.pop("device", None)
+        dev_opts.pop("shots", None)
 
+        # QCOS provider: convert directly to Qiskit QuantumCircuit
+        if dev_provider == "qcos":
+            from ...compiler.compile_engine.qiskit.dialect import to_qiskit
+            qiskit_circuit = to_qiskit(self)
+            tasks = device_base.run(
+                provider=dev_provider,
+                device=dev_device,
+                source=qiskit_circuit,
+                shots=dev_shots,
+                **dev_opts,
+            )
         # If pre-compiled/native source exists, submit directly
-        if self._compiled_source is not None:
+        elif self._compiled_source is not None:
             tasks = device_base.run(
                 provider=dev_provider,
                 device=dev_device,
@@ -899,18 +915,15 @@ class Circuit:
             )
         else:
             # Compile first using current defaults
-            # compile() 返回 self，并将编译结果存储在 self._compiled_source 中
             compiled_circuit = self.compile(
                 compile_engine=self._compile_engine,
                 output=self._compile_output,
                 target=self._compile_target,
                 options=self._compile_opts,
             )
-            
-            # compiled_circuit 是 Circuit 对象，编译结果存在 _compiled_source 属性中
+
             source_to_submit = compiled_circuit._compiled_source
             if source_to_submit is not None:
-                # 有编译源代码（QASM2/QASM3/TQASM），提交给 device
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
@@ -919,7 +932,7 @@ class Circuit:
                     **dev_opts,
                 )
             else:
-                # 没有编译源代码，直接提交 IR (仅供 simulator/local 使用)
+                # No compiled source, submit IR directly (simulator/local only)
                 tasks = device_base.run(
                     provider=dev_provider,
                     device=dev_device,
