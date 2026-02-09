@@ -77,9 +77,9 @@ Quantum hardware
 
 ---
 
-## Usage
+## Installation
 
-To use wuyue and connect to quantum hardware on China Mobile ecloud, we need to install wuyue_open and wuyue_plugin.
+To use wuyue and connect to quantum hardware on China Mobile ecloud, we need to install wuyue_open and wuyue_plugin. Due to the requirement of WuYue_SDK, you need to create a environment with python==3.11
 
 Firstly go to [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home), setup your China Mobile ecloud account. Then go to 编程框架本地部署 (Deploy SDK locally), download WuYue_SDK and get your SDK code. From the SDK, you will need to install two packages via 
 
@@ -89,6 +89,10 @@ pip install wuyue_plugin-1.0-py3-none-any.whl
 ```
 
 Then you need to prepare your access key, secret key and sdk code from China Mobile website.
+
+In case of package conflict, we recommend to re-install tyxonq from source after installing these two packages.
+
+## Usage
 
 ```python
 from tyxonq import Circuit
