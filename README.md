@@ -4,11 +4,12 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 [![Real Quantum Hardware](https://img.shields.io/badge/Quantum%20Hardware-Homebrew__S2-brightgreen)](https://www.tyxonq.com/)
+[![QCOS Integration](https://img.shields.io/badge/QCOS-China%20Mobile%20ecloud-blue)](https://ecloud.10086.cn/)
 
 For Chinese Introduction, see: [中文README](README_cn.md).
 For Japanese Introduction, see: [日本語README](README_jp.md).
 
-TyxonQ 太玄量子 is a next‑generation quantum programming framework with a stable IR, pluggable compiler, unified device abstraction (simulators and hardware), a single numerics backend interface (NumPy/PyTorch/CuPyNumeric), and a device runtime friendly postprocessing layer. It is designed to mirror real devices while remaining simple for engineers and scientists.
+TyxonQ (太玄量子) is a production-ready, next-generation quantum programming framework featuring stable IR, pluggable compiler, unified device abstraction (simulators and hardware), single numerics backend interface (NumPy/PyTorch/CuPyNumeric), and device-runtime friendly postprocessing. Version 1.0.0 introduces revolutionary pulse-level control, China Mobile QCOS (Quantum Computing OS) integration, and enhanced quantum chemistry performance.
 
 ### Core goals
 - **System‑architect‑friendly, hardware‑realistic programming model**: stable IR + chain pipeline mirroring real device execution; clear contracts for compiler, devices, and postprocessing; closest‑to‑hardware code path.
@@ -64,6 +65,28 @@ print("E[Z] (sim)", ez_sim)
 print("E[Z] (hw) ", ez_hw)
 ```
 
+### Pulse-Level Quantum Control
+```python
+import tyxonq as tq
+from tyxonq import waveforms
+
+# High-level: Write algorithms with gates
+circuit = tq.Circuit(2).h(0).cx(0, 1)
+
+# Hardware execution: Automatic TQASM export for real QPU
+result = circuit.device(provider="tyxonq", device="homebrew_s2").run(shots=1024)
+
+# Or use China Mobile QCOS hardware
+result = circuit.device(
+    provider="qcos",
+    device="WuYue-QPUSim-FullAmpSim",
+    shots=1024,
+    access_key="your_access_key",
+    secret_key="your_secret_key",
+    sdk_code="your_sdk_code"
+).run()
+```
+
 ### Minimal Quantum Chemistry (PySCF‑style)
 ```python
 # pip install pyscf  # required for UCCSD example
@@ -89,6 +112,11 @@ print("UCCSD energy (device path):", e)
 pip install tyxonq
 # or from source
 uv build && uv pip install dist/tyxonq-*.whl
+
+# For China Mobile QCOS integration (requires Python 3.11)
+pip install wuyue_open-0.5-py3-none-any.whl
+pip install wuyue_plugin-1.0-py3-none-any.whl
+# Then reinstall tyxonq from source
 ```
 
 ## 🔑 Quantum Hardware Setup
@@ -97,6 +125,7 @@ uv build && uv pip install dist/tyxonq-*.whl
 to register and obtain your API key
 2. **Hardware Access**: Request access to **Homebrew_S2** quantum processor through 
 API [TyxonQ QPU API](https://www.tyxonq.com)
+3. **China Mobile QCOS**: For ecloud quantum hardware access, visit [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home) and setup your account
 
 ### Hardware API Configuration
 Set up your API credentials:
@@ -105,12 +134,23 @@ Set up your API credentials:
 import tyxonq as tq
 import getpass
 
-# Configure quantum hardware access
+# Configure TyxonQ quantum hardware access
 API_KEY = getpass.getpass("Input your TyxonQ API_KEY:")
 tq.set_token(API_KEY) # Get from https://www.tyxonq.com
-# legacy style
-# apis.set_token(API_KEY) # Get from https://www.tyxonq.com
+
+# Configure China Mobile QCOS (alternative)
+# Credentials can be set via environment variables:
+# export QCOS_ACCESS_KEY="your_access_key"
+# export QCOS_SECRET_KEY="your_secret_key"  
+# export QCOS_SDK_CODE="your_sdk_code"
 ```
+
+### Supported Hardware Providers
+| Provider | Device Type | Access Method |
+|----------|-------------|---------------|
+| **TyxonQ** | `homebrew_s2` | Direct API access |
+| **QCOS** | `WuYue-*` series | China Mobile ecloud plugin |
+| **Simulators** | `statevector`, `density_matrix`, `mps` | Local execution |
 
 ## 📖 Technical Documentation
 
@@ -154,7 +194,7 @@ This document provides:
 
 ### 🚀 Performance Leadership
 
-TyxonQ delivers **industry-leading performance** in gradient computation:
+TyxonQ delivers **industry-leading performance** in gradient computation and quantum chemistry workflows:
 
 | Framework | Time/Step | Method |
 |-----------|-----------|--------|
@@ -410,22 +450,24 @@ result = circuit.with_noise("phase_damping", l=0.05).run(shots=1024)
 
 ## 📚 Comprehensive Example Library
 
-TyxonQ includes **66 high-quality examples** covering:
+TyxonQ includes **80+ high-quality examples** covering:
 
 - **Variational Algorithms**: VQE, QAOA, VQD with SciPy/PyTorch optimization
-- **Quantum Chemistry**: UCCSD, k-UpCCGSD, molecular properties (RDM, dipole)
+- **Quantum Chemistry**: UCCSD, k-UpCCGSD, molecular properties (RDM, dipole, HOMO-LUMO gaps)
+- **Pulse-Level Control**: Gate→Pulse compilation, waveform design, TQASM export
 - **Quantum Machine Learning**: MNIST classification, hybrid GPU training
 - **Advanced Techniques**: Quantum Natural Gradient, Trotter evolution, slicing
 - **Noise Simulation**: T1/T2 calibration, readout mitigation, error analysis
 - **Performance Benchmarks**: Framework comparisons, optimization strategies
-- **Hardware Deployment**: Real quantum computer execution examples
+- **Hardware Deployment**: Real quantum computer execution examples (TyxonQ + QCOS)
+- **Research Projects**: GQE drug design transfer learning, AIDD workflows
 
 Explore the full collection in [`examples/`](examples/) directory.
 
 ## Dependencies
 - Python >= 3.10 (supports Python 3.10, 3.11, 3.12+)
 - PyTorch >= 1.8.0 (required for autograd support)
-
+- For QCOS integration: Python 3.11 required
 
 ## 📧 Contact & Support
 
@@ -433,6 +475,7 @@ Explore the full collection in [`examples/`](examples/) directory.
 - **Technical Support**: [code@quregenai.com](mailto:code@quregenai.com)
 - **General Inquiries**: [bd@quregenai.com](mailto:bd@quregenai.com)
 - **Issue**: [github issue](https://github.com/QureGenAI-Biotech/TyxonQ/issues)
+- **Documentation**: [Technical Whitepaper](TYXONQ_TECHNICAL_WHITEPAPER.md)
 
 #### 微信公众号 | Official WeChat
 <img src="docs/images/wechat_offical_qrcode.jpg" alt="TyxonQ 微信公众号" width="200">
