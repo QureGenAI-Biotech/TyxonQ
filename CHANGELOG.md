@@ -25,7 +25,6 @@ and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.
 - **Error Handling**: Improved error messages and validation across all components
 
 ### Performance Improvements
-- **Gradient Computation**: 1.38x faster than PennyLane, 5.61x faster than Qiskit
 - **UCCSD Execution**: shots=0 performance optimization using intelligent caching
 - **Batch Processing**: Significant speedup in grouped measurement compilation
 
