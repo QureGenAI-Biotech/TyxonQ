@@ -1,0 +1,8 @@
+torch
+tyxonq
+pyscf
+openfermion
+numpy
+scipy
+pandas
+wandb
