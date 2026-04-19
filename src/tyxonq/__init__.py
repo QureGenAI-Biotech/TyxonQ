@@ -8,7 +8,18 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 import sys as _sys
 import importlib as _importlib
 
-__version__ = "0.9.9"
+# Version is now read from pyproject.toml at install time
+try:
+    from importlib.metadata import version, PackageNotFoundError
+    try:
+        __version__ = version("tyxonq")
+    except PackageNotFoundError:
+        # Package is not installed, use fallback
+        __version__ = "1.0.0.dev0"
+except ImportError:
+    # Python < 3.8 fallback (should not happen given requires-python >= 3.10)
+    __version__ = "1.0.0.dev0"
+
 __author__ = "TyxonQ Development Team"
 
 # --- Cloud API re-exports and module aliases ---
