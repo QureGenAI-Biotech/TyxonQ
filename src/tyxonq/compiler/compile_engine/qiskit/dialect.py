@@ -14,9 +14,24 @@ from ....core.ir import Circuit
 
 OP_MAPPING: Dict[str, str] = {
     "h": "h",
+    "x": "x",
+    "y": "y",
+    "z": "z",
+    "s": "s",
+    "sdg": "sdg",
+    "t": "t",
+    "tdg": "tdg",
     "rx": "rx",
+    "ry": "ry",
     "rz": "rz",
     "cx": "cx",
+    "cy": "cy",
+    "cz": "cz",
+    "swap": "swap",
+    "iswap": "iswap",
+    "rxx": "rxx",
+    "ryy": "ryy",
+    "rzz": "rzz",
 }
 
 
@@ -145,7 +160,9 @@ def qasm2_dumps_compat(qc: Any) -> str:
 def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
     """Convert IR `Circuit` to a Qiskit `QuantumCircuit`.
 
-    Supports ops: h, rx(theta), rz(theta), cx, measure_z.
+    Supports ops: h, x, y, z, s, sdg, t, tdg, rx(theta), ry(theta), rz(theta),
+    cx, cy, cz, swap, iswap, rxx(theta), ryy(theta), rzz(theta), barrier,
+    measure_z.
     """
     if QuantumCircuit is None:
         raise RuntimeError("qiskit is not available; please install qiskit to use this provider")
@@ -156,12 +173,45 @@ def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
         name = op[0]
         if name == "h":
             qc.h(int(op[1]))
+        elif name == "x":
+            qc.x(int(op[1]))
+        elif name == "y":
+            qc.y(int(op[1]))
+        elif name == "z":
+            qc.z(int(op[1]))
+        elif name == "s":
+            qc.s(int(op[1]))
+        elif name == "sdg":
+            qc.sdg(int(op[1]))
+        elif name == "t":
+            qc.t(int(op[1]))
+        elif name == "tdg":
+            qc.tdg(int(op[1]))
         elif name == "rx":
             qc.rx(float(op[2]), int(op[1]))
+        elif name == "ry":
+            qc.ry(float(op[2]), int(op[1]))
         elif name == "rz":
             qc.rz(float(op[2]), int(op[1]))
-        elif name == "cx":
+        elif name in ("cx", "cnot"):
             qc.cx(int(op[1]), int(op[2]))
+        elif name == "cy":
+            qc.cy(int(op[1]), int(op[2]))
+        elif name == "cz":
+            qc.cz(int(op[1]), int(op[2]))
+        elif name == "swap":
+            qc.swap(int(op[1]), int(op[2]))
+        elif name == "iswap":
+            qc.iswap(int(op[1]), int(op[2]))
+        elif name == "rxx":
+            qc.rxx(float(op[3]), int(op[1]), int(op[2]))
+        elif name == "ryy":
+            qc.ryy(float(op[3]), int(op[1]), int(op[2]))
+        elif name == "rzz":
+            qc.rzz(float(op[3]), int(op[1]), int(op[2]))
+        elif name == "barrier":
+            qubits = [int(q) for q in op[1:]] if len(op) > 1 else list(range(circuit.num_qubits))
+            qc.barrier(*qubits)
         elif name == "measure_z":
             measure_indices.append(int(op[1]))
         else:
@@ -184,8 +234,14 @@ def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
 def from_qiskit(qc: Any) -> Circuit:
     """Convert a Qiskit `QuantumCircuit` to IR `Circuit`.
 
-    Recognizes: h, rx(theta), rz(theta), cx, measure.
+    Recognizes: h, x, y, z, s, sdg, t, tdg, rx, ry, rz, cx, cy, cz, swap, iswap,
+    rxx, ryy, rzz, measure, barrier.
     """
+    _SINGLE_NOPARAM = {"h", "x", "y", "z", "s", "sdg", "t", "tdg"}
+    _SINGLE_THETA = {"rx", "ry", "rz"}
+    _TWO_NOPARAM = {"cx", "cy", "cz", "swap", "iswap"}
+    _TWO_THETA = {"rxx", "ryy", "rzz"}
+
     ops: List[Any] = []
     for inst in getattr(qc, "data", []):
         op = getattr(inst, "operation", None)
@@ -200,18 +256,20 @@ def from_qiskit(qc: Any) -> Circuit:
             qubits = inst[1]
             params = getattr(op, "params", [])
 
-        if name == "h":
-            ops.append(("h", int(qc.find_bit(qubits[0]).index)))
-        elif name == "rx":
+        if name in _SINGLE_NOPARAM:
+            ops.append((name, int(qc.find_bit(qubits[0]).index)))
+        elif name in _SINGLE_THETA:
             theta = float(params[0]) if params else 0.0
-            ops.append(("rx", int(qc.find_bit(qubits[0]).index), theta))
-        elif name == "rz":
-            theta = float(params[0]) if params else 0.0
-            ops.append(("rz", int(qc.find_bit(qubits[0]).index), theta))
-        elif name == "cx":
+            ops.append((name, int(qc.find_bit(qubits[0]).index), theta))
+        elif name in _TWO_NOPARAM:
             c = int(qc.find_bit(qubits[0]).index)
             t = int(qc.find_bit(qubits[1]).index)
-            ops.append(("cx", c, t))
+            ops.append((name, c, t))
+        elif name in _TWO_THETA:
+            theta = float(params[0]) if params else 0.0
+            c = int(qc.find_bit(qubits[0]).index)
+            t = int(qc.find_bit(qubits[1]).index)
+            ops.append((name, c, t, theta))
         elif name == "measure":
             q = int(qc.find_bit(qubits[0]).index)
             ops.append(("measure_z", q))
