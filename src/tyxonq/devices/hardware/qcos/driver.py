@@ -116,21 +116,18 @@ def run(
     else:
         shots = int(shots)
 
-    # Extract runner options
+    # Extract driver-internal options
     auto_retry = opts.pop("auto_retry", True)
     timeout = opts.pop("timeout", 100)
     task_name = opts.pop("task_name", None)
 
-    # Build runner config from remaining opts
-    runner_kwargs = {}
+    # Forward all remaining opts to wuyue Runner. Runner.param_map filters
+    # unknown keys internally, so we don't need a whitelist here. This keeps
+    # us compatible with new wuyue_plugin params (bit_info, qmachine_type,
+    # dry_run, initial_mapping, etc.) without driver changes.
+    runner_kwargs = dict(opts)
     if task_name is not None:
         runner_kwargs["task_name"] = task_name
-    # Pass through WuYue-specific options
-    for key in ("calculate_type", "mapping_flag", "noise_type",
-                "circuit_optimization", "qubit_mapping",
-                "gate_decomposition", "is_amend"):
-        if key in opts:
-            runner_kwargs[key] = opts.pop(key)
 
     runner = Runner(access_key, secret_key, auto_retry)
 
