@@ -31,7 +31,12 @@ def set_token(token: str, *, provider: Optional[str] = None, device: Optional[st
     return dict(_TOKENS)
 
 
-def get_token(*, provider: Optional[str] = None, device: Optional[str] = None) -> Optional[str]:
+def get_token(
+    *,
+    provider: Optional[str] = None,
+    device: Optional[str] = None,
+    env_fallback: bool = True,
+) -> Optional[str]:
     prov = (provider or _DEFAULTS.get("provider") or "tyxonq").lower()
     key_device = prov + "::" + (device or "")
     key_provider = prov + "::"
@@ -39,8 +44,10 @@ def get_token(*, provider: Optional[str] = None, device: Optional[str] = None) -
     tok = _TOKENS.get(key_device) or _TOKENS.get(key_provider)
     if tok:
         return tok
-    # Fallback to environment variable
-    return os.getenv("TYXONQ_API_KEY")
+    # Optional fallback to the global env var (default on for back-compat).
+    if env_fallback:
+        return os.getenv("TYXONQ_API_KEY")
+    return None
 
 
 def set_default(*, provider: Optional[str] = None, device: Optional[str] = None) -> None:
