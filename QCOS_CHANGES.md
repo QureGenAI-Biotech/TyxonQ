@@ -19,12 +19,16 @@ Key components:
 
 | Component | Description |
 |-----------|-------------|
-| `_ensure_license()` | Calls `License.init_license(sdk_code, access_key, secret_key)` once |
-| `_get_credentials()` | Extracts `access_key`, `secret_key`, `sdk_code` from opts or env vars |
+| `_get_credentials()` | Extracts `access_key`, `secret_key` from opts or env vars |
 | `QCOSTask` | Task wrapper with `id`, `device`, `status`, `wuyue_result`, `async_result` |
 | `run()` | Receives a Qiskit QuantumCircuit, submits via `Runner.run()` |
 | `get_task_details()` | Returns unified result dict from WuYue `Result` object |
 | `list_devices()` | Lists available devices via `Runner.get_eng_list()` |
+
+> **Migration note (2026-04):** China Mobile updated the WuYue platform so
+> `sdk_code` and `License.init_license(...)` are no longer required. The driver
+> now authenticates with `access_key` + `secret_key` only. Update both
+> `wuyue_open` and `wuyue_plugin` to the latest release before using.
 
 ---
 
@@ -81,14 +85,14 @@ Quantum hardware
 
 To use wuyue and connect to quantum hardware on China Mobile ecloud, we need to install wuyue_open and wuyue_plugin. Due to the requirement of WuYue_SDK, you need to create a environment with python==3.11
 
-Firstly go to [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home), setup your China Mobile ecloud account. Then go to 编程框架本地部署 (Deploy SDK locally), download WuYue_SDK and get your SDK code. From the SDK, you will need to install two packages via 
+Firstly go to [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home), setup your China Mobile ecloud account. Then go to 编程框架本地部署 (Deploy SDK locally), download WuYue_SDK. From the SDK, you will need to install two packages via
 
 ```
 pip install wuyue_open-0.5-py3-none-any.whl
 pip install wuyue_plugin-1.0-py3-none-any.whl
 ```
 
-Then you need to prepare your access key, secret key and sdk code from China Mobile website.
+Then you need to prepare your access key and secret key from China Mobile website.
 
 In case of package conflict, we recommend to re-install tyxonq from source after installing these two packages.
 
@@ -106,7 +110,6 @@ results = c.run(
     shots=100,
     access_key="your_access_key",
     secret_key="your_secret_key",
-    sdk_code="your_sdk_code",
     timeout=100,          # seconds, 0 for async
     wait_async_result=True,
 )
@@ -119,7 +122,6 @@ Credentials can also be set via environment variables instead of passing them ev
 ```bash
 export QCOS_ACCESS_KEY="your_access_key"
 export QCOS_SECRET_KEY="your_secret_key"
-export QCOS_SDK_CODE="your_sdk_code"
 ```
 
 ```python

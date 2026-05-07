@@ -82,8 +82,7 @@ result = circuit.device(
     device="WuYue-QPUSim-FullAmpSim",
     shots=1024,
     access_key="your_access_key",
-    secret_key="your_secret_key",
-    sdk_code="your_sdk_code"
+    secret_key="your_secret_key"
 ).run()
 ```
 
@@ -141,8 +140,7 @@ tq.set_token(API_KEY) # Get from https://www.tyxonq.com
 # Configure China Mobile QCOS (alternative)
 # Credentials can be set via environment variables:
 # export QCOS_ACCESS_KEY="your_access_key"
-# export QCOS_SECRET_KEY="your_secret_key"  
-# export QCOS_SDK_CODE="your_sdk_code"
+# export QCOS_SECRET_KEY="your_secret_key"
 ```
 
 ### Supported Hardware Providers

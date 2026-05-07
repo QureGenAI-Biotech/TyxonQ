@@ -15,7 +15,6 @@ Usage:
         shots=100,
         access_key="...",
         secret_key="...",
-        sdk_code="...",
         timeout=100,
         wait_async_result=True,
     )
@@ -31,43 +30,36 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 
 logger = logging.getLogger(__name__)
 
-_license_initialized = False
-
-
-def _ensure_license(access_key: str, secret_key: str, sdk_code: str) -> None:
-    """Initialize WuYue license once."""
-    global _license_initialized
-    if _license_initialized:
-        return
-    from wuyue.ecloudsdkcore.license.license import License
-    License.init_license(sdk_code, access_key, secret_key)
-    _license_initialized = True
-
 
 def _get_credentials(opts: Dict[str, Any]) -> tuple:
-    """Extract access_key, secret_key, sdk_code from opts or env vars.
+    """Extract access_key and secret_key from opts or env vars.
 
     Returns:
-        (access_key, secret_key, sdk_code)
+        (access_key, secret_key)
 
     Raises:
         ValueError: If any credential is missing.
     """
+    if "sdk_code" in opts or os.getenv("QCOS_SDK_CODE"):
+        raise ValueError(
+            "sdk_code / QCOS_SDK_CODE is no longer supported (China Mobile "
+            "WuYue platform update, 2026-04). Remove it and authenticate with "
+            "access_key + secret_key only. Make sure wuyue / wuyue_open / "
+            "wuyue_plugin are upgraded to the post-update release."
+        )
+
     access_key = opts.pop("access_key", None) or os.getenv("QCOS_ACCESS_KEY")
     secret_key = opts.pop("secret_key", None) or os.getenv("QCOS_SECRET_KEY")
-    sdk_code = opts.pop("sdk_code", None) or os.getenv("QCOS_SDK_CODE")
 
     missing = []
     if not access_key:
         missing.append("access_key (or QCOS_ACCESS_KEY env var)")
     if not secret_key:
         missing.append("secret_key (or QCOS_SECRET_KEY env var)")
-    if not sdk_code:
-        missing.append("sdk_code (or QCOS_SDK_CODE env var)")
     if missing:
         raise ValueError(f"QCOS credentials missing: {', '.join(missing)}")
 
-    return access_key, secret_key, sdk_code
+    return access_key, secret_key
 
 
 @dataclass
@@ -99,7 +91,7 @@ def run(
                 by base.py before reaching here).
         shots: Number of measurement shots.
         **opts: Additional options including:
-            - access_key, secret_key, sdk_code: Authentication credentials.
+            - access_key, secret_key: Authentication credentials.
             - timeout: Wait timeout in seconds (default 100, 0 for async).
             - auto_retry: Enable automatic retry (default True).
             - task_name: Custom task name.
@@ -116,9 +108,7 @@ def run(
     # Strip provider prefix if present
     backend = device.split("::")[-1] if "::" in device else device
 
-    # Get credentials and initialize license
-    access_key, secret_key, sdk_code = _get_credentials(opts)
-    _ensure_license(access_key, secret_key, sdk_code)
+    access_key, secret_key = _get_credentials(opts)
 
     # Handle batch shots
     if isinstance(shots, (list, tuple)):
@@ -126,21 +116,18 @@ def run(
     else:
         shots = int(shots)
 
-    # Extract runner options
+    # Extract driver-internal options
     auto_retry = opts.pop("auto_retry", True)
     timeout = opts.pop("timeout", 100)
     task_name = opts.pop("task_name", None)
 
-    # Build runner config from remaining opts
-    runner_kwargs = {}
+    # Forward all remaining opts to wuyue Runner. Runner.param_map filters
+    # unknown keys internally, so we don't need a whitelist here. This keeps
+    # us compatible with new wuyue_plugin params (bit_info, qmachine_type,
+    # dry_run, initial_mapping, etc.) without driver changes.
+    runner_kwargs = dict(opts)
     if task_name is not None:
         runner_kwargs["task_name"] = task_name
-    # Pass through WuYue-specific options
-    for key in ("calculate_type", "mapping_flag", "noise_type",
-                "circuit_optimization", "qubit_mapping",
-                "gate_decomposition", "is_amend"):
-        if key in opts:
-            runner_kwargs[key] = opts.pop(key)
 
     runner = Runner(access_key, secret_key, auto_retry)
 
