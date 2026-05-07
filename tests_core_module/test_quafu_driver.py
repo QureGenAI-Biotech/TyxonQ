@@ -338,3 +338,13 @@ def test_cancel_calls_manager_cancel():
     out = driver.cancel(task)
     mgr.cancel.assert_called_once_with(12345)
     assert out == {"cancelled": True, "tid": 12345}
+
+
+# ---------- Provider registration ----------
+
+def test_resolve_driver_returns_quafu_module():
+    from tyxonq.devices.base import resolve_driver
+    from tyxonq.devices.hardware.quafu import driver as quafu_driver
+
+    drv = resolve_driver("quafu", "Dongling")
+    assert drv is quafu_driver

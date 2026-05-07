@@ -128,6 +128,8 @@ def resolve_driver(provider: str, device: str):
             - "simulator" or "local": Local quantum simulators
             - "tyxonq": TyxonQ quantum hardware platform
             - "ibm": IBM Quantum devices and simulators
+            - "qcos": China Mobile WuYue cloud (BAQIS-adjacent)
+            - "quafu": BAQIS Quafu Superconducting Quantum Cloud
             
         device (str): Specific device identifier within the provider.
             The device string format depends on the provider:
@@ -208,7 +210,11 @@ def resolve_driver(provider: str, device: str):
         return drv
     if provider == "qcos":
         from .hardware.qcos import driver as drv
-        
+
+        return drv
+    if provider == "quafu":
+        from .hardware.quafu import driver as drv
+
         return drv
     raise ValueError(f"Unsupported provider: {provider}")
 
