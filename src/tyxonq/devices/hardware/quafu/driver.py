@@ -6,10 +6,12 @@ provider-driver contract (run / get_task_details / list_devices / cancel).
 from __future__ import annotations
 
 import os
+import warnings
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Union
 
 from ..config import get_token as _hw_get_token
+from ._vendor_quafu import Task as _QuafuTaskMgr
 
 
 # ---------- Token resolution ----------
@@ -55,3 +57,123 @@ class QuafuTask:
     _mgr: Any = field(default=None, repr=False)
     async_result: bool = True
     task_info: Optional[Dict[str, Any]] = None
+
+
+def _build_task_dict(
+    *, chip: str, source: str, shots: int, opts: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Construct the payload Quafu's /task/run endpoint expects.
+
+    Pops keys from `opts` so the caller can pass any leftover kwargs through
+    without conflicting with internal options. Whatever the user did not set
+    explicitly we leave at upstream's defaults (False / None / []).
+    """
+    return {
+        "chip": chip,
+        "name": opts.pop("task_name", "TyxonQJob"),
+        "circuit": source,
+        "shots": int(shots),
+        # Ask the server to skip its own compiler by default; TyxonQ's
+        # Circuit.compile() already produced runnable QASM. Users can opt in to
+        # server-side recompilation via opts={"compiler": "qsteed"} etc.
+        "compile": opts.pop("compile", True),
+        "options": {
+            "compiler": opts.pop("compiler", None),
+            "correct": opts.pop("correct", False),
+            "open_dd": opts.pop("open_dd", None),
+            "target_qubits": opts.pop("target_qubits", []),
+        },
+    }
+
+
+def _validate_qasm(src: Any) -> None:
+    if not src:
+        raise ValueError("Quafu driver requires a source (OpenQASM 2.0 string)")
+    if not isinstance(src, str):
+        raise TypeError(
+            f"Quafu source must be a str (OpenQASM 2.0), got {type(src).__name__}"
+        )
+    if "OPENQASM 2.0" not in src:
+        raise ValueError(
+            "Quafu source must be OpenQASM 2.0 (header 'OPENQASM 2.0;' required)"
+        )
+
+
+def run(
+    device: str,
+    token: Optional[str] = None,
+    *,
+    source: Optional[Union[str, Sequence[str]]] = None,
+    shots: Union[int, Sequence[int]] = 1024,
+    **opts: Any,
+) -> List[QuafuTask]:
+    """Submit one or more OpenQASM 2.0 circuits to the Quafu cloud.
+
+    Args:
+        device: Chip name. May be `"Dongling"` or `"quafu::Dongling"`.
+        token: Optional explicit token. If None, falls through the resolution
+            chain in `_resolve_token`.
+        source: OpenQASM 2.0 string, or a list of such strings for batch
+            submission. Each must include the 'OPENQASM 2.0' header.
+        shots: Per-task shot count. Quafu requires multiples of 1024; the
+            driver warns (does not error) on other values.
+        **opts: Options forwarded into the task dict. Recognized keys:
+            `task_name`, `compiler` ({None|'quarkcircuit'|'qsteed'|'qiskit'}),
+            `correct` (readout error correction, bool), `open_dd` (dynamical
+            decoupling, {None|'XY4'|'CPMG'}), `target_qubits` (list[int]),
+            `compile` (bool, defaults to True — pass False to bypass the
+            server-side recompiler).
+
+    Returns:
+        List of QuafuTask handles, one per submitted source.
+    """
+    chip = device.split("::")[-1] if "::" in device else device
+    resolved_token = _resolve_token(token)
+
+    sources = source if isinstance(source, (list, tuple)) else [source]
+    for s in sources:
+        _validate_qasm(s)
+
+    if isinstance(shots, (list, tuple)):
+        shots_list = [int(s) for s in shots]
+        if len(shots_list) != len(sources):
+            raise ValueError(
+                f"shots list length {len(shots_list)} != sources length {len(sources)}"
+            )
+    else:
+        shots_list = [int(shots)] * len(sources)
+
+    for s in shots_list:
+        if s <= 0:
+            raise ValueError(f"shots must be positive, got {s}")
+        if s % 1024 != 0:
+            warnings.warn(
+                f"Quafu requires shots to be a multiple of 1024 (got {s}); "
+                "the server may round or reject the request.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+    mgr = _QuafuTaskMgr(resolved_token)
+
+    tasks: List[QuafuTask] = []
+    for src, sh in zip(sources, shots_list):
+        # Each submission gets a fresh copy of opts so popped keys don't
+        # bleed into the next iteration.
+        task_opts = dict(opts)
+        task_dict = _build_task_dict(chip=chip, source=src, shots=sh, opts=task_opts)
+        tid = mgr.run(task_dict)
+        if not isinstance(tid, int):
+            raise RuntimeError(f"Quafu submission failed: server returned {tid!r}")
+        tasks.append(
+            QuafuTask(
+                id=tid,
+                device=chip,
+                status="submitted",
+                _mgr=mgr,
+                async_result=True,
+                task_info=task_dict,
+            )
+        )
+
+    return tasks

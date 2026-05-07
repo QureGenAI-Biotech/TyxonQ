@@ -82,3 +82,142 @@ def test_resolve_token_raises_with_helpful_message_when_missing():
     assert "quafu-sqc.baqis.ac.cn" in msg
     assert "TYXONQ_QUAFU_TOKEN" in msg
     assert "tq.set_token" in msg
+
+
+# ---------- Submission ----------
+
+_BELL_QASM = (
+    "OPENQASM 2.0;\n"
+    'include "qelib1.inc";\n'
+    "qreg q[2];\ncreg c[2];\n"
+    "h q[0];\ncx q[0],q[1];\n"
+    "measure q[0] -> c[0];\nmeasure q[1] -> c[1];\n"
+)
+
+
+def _mock_session(verify_response="ok", run_response=12345, get_response=None):
+    """Build a mock requests.Session that returns the given JSON-encoded
+    payloads for the verify (init) and run (submit) calls.
+    """
+    import json
+
+    def _bytes(obj):
+        return MagicMock(content=json.dumps(obj).encode())
+
+    sess = MagicMock()
+    sess.get.return_value = _bytes(verify_response if get_response is None else get_response)
+    sess.post.return_value = _bytes(run_response)
+    return sess
+
+
+def test_run_submits_returns_quafu_task():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    with patch.object(Task, "session", _mock_session(run_response=99001)):
+        tasks = driver.run(
+            device="Dongling", token="t", source=_BELL_QASM, shots=1024,
+        )
+
+    assert isinstance(tasks, list) and len(tasks) == 1
+    assert tasks[0].id == 99001
+    assert tasks[0].device == "Dongling"
+    assert tasks[0].status == "submitted"
+
+
+def test_run_strips_provider_prefix_from_device():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    with patch.object(Task, "session", _mock_session()):
+        tasks = driver.run(
+            device="quafu::Dongling", token="t", source=_BELL_QASM, shots=1024,
+        )
+    assert tasks[0].device == "Dongling"
+
+
+def test_run_sends_correct_payload():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    sess = _mock_session()
+    with patch.object(Task, "session", sess):
+        driver.run(
+            device="Dongling", token="t", source=_BELL_QASM, shots=2048,
+            task_name="MyJob",
+        )
+
+    # Examine the POST that was made for /task/run
+    post_url = sess.post.call_args[0][0]
+    assert "/task/run/" in post_url
+    assert "chip=Dongling" in post_url
+    assert "shots=2048" in post_url
+    assert "name=MyJob" in post_url
+
+    import json
+    body = json.loads(sess.post.call_args[1]["data"])
+    assert body["circuit"] == _BELL_QASM
+    # By default, TyxonQ asks the server NOT to recompile
+    # (the user already compiled to QASM via Circuit.compile()).
+    assert body["options"]["compiler"] is None
+
+
+def test_run_passes_compiler_option_through():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    sess = _mock_session()
+    with patch.object(Task, "session", sess):
+        driver.run(
+            device="Dongling", token="t", source=_BELL_QASM, shots=1024,
+            compiler="qsteed",
+        )
+
+    import json
+    body = json.loads(sess.post.call_args[1]["data"])
+    assert body["options"]["compiler"] == "qsteed"
+
+
+def test_run_warns_on_non_multiple_of_1024_shots():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    with patch.object(Task, "session", _mock_session()):
+        with pytest.warns(UserWarning, match="multiple of 1024"):
+            driver.run(
+                device="Dongling", token="t", source=_BELL_QASM, shots=500,
+            )
+
+
+def test_run_rejects_non_qasm_source():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    with patch.object(Task, "session", _mock_session()):
+        with pytest.raises(ValueError, match="OPENQASM 2.0"):
+            driver.run(
+                device="Dongling", token="t", source="not qasm at all", shots=1024,
+            )
+
+
+def test_run_rejects_empty_source():
+    from tyxonq.devices.hardware.quafu import driver
+
+    with pytest.raises(ValueError, match="source"):
+        driver.run(device="Dongling", token="t", source=None, shots=1024)
+
+
+def test_run_batch_returns_one_task_per_source():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    sess = _mock_session()
+    # Each .post() call returns the same mocked tid (12345); fine for shape test.
+    with patch.object(Task, "session", sess):
+        tasks = driver.run(
+            device="Dongling", token="t",
+            source=[_BELL_QASM, _BELL_QASM, _BELL_QASM],
+            shots=1024,
+        )
+    assert len(tasks) == 3
+    assert sess.post.call_count == 3
