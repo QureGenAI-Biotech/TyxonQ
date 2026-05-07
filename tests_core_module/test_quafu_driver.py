@@ -2,6 +2,7 @@
 Python in TyxonQ's supported range without a live token."""
 from __future__ import annotations
 
+import json as _json
 import os
 import pytest
 from unittest.mock import MagicMock, patch
@@ -221,3 +222,73 @@ def test_run_batch_returns_one_task_per_source():
         )
     assert len(tasks) == 3
     assert sess.post.call_count == 3
+
+
+# ---------- Result retrieval ----------
+
+
+def _mgr_with_result(result_payload):
+    """Create a mocked Task manager whose .result(tid) returns the given dict."""
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    if hasattr(Task, "instance"):
+        del Task.instance
+    sess = MagicMock()
+    sess.get.return_value = MagicMock(content=_json.dumps("ok").encode())
+    sess.post.return_value = MagicMock(content=_json.dumps(12345).encode())
+    with patch.object(Task, "session", sess):
+        mgr = Task("test-token")
+    # Now stub .result on the singleton instance
+    mgr.result = MagicMock(return_value=result_payload)
+    return mgr
+
+
+@pytest.mark.parametrize(
+    "upstream_status, expected_uni",
+    [
+        ("Finished", "completed"),
+        ("Failed", "failed"),
+        ("Running", "running"),
+        ("Pending", "queued"),
+        ("Queued", "queued"),
+        ("Whatever", "unknown"),
+    ],
+)
+def test_get_task_details_status_mapping(upstream_status, expected_uni):
+    from tyxonq.devices.hardware.quafu import driver
+
+    mgr = _mgr_with_result(
+        {"count": {"00": 510, "11": 514}, "status": upstream_status}
+    )
+    task = driver.QuafuTask(id=12345, device="Dongling", _mgr=mgr)
+
+    out = driver.get_task_details(task)
+
+    assert out["uni_status"] == expected_uni
+    assert out["result"] == {"00": 510, "11": 514}
+    assert out["result_meta"]["device"] == "Dongling"
+    assert out["result_meta"]["tid"] == 12345
+    assert out["result_meta"]["raw"]["status"] == upstream_status
+
+
+def test_get_task_details_handles_missing_count_field():
+    from tyxonq.devices.hardware.quafu import driver
+
+    mgr = _mgr_with_result({"status": "Pending"})  # no count yet
+    task = driver.QuafuTask(id=12345, device="Dongling", _mgr=mgr)
+
+    out = driver.get_task_details(task)
+    assert out["result"] == {}
+    assert out["uni_status"] == "queued"
+    assert out["result_meta"]["shots"] is None
+
+
+def test_get_task_details_surfaces_error_field():
+    from tyxonq.devices.hardware.quafu import driver
+
+    mgr = _mgr_with_result({"status": "Failed", "error": "calibration drift"})
+    task = driver.QuafuTask(id=12345, device="Dongling", _mgr=mgr)
+
+    out = driver.get_task_details(task)
+    assert out["uni_status"] == "failed"
+    assert out["error"] == "calibration drift"

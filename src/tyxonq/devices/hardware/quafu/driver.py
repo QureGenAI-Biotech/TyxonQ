@@ -177,3 +177,54 @@ def run(
         )
 
     return tasks
+
+
+_STATUS_MAP: Dict[str, str] = {
+    "Finished": "completed",
+    "Failed": "failed",
+    "Running": "running",
+    "Pending": "queued",
+    "Queued": "queued",
+}
+
+
+def _map_status(s: Any) -> str:
+    if not isinstance(s, str):
+        return "unknown"
+    return _STATUS_MAP.get(s, "unknown")
+
+
+def get_task_details(task: QuafuTask, token: Optional[str] = None) -> Dict[str, Any]:
+    """Fetch a task's result and normalize to TyxonQ's unified result shape.
+
+    The unified shape (matches qcos / tyxonq drivers) is:
+        {"result": dict[bitstring, count],
+         "result_meta": {"shots": int, "device": str, "tid": int, "raw": dict},
+         "uni_status": str,
+         "error": str}
+    """
+    if task._mgr is None:
+        raise RuntimeError(
+            "QuafuTask has no manager; was it constructed via driver.run()?"
+        )
+    raw = task._mgr.result(task.id)
+    if not isinstance(raw, dict):
+        return {
+            "result": {},
+            "result_meta": {"tid": task.id, "device": task.device, "raw": raw},
+            "uni_status": "unknown",
+            "error": f"unexpected response: {raw!r}",
+        }
+
+    counts = raw.get("count", {}) or {}
+    return {
+        "result": counts,
+        "result_meta": {
+            "shots": sum(counts.values()) if counts else None,
+            "device": task.device,
+            "tid": task.id,
+            "raw": raw,
+        },
+        "uni_status": _map_status(raw.get("status")),
+        "error": raw.get("error", ""),
+    }
