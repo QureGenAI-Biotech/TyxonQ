@@ -292,3 +292,49 @@ def test_get_task_details_surfaces_error_field():
     out = driver.get_task_details(task)
     assert out["uni_status"] == "failed"
     assert out["error"] == "calibration drift"
+
+
+# ---------- list_devices ----------
+
+def test_list_devices_filters_offline_chips():
+    from tyxonq.devices.hardware.quafu import driver
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+
+    sess = MagicMock()
+    sess.get.side_effect = [
+        # 1st call: verify (during Task.__init__)
+        MagicMock(content=_json.dumps("ok").encode()),
+        # 2nd call: status(0)
+        MagicMock(content=_json.dumps(
+            {"Dongling": 0, "Baihua": 10, "Miaofeng": "Offline"}
+        ).encode()),
+    ]
+    with patch.object(Task, "session", sess):
+        devs = driver.list_devices(token="t")
+
+    assert sorted(devs) == ["quafu::Baihua", "quafu::Dongling"]
+    assert "quafu::Miaofeng" not in devs
+
+
+def test_list_devices_returns_empty_on_token_failure(monkeypatch):
+    """If the user has no token configured, list_devices returns [] rather
+    than crashing. Matches the qcos driver's defensive shape."""
+    from tyxonq.devices.hardware.quafu import driver
+    # No token set anywhere — _resolve_token would normally raise, but
+    # list_devices wraps in a try/except and returns [].
+    devs = driver.list_devices()
+    assert devs == []
+
+
+# ---------- cancel ----------
+
+def test_cancel_calls_manager_cancel():
+    from tyxonq.devices.hardware.quafu import driver
+
+    mgr = MagicMock()
+    mgr.cancel.return_value = {"cancelled": True, "tid": 12345}
+    task = driver.QuafuTask(id=12345, device="Dongling", _mgr=mgr)
+
+    out = driver.cancel(task)
+    mgr.cancel.assert_called_once_with(12345)
+    assert out == {"cancelled": True, "tid": 12345}

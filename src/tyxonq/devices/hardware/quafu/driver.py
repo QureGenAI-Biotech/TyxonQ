@@ -5,6 +5,7 @@ provider-driver contract (run / get_task_details / list_devices / cancel).
 """
 from __future__ import annotations
 
+import logging
 import os
 import warnings
 from dataclasses import dataclass, field
@@ -228,3 +229,40 @@ def get_task_details(task: QuafuTask, token: Optional[str] = None) -> Dict[str, 
         "uni_status": _map_status(raw.get("status")),
         "error": raw.get("error", ""),
     }
+
+
+logger = logging.getLogger(__name__)
+
+
+def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
+    """Return online Quafu chips, prefixed `quafu::`.
+
+    Defensive: if no token is configured, returns [] rather than raising.
+    Matches the qcos driver's behavior so this can be called eagerly during
+    device discovery without crashing.
+    """
+    try:
+        resolved_token = _resolve_token(token)
+    except RuntimeError as e:
+        logger.warning(f"Quafu list_devices: {e}")
+        return []
+
+    try:
+        mgr = _QuafuTaskMgr(resolved_token)
+        chips = mgr.status(0)
+    except Exception as e:
+        logger.warning(f"Quafu list_devices: status() failed: {e}")
+        return []
+
+    if not isinstance(chips, dict):
+        return []
+    return [f"quafu::{name}" for name, depth in chips.items() if depth != "Offline"]
+
+
+def cancel(task: QuafuTask, token: Optional[str] = None) -> Dict[str, Any]:
+    """Cancel a queued Quafu task. Returns the upstream response verbatim."""
+    if task._mgr is None:
+        raise RuntimeError(
+            "QuafuTask has no manager; was it constructed via driver.run()?"
+        )
+    return task._mgr.cancel(task.id)
