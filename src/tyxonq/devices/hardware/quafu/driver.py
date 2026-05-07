@@ -186,6 +186,11 @@ _STATUS_MAP: Dict[str, str] = {
     "Running": "running",
     "Pending": "queued",
     "Queued": "queued",
+    # Transient states observed during live runs against quafu-sqc.baqis.ac.cn.
+    # Treat them all as "running" so callers can keep polling.
+    "Submitted": "running",
+    "InQueue": "queued",
+    "Compiling": "running",
 }
 
 
@@ -256,7 +261,9 @@ def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
 
     if not isinstance(chips, dict):
         return []
-    return [f"quafu::{name}" for name, depth in chips.items() if depth != "Offline"]
+    # An integer queue depth means the chip is online and accepting jobs.
+    # String values (Offline, Calibrating, Maintenance, ...) mean it is not.
+    return [f"quafu::{name}" for name, depth in chips.items() if isinstance(depth, int)]
 
 
 def cancel(task: QuafuTask, token: Optional[str] = None) -> Dict[str, Any]:

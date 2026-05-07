@@ -66,7 +66,10 @@ def pick_chip(token: str) -> str | None:
     queue = mgr.status(0)
     print("queue depths:", json.dumps(queue, indent=2, ensure_ascii=False))
 
-    online = {name: depth for name, depth in queue.items() if depth != "Offline"}
+    # Only chips with an integer queue depth are actually accepting jobs.
+    # Everything else (Offline, Calibrating, Maintenance, ...) returns a
+    # status string — exclude those.
+    online = {name: depth for name, depth in queue.items() if isinstance(depth, int)}
     if not online:
         return None
     # Idle first; otherwise least-busy.
@@ -126,23 +129,48 @@ def submit_and_wait(
         task_name=task_name,
     )
     results = chain.postprocessing().run()
-
-    # If the result already came back synchronously and is `completed`, return.
     r0 = results[0]
+
+    # Already done? return.
     if r0.get("uni_status") == "completed":
         return r0
 
-    # Otherwise poll. The Chain API's `.run()` may return a still-queued
-    # state if the server is busy.
-    deadline = time.time() + timeout_seconds
-    while r0.get("uni_status") in ("queued", "running", "submitted") and time.time() < deadline:
-        time.sleep(2.0)
-        # Re-fetch via the unified API.
-        if hasattr(r0, "id") or "result_meta" in r0:
-            # We still have a task handle elsewhere; in this minimal demo we
-            # just trust the result and break out.
-            break
-    return r0
+    # Extract the task id from the unified result shape (it's nested one
+    # extra level because devices/base.get_task_details wraps the driver's
+    # result dict).
+    meta = r0.get("result_meta", {}) or {}
+    inner = meta.get("result_meta", meta) if isinstance(meta, dict) else {}
+    tid = inner.get("tid")
+    if not isinstance(tid, int):
+        return r0  # nothing to poll — caller can inspect r0["error"]
+
+    # Poll server-side via the vendored client. The Chain API's `.run()`
+    # only fetches once, so a transient status (Submitted / InQueue /
+    # Compiling) that arrives in the first 0.2s would otherwise stick.
+    from tyxonq.devices.hardware.quafu._vendor_quafu import Task
+    from tyxonq.devices.hardware.quafu.driver import _map_status
+
+    if hasattr(Task, "instance"):
+        del Task.instance
+    token = _resolve_token()
+    mgr = Task(token)
+    try:
+        raw = mgr.result(tid, timeout=timeout_seconds)
+    except TimeoutError as e:
+        return {**r0, "error": f"polling timed out: {e}"}
+
+    counts = raw.get("count", {}) or {}
+    return {
+        "result": counts,
+        "result_meta": {
+            "shots": sum(counts.values()) if counts else None,
+            "device": chip,
+            "tid": tid,
+            "raw": raw,
+        },
+        "uni_status": _map_status(raw.get("status")),
+        "error": raw.get("error", ""),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +261,7 @@ def main() -> None:
     print(c._compiled_source)
 
     print("\n--- Submitting + waiting ---")
+    chip = "Baihua"
     result = submit_and_wait(
         c, chip,
         shots=1024,

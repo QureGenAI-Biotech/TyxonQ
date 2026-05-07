@@ -166,27 +166,3 @@ Status code mapping (from `wuyue_plugin` → TyxonQ unified):
 | 6 | Failed | `failed` |
 | any other | — | `unknown` |
 
-## Limitations
-
-- Requires the proprietary `wuyue_plugin` package installed locally; it is
-  not on PyPI in the standard sense and ships with the WuYue SDK. If
-  installation fails, this provider is unavailable but the rest of TyxonQ
-  works fine.
-- Pulse-level and waveform programming go through a separate WuYue
-  pulse API not yet exposed in TyxonQ.
-- `list_devices` requires valid credentials even to enumerate the
-  catalog.
-
-## Comparison with the `quafu` provider
-
-| Aspect | `qcos` | `quafu` |
-|---|---|---|
-| Operator | China Mobile + WuYue (五岳) | BAQIS (北量院) |
-| Endpoint | China Mobile Cloud (auth-gated) | `quafu-sqc.baqis.ac.cn` |
-| Auth | access_key + secret_key | single token |
-| Source format | Qiskit `QuantumCircuit` | OpenQASM 2.0 string |
-| Chain API pre-compile needed | No (auto-converts IR → Qiskit) | Yes (`c.compile(compile_engine="qiskit", output="qasm2")`) |
-| External SDK dependency | Yes (`wuyue_plugin`) | No (vendored REST client) |
-| Token rotation | per-application, manual | every 30 days, automatic on portal |
-
-See `docs/quafu_provider.md` for the BAQIS Quafu equivalent.

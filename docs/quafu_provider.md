@@ -105,8 +105,7 @@ the caller back off.
 
 ## Limitations (v1)
 
-- Cloud submission only — the QuarkServer / `127.0.0.1:2088` lab path is
-  not exposed.
+- Cloud submission only
 - No pulse-level / waveform programming (Quafu's REST API does not
   surface it).
 - No chip-topology visualization (would require the optional
