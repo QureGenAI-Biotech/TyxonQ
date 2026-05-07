@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog (https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.html).
 
+### [1.1.0] - 2026-05-07
+### Added
+- **Enhanced Qiskit Dialect Support**: Expanded gate conversion with 15+ gate types including x, y, z, s, sdg, t, tdg, ry, cy, cz, swap, iswap, rxx, ryy, rzz, and barrier
+- **Improved QCOS Authentication**: Simplified credential management - removed sdk_code requirement, now using access_key + secret_key only (aligned with China Mobile WuYue platform 2026-04 update)
+
+### Changed
+- **Qiskit Dialect Conversion**: Comprehensive bidirectional conversion (to_qiskit/from_qiskit) supporting full gate set with proper parameter handling
+- **QCOS Driver Options**: Removed whitelist filtering, now forwarding all options to wuyue Runner for better compatibility with new parameters (bit_info, qmachine_type, dry_run, initial_mapping, etc.)
+- **QCOS_CHANGES Documentation**: Updated migration guide and installation instructions reflecting platform changes
+
+### Fixed
+- **QCOS Credential Flow**: Eliminated unnecessary License.init_license() call that was deprecated by China Mobile
+- **Qiskit Gate Mapping**: Fixed cx/cnot equivalence and added proper two-qubit gate parameter handling
+
 ### [1.0.0] - 2026-02-15
 ### Added
 - **Revolutionary Pulse-Level Quantum Control**: Complete pulse programming framework with dual-mode architecture (automatic gate→pulse + direct Hamiltonian evolution)
