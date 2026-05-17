@@ -1,0 +1,17 @@
+This directory contains a vendored copy of `quark/quafu.py` from the
+quarkstudio package, distributed under the MIT License.
+
+Original copyright:
+    Copyright (c) 2024 YL Feng <fengyulong@pku.org.cn>
+
+Upstream package: https://pypi.org/project/quarkstudio/
+Upstream homepage: https://gitee.com (per package metadata)
+Vendored from quarkstudio version: 7.3.7
+Vendored on: 2026-05-06
+
+The full MIT license text is reproduced in the header of _vendor_quafu.py.
+
+Local modifications:
+- Removed `Task.backend()` (depends on the optional `quarkcircuit` package
+  which we do not vendor).
+- Added a provenance comment block at the top of the file.

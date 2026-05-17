@@ -148,6 +148,7 @@ tq.set_token(API_KEY) # Get from https://www.tyxonq.com
 |----------|-------------|---------------|
 | **TyxonQ** | `homebrew_s2` | Direct API access |
 | **QCOS** | `WuYue-*` series | China Mobile ecloud plugin |
+| **Quafu** | `Dongling`, `Baihua`, ... | BAQIS Quafu superconducting cloud. Token from https://quafu-sqc.baqis.ac.cn/. See [docs/quafu_provider.md](docs/quafu_provider.md). |
 | **Simulators** | `statevector`, `density_matrix`, `mps` | Local execution |
 
 ## 📖 Technical Documentation
