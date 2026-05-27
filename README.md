@@ -113,8 +113,9 @@ pip install tyxonq
 uv build && uv pip install dist/tyxonq-*.whl
 
 # For China Mobile QCOS integration (requires Python 3.11)
-pip install wuyue_open-0.5-py3-none-any.whl
-pip install wuyue_plugin-1.0-py3-none-any.whl
+# Download the unified WuYue SDK whl from the ecloud console
+# (Programming Framework -> SDK Local Deployment) and install it:
+pip install wuyue-1.0-py3-none-any.whl
 # Then reinstall tyxonq from source
 ```
 

@@ -10,7 +10,7 @@ and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.
 - **Industry-Leading Waveform Library**: 10+ waveform types including DRAG, Hermite, Blackman with physics-validated implementations
 - **Three-Level System Support**: Realistic transmon qubit modeling with |2⟩ state leakage simulation
 - **TQASM 0.2 + OpenPulse Export**: Full defcal support for cloud QPU deployment
-- **China Mobile QCOS Integration**: Direct connectivity to quantum hardware on ecloud via wuyue_plugin without local Docker
+- **China Mobile QCOS Integration**: Direct connectivity to quantum hardware on ecloud via the wuyue SDK without local Docker
 - **Enhanced Quantum Chemistry Performance**: Smart caching mechanisms, batch compilation, and hybrid GPU acceleration
 - **Quantum Natural Gradient (QNG)**: Advanced optimization with Fubini-Study metric implementation
 - **HOMO-LUMO Gap Analysis**: New molecular property computation capabilities
