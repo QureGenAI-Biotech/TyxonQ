@@ -1,6 +1,6 @@
 # TyxonQ QCOS Integration - Change Log
 
-Connects TyxonQ directly to quantum hardware on China Mobile ecloud via `wuyue_plugin.runner.Runner`.
+Connects TyxonQ directly to quantum hardware on China Mobile ecloud via `wuyue.plugin.runner.Runner`.
 No local QCOS Docker required.
 
 ---
@@ -13,7 +13,7 @@ Module init, exports the driver.
 
 ### `src/tyxonq/devices/hardware/qcos/driver.py`
 
-QCOS driver that uses `wuyue_plugin.Runner` internally.
+QCOS driver that uses `wuyue.plugin.runner.Runner` internally.
 
 Key components:
 
@@ -23,12 +23,19 @@ Key components:
 | `QCOSTask` | Task wrapper with `id`, `device`, `status`, `wuyue_result`, `async_result` |
 | `run()` | Receives a Qiskit QuantumCircuit, submits via `Runner.run()` |
 | `get_task_details()` | Returns unified result dict from WuYue `Result` object |
-| `list_devices()` | Lists available devices via `Runner.get_eng_list()` |
+| `list_devices()` | Returns a static catalog of known WuYue device IDs |
 
-> **Migration note (2026-04):** China Mobile updated the WuYue platform so
-> `sdk_code` and `License.init_license(...)` are no longer required. The driver
-> now authenticates with `access_key` + `secret_key` only. Update both
-> `wuyue_open` and `wuyue_plugin` to the latest release before using.
+> **Migration note (2026-04):** China Mobile removed `sdk_code` and
+> `License.init_license(...)`; authenticate with `access_key` + `secret_key` only.
+>
+> **Migration note (2026-05):** The two-package layout (`wuyue_open` +
+> `wuyue_plugin`) was replaced by a single unified `wuyue` whl. Importing
+> `wuyue_plugin` will fail; the driver now imports from `wuyue.plugin.runner`.
+> `Runner.get_eng_list()` was also removed, so `list_devices()` returns a
+> static catalog. Install the new whl with
+> `pip install wuyue-1.0-py3-none-any.whl`. The new whl pins
+> `qiskit==1.4.3`; use `pip install ... --no-deps` or a dedicated env if you
+> need a newer qiskit for other code.
 
 ---
 
@@ -71,7 +78,7 @@ TyxonQ Circuit
      |  to_qiskit(circuit)
      v
 Qiskit QuantumCircuit
-     |  wuyue_plugin.Runner.run(qc, ...)
+     |  wuyue.plugin.runner.Runner.run(qc, ...)
      v
 China Mobile ecloud API (ecloud.10086.cn)
      |
@@ -83,18 +90,28 @@ Quantum hardware
 
 ## Installation
 
-To use wuyue and connect to quantum hardware on China Mobile ecloud, we need to install wuyue_open and wuyue_plugin. Due to the requirement of WuYue_SDK, you need to create a environment with python==3.11
+To use wuyue and connect to quantum hardware on China Mobile ecloud, install the
+unified `wuyue` SDK. Due to the WuYue SDK requirements, use Python 3.11.
 
-Firstly go to [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home), setup your China Mobile ecloud account. Then go to 编程框架本地部署 (Deploy SDK locally), download WuYue_SDK. From the SDK, you will need to install two packages via
+Firstly go to [China Mobile ecloud console](https://ecloud.10086.cn/api/page/wyqcloud/web/console/#/overview_home),
+setup your China Mobile ecloud account. Then go to 编程框架本地部署 (Deploy SDK locally),
+download the WuYue SDK and install the single whl:
 
 ```
-pip install wuyue_open-0.5-py3-none-any.whl
-pip install wuyue_plugin-1.0-py3-none-any.whl
+pip install wuyue-1.0-py3-none-any.whl
 ```
 
-Then you need to prepare your access key and secret key from China Mobile website.
+The previous two-package layout (`wuyue_open-0.5` + `wuyue_plugin-1.0`) is no
+longer published; both names are gone in the 2026-05 release.
 
-In case of package conflict, we recommend to re-install tyxonq from source after installing these two packages.
+Then prepare your access key and secret key from the China Mobile console.
+
+`wuyue==1.0` hard-pins `qiskit==1.4.3`. If you need a newer qiskit for other
+work in the same environment, either keep a dedicated env for QCOS or install
+with `--no-deps` and pick a qiskit version yourself.
+
+In case of package conflict, we recommend reinstalling tyxonq from source after
+installing the wuyue whl.
 
 ## Usage
 

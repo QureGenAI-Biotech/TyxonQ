@@ -1,7 +1,10 @@
-"""QCOS driver for TyxonQ - connects to 移动云量子真机 via wuyue_plugin.
+"""QCOS driver for TyxonQ - connects to 移动云量子真机 via the wuyue SDK.
 
 Submits Qiskit QuantumCircuit objects to the WuYue cloud platform using
-wuyue_plugin.runner.Runner. No local QCOS Docker required.
+wuyue.plugin.runner.Runner. No local QCOS Docker required.
+
+Requires the unified `wuyue` whl (>=1.0, 2026-05 release). The earlier
+two-package layout (`wuyue_open` + `wuyue_plugin`) is no longer supported.
 
 Usage:
     from tyxonq import Circuit
@@ -44,8 +47,8 @@ def _get_credentials(opts: Dict[str, Any]) -> tuple:
         raise ValueError(
             "sdk_code / QCOS_SDK_CODE is no longer supported (China Mobile "
             "WuYue platform update, 2026-04). Remove it and authenticate with "
-            "access_key + secret_key only. Make sure wuyue / wuyue_open / "
-            "wuyue_plugin are upgraded to the post-update release."
+            "access_key + secret_key only. Install the unified `wuyue` whl "
+            "(>=1.0, 2026-05 release)."
         )
 
     access_key = opts.pop("access_key", None) or os.getenv("QCOS_ACCESS_KEY")
@@ -100,7 +103,7 @@ def run(
     Returns:
         List containing a single QCOSTask.
     """
-    from wuyue_plugin.runner import Runner
+    from wuyue.plugin.runner import Runner
 
     if source is None:
         raise ValueError("QCOS driver requires a circuit (source parameter)")
@@ -123,7 +126,7 @@ def run(
 
     # Forward all remaining opts to wuyue Runner. Runner.param_map filters
     # unknown keys internally, so we don't need a whitelist here. This keeps
-    # us compatible with new wuyue_plugin params (bit_info, qmachine_type,
+    # us compatible with new wuyue SDK params (bit_info, qmachine_type,
     # dry_run, initial_mapping, etc.) without driver changes.
     runner_kwargs = dict(opts)
     if task_name is not None:
@@ -235,25 +238,31 @@ def get_task_details(task: QCOSTask, token: Optional[str] = None) -> Dict[str, A
     }
 
 
-def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
-    """List available WuYue cloud devices.
+# Known device IDs published on the WuYue cloud console. The unified
+# `wuyue` SDK (>=1.0) no longer exposes Runner.get_eng_list(), so device
+# discovery has to come from a static list (or the console UI).
+_KNOWN_DEVICES = (
+    "WuYue-QPUSim-FullAmpSim",
+    "WuYue-QPUSim-SingleAmpSim",
+    "WuYue-QPUSim-PartialAmpSim",
+    "WuYue-QPUSim-DensitySim",
+    "WuYue-QPUSim-TensorSim",
+    "WuYue-QPUSim-CIMSim"
+    "WuYue-QPU-Wukong-001",
+    "WuYue-QPU-001",
+    "WuYue-QPU-002",
+    "WuYue-QPU-003",
+)
 
-    Requires access_key and secret_key in kws or env vars.
+
+def list_devices(token: Optional[str] = None, **kws: Any) -> List[str]:
+    """Return known WuYue cloud devices.
+
+    The unified `wuyue` SDK removed `Runner.get_eng_list()`, so this is a
+    static catalog. Check the China Mobile ecloud console for current
+    availability before submitting jobs.
 
     Returns:
         List of device names with "qcos::" prefix.
     """
-    try:
-        access_key = kws.pop("access_key", None) or os.getenv("QCOS_ACCESS_KEY")
-        secret_key = kws.pop("secret_key", None) or os.getenv("QCOS_SECRET_KEY")
-        if not access_key or not secret_key:
-            logger.warning("QCOS credentials not set, cannot list devices")
-            return []
-
-        from wuyue_plugin.runner import Runner
-        runner = Runner(access_key, secret_key)
-        devices = runner.get_eng_list(**kws)
-        return [f"qcos::{dev_id}" for dev_id in devices.values()]
-    except Exception as e:
-        logger.warning(f"Failed to list QCOS devices: {e}")
-        return []
+    return [f"qcos::{dev_id}" for dev_id in _KNOWN_DEVICES]
