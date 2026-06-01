@@ -40,12 +40,18 @@ def main() -> None:
 
     # Submit synchronously: timeout > 0 makes the WuYue Runner poll until
     # the task finishes (or until timeout seconds elapse, max 3600).
+    #
+    # calculate_type is REQUIRED by the WuYue simulators (1=单点/single-node,
+    # 2=分布式/distributed — distributed only supported by the Single-Amp and
+    # Full-Amp simulators). Omitting it makes the server reject the task with
+    # "未设置计算类型[calculatType]!".
     results = c.run(
         provider="qcos",
         device="WuYue-QPUSim-FullAmpSim",
         shots=100,
         timeout=100,
         wait_async_result=True,
+        calculate_type=1,
     )
 
     print("result:", json.dumps(results, indent=2, ensure_ascii=False, default=str))

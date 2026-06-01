@@ -245,12 +245,13 @@ _KNOWN_DEVICES = (
     "WuYue-QPUSim-FullAmpSim",
     "WuYue-QPUSim-SingleAmpSim",
     "WuYue-QPUSim-PartialAmpSim",
-    "WuYue-QPUSim-DensityMatrix",
-    "WuYue-QPUSim-Stabilizer",
-    "wukong01",
-    "WuYue-1",
-    "WuYue-2",
-    "WuYue-3",
+    "WuYue-QPUSim-DensitySim",
+    "WuYue-QPUSim-TensorSim",
+    "WuYue-QPUSim-CIMSim"
+    "WuYue-QPU-Wukong-001",
+    "WuYue-QPU-001",
+    "WuYue-QPU-002",
+    "WuYue-QPU-003",
 )
 
 
