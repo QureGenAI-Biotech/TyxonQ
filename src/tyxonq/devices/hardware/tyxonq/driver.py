@@ -89,21 +89,21 @@ def submit_task(
     lang: str = "OPENQASM",
     **kws: Any,
 ) -> List[TyxonQTask]:
-    # Type and content validation for homebrew_s2
+    # Homebrew 门线路统一接收 OpenQASM 2 字符串。
     dev = device.split("::")[-1]
     
-    if dev == "homebrew_s2":
+    if dev in ("homebrew_s2", "homebrew_s3"):
         # Normalize source to list for uniform validation
         sources_to_validate = source if isinstance(source, (list, tuple)) else [source]
         
         for src in sources_to_validate:
             if not isinstance(src, str):
                 raise TypeError(
-                    f"homebrew_s2 requires QASM2 source code (str), got {type(src).__name__}"
+                    f"{dev} requires QASM2 source code (str), got {type(src).__name__}"
                 )
-            if not ("qreg" in src or "creg" in src):
+            if "qreg" not in src or "creg" not in src:
                 raise ValueError(
-                    f"homebrew_s2 source must be valid QASM2 format (must contain qreg/creg)"
+                    f"{dev} source must be valid QASM2 format (must contain qreg/creg)"
                 )
     
     # Minimal pass-through; compilation handled elsewhere
@@ -219,5 +219,3 @@ def remove_task(task: TyxonQTask, token: Optional[str] = None) -> Dict[str, Any]
     r = requests.post(url, json={"id": task.id}, headers=_headers(token), timeout=15)
     r.raise_for_status()
     return r.json()
-
-

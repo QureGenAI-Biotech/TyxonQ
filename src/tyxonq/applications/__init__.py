@@ -6,10 +6,10 @@ stabilizes test collection across environments.
 """
 
 
-from . import chem
+from . import chem, qml
 
 __all__ = [
     "chem",
+    "qml",
 ]
-
 
