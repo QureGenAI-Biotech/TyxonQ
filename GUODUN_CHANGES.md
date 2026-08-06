@@ -241,7 +241,4 @@ python examples/run_circuit_on_guodun.py \
 ## 范围边界
 
 - 只接入国盾官方支持的门和原生门脉冲。
-- 不新增 TyxonQ `Circuit.fsim()` API。
-- 不接入实验中的 FSim 标定线路。
-- 不自动添加测量、重提任务、扩大 shots 或并发提交。
 - 脉冲真机提交前必须重新读取当前标定，并通过全部逐点安全检查。
