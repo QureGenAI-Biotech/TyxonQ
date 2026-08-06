@@ -904,6 +904,29 @@ class Circuit:
                 shots=dev_shots,
                 **dev_opts,
             )
+        # Guodun provider 固定使用本地 QCIS 编译链；不复用其他 provider 的旧产物。
+        elif dev_provider == "guodun":
+            physical_qubits = dev_opts.pop("physical_qubits", None)
+            compile_options = dict(self._compile_opts)
+            if physical_qubits is not None:
+                compile_options["physical_qubits"] = physical_qubits
+            compiled = self.compile(
+                compile_engine="guodun",
+                output="qcis",
+                options=compile_options,
+            )
+            source_to_submit = (
+                compiled.get("compiled_source")
+                if isinstance(compiled, dict)
+                else self._compiled_source
+            )
+            tasks = device_base.run(
+                provider=dev_provider,
+                device=dev_device,
+                source=source_to_submit,
+                shots=dev_shots,
+                **dev_opts,
+            )
         # If pre-compiled/native source exists, submit directly
         elif self._compiled_source is not None:
             tasks = device_base.run(
@@ -1019,10 +1042,9 @@ class Circuit:
 
     # Instruction helpers
     def add_measure(self, *qubits: int) -> "Circuit":
-        new_inst = list(self.instructions)
         for q in qubits:
-            new_inst.append(("measure", (int(q),)))
-        return replace(self, instructions=new_inst)
+            self.instructions.append(("measure", (int(q),)))
+        return self
 
     def add_reset(self, *qubits: int) -> "Circuit":
         new_inst = list(self.instructions)
@@ -2012,4 +2034,3 @@ def cancel_task(task: Any) -> Any:
     if hasattr(drv, "remove_task"):
         return drv.remove_task(task, tok)
     raise NotImplementedError("cancel not supported for this provider/task type")
-
