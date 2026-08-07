@@ -904,6 +904,18 @@ class Circuit:
                 shots=dev_shots,
                 **dev_opts,
             )
+        # LQCloud provider: convert directly to the official SDK circuit.
+        elif dev_provider == "lqcloud":
+            from ...devices.hardware.lqcloud.translator import to_lqcloud
+
+            lqcloud_circuit = to_lqcloud(self)
+            tasks = device_base.run(
+                provider=dev_provider,
+                device=dev_device,
+                source=lqcloud_circuit,
+                shots=dev_shots,
+                **dev_opts,
+            )
         # If pre-compiled/native source exists, submit directly
         elif self._compiled_source is not None:
             tasks = device_base.run(
@@ -2012,4 +2024,3 @@ def cancel_task(task: Any) -> Any:
     if hasattr(drv, "remove_task"):
         return drv.remove_task(task, tok)
     raise NotImplementedError("cancel not supported for this provider/task type")
-

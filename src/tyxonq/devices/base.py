@@ -130,6 +130,7 @@ def resolve_driver(provider: str, device: str):
             - "ibm": IBM Quantum devices and simulators
             - "qcos": China Mobile WuYue cloud (BAQIS-adjacent)
             - "quafu": BAQIS Quafu Superconducting Quantum Cloud
+            - "lqcloud": LogicalQubit cloud via the official LQCloud SDK
             
         device (str): Specific device identifier within the provider.
             The device string format depends on the provider:
@@ -216,6 +217,10 @@ def resolve_driver(provider: str, device: str):
         from .hardware.quafu import driver as drv
 
         return drv
+    if provider == "lqcloud":
+        from .hardware.lqcloud import driver as drv
+
+        return drv
     raise ValueError(f"Unsupported provider: {provider}")
 
 
@@ -283,7 +288,13 @@ def run(
 
     prov = provider or hwcfg.get_default_provider()
     dev = device or hwcfg.get_default_device()
-    tok = hwcfg.get_token(provider=prov, device=dev)
+    # 显式 token 优先；其他供应商不能误用 TyxonQ 平台自己的全局密钥。
+    explicit_token = opts.pop("token", None)
+    tok = explicit_token or hwcfg.get_token(
+        provider=prov,
+        device=dev,
+        env_fallback=prov == "tyxonq",
+    )
 
     drv = resolve_driver(prov, dev)
 
@@ -425,7 +436,7 @@ def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = N
 
     prov = provider or hwcfg.get_default_provider()
     dev = hwcfg.get_default_device()
-    tok = token or hwcfg.get_token(provider=prov)
+    tok = token or hwcfg.get_token(provider=prov, env_fallback=prov == "tyxonq")
 
     # Aggregate simulators and provider-specific hardware list
     sim_list = [
@@ -478,6 +489,8 @@ def get_task_details(task: Any, *, wait: bool = False, poll_interval: float = 2.
         uni_status = unified['uni_status']
         if uni_status in ('done', 'completed', 'success', 'finished'):
             return unified
+        if uni_status in ('failed', 'error', 'cancelled', 'canceled'):
+            return unified
         if wait and (time.perf_counter() - start_time) >= timeout:
             return unified
         if wait:
@@ -503,7 +516,5 @@ def remove_task(task: Any) -> Any:
     if hasattr(drv, "remove_task"):
         return drv.remove_task(handle, None)
     raise NotImplementedError("remove_task not supported for this provider")
-
-
 
 

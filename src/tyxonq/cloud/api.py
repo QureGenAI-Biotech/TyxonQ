@@ -59,6 +59,7 @@ def submit_task(
         circuit=circuit,
         source=source,
         shots=shots,
+        token=token,
         **opts,
     )
 
@@ -125,6 +126,7 @@ def run(
         circuit=circuit,
         source=source,
         shots=shots,
+        token=token,
         **opts,
     )
 
@@ -154,5 +156,4 @@ __all__ = [
     "result",
     "cancel",
 ]
-
 

@@ -42,6 +42,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+lqcloud = [
+    "lqcloud==0.4.2",
+]
 dev = [
     "jupyter>=1.1.1",
     "pytest>=6.0",
