@@ -71,3 +71,25 @@ def test_online_example_submits_once_prints_id_and_does_not_query(
     assert "example-query-id" in output
     assert "exp_name=tyxonq_gd_test_x_" in output
     assert "未查询结果" in output
+
+
+def test_variational_tutorial_example_runs_offline(monkeypatch, capsys):
+    from examples import run_guodun_variational as example
+
+    monkeypatch.delenv("TYXONQ_GUODUN_TOKEN", raising=False)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "run_guodun_variational.py",
+            "--physical-qubits",
+            "0,6,12,7,1",
+        ],
+    )
+
+    example.main()
+
+    output = capsys.readouterr().out
+    assert "逻辑到物理映射: {0: 0, 1: 6, 2: 12, 3: 7, 4: 1}" in output
+    assert "'CZ': 16" in output
+    assert "'M': 5" in output
+    assert "未登录、未下载配置、未提交任务" in output
