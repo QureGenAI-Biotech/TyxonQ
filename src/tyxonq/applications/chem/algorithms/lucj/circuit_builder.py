@@ -106,7 +106,12 @@ def build_lucj_circuit(
             "beta": [beta_qubit(p, n) for p in range(n)],
         },
         "reference_occupations": _closed_shell_reference_occupations(electrons, n),
-        "parameter_shapes": lucj_parameter_shapes(n, layer_count, name),
+        "parameter_shapes": lucj_parameter_shapes(
+            n,
+            layer_count,
+            name,
+            with_final_orbital_rotation=isinstance(final_orbital_rotation, np.ndarray),
+        ),
         "has_final_orbital_rotation": final_orbital_rotation is not None,
         "logical_ops": logical_ops,
     }
