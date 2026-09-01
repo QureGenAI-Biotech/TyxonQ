@@ -278,9 +278,11 @@ class HEADeviceRuntime:
         if bases in self._prefix_cache:
             return self._prefix_cache[bases]
         ops: List[Tuple] = []
-        # Apply basis rotations to convert from measured basis to Z basis
-        for lsb_q, p in enumerate(bases):
-            q = self.n - 1 - int(lsb_q)
+        # Apply basis rotations to convert from measured basis to Z basis.
+        # bases 按 OpenFermion 比特索引（LSB 优先）枚举；电路态制备与
+        # counts/probabilities 聚合都按 IR 索引直读（位串位置 = IR 比特），
+        # 故旋转必须放在 IR 比特 q 上，否则聚合会读到镜像比特。
+        for q, p in enumerate(bases):
             if p == "X":
                 ops.append(("h", q))
             elif p == "Y":

@@ -22,6 +22,7 @@ and research-level applications.
    pulse_zz_crosstalk
    pulse_iswap_swap_decomposition
    quantum_natural_gradient
+   qmmm_md_integration
 
 .. note::
    This tutorial requires solid understanding of quantum computing fundamentals and variational algorithms.

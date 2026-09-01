@@ -742,6 +742,38 @@ TyxonQ provides comprehensive validation mechanisms to ensure accuracy and relia
 - **Molecular System Benchmarks**: Standard test molecules and drug-relevant chemical systems for performance validation
 - **Hardware Migration Testing**: Seamless migration validation between simulators and real quantum hardware
 
+### 4.5 Molecular Dynamics and QM/MM Ecosystem Integration
+
+Starting with v1.2.0, TyxonQ plugs into the molecular-dynamics ecosystem as a quantum-chemistry force provider through `applications/chem/interfaces/`. The design principle is strict reuse: all nuclear gradients come from PySCF's analytic gradient machinery (no hand-written gradients), while TyxonQ supplies the correlated electronic solver (UCCSD/HEA/SQD backends) and the device layer — including real quantum hardware.
+
+**Architecture.** The single facade is `qc_scanner`, a PySCF-gradient-scanner-compatible callable returning `(energy, gradient)` in atomic units. It carries a construction recipe (method, basis, active space) and rebuilds geometry on demand, which makes it directly consumable by MD integrators:
+
+```python
+from tyxonq.applications.chem.interfaces import qc_scanner
+
+scan = qc_scanner("O 0 0 0; H 0 -0.757 0.587; H 0 0.757 0.587",
+                  basis="sto-3g", active_space=(4, 4), method="uccsd",
+                  mm_charges=(mm_coords_bohr, mm_charges_e))  # electrostatic embedding
+e, de = scan(coords_bohr)            # QM energy + gradient, environment included
+de_mm = scan.mm_gradient()           # back-reaction forces on MM particles
+scan.set_mm_charges(new_mm_coords)   # per-step environment update (MD loop)
+```
+
+**Engine adapters.** Four thin adapters expose the same scanner to different MD topologies:
+
+| Adapter | Engine | Topology |
+|---|---|---|
+| `TyxonQCalculator` | ASE | region partitioning (`qm_indices`); full-system forces = QM gradient + MM back-reaction; drives ASE optimizers/MD and serves as an i-PI force field |
+| `TyxonQDriver` | i-PI | thin shell over `ipi.pes._ase`; enables three-process runs: LAMMPS (`fix ipi`) + i-PI server + TyxonQ driver |
+| `openmm_potential` | OpenMM | `create_tyxonq_system` / mixed systems, and `create_qmmm_ee_system` for native electrostatic embedding with double-counting surgery (QM charges zeroed, intra-QM bonded terms removed, exceptions cleared) |
+| `TyxonQMdiEngine` | MDI | `@DEFAULT` command table with `>NLATTICE/>CLATTICE/>LATTICE` embedding channel; atomic units end to end |
+
+**Embedding coverage.** Two electrostatic-embedding regimes are validated: cluster embedding via `pyscf.qmmm` (`mm_charges`) and true periodic embedding via `pyscf.qmmm.pbc` (`mm_lattice`, Ewald summation with explicit guard rails against upstream pitfalls). Both support per-step environment updates and MM back-reaction forces. A documented approximation applies to the back-reaction: the upstream analytic expressions lack post-HF orbital-response terms (~4.3e-5 Ha/Bohr baseline bias), so thermostatted MD is supported while strict NVE conservation diagnostics are not.
+
+**Algorithm and hardware flexibility.** The QM backend is selected by `method=` (`uccsd`/`rouccsd`/`hea`/`sqd`). HEA additionally forwards execution options (`shots`/`provider`/`device`) through `as_pyscf_solver(device_opts=...)` down to `devices.base.run`, so the same QM/MM workflow targets simulators or real quantum hardware (TyxonQ/QCOS/Quafu providers) without code changes.
+
+**Validation.** Twelve use cases (`tests_applications_chem/`, 39 tests) plus nine runnable tutorials (`examples/qmmm/`, E1–E9) were executed end-to-end with UCCSD as the target algorithm; three-process LAMMPS topologies reproduce the reference decomposition to ~1e-5 Ha at step 0.
+
 ### 3.5 Production-Ready Noise Simulation
 
 TyxonQ provides comprehensive noise simulation capabilities through its density matrix simulator with Kraus operator support, enabling realistic modeling of quantum hardware imperfections. This feature is essential for NISQ-era algorithm development and hardware-aware circuit optimization.

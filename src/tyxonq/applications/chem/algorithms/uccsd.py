@@ -347,6 +347,13 @@ class UCCSD(UCC):
         """
         return self.energy()
 
+    @classmethod
+    def as_pyscf_solver(cls, config_function=None, runtime: str = "numeric",
+                        device_opts: dict | None = None, **kwargs):
+        """PySCF 兼容求解器；``device_opts``（shots/provider/device）透传到真机/模拟器。"""
+        return super().as_pyscf_solver(config_function=config_function, runtime=runtime,
+                                       device_opts=device_opts, **kwargs)
+
     # Use base class numeric path; runtime construction now injects CI Hamiltonian centrally
 
 
@@ -453,3 +460,10 @@ class ROUCCSD(UCC):
 
         self.param_ids = list(range(len(self.ex_ops)))
         self.init_guess = np.zeros_like(self.param_ids)
+
+    @classmethod
+    def as_pyscf_solver(cls, config_function=None, runtime: str = "numeric",
+                        device_opts: dict | None = None, **kwargs):
+        """PySCF 兼容求解器；``device_opts``（shots/provider/device）透传到真机/模拟器。"""
+        return super().as_pyscf_solver(config_function=config_function, runtime=runtime,
+                                       device_opts=device_opts, **kwargs)

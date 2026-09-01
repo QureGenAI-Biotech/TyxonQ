@@ -556,10 +556,18 @@ class HEA:
 
     # ---------- PySCF solver 适配（可选） ----------
     @classmethod
-    def as_pyscf_solver(cls, *, n_layers: int = 1, mapping: str = "parity", runtime: str = "device", config_function: Callable | None = None):
+    def as_pyscf_solver(cls, *, n_layers: int = 1, mapping: str = "parity", runtime: str = "device",
+                        config_function: Callable | None = None, device_opts: dict | None = None):
         """返回一个最小 PySCF FCI 求解器兼容对象，内部以 HEA 优化。
 
         仅实现 kernel/make_rdm1/make_rdm2 所需的最小接口，便于与 CASSCF 对接。
+
+        ``device_opts``：每次 ``kernel`` 时透传给 :meth:`HEA.kernel` 的运行选项，
+        如 ``shots``/``provider``/``device``。真机模式示例：
+        ``runtime="device"`` + ``device_opts={"provider": "tyxonq", "device": "...",
+        "shots": 2048}``，token 预先经 ``tq.set_token(...)`` 设置；
+        ``provider`` 取值同 ``tyxonq.devices.base.run``（tyxonq/qcos/quafu/simulator）。
+        缺省 ``shots=0`` 时自动回退解析路径（``HEA.kernel`` 内置逻辑）。
         """
 
         class _FCISolver:
@@ -570,7 +578,9 @@ class HEA:
                 self.instance = cls.from_integral(h1, h2, nelec, ecore, n_layers=n_layers, mapping=mapping, runtime=runtime)
                 if config_function is not None:
                     config_function(self.instance)
-                e = self.instance.kernel()
+                # 透传真机/采样运行选项（shots/provider/device 等）；
+                # PySCF 不传这类参数，故取自构造时的 device_opts。
+                e = self.instance.kernel(**dict(device_opts or {}))
                 return float(e), self.instance.params
 
             def make_rdm1(self, params, norb, nelec):
@@ -584,6 +594,13 @@ class HEA:
                 return rdm1, rdm2
 
             def spin_square(self, params, norb, nelec):
+                # 闭壳单重态的 <S^2> 恒为 0；开壳层情形未实现，避免静默给错值。
+                spin = getattr(self.instance, "spin", 0) or 0
+                if int(spin) != 0:
+                    raise NotImplementedError(
+                        "HEA.as_pyscf_solver only supports spin_square for closed-shell "
+                        "singlets; use the SQD path (sqd.as_pyscf_solver) for open shells."
+                    )
                 return 0.0, 1.0
 
         return _FCISolver()

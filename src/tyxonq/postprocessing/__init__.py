@@ -155,6 +155,22 @@ def apply_postprocessing(result: Dict[str, Any], options: Optional[Dict[str, Any
             counts = result.get("result") or result.get("counts") or {}
             expectations = result.get("expectations") or {}
             probabilities = result.get("probabilities") if isinstance(result.get("probabilities"), (list, tuple)) or hasattr(result.get("probabilities"), "shape") else None
+            # shots=0 时统一包装层只提升 counts；expectations/probabilities/statevector
+            # 留在驱动原始 payload（result_meta）里，counts 为空时回源取，
+            # 否则解析聚合会退化成只加常数项。
+            if not counts:
+                _raw = result.get("result_meta")
+                if isinstance(_raw, dict):
+                    expectations = expectations or (_raw.get("expectations") or {})
+                    _rp = _raw.get("probabilities")
+                    if probabilities is None and (isinstance(_rp, (list, tuple)) or hasattr(_rp, "shape")):
+                        probabilities = _rp
+                    if probabilities is None and _raw.get("statevector") is not None:
+                        try:
+                            import numpy as _np2
+                            probabilities = _np2.abs(_np2.asarray(_raw.get("statevector"))) ** 2
+                        except Exception:
+                            pass
             if probabilities is None and result.get("statevector") is not None:
                 try:
                     import numpy as _np

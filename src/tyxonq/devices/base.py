@@ -28,6 +28,24 @@ class DeviceTask:
             result['metadata'] = result['result_meta']
         if 'metadata' not in result:
             result['metadata'] = {}
+        # 驱动 payload 可能嵌套（result_meta 内还有一层 result_meta，引擎 metadata 在最内层），
+        # 把内层引擎 metadata 的字段（如 num_qubits）提升到外层，供解析聚合使用。
+        _inner = result.get('result_meta')
+        if isinstance(_inner, dict):
+            # 模拟器驱动：payload['result_meta'] 即引擎 metadata（含 num_qubits）；
+            # 其他驱动：可能多包一层 'metadata'。
+            _inner_meta = _inner.get('metadata')
+            if not isinstance(_inner_meta, dict):
+                _inner2 = _inner.get('result_meta')
+                if isinstance(_inner2, dict):
+                    _inner_meta = _inner2.get('metadata') or _inner2
+            if isinstance(_inner_meta, dict):
+                for _k, _v in _inner_meta.items():
+                    result['metadata'].setdefault(_k, _v)
+            if result.get('probabilities') is None and _inner.get('probabilities') is not None:
+                result['probabilities'] = _inner['probabilities']
+            if not result.get('expectations') and _inner.get('expectations'):
+                result['expectations'] = _inner['expectations']
         # Ensure expectations/probabilities keys exist (optional)
         if 'expectations' not in result:
             result['expectations'] = {}

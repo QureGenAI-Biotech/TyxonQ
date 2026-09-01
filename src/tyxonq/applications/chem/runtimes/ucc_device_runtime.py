@@ -74,17 +74,17 @@ class UCCDeviceRuntime:
         if bases in self._prefix_cache:
             return self._prefix_cache[bases]
         ops: List[Tuple] = []
-        # Map OpenFermion little-endian bases (q=0 is LSB) to IR qubit indices by bit-reversal
+        # bases 按 OpenFermion 比特索引（LSB 优先）枚举；电路态制备与
+        # counts/probabilities 聚合都按 IR 索引直读（位串位置 = IR 比特），
+        # 故旋转与测量必须放在 IR 比特 q 上，否则聚合会读到镜像比特。
         n = self.n_qubits
         for q, p in enumerate(bases):
-            qq = n - 1 - q
             if p == "X":
-                ops.append(("h", qq))
+                ops.append(("h", q))
             elif p == "Y":
-                ops.append(("rz", qq, -pi/2)); ops.append(("h", qq))
-        # Measure all qubits in the mapped order
+                ops.append(("rz", q, -pi/2)); ops.append(("h", q))
         for q in range(n):
-            ops.append(("measure_z", n - 1 - q))
+            ops.append(("measure_z", q))
         self._prefix_cache[bases] = ops
         return ops
 
@@ -95,6 +95,16 @@ class UCCDeviceRuntime:
     # 4) Adaptive shots allocation per parameter/group based on variance/sensitivity
     # 5) Optional low-rank/commuting-group Hamiltonian transforms to reduce measurement cost
     # 6) Caching of expectation terms across close parameters during local line-search
+    # 7) Ansatz equivalence gap: gate-level build_ucc_circuit (TenCirChem-style 2*theta cry
+    #    + 4-body multicontrol decomposition) differs from the numeric path's exact exp
+    #    evolution by ~1e-4 Ha on H4 (state overlap 0.99995); trotter=True is exact.
+    #    Audit the doubles gate decomposition / shared-param handling against the reference.
+    # 8) PSR shift mismatch for doubles: E(theta±pi/2) are identical for ALL theta (energy
+    #    surface has period pi under the 2*theta convention), so the ±pi/2 parameter-shift
+    #    gradient of double-excitation components is identically 0 while the numeric
+    #    gradient is not. Fix: use shift s with normalization 1/sin(2s) (e.g. s=pi/4 gives
+    #    g = E(theta+s) - E(theta-s)), or fall back to finite difference. Audit both
+    #    ucc/hea device runtimes' energy_and_grad against TenCirChem's shot gradient.
 
 
     def _execute_circuits(

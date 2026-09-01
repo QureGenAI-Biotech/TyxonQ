@@ -1,0 +1,30 @@
+# E7 — LAMMPS 侧输入：fix ipi 让 LAMMPS 成为 i-PI 的 client（力场端）
+#
+# 拓扑（详见 ../README.md）：
+#   LAMMPS (本脚本) ──fix ipi──▶ i-PI server ◀──i-pi-driver-py── TyxonQ driver
+#                                    │
+#                          <forces> 两个力场加权求和
+#
+# 语义依据 docs.lammps.org/fix_ipi.html：
+#   - 动力学参数全部在 i-PI 侧指定，LAMMPS 只负责按自己声明的力场算力；
+#   - 初始构型会被 i-PI 发来的坐标覆盖，但原子种类顺序必须一致；
+#   - 不支持 units lj（约化单位），这里用 real。
+#
+# LJ 参数故意取得很弱（epsilon = 0.001 kcal/mol, sigma = 1.5 Å）：
+# MM 贡献约 2.5e-3 Hartree，仅作管线验证，不喧宾夺主。
+
+units           real
+atom_style      atomic
+boundary        p p p
+
+read_data       water.lmp
+
+pair_style      lj/cut 10.0
+pair_coeff      * * 0.001 1.5
+
+# fix ipi：连到 i-PI server 的 inet socket。
+# __PORT_LMP__ 由 run.py 运行时替换；手动运行时自行改为 input.xml 中的端口。
+fix             1 all ipi 127.0.0.1 __PORT_LMP__
+
+# i-PI 决定每一步何时结束；给一个足够大的步数，实际由 server 断连终止。
+run             1000000

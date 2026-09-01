@@ -958,20 +958,26 @@ class UCC:
 
     # ---- PySCF solver adapter (minimal, aligned with HEA style) ----
     @classmethod
-    def as_pyscf_solver(cls, config_function = None, runtime: str = "numeric", **kwargs):  # pragma: no cover
+    def as_pyscf_solver(cls, config_function = None, runtime: str = "numeric",
+                        device_opts: dict | None = None, **kwargs):  # pragma: no cover
         """Create a PySCF-compatible FCI solver using UCC/ROUCCSD ansatz.
         
         Args:
             config_function: Optional function to configure UCC instance before kernel
             runtime: Runtime to use ("numeric" for analytic, "device" for simulation)
                     Default is "numeric" for maximum accuracy in PySCF workflows
+            device_opts: Optional run-time options merged into every ``instance.kernel``
+                    call (e.g. ``{"shots": ..., "provider": ..., "device": ...}``,
+                    same shape as ``examples/cloud_uccsd_hea_demo.py``). Points the
+                    device path at a simulator or real hardware (``devices.base.run``
+                    entry); ``runtime="device"`` is required for non-numeric backends.
             **kwargs: Other arguments passed to UCC constructor
         """
         class _FCISolver:
             def __init__(self):
                 self.instance: UCC | None = None  # type: ignore[name-defined]
                 self.config_function = config_function
-                self.instance_kwargs = kwargs
+                self.instance_kwargs = dict(kwargs)
                 for arg in ["run_ccsd", "run_fci"]:
                     # keep MP2 for initial guess
                     self.instance_kwargs[arg] = False
@@ -996,9 +1002,13 @@ class UCC:
                 self.instance = cls.from_integral(h1, h2, nelec, **self.instance_kwargs)
                 if self.config_function is not None:
                     self.config_function(self.instance)
-                # Call kernel with explicit runtime parameter (use class-level default if not provided by PySCF)
-                # PySCF typically doesn't pass runtime, so we use our class default
-                e_opt = self.instance.kernel(shots=kwargs.get("shots", 0), runtime=runtime)
+                # PySCF 不传运行选项，故取自构造时的 device_opts（shots/provider/
+                # device 等，指向模拟器或真机）；PySCF 若真传了 shots 则优先。
+                opts = dict(device_opts or {})
+                if "shots" in kwargs:
+                    opts["shots"] = kwargs["shots"]
+                opts.setdefault("runtime", runtime)
+                e_opt = self.instance.kernel(**opts)
                 return e_opt + ecore, self.instance.params
 
             def make_rdm1(self,params, norb, nelec):

@@ -1,0 +1,57 @@
+<simulation verbosity='medium'>
+  <!-- E8-B — i-PI server 侧输入：周期性固体 QM/MM 的水二聚体（20 A 周期盒）。
+       tq     = TyxonQ driver（QM 力：pbc Ewald 嵌入能量/梯度 + MM 反作用力）
+       lammps = LAMMPS fix ipi client（MM 力：MM-MM 周期静电 pppm + QM-MM vdW）
+       占位符 __PORT_TQ__/__PORT_LMP__/__XYZ__ 由 run.py 运行时替换。 -->
+  <output prefix='qmmm'>
+    <properties filename='md' stride='1'>
+      [ step, time{femtosecond}, temperature{kelvin}, potential{kelvin}, kinetic_cv{kelvin} ]
+    </properties>
+    <trajectory filename='pos' stride='1' format='xyz' cell_units='angstrom'>
+      positions{angstrom}
+    </trajectory>
+  </output>
+  <total_steps> 8 </total_steps>
+  <prng> <seed> 42 </seed> </prng>
+
+  <ffsocket mode='inet' name='tq'>
+    <address>127.0.0.1</address>
+    <port> __PORT_TQ__ </port>
+    <timeout> 600 </timeout>
+  </ffsocket>
+
+  <ffsocket mode='inet' name='lammps'>
+    <address>127.0.0.1</address>
+    <port> __PORT_LMP__ </port>
+    <timeout> 600 </timeout>
+  </ffsocket>
+
+  <system>
+    <initialize nbeads='1'>
+      <file mode='xyz' units='angstrom'> __XYZ__ </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <!-- 两个力分量直接相加（weight 默认 1）。TyxonQ 返回的是全 6 原子
+           的力（QM 梯度 ⊕ MM 反作用力，嵌入为 pbc Ewald），LAMMPS 返回
+           防双计数后的 MM 力（pppm 周期静电 + vdW），两者之和即
+           E_QM(pbc 嵌入) + E_MM 的负梯度。 -->
+      <force forcefield='tq'/>
+      <force forcefield='lammps'/>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'> 300 </temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+        <thermostat mode='langevin'>
+          <tau units='femtosecond'> 100 </tau>
+        </thermostat>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+    <cell mode='manual' units='angstrom'>
+      [ 20.0, 0.0, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 20.0 ]
+    </cell>
+  </system>
+</simulation>

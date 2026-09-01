@@ -470,7 +470,10 @@ class StatevectorEngine:
             if use_noise and z_atten is not None:
                 val *= z_atten[q]
             expectations[f"Z{q}"] = val
-        return {"expectations": expectations, "metadata": {"shots": shots, "backend": self.backend.name}}
+        return {
+            "expectations": expectations,
+            "metadata": {"shots": shots, "backend": self.backend.name, "num_qubits": int(num_qubits)},
+        }
 
     def expval(self, circuit: "Circuit", obs: Any, **kwargs: Any) -> float:
         try:

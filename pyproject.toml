@@ -27,7 +27,7 @@ dependencies = [
     "openfermion>=1.7.1",
     "openfermionpyscf>=0.5",
     "renormalizer>=0.0.11",
-    "pyscf>2.5",
+    "pyscf>=2.10",
     "numpy>=2.0.2",
     "opt-einsum>=3.4.0",
     "python-dotenv>=1.1.1",
@@ -48,6 +48,14 @@ dev = [
     "pytest-lazy-fixtures>=1.1.4",
     "build>=0.8.0",
     "twine>=4.0.0",
+]
+# 分子动力学接口（interfaces/）：ASE 枢纽 + OpenMM 直连。
+# i-PI 与 MDI 为可选专线，需单独安装（`pip install -U ipi` / `pip install 'pymdi>=1.4'`，
+# 见 examples/qmmm/ 下各教程的文件头说明）。
+md = [
+    "ase>=3.23",
+    "openmm>=8.1",
+    "openmmml>=1.7",
 ]
 
 [project.urls]

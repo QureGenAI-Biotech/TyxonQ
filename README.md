@@ -440,6 +440,7 @@ result = circuit.with_noise("phase_damping", l=0.05).run(shots=1024)
 - **Properties**: RDM1/2 and basic property operators; dynamics numeric path caches MPO/term matrices to avoid rebuilds.
 - **Bridges**: OpenFermion I/O via `libs/hamiltonian_encoding`; tight interop with PySCF for references and integrals.
 - **Chem libs**: `applications/chem/chem_libs/` including `circuit_chem_library` (UCC family ansatz), `quantum_chem_library` (CI/civector ops), `hamiltonians_chem_library` (HF/integrals → Hamiltonians).
+- **MD / QM-MM ecosystem** (v1.2.0): `applications/chem/interfaces/` plugs TyxonQ into molecular-dynamics engines as the QM force provider — `qc_scanner` (energy/gradient facade with cluster **and periodic Ewald** electrostatic embedding, per-step environment update, MM back-reaction forces), `TyxonQCalculator` (ASE, region partitioning), `TyxonQDriver` (i-PI), OpenMM native QM/MM (`create_tyxonq_system` / `create_qmmm_ee_system`), and `TyxonQMdiEngine` (MDI dedicated line). All gradients are reused from PySCF; QM backends selectable via `method="uccsd" | "hea" | ...`, with HEA execution options (`shots`/`provider`/`device`) forwarded to simulators **or real quantum hardware**. 👉 **See [`examples/qmmm/`](examples/qmmm/) for 9 runnable tutorials (E1–E9).**
 
 - **AIDD (AI Drug Design) field Feature**
   - Drug‑design‑oriented Hamiltonians and workflows (ligand–receptor fragments, solvent/embedding, coarse‑grained models) prioritized for AI Drug Design.
@@ -454,6 +455,7 @@ TyxonQ includes **80+ high-quality examples** covering:
 
 - **Variational Algorithms**: VQE, QAOA, VQD with SciPy/PyTorch optimization
 - **Quantum Chemistry**: UCCSD, k-UpCCGSD, molecular properties (RDM, dipole, HOMO-LUMO gaps)
+- **QM/MM & Molecular Dynamics** *(new in v1.2.0)*: `qc_scanner`-based ab-initio MD, ASE optimization, i-PI driver, LAMMPS three-process QM/MM (cluster + periodic Ewald), OpenMM QM/MM with electrostatic embedding, MDI dedicated line — see [`examples/qmmm/`](examples/qmmm/)
 - **Pulse-Level Control**: Gate→Pulse compilation, waveform design, TQASM export
 - **Quantum Machine Learning**: MNIST classification, hybrid GPU training
 - **Advanced Techniques**: Quantum Natural Gradient, Trotter evolution, slicing
