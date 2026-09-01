@@ -15,7 +15,7 @@ import numpy as np
 
 os.environ.setdefault("MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "tyxonq_matplotlib"))
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
@@ -28,7 +28,10 @@ from tyxonq.applications.chem.algorithms.lucj import (  # noqa: E402
     LUCJ,
     initialize_lucj_parameters_from_ccsd,
 )
-from tyxonq.applications.chem.algorithms.sqd import run_sqd_fermion  # noqa: E402
+from tyxonq.applications.chem.algorithms.sqd import (  # noqa: E402
+    reverse_bitstring_halves,
+    run_sqd_fermion,
+)
 from tyxonq.devices.simulators.statevector.engine import StatevectorEngine  # noqa: E402
 
 
@@ -288,12 +291,17 @@ def run_h2o_sqd(
     lucj_noiseless_energy = float(StatevectorEngine().expval(circuit, data.h_qubit_op))
     lucj_noisy_energy = noisy_mixed_energy(lucj_noiseless_energy, data.h_qubit_op, noise_p)
     noisy_counts = sample_noisy_lucj_counts(circuit, shots=shots, noise_p=noise_p, seed=seed)
+    # TyxonQ/LUCJ raw order 的每个自旋半区需反转后才能交给 SQD/PySCF。
+    sqd_counts = {
+        reverse_bitstring_halves(bitstring): count
+        for bitstring, count in noisy_counts.items()
+    }
     initial_occupancies = build_initial_occupancies(data.active_natural_occupations)
 
     sqd_result = run_sqd_fermion(
         data.one_body_integrals,
         data.two_body_integrals,
-        noisy_counts,
+        sqd_counts,
         samples_per_batch=samples_per_batch,
         norb=n_orbitals,
         nelec=nelec,

@@ -289,6 +289,12 @@ def compile(
         # 缓存编译源代码（TQASM/QASM3 等）
         circuit._compiled_source = compiled_source
         return compiled_circuit
+    if compile_engine == "guodun":
+        from .compile_engine.guodun import GuodunCompiler
+
+        result = GuodunCompiler().compile(circuit=circuit, options=opts)  # type: ignore[arg-type]
+        circuit._compiled_source = result["compiled_source"]
+        return result
     if compile_engine == "qiskit":
         from .compile_engine.qiskit import QiskitCompiler
 
@@ -429,5 +435,4 @@ def compile_pulse(
         "compiled_pulse_schedule": result["compiled_source"],
         "metadata": result.get("metadata", {})
     }
-
 

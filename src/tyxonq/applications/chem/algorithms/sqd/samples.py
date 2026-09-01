@@ -15,7 +15,12 @@ def samples_to_arrays(
     *,
     sample_order: SampleOrder = "alpha_beta",
 ) -> tuple[np.ndarray, np.ndarray]:
-    """把 counts 或 bitstring 矩阵转换成内部 ``[beta | alpha]`` 顺序。"""
+    """把 counts 或 bitstring 矩阵转换成内部 ``[beta | alpha]`` 顺序。
+
+    ``sample_order="alpha_beta"`` 只交换 alpha/beta 两个半区，不反转
+    半区内部。TyxonQ/LUCJ raw qubit order 进入本函数前，需要先调用
+    ``reverse_bitstring_halves`` 转成 SQD/PySCF order。
+    """
     if isinstance(samples, Mapping):
         if probabilities is not None:
             raise ValueError("probabilities must be None when samples is a counts dictionary.")
@@ -120,6 +125,23 @@ def bitstring_matrix_to_integers(bitstring_matrix: np.ndarray) -> np.ndarray:
     for i in range(n_bits):
         result += bitstring_matrix[:, i] * (1 << (n_bits - 1 - i))
     return result
+
+
+def reverse_bitstring_halves(bitstring: str) -> str:
+    """在 TyxonQ/LUCJ raw order 和 SQD/PySCF order 之间转换 bitstring。
+
+    TyxonQ/LUCJ raw order 为
+    ``[alpha0..alphaN-1 | beta0..betaN-1]``；SQD/PySCF order 为
+    ``[alphaN-1..alpha0 | betaN-1..beta0]``。
+    """
+    if not isinstance(bitstring, str):
+        raise TypeError("bitstring must be a string.")
+    if len(bitstring) % 2:
+        raise ValueError("The length of the bitstring must be even.")
+    if any(bit not in {"0", "1"} for bit in bitstring):
+        raise ValueError("bitstring must contain only '0' and '1'.")
+    half = len(bitstring) // 2
+    return bitstring[:half][::-1] + bitstring[half:][::-1]
 
 
 def _as_bitstring_matrix(

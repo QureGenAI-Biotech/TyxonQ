@@ -15,6 +15,7 @@ from .samples import (
     generate_counts_bipartite_hamming,
     generate_counts_uniform,
     normalize_counts_dict,
+    reverse_bitstring_halves,
     samples_to_arrays,
 )
 from .subsampling import postselect_by_hamming_right_and_left, subsample
@@ -30,6 +31,7 @@ __all__ = [
     "normalize_counts_dict",
     "postselect_by_hamming_right_and_left",
     "recover_configurations",
+    "reverse_bitstring_halves",
     "run_sqd_fermion",
     "samples_to_arrays",
     "solve_sci",
