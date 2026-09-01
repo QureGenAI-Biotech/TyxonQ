@@ -153,6 +153,26 @@ tq.set_token(API_KEY) # Get from https://www.tyxonq.com
 | **Guodun** | `gd_*` series | QuantumCTek cloud via QCIS and `cqlib`. See [docs/guodun_provider.md](docs/guodun_provider.md). |
 | **Simulators** | `statevector`, `density_matrix`, `mps` | Local execution |
 
+## AI Agent & MCP Integration
+
+TyxonQ can be integrated with AI agent workflows through MCP
+(Model Context Protocol).
+
+The OpenQuantum project provides a TyxonQ local simulation
+workbench, including:
+
+- TyxonQ SDK integration through MCP tools
+- Agent Skill definitions for automated quantum circuit workflows
+- Local quantum circuit simulation with TyxonQ backend
+
+Project:
+- OpenQuantum:
+  https://github.com/xi-zhao/openQuantum
+
+This integration enables AI agents to interact with TyxonQ
+through structured tools while maintaining controlled and
+reproducible quantum execution workflows.
+
 ## 📖 Technical Documentation
 
 ### TyxonQ Technical Whitepaper
