@@ -904,6 +904,15 @@ class Circuit:
                 shots=dev_shots,
                 **dev_opts,
             )
+        # LQCloud provider: convert directly to the official SDK circuit.
+        elif dev_provider == "lqcloud":
+            from ...devices.hardware.lqcloud.translator import to_lqcloud
+
+            lqcloud_circuit = to_lqcloud(self)
+            tasks = device_base.run(
+                provider=dev_provider,
+                device=dev_device,
+                source=lqcloud_circuit,
         # Guodun provider 固定使用本地 QCIS 编译链；不复用其他 provider 的旧产物。
         elif dev_provider == "guodun":
             physical_qubits = dev_opts.pop("physical_qubits", None)

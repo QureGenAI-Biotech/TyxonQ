@@ -130,6 +130,7 @@ def resolve_driver(provider: str, device: str):
             - "ibm": IBM Quantum devices and simulators
             - "qcos": China Mobile WuYue cloud (BAQIS-adjacent)
             - "quafu": BAQIS Quafu Superconducting Quantum Cloud
+            - "lqcloud": LogicalQubit cloud via the official LQCloud SDK
             - "guodun": GuoDun Quantum Computing Cloud
             
         device (str): Specific device identifier within the provider.
@@ -217,6 +218,8 @@ def resolve_driver(provider: str, device: str):
         from .hardware.quafu import driver as drv
 
         return drv
+    if provider == "lqcloud":
+        from .hardware.lqcloud import driver as drv
     if provider == "guodun":
         from .hardware.guodun import driver as drv
 
@@ -288,11 +291,13 @@ def run(
 
     prov = provider or hwcfg.get_default_provider()
     dev = device or hwcfg.get_default_device()
+    # 显式 token 优先；其他供应商不能误用 TyxonQ 平台自己的全局密钥。
     # 显式 token 优先；其他 provider 不能误用 TyxonQ 云的全局密钥。
     explicit_token = opts.pop("token", None)
     tok = explicit_token or hwcfg.get_token(
         provider=prov,
         device=dev,
+        env_fallback=prov == "tyxonq",
         env_fallback=(prov == "tyxonq"),
     )
 
@@ -436,6 +441,7 @@ def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = N
 
     prov = provider or hwcfg.get_default_provider()
     dev = hwcfg.get_default_device()
+    tok = token or hwcfg.get_token(provider=prov, env_fallback=prov == "tyxonq")
     tok = token or hwcfg.get_token(
         provider=prov,
         env_fallback=(prov == "tyxonq"),

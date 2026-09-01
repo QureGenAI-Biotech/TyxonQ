@@ -5,6 +5,9 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- **LQCloud Provider**: Added optional `lqcloud==0.4.2` gate-circuit submission, dynamic device discovery, polling, cancellation, result normalization, example, and Chinese usage guide.
 ### Added
 - **Guodun Provider**: Added optional `cqlib==1.3.11` integration for official QCIS gate circuits, native gate pulse templates, waveform queries, task submission, result polling, cancellation, and device discovery.
 
