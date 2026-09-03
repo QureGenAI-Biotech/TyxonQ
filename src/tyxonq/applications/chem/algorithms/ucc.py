@@ -589,9 +589,22 @@ class UCC:
         def f_only(x: np.ndarray) -> float:
             return float(self.energy(x, **runtime_opts))
 
+        # 同点缓存：L-BFGS-B 以分离 callable 消费 f 与 jac，同一 x 会被求值两次。
+        # 缓存后：① 采样档成本减半（每次 energy_and_grad 要提交
+        # (1+4·n_params)×n_groups 个电路，与 shots 无关）；② 修复一致性——
+        # 此前 f(x) 与 jac(x) 来自两批独立采样，线搜索的 Wolfe 条件拿到
+        # 不自洽的函数值/梯度。
+        _cache = {"x": None, "eg": None}
+
         def f_with_grad(x: np.ndarray) -> Tuple[float, np.ndarray]:
+            xa = np.asarray(x, dtype=np.float64)
+            if _cache["x"] is not None and np.array_equal(xa, _cache["x"]):
+                return _cache["eg"]
             e, g = self.energy_and_grad(x, **runtime_opts)
-            return float(e), np.asarray(g, dtype=np.float64)
+            eg = (float(e), np.asarray(g, dtype=np.float64))
+            _cache["x"] = xa.copy()
+            _cache["eg"] = eg
+            return eg
 
         t1 = _time.time()
         func = f_only if self.grad == "free" else f_with_grad

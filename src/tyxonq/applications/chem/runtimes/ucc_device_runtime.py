@@ -95,16 +95,31 @@ class UCCDeviceRuntime:
     # 4) Adaptive shots allocation per parameter/group based on variance/sensitivity
     # 5) Optional low-rank/commuting-group Hamiltonian transforms to reduce measurement cost
     # 6) Caching of expectation terms across close parameters during local line-search
-    # 7) Ansatz equivalence gap: gate-level build_ucc_circuit (TenCirChem-style 2*theta cry
-    #    + 4-body multicontrol decomposition) differs from the numeric path's exact exp
-    #    evolution by ~1e-4 Ha on H4 (state overlap 0.99995); trotter=True is exact.
-    #    Audit the doubles gate decomposition / shared-param handling against the reference.
-    # 8) PSR shift mismatch for doubles: E(theta±pi/2) are identical for ALL theta (energy
-    #    surface has period pi under the 2*theta convention), so the ±pi/2 parameter-shift
-    #    gradient of double-excitation components is identically 0 while the numeric
-    #    gradient is not. Fix: use shift s with normalization 1/sin(2s) (e.g. s=pi/4 gives
-    #    g = E(theta+s) - E(theta-s)), or fall back to finite difference. Audit both
-    #    ucc/hea device runtimes' energy_and_grad against TenCirChem's shot gradient.
+    # 7) RESOLVED (2026-09): the "ansatz equivalence gap" (gate-level singles block
+    #    energy-inert, ~1e-4 Ha gap vs numeric on H4, doubles grad 0.416 vs 0.454)
+    #    was NOT a decomposition defect. Root cause: StatevectorEngine.state() had
+    #    its own op-dispatch loop MISSING the "cry" branch (run() had it), and
+    #    unknown ops are silently skipped -- so every cry gate was dropped on the
+    #    shots=0 analytic path, degenerating the singles block (cx + parity + cry
+    #    + parity^-1 + cx) into the identity. The decomposition itself is exact:
+    #    same structure as TenCirChem evolve_tensornetwork.evolve_excitation
+    #    (arXiv:2005.14475), whose gate-level circuit matches its operator-level
+    #    (civector) energies to 1e-10. After adding the cry branch to state():
+    #    gate mode matches numeric to ~1e-10 (H2 sweep, H4 random points) and
+    #    gate-mode PSR grad matches numeric to ~2e-6 (two-shift rule, item 8).
+    #    Regression: tests_applications_chem/test_device_runtime_regression.py
+    #    (blind spots 4/5) + tests_core_module state()/run() parity test.
+    # 8) RESOLVED (2026-09): the UCC energy surface E(theta) contains only EVEN
+    #    harmonics {2,4,...,2m} (exp(theta*A) with A^2=-I gives amplitudes ~cos/sin(theta);
+    #    m = blocks sharing one parameter, plus k=4 from trotterized commuting string
+    #    pairs), so the old ±pi/2 shift gave sin(2k*pi/2)=0 -> gradient identically ~0.
+    #    Replaced with the two-shift rule g = 2*D(pi/8) + (1-sqrt(2))*D(pi/4),
+    #    D(s) = E(theta+s) - E(theta-s), exact for harmonics {2,4} (solves
+    #    sum_j a_j sin(2k s_j) = k for k=1,2). Verified: both trotter AND gate mode
+    #    match numeric grad to ~1e-6 (the earlier "fractional-harmonic gate-mode
+    #    artifacts" were the missing-cry illusion of item 7). HEA runtime keeps
+    #    ±pi/2 (RY gates are frequency-1, half-angle convention -- correct there).
+    #    TenCirChem reference uses JAX AD (jit(value_and_grad)) for UCC, never PSR.
 
 
     def _execute_circuits(
@@ -302,7 +317,18 @@ class UCCDeviceRuntime:
         **device_kwargs,
     ) -> Tuple[float, np.ndarray]:
         """Compute energy and gradient using batched parameter shifts.
-        
+
+        Gradient rule (method="fd", the default): two-shift PSR
+            g = 2*[E(θ+π/8) − E(θ−π/8)] + (1−√2)*[E(θ+π/4) − E(θ−π/4)]
+        The UCC energy surface only contains EVEN harmonics cos(2kθ+φ), k=1..m
+        (exp(θA) with A²=−I ⇒ state amplitudes ~cos θ, sin θ; m grows with the
+        number of excitation blocks sharing a parameter and with trotterized
+        commuting-string products). The classic ±π/2 rule evaluates sin(2k·π/2)=0
+        and returns ~0 for EVERY parameter; the two-shift rule above is exact for
+        harmonics {2,4} (weights solve Σ_j a_j·sin(2k·s_j) = k for k=1,2).
+        Use gradient_method="ps" for a small-step central finite difference
+        (robust for arbitrary harmonics, but amplifies shot noise by 1/(2δ)).
+
         Args:
             params: Parameter vector
             shots: Number of measurement shots
@@ -310,7 +336,7 @@ class UCCDeviceRuntime:
             device: Device name
             postprocessing: Postprocessing options
             noise: Noise configuration
-            gradient_method: "fd" (finite difference) or "ps" (parameter shift)
+            gradient_method: "fd" (two-shift PSR, default) or "ps" (central finite difference)
             **device_kwargs: Additional device options
             
         Returns:
@@ -341,14 +367,17 @@ class UCCDeviceRuntime:
 
         # Parameter shift evaluations
         method = str(gradient_method).lower()
+        # Two-shift PSR: exact for the even harmonics {2,4} of the UCC energy surface.
+        # Weights solve a1*sin(2k*s1) + a2*sin(2k*s2) = k for k=1,2 with s=(π/8, π/4).
+        psr_shifts = (float(np.pi / 8.0), float(np.pi / 4.0))
+        psr_weights = (2.0, 1.0 - float(np.sqrt(2.0)))
         if method == "fd":
-            # Finite difference with π/2 shift (standard PSR)
-            shift = float(np.pi / 2.0)
             for i in range(len(base)):
-                p_plus = base.copy(); p_plus[i] += shift
-                p_minus = base.copy(); p_minus[i] -= shift
-                _append_variant(p_plus, ("plus", i))
-                _append_variant(p_minus, ("minus", i))
+                for j, shift in enumerate(psr_shifts):
+                    p_plus = base.copy(); p_plus[i] += shift
+                    p_minus = base.copy(); p_minus[i] -= shift
+                    _append_variant(p_plus, (f"plus{j}", i))
+                    _append_variant(p_minus, (f"minus{j}", i))
         else:
             # Parameter shift with smaller step (numerical gradient)
             step = float(np.pi / 90.0)
@@ -370,11 +399,10 @@ class UCCDeviceRuntime:
             **device_kwargs
         )
 
-        # Aggregate results: extract energies and accumulate by parameter shift type
+        # Aggregate results: extract energies and accumulate by (tag, param) variant
         e0 = float(self._identity_const)
         n_params = len(base)
-        plus_energy = np.zeros(n_params, dtype=np.float64)
-        minus_energy = np.zeros(n_params, dtype=np.float64)
+        shifted_energy: Dict[Tuple[str, int], float] = {}
 
         for k, result in enumerate(results):
             # Extract energy from postprocessed result
@@ -384,24 +412,28 @@ class UCCDeviceRuntime:
             tag, idx = tags[k]
             if tag == "base":
                 e0 += energy_contrib
-            elif tag.startswith("plus"):
-                if 0 <= idx < n_params:
-                    plus_energy[idx] += energy_contrib
-            elif tag.startswith("minus"):
-                if 0 <= idx < n_params:
-                    minus_energy[idx] += energy_contrib
+            elif 0 <= idx < n_params:
+                key = (tag, idx)
+                shifted_energy[key] = shifted_energy.get(key, 0.0) + energy_contrib
+
+        def _diff(tag_plus: str, tag_minus: str, i: int) -> float:
+            return (shifted_energy.get((tag_plus, i), 0.0)
+                    - shifted_energy.get((tag_minus, i), 0.0))
 
         # Compute gradients using appropriate rule
         g = np.zeros_like(base)
         if method == "fd":
-            # Finite difference: (E[+π/2] - E[-π/2]) / 2
+            # Two-shift PSR: g = Σ_j w_j * [E(θ+s_j) − E(θ−s_j)]
             for i in range(n_params):
-                g[i] = 0.5 * (plus_energy[i] - minus_energy[i])
+                g[i] = sum(
+                    w * _diff(f"plus{j}", f"minus{j}", i)
+                    for j, w in enumerate(psr_weights)
+                )
             return float(e0), g
         else:
             # Numerical gradient: (E[+δ] - E[-δ]) / (2δ)
             step = float(np.pi / 90.0)
             for i in range(n_params):
-                g[i] = (plus_energy[i] - minus_energy[i]) / (2.0 * step)
+                g[i] = _diff("plus_s", "minus_s", i) / (2.0 * step)
             return float(e0), g
 

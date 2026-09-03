@@ -928,6 +928,10 @@ class StatevectorEngine:
                 q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_ry(theta, backend=self.backend), q, n)
             elif name == "cx":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cx_4x4(), c, t, n)
+            elif name == "cry":
+                # 与 run() 分发保持一致：此前 state() 缺该分支，cry 被静默丢弃，
+                # 导致 UCC 门级单激发块（cx+cry+cx）在 shots=0 解析档退化为恒等
+                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_cry_4x4(theta, backend=self.backend), c, t, n)
             elif name == "cz":
                 c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, n)
             elif name == "iswap":

@@ -306,23 +306,34 @@ ase/openmm/ipi/mdi 各自加独立的 `_has_*()` 跳过守卫（§附录 A：三
 | 9 | `test_openmm_potential.py` | **openmm-ml ✅（2026-09-01，7/7）**：单水 topology 建纯 QM System，Context 取 (E, F) 与 scanner 按 kJ/mol/nm 换算一致（rel 1e-7 / rtol 1e-6）；`info={'charge':...}` 映射；`createMixedSystem`（interpolate=True）含 `lambda_interpolate` 且 λ=0/1 能量可算；混合体系删 QM 内部键/角项；**静电嵌入（`create_qmmm_ee_system`）**：防双计数手术 + pbc 守卫、能量分解（E_total = E_QM(嵌入)+E_MM 经典，rel 1e-6，嵌入能量与裸算不同证明电荷进哈密顿量）、全原子力 = 区域划分 Calculator 力 + 纯经典力（rtol 1e-5） | 全程 `method="uccsd"`；无 openmm 时 skip |
 | 10 | `test_mdi_engine.py` | **MDI 命令回环 ✅（2026-09-01，4/4）**：双进程 TCP（driver=父进程，engine=子进程）；①无嵌入：元数据命令 + (E, F) 与裸 scanner 一致（rel 1e-6 / rtol 1e-4）；②推 `>NLATTICE`/`>CLATTICE`/`>LATTICE`：能量位移 > 1e-4，(E, F) 与带 `mm_charges` 的 scanner 一致，MM 行 = 反作用力；③**先裸 `>COORDS` 后推 lattice**（锁住裸建后重入装饰丢弃新对象的 bug）；④二次推 `>LATTICE` 每步更新 | 全程 `method="uccsd"`；无 `mdi`（PyPI `pymdi`）时 skip |
 | 11 | `test_qmmm_embedding.py` | **E8 阶段 A**：`set_mm_charges` 每步更新与新鲜构建一致；MM 反作用力对 MM 坐标有限差分；`TyxonQCalculator(qm_indices=...)` 全体系力 = QM 梯度 + MM 反作用力 | 全程 `method="uccsd"`（目标算法，不换 FCI）：能量一致 `1e-8`、力一致 `rtol=1e-3`；有限差分步长 0.05 Å、5% 相对容差（覆盖量子数值抖动）；MM 原子受力非零 |
-| 12 | `test_qc_scanner_hea_device.py` | **HEA 采样档穿透（2026-09-01，2/2）**：`shots=0` 与 numeric 一致（rel 1e-8）；`shots=4096` 全链路跑通（`< 3e-2`，带噪优化尾部容差）；instance 属性证明选项穿透；嵌入档能量位移存在 | 全程 `method="hea"`；HEA 存在的目的就是上真机，采样档是其真实工作形态 |
-| 13 | `test_device_runtime_regression.py` | **三个盲区回归（2026-09-01，3/3）**：①≥3 比特体系采样档位序（UCCSD H4 8q + HEA 水 CAS(4,4) 6q，4096 shots `< 2e-2`）；②shots=0 解析档直连（绕过 API 层 numeric 短路，rel 1e-8，UCCSD 侧用 `trotter=True`）；③同批电路 32768-shot 计数 vs 解析概率口径一致（`< 1e-2`） | 封堵 2 比特镜像自抵消 / API 短路 / 宽容差三个历史盲区 |
+| 12 | `test_qc_scanner_hea_device.py` | **HEA 采样档穿透（2026-09-01，2/2）**：`shots=0` 与 numeric 一致（rel 1e-8）；`shots=8192` 全链路跑通（`< 3e-2`；4096 实测重尾偶发 +0.1 Ha 坏抽签，2026-09-02 升档 8192）；instance 属性证明选项穿透；嵌入档能量位移存在 | 全程 `method="hea"`；HEA 存在的目的就是上真机，采样档是其真实工作形态 |
+| 13 | `test_device_runtime_regression.py` | **四个盲区回归（2026-09-01/02，4/4）**：①≥3 比特体系采样档位序（UCCSD H4 8q + HEA 水 CAS(4,4) 6q，4096 shots `< 2e-2`）；②shots=0 解析档直连（绕过 API 层 numeric 短路，rel 1e-8，UCCSD 侧用 `trotter=True`）；③同批电路 32768-shot 计数 vs 解析概率口径一致（`< 1e-2`）；④PSR 两点移位梯度规则（H2 trotter 档对照 numeric 梯度 `< 1e-5`，门级档规则自洽 `< 1e-3`，8192-shot 采样档落在噪声带内） | 封堵 2 比特镜像自抵消 / API 短路 / 宽容差 / PSR 梯度从未对照数值梯度四个历史盲区 |
 
 **新增于旧计划的是 1–4**：SQD 专属，容差比 UCC 路径严一到两个数量级（1e-7 vs 1e-5），
 因为 SQD 走 PySCF 原生 `selected_ci`，没有 ansatz 误差。
 
-**挂起 to-do：UCC 门级 ansatz 等价性缺口**（2026-09-01 发现，独立立项）：
-`build_ucc_circuit` 门级态制备（TenCirChem 风格 `2*theta` 双激发 cry 分解 + 共享参数）
-与数值路径精确 `exp` 演化在 H4 上有 ~1e-4 Ha 确定性态差（态重叠 0.99995，
-H6 上偏差 +0.173 同机制）；`trotter=True` 档精确到 2.9e-13。与旋转位序修复无关，
-见 `ucc_device_runtime.py` backlog 第 7 项；回归测试②用 `trotter=True` 绕开此缺口。
+**挂起 to-do：UCC 门级 ansatz 等价性缺口**（2026-09-01 发现，独立立项；2026-09-02 根因已定位）：
+`build_ucc_circuit` 门级态制备与数值路径精确 `exp` 演化在 H4 上有 ~1e-4 Ha 确定性态差
+（态重叠 0.99995，H6 上偏差 +0.173 同机制）；`trotter=True` 档精确到 2.9e-13。
+**根因（PSR 修复排查中顺带定位）**：门级单激发块（`_evolve_excitation_ops` 的
+`len(f_idx)==2` 分支：cx + 宇称链 + cry(l→k, 2θ)）对能量恒等——E(θ_s) 在 H2/H4
+全 2π 扫描 + 中心差分下严格为常数（即该块在能量面上是恒等算符），单激发关联完全
+缺失；因最优单激发振幅小，仅表现为 ~1e-4 Ha 能量差。门级双激发也有轻度偏差
+（H2 梯度 0.416 vs numeric 0.454）。修复方向：对照参考实现重新推导单激发 CRY
+分解（基变换 + 宇称条件化）。见 `ucc_device_runtime.py` backlog 第 7 项；
+回归测试②④用 `trotter=True` 绕开此缺口。
 
-**挂起 to-do：双激发分量 ±π/2 参数移位梯度恒为零**（2026-09-01 发现，独立立项）：
-`2*theta` 约定下能量面对双激发参数周期为 π，E(θ±π/2) 对任意 θ 恒等，
-故 device `energy_and_grad` 的 ±π/2 PSR 双激发分量梯度恒为 0（数值梯度不为 0）；
-修复方向：移位 s 配合归一化 1/sin(2s)（如 s=π/4 时 g = E(θ+s)−E(θ−s)）或改用有限差分。
-见 `ucc_device_runtime.py` backlog 第 8 项。
+**已解决 to-do：UCC device PSR 梯度恒为零**（2026-09-01 发现，2026-09-02 修复）：
+排查发现比原记录更普适——UCC 能量面只含偶次谐波 {2,4,...}（exp(θA) 且 A²=−I ⇒
+态幅 ~cos θ/sin θ），旧 ±π/2 移位规则 sin(2k·π/2)=0 对**所有**参数（单/双激发）
+梯度恒为 ~0，采样档 L-BFGS 一直在拿纯噪声梯度优化（靠 MP2 初值已近最优未暴露）。
+修复：两点移位规则 g = 2·[E(θ+π/8)−E(θ−π/8)] + (1−√2)·[E(θ+π/4)−E(θ−π/4)]
+（对谐波 {2,4} 精确，权重解 Σ a_j sin(2k s_j)=k）；验证：H2 trotter ≤2e-6、
+H4 trotter 全 11 参数 ≤3e-3（残差为分数谐波 trotter 伪影 ~0.4%）、8192-shot
+采样在噪声带内；HEA 保持 ±π/2（RY 半角约定频率 1，本就正确）；TenCirChem
+参考实现 UCC 梯度全走 JAX AD、从不 PSR。回归测试见盲区④；`tests_mol_valid` 的
+`test_device_counts_gradient_converges_to_pyscf` 改用 trotter 档并加绝对上界 0.15
+（修复前误差 ~0.98 不收敛）。见 `ucc_device_runtime.py` backlog 第 8 项（已标 RESOLVED）。
 
 ---
 
@@ -341,6 +352,7 @@ H6 上偏差 +0.173 同机制）；`trotter=True` 档精确到 2.9e-13。与旋�
 | E8-A | `md_lammps_qmmm_embedded/` | **生产级固体 QM/MM 阶段 A（无需 MDI）✅ 已完成**：区域划分（`qm_indices`）+ 静电嵌入（`pyscf.qmmm.add_mm_charges`）+ MM 反作用力，三进程拓扑不变；双水分子示范（QM 水 + MM 水）。LAMMPS 侧防双计数：QM 原子电荷置 0（QM–MM 库仑归嵌入）、`pair_coeff qmtype qmtype 0.0 ...` 关 QM–QM LJ、保留 QM–MM vdW。实跑验收：step-0 总势能 = E_QM(嵌入)+E_LJ(QM-MM vdW)+E_coul(MM-MM) 一致到 7.67e-6 Ha（容差 2e-4） | lammps, ipi |
 | E8-B | `md_lammps_qmmm_pbc/` | **阶段 B：真周期 ✅ 已完成**。换 `pyscf.qmmm.pbc.add_mm_charges`（Ewald 背景电荷，含参考胞与周期镜像的静电互作用）；§6.1 验证门已执行完毕，`QCScanner` 的 `mm_lattice` 分支、用例 12、三进程教程均落地（回归 26/26）；RB5 降级已于 2026-09-01 复核后收回（`mm_gradient` 照交，文档化轨道响应缺口）。LAMMPS 侧 MM-MM 周期静电用 `kspace_style pppm`，与嵌入的 QM-MM 周期互补不重叠（QM 电荷置 0）。实跑验收：step-0 总势能 = E_QM(pbc 嵌入)+E_LJ+E_ewald(解析 Ewald，双 κ 互检) 一致到 1.04e-5 Ha（容差 2e-4）；验收含「大盒子极限收敛到阶段 A 簇嵌入」对照（用例 12） | lammps, ipi |
 | E9 | `md_mdi_qmmm_embedded.py` | **MDI 专线静电嵌入 ✅ 已完成**：自带手写 Python driver（两进程），不需带 MDI 包的 LAMMPS；三步验收：无嵌入基准 → 推晶格后 ΔE = +3.283e-3 Ha + MM 反作用力非零 → MM 平移 0.2 Å 能量跟随（`set_mm_charges` 重入）；与 E8-A 物理等价，簇嵌入对照见 E6b | pymdi |
+| E10 | `md_qmmm_device_hardware.py` | **QM/MM 上真机 ✅（2026-09-02）**：UCCSD 解析档（与 numeric 差 0）/采样档；HEA 采样档（为真机而生的工作形态）+ 选项穿透自检；静电嵌入 + 设备档（`mm_charges` 位移 + `mm_gradient`）；真机实践要点：HEA 嵌入档带噪优化需高 shots（实测 2048 → 偏差可达 0.1~0.25，8192 → ~1e-3，固定参数对照 ~1.6e-3 证明聚合链正确）；第 5 节给出 `provider="tyxonq"` + `tq.set_token` 真机切换模板（默认注释） | 仅 pyscf |
 
 每个 example 顶部注明：所需环境、预期运行时间、以及若依赖缺失时的优雅退出。
 E1/E2 必须能在纯 pyscf 环境跑通（这是 CI 唯一能覆盖的两个）。

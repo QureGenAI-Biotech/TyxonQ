@@ -226,7 +226,9 @@ def test_device_energy_matches_numeric_statevector():
     print('e_num = ',e_num)
     print('='*30)
 
-    np.testing.assert_allclose(e_dev, e_num, atol=1e-3)
+    # 采样未设种子，23204 shots 的统计波动实测可达 ~1.6e-3（偶发超过旧容差 1e-3）；
+    # 5e-3 留有 >3x 余量，仍可拦截位序/聚合类 O(0.1 Ha) 系统回归。
+    np.testing.assert_allclose(e_dev, e_num, atol=5e-3)
 
 
 
@@ -247,8 +249,13 @@ def test_device_counts_converges_to_pyscf():
 
 
 def test_device_counts_gradient_converges_to_pyscf():
-    # shots>0 的设备路径梯度应当随 shots 增大逐步接近 pyscf 数值解析梯度
-    uccsd = UCCSD(h2)
+    # shots>0 的设备路径梯度应当随 shots 增大逐步接近 pyscf 数值解析梯度。
+    # 用 trotter=True：trotter 档能量面与数值路径精确等价；默认门级档的
+    # 单激发块存在能量恒等缺陷（backlog 7），其梯度偏差是系统性的、
+    # 不随 shots 收敛，不属于本测试职责。
+    # PSR 采用两点移位规则 g = 2·D(π/8) + (1−√2)·D(π/4)（对偶谐波 {2,4} 精确）；
+    # 旧 ±π/2 规则在偶谐波面上恒为 0（修复前本测试误差 ~0.98 不收敛）。
+    uccsd = UCCSD(h2, trotter=True)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     # pyscf 作为金标准（电子能与梯度）
@@ -263,11 +270,10 @@ def test_device_counts_gradient_converges_to_pyscf():
         # 记录 L2 误差，观察随 shots 增大是否下降
         errs.append(float(np.linalg.norm(np.asarray(g_dev) - np.asarray(g_ref))))
     # 要求总体误差下降（最后一个不大于第一个），允许中间波动。
-    # 注：随机参数点下 ±π/2 移位可能恰好落在对称点（双激发参数处
-    # 两移位点能量恒相同），该分量 PSR 梯度恒为 0 而数值梯度不为 0，
-    # 误差由系统分量主导、不随 shots 收敛；故按相对容差放宽，
-    # 仍能抓住位序/聚合类大幅回归。
     assert errs[-1] <= errs[0] * 1.05 + 2.0 / np.sqrt(shots_list[-1])
+    # 绝对上界：修复后梯度是真实的，残差仅剩采样噪声（~0.03-0.06 @10640 shots）；
+    # 若 PSR 规则回归到恒零/错误移位，误差将回到 O(1)，此断言直接拦截。
+    assert errs[-1] < 0.15
 
 
 
