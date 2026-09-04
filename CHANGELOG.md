@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog (https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.html).
 
+### [1.3.0] - 2026-09-01
+### Added
+- **MD / QM-MM ecosystem integration** (`tyxonq.applications.chem.interfaces`): TyxonQ as a quantum-chemistry force engine; all nuclear gradients reused from PySCF:
+  - `qc_scanner`: unified energy/gradient facade (SQD/UCCSD/ROUCCSD/HEA), cluster & periodic-Ewald electrostatic embedding, MM back-reaction forces
+  - `TyxonQCalculator` (ASE), `TyxonQDriver` (i-PI), `create_qmmm_ee_system` (OpenMM), `TyxonQMdiEngine` (MDI)
+- **HEA/UCCSD real-hardware passthrough**: `qc_scanner(..., solver_kwargs={"runtime": "device", ...})` forwards options via `as_pyscf_solver(device_opts=...)` to `devices.base.run` (TyxonQ/QCOS/Quafu)
+- **New examples** (`examples/qmmm/`): E1-E10 runnable tutorials
+- **Tests**: `tests_applications_chem/` expanded to 47 cases
+
+### Changed
+- `pyproject.toml`: `md` extra covers `ase>=3.23`, `openmm>=8.1`, `openmmml>=1.7`
+- **Simulator engine strictness (intentional)**: unknown ops raise `ValueError` and unsupported special ops raise `NotImplementedError` (no more silent skip); MPS `state()` returns native `MPSState`; every engine's `run(shots=0)` also returns `probabilities`. No public API signature changed
+
+### Fixed
+- **Simulator engine op-dispatch single source of truth**: the three engines carried 8+ independent dispatch loops, silently dropping `y`/`z`/`t`/`tdg`/`cy` and silently skipping unknown ops (the real cause behind backlog #7 "missing cry"). Now one `_evolve` dispatch per engine (authoritative `gate_table.resolve_unitary`) shared by `run()`/`state()`/`expval()`; driver shots=0 reuses the same `run()` output; added `DensityMatrixEngine.state()/probabilities()`; `Circuit.state()` returns the true 2D density matrix (density_matrix) and delegates to the engine (MPS); `_expectation_density_matrix` computes true Tr(ρO)
+- Device-runtime measurement bit-ordering: X/Y basis rotations sat at mirrored index `n-1-q` while aggregation reads `q`, corrupting sampling energies for 3+ qubits (up to ~0.25 Ha on water CAS(4,4)); now act on `q`
+- `UCCDeviceRuntime.energy_and_grad`: the ±π/2 parameter-shift returned ~0 gradient for every UCC parameter (even-harmonic energy surface); replaced with the two-shift rule (exact for harmonics {2,4})
+- Shots=0 analytic aggregation: multi-qubit ZZ was factorized into single-qubit ⟨Z⟩ products (exact only for product states; ~0.12 Ha bias on H4); now exact probability-based aggregation
+- `QCScanner.set_mm_charges`: bare-SCF `add_mm_charges` returns a new object (not in-place); the dropped return value silently disabled embedding
+- `apply_postprocessing` (shots=0): analytic `expectations`/`probabilities` stayed in the driver payload and silently degraded to a constant
+- MDI `>COORDS`: engine now receives full-system coordinates and slices the QM subset internally
+
+### Known Limitations
+- MM back-reaction forces lack post-HF orbital-response terms (~4.3e-5 Ha/Bohr baseline bias); thermostatted MD is fine, strict NVE conservation diagnostics are not
+- SQD sampling-path bit-ordering fix deferred (frozen-subspace MD path unaffected)
+
+### [1.2.0] - 2026-08-08
+### Added
+- **LUCJ-SQD workflow** (`tyxonq.applications.chem.algorithms.sqd` / `.lucj`):
+  - SQD (Sample-based Quantum Diagonalization) fermionic solver: `run_sqd_fermion`, `solve_sci`, `diagonalize_fermionic_hamiltonian`, plus sampling / subsampling / post-selection and configuration-recovery utilities
+  - LUCJ (Local Unitary Cluster Jastrow) ansatz: `build_lucj_circuit`, `initialize_lucj_parameters_from_ccsd`, Givens-schedule & topology helpers
+  - PySCF integration: `SQDFCISolver`, `as_pyscf_solver`, `lucj_sampler`; closed-shell workflow correction
+  - Example `examples/h2o_sqd.py`, doc `LUCJ_SQD.md`
+- **RiverONE QML adapter** (`tyxonq.applications.qml.riverone`): example `examples/riverone_qml.py`, doc `RIVERONE.md`
+
 ### [1.1.0] - 2026-05-07
 ### Added
 - **Enhanced Qiskit Dialect Support**: Expanded gate conversion with 15+ gate types including x, y, z, s, sdg, t, tdg, ry, cy, cz, swap, iswap, rxx, ryy, rzz, and barrier

@@ -19,6 +19,8 @@ from ....libs.quantum_library.kernels.gates import (
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
     gate_rxx, gate_ryy, gate_rzz, gate_iswap_4x4, gate_swap_4x4,
 )
+# 单一真相源：权威 op 词汇表 + 门矩阵解析（run()/state() 共用，杜绝两处分叉）
+from ....libs.quantum_library.kernels.gate_table import resolve_unitary
 from ....libs.quantum_library.kernels.statevector import (
     init_statevector,
     apply_1q_statevector,
@@ -43,7 +45,13 @@ class StatevectorEngine:
     def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> Dict[str, Any]:
         shots = int(shots or 0)
         num_qubits = int(getattr(circuit, "num_qubits", 0))
-        state = init_statevector(num_qubits, backend=self.backend)
+        # 单一真相源：run() 与 state() 共用此初态逻辑，统一支持 circuit._initial_state
+        # （此前 run() 忽略自定义初态、仅 state() 支持，属两处分叉之一）
+        _initial_state = getattr(circuit, "_initial_state", None)
+        if _initial_state is not None:
+            state = self.backend.array(_initial_state, dtype=self.backend.complex128)
+        else:
+            state = init_statevector(num_qubits, backend=self.backend)
         # optional noise parameters controlled by explicit switch
         use_noise = bool(kwargs.get("use_noise", False))
         noise = kwargs.get("noise") if use_noise else None
@@ -53,66 +61,20 @@ class StatevectorEngine:
             if not isinstance(op, (list, tuple)) or not op:
                 continue
             name = op[0]
-            if name == "h":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_h(), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "rz":
-                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rz(theta, backend=self.backend), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "rx":
-                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rx(theta, backend=self.backend), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "ry":
-                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_ry(theta, backend=self.backend), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "cx":
-                c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cx_4x4(), c, t, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [c, t])
-            elif name == "cry":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_cry_4x4(theta, backend=self.backend), c, t, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [c, t])
-            elif name == "cz":
-                c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [c, t])
-            elif name == "iswap":
-                q0 = int(op[1]); q1 = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_iswap_4x4(), q0, q1, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q0, q1])
-            elif name == "swap":
-                q0 = int(op[1]); q1 = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_swap_4x4(), q0, q1, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q0, q1])
-            elif name == "rxx":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rxx(theta, backend=self.backend), c, t, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [c, t])
-            elif name == "ryy":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_ryy(theta, backend=self.backend), c, t, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [c, t])
-            elif name == "rzz":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rzz(theta, backend=self.backend), c, t, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [c, t])
-            elif name == "x":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(backend=self.backend), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "s":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_s(), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "sdg":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_sd(), q, num_qubits)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
+            # 单一真相源分发：全部幺正门（1q/2q）经权威门表 gate_table.resolve_unitary
+            # 解析为 (arity, qubits, matrix)，再用 statevector apply 内核施加。此前这里是
+            # 手写门分支，缺 y/z/t/tdg/cy，且与 state() 各维护一套而分叉（cry 曾因此漏）。
+            res = resolve_unitary(name, op, self.backend)
+            if res is not None:
+                kind, qubits, mat = res
+                if kind == "1q":
+                    q = int(qubits[0]); state = apply_1q_statevector(self.backend, state, mat, q, num_qubits)
+                    if use_noise and z_atten is not None:
+                        self._attenuate(noise, z_atten, [q])
+                else:
+                    q0, q1 = int(qubits[0]), int(qubits[1]); state = apply_2q_statevector(self.backend, state, mat, q0, q1, num_qubits)
+                    if use_noise and z_atten is not None:
+                        self._attenuate(noise, z_atten, [q0, q1])
             elif name == "measure_z":
                 measures.append(int(op[1]))
             elif name == "barrier":
@@ -370,8 +332,13 @@ class StatevectorEngine:
                     if use_noise and z_atten is not None:
                         self._attenuate(noise, z_atten, [q])
             else:
-                # unsupported ops ignored in this minimal engine
-                continue
+                # 单一真相源：未知 op 必须 loudly raise，绝不静默 continue 丢弃
+                # （y/z/t/tdg/cy/cry 类漏洞正是源于此前的静默跳过）
+                raise ValueError(
+                    f"StatevectorEngine: unsupported op '{name}'. Known ops are "
+                    f"defined in libs.quantum_library.kernels.gate_table "
+                    f"(unitary/control/special); refusing to silently skip."
+                )
 
         # If shots requested and there are measurements, return sampled counts over computational basis
         if shots > 0 and len(measures) > 0:
@@ -470,8 +437,15 @@ class StatevectorEngine:
             if use_noise and z_atten is not None:
                 val *= z_atten[q]
             expectations[f"Z{q}"] = val
+        # shots=0 解析档：顺带返回精确 probabilities / statevector，供 driver 单一源消费
+        # （消除 driver 对 eng.state() 的第二次独立分发调用），与采样档同出一个态。
+        nb = self.backend
+        probs_t = nb.square(nb.abs(state)) if hasattr(nb, "square") else nb.abs(state) ** 2
+        probs_np = np.asarray(nb.to_numpy(probs_t), dtype=float)
         return {
             "expectations": expectations,
+            "probabilities": probs_np,
+            "statevector": state,
             "metadata": {"shots": shots, "backend": self.backend.name, "num_qubits": int(num_qubits)},
         }
 
@@ -897,153 +871,17 @@ class StatevectorEngine:
             return state
 
     # ---- New public helpers ----
-    def state(self, circuit: "Circuit") -> Any:
+    def state(self, circuit: "Circuit", **kwargs: Any) -> Any:
         """Return final statevector after applying circuit ops.
-        
+
         Returns backend tensor (preserves autograd for PyTorch backend).
         Supports custom initial state via circuit._initial_state.
+
+        单一真相源：委托 run(shots=0) 的唯一 op 分发循环，避免 run()/state() 各维护
+        一套分发而再次分叉（cry / y / z / t / tdg / cy 曾因此被静默丢弃）。run() 已统一
+        支持 circuit._initial_state 并覆盖权威门表全部门 + 特殊/控制 op，故此处不再重复。
         """
-        n = int(getattr(circuit, "num_qubits", 0))
-        
-        # Check if circuit has a custom initial state
-        initial_state = getattr(circuit, "_initial_state", None)
-        if initial_state is not None:
-            # Convert initial state to backend tensor (complex128)
-            state = self.backend.array(initial_state, dtype=self.backend.complex128)
-        else:
-            # Default: initialize to |00...0⟩
-            state = init_statevector(n, backend=self.backend)
-        
-        for op in circuit.ops:
-            if not isinstance(op, (list, tuple)) or not op:
-                continue
-            name = op[0]
-            if name == "h":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_h(), q, n)
-            elif name == "rz":
-                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rz(theta, backend=self.backend), q, n)
-            elif name == "rx":
-                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_rx(theta, backend=self.backend), q, n)
-            elif name == "ry":
-                q = int(op[1]); theta = op[2]; state = apply_1q_statevector(self.backend, state, gate_ry(theta, backend=self.backend), q, n)
-            elif name == "cx":
-                c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cx_4x4(), c, t, n)
-            elif name == "cry":
-                # 与 run() 分发保持一致：此前 state() 缺该分支，cry 被静默丢弃，
-                # 导致 UCC 门级单激发块（cx+cry+cx）在 shots=0 解析档退化为恒等
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_cry_4x4(theta, backend=self.backend), c, t, n)
-            elif name == "cz":
-                c = int(op[1]); t = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_cz_4x4(), c, t, n)
-            elif name == "iswap":
-                q0 = int(op[1]); q1 = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_iswap_4x4(), q0, q1, n)
-            elif name == "swap":
-                q0 = int(op[1]); q1 = int(op[2]); state = apply_2q_statevector(self.backend, state, gate_swap_4x4(), q0, q1, n)
-            elif name == "rxx":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rxx(theta, backend=self.backend), c, t, n)
-            elif name == "ryy":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_ryy(theta, backend=self.backend), c, t, n)
-            elif name == "rzz":
-                c = int(op[1]); t = int(op[2]); theta = op[3]; state = apply_2q_statevector(self.backend, state, gate_rzz(theta, backend=self.backend), c, t, n)
-            elif name == "x":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_x(backend=self.backend), q, n)
-            elif name == "s":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_s(), q, n)
-            elif name == "sdg":
-                q = int(op[1]); state = apply_1q_statevector(self.backend, state, gate_sd(), q, n)
-            elif name == "project_z":
-                q = int(op[1]); keep = int(op[2]); state = self._project_z(state, q, keep, n)
-            elif name == "reset":
-                q = int(op[1]); state = self._project_z(state, q, 0, n)
-            elif name == "unitary":
-                # Handle custom unitary gate
-                if len(op) == 3:  # 1-qubit: ("unitary", qubit, matrix_key)
-                    q = int(op[1])
-                    mat_key = str(op[2])
-                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
-                    if matrix is not None:
-                        state = apply_kqubit_unitary(state, matrix, [q], n, self.backend)
-                elif len(op) == 4:  # 2-qubit: ("unitary", q0, q1, matrix_key)
-                    q0, q1 = int(op[1]), int(op[2])
-                    mat_key = str(op[3])
-                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
-                    if matrix is not None:
-                        state = apply_kqubit_unitary(state, matrix, [q0, q1], n, self.backend)
-            elif name == "kraus":
-                # Handle Kraus channel
-                q = int(op[1])
-                kraus_key = str(op[2])
-                status_val = float(op[3]) if len(op) > 3 else None
-                kraus_ops = getattr(circuit, "_kraus_cache", {}).get(kraus_key)
-                if kraus_ops is not None:
-                    state = apply_kraus_statevector(
-                        state, kraus_ops, q, n, status_val, self.backend
-                    )
-            elif name == "pulse":
-                # Handle Pulse operation (same as in run())
-                q = int(op[1])
-                pulse_key = str(op[2])
-                pulse_params = op[3] if len(op) > 3 else {}
-                
-                # Get pulse from circuit metadata (not _pulse_cache)
-                pulse_library = circuit.metadata.get("pulse_library", {})
-                pulse_waveform = pulse_library.get(pulse_key)
-                
-                if pulse_waveform is not None:
-                    from ....libs.quantum_library.pulse_simulation import compile_pulse_to_unitary
-                    
-                    qubit_freq = pulse_params.get("qubit_freq", 5.0e9)
-                    drive_freq = pulse_params.get("drive_freq", qubit_freq)
-                    anharmonicity = pulse_params.get("anharmonicity", -300e6)
-                    
-                    U = compile_pulse_to_unitary(
-                        pulse_waveform,
-                        qubit_freq=qubit_freq,
-                        drive_freq=drive_freq,
-                        anharmonicity=anharmonicity,
-                        backend=self.backend
-                    )
-                    
-                    state = apply_1q_statevector(self.backend, state, U, q, n)
-            
-            elif name == "pulse_inline":
-                # ==========================================
-                # Handle inlined pulse operation (NEW: 3-level support)
-                # ==========================================
-                # This mirrors the pulse operation handling in run() method,
-                # now with complete 3-level system support.
-                #
-                # References:
-                # - state() method: companion method to run() for getting final state
-                # - compile_three_level_unitary(): compiles pulse to 3×3 unitary
-                # - _apply_three_level_unitary(): applies 3×3 unitary to statevector
-                
-                q = int(op[1])
-                waveform_dict = op[2] if len(op) > 2 else {}
-                pulse_params = op[3] if len(op) > 3 else {}
-                
-                pulse_waveform = self._deserialize_pulse_waveform(waveform_dict)
-                
-                if pulse_waveform is not None:
-                    qubit_freq = pulse_params.get("qubit_freq", 5.0e9)
-                    drive_freq = pulse_params.get("drive_freq", qubit_freq)
-                    anharmonicity = pulse_params.get("anharmonicity", -300e6)
-                    
-                    # Note: state() method doesn't have access to kwargs like run() does
-                    # For full 3-level support in state(), user should use run() method
-                    # This limitation ensures backward compatibility
-                    
-                    from ....libs.quantum_library.pulse_simulation import compile_pulse_to_unitary
-                    
-                    U = compile_pulse_to_unitary(
-                        pulse_waveform,
-                        qubit_freq=qubit_freq,
-                        drive_freq=drive_freq,
-                        anharmonicity=anharmonicity,
-                        backend=self.backend
-                    )
-                    
-                    state = apply_1q_statevector(self.backend, state, U, q, n)
-        return state
+        return self.run(circuit, shots=0, **kwargs)["statevector"]
 
     def probability(self, circuit: "Circuit") -> Any:
         """Return probability vector over computational basis.

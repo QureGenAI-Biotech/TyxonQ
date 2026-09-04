@@ -107,6 +107,25 @@ def gate_cz_4x4() -> Any:
     ], dtype=nb.complex128)
 
 
+def gate_cy_4x4() -> Any:
+    """Controlled-Y gate.
+
+    Basis order is |00>, |01>, |10>, |11> with the control as the
+    most-significant qubit, consistent with gate_cx_4x4 / gate_cz_4x4 /
+    gate_cry_4x4. When control=1 the Pauli-Y acts on the target.
+    """
+    one = nb.array(1.0, dtype=nb.complex128)
+    zero = nb.array(0.0, dtype=nb.complex128)
+    j = nb.array(1j, dtype=nb.complex128)
+    minus_j = nb.array(-1j, dtype=nb.complex128)
+    return nb.array([
+        [one, zero, zero, zero],
+        [zero, one, zero, zero],
+        [zero, zero, zero, minus_j],
+        [zero, zero, j, zero],
+    ], dtype=nb.complex128)
+
+
 def gate_iswap_4x4() -> Any:
     """iSWAP gate: exchanges qubits and applies relative phase.
     

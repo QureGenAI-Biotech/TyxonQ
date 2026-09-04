@@ -97,18 +97,26 @@ class UCCDeviceRuntime:
     # 6) Caching of expectation terms across close parameters during local line-search
     # 7) RESOLVED (2026-09): the "ansatz equivalence gap" (gate-level singles block
     #    energy-inert, ~1e-4 Ha gap vs numeric on H4, doubles grad 0.416 vs 0.454)
-    #    was NOT a decomposition defect. Root cause: StatevectorEngine.state() had
-    #    its own op-dispatch loop MISSING the "cry" branch (run() had it), and
-    #    unknown ops are silently skipped -- so every cry gate was dropped on the
-    #    shots=0 analytic path, degenerating the singles block (cx + parity + cry
-    #    + parity^-1 + cx) into the identity. The decomposition itself is exact:
-    #    same structure as TenCirChem evolve_tensornetwork.evolve_excitation
-    #    (arXiv:2005.14475), whose gate-level circuit matches its operator-level
-    #    (civector) energies to 1e-10. After adding the cry branch to state():
-    #    gate mode matches numeric to ~1e-10 (H2 sweep, H4 random points) and
-    #    gate-mode PSR grad matches numeric to ~2e-6 (two-shift rule, item 8).
-    #    Regression: tests_applications_chem/test_device_runtime_regression.py
-    #    (blind spots 4/5) + tests_core_module state()/run() parity test.
+    #    was NOT a decomposition defect. The missing "cry" branch in state() was only
+    #    a SYMPTOM of a systemic design defect: every engine carried SEVERAL independent
+    #    op-dispatch loops (run()/state()/expval()/expectation_pauli(), plus Circuit.state()'s
+    #    inline MPS re-execution loop and its silent density_matrix->statevector fallback)
+    #    -- 8+ forks, each covering a different gate set, ALL silently `continue`-ing on
+    #    unknown ops. Concretely y/z/t/tdg/cy were dropped in EVERY loop of ALL THREE
+    #    engines (0 grep hits), so the shots=0 analytic path degenerated the singles block
+    #    (cx + parity + cry + parity^-1 + cx) into the identity. The decomposition itself is
+    #    exact: same structure as TenCirChem evolve_tensornetwork.evolve_excitation
+    #    (arXiv:2005.14475), whose gate-level circuit matches its operator-level (civector)
+    #    energies to 1e-10. FIXED by single-sourcing op dispatch (2026-09): each engine now
+    #    has ONE dispatch loop (_evolve / run) driven by the authoritative
+    #    gate_table.resolve_unitary vocabulary (all 1q/2q unitaries + special + control ops);
+    #    run()/state()/expval()/expectation_pauli() all route through it, unknown/unsupported
+    #    ops raise instead of silently skipping, and driver.run(shots=0) reuses the same run()
+    #    output (no second state() call). gate mode matches numeric to ~1e-10 (H2 sweep, H4
+    #    random points); gate-mode PSR grad matches numeric to ~2e-6 (two-shift rule, item 8).
+    #    Regression: tests_applications_chem/test_device_runtime_regression.py (blind spots
+    #    4/5) + tests_core_module/test_engine_dispatch_completeness.py (dispatch completeness
+    #    / run()-state() parity / unknown-op raise / driver shots=0 single-source).
     # 8) RESOLVED (2026-09): the UCC energy surface E(theta) contains only EVEN
     #    harmonics {2,4,...,2m} (exp(theta*A) with A^2=-I gives amplitudes ~cos/sin(theta);
     #    m = blocks sharing one parameter, plus k=4 from trotterized commuting string
