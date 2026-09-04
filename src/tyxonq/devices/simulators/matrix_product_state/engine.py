@@ -16,12 +16,13 @@ from __future__ import annotations
 from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend, ArrayBackend
+# 单一真相源：门矩阵与权威 op 词汇表 resolve_unitary 同源于 kernels.gates
+# （与 statevector/density_matrix 引擎共用同一门表）
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
+    resolve_unitary,
 )
-# 单一真相源：权威 op 词汇表 + 门矩阵解析（与 statevector/density_matrix 引擎共用同一门表）
-from ....libs.quantum_library.kernels.gate_table import resolve_unitary
 from ....libs.quantum_library.kernels.matrix_product_state import (
     init_product_state,
     apply_1q as mps_apply_1q,
@@ -82,7 +83,7 @@ class MatrixProductStateEngine:
 
         run() / state() / expectation_pauli() 全部经此，杜绝多套分发彼此分叉
         （y/z/t/tdg/cy/iswap/swap/rxx/ryy/rzz 曾在 run()/state() 两处都被静默丢弃）。
-        幺正门经权威门表 gate_table.resolve_unitary 解析为 (arity, qubits, matrix)，
+        幺正门经权威门表 gates.resolve_unitary 解析为 (arity, qubits, matrix)，
         用 MPS apply_1q/apply_2q 原地施加；measure_z/barrier 为控制 op；MPS 不支持的
         特殊 op（unitary/kraus/project_z/reset/pulse/pulse_inline）与任何未知 op 一律
         loudly raise，绝不静默跳过。
@@ -128,7 +129,7 @@ class MatrixProductStateEngine:
                 # 单一真相源：未知 op 必须 loudly raise，绝不静默跳过
                 raise ValueError(
                     f"MatrixProductStateEngine: unsupported op '{name}'. Known ops are "
-                    f"defined in libs.quantum_library.kernels.gate_table "
+                    f"defined in libs.quantum_library.kernels.gates "
                     f"(unitary/control/special); refusing to silently skip."
                 )
         return state, measures

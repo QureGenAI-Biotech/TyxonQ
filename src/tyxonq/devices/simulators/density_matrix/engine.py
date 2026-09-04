@@ -14,12 +14,13 @@ from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend
 from ..noise import channels as noise_channels
+# 单一真相源：门矩阵与权威 op 词汇表 resolve_unitary 同源于 kernels.gates
+# （与 statevector/mps 引擎共用同一门表）
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
+    resolve_unitary,
 )
-# 单一真相源：权威 op 词汇表 + 门矩阵解析（与 statevector/mps 引擎共用同一门表）
-from ....libs.quantum_library.kernels.gate_table import resolve_unitary
 from ....libs.quantum_library.kernels.density_matrix import (
     init_density,
     apply_1q_density,
@@ -50,7 +51,7 @@ class DensityMatrixEngine:
             if not isinstance(op, (list, tuple)) or not op:
                 continue
             name = op[0]
-            # 单一真相源分发：全部幺正门（1q/2q）经权威门表 gate_table.resolve_unitary
+            # 单一真相源分发：全部幺正门（1q/2q）经权威门表 gates.resolve_unitary
             # 解析为 (arity, qubits, matrix)，ρ → G ρ G†。此前这里是手写门分支，缺
             # y/z/t/tdg/cy/iswap/swap/rxx/ryy/rzz/unitary，且对未知 op 静默跳过。
             res = resolve_unitary(name, op, self.backend)
@@ -103,7 +104,7 @@ class DensityMatrixEngine:
                 # 单一真相源：未知 op 必须 loudly raise，绝不静默跳过
                 raise ValueError(
                     f"DensityMatrixEngine: unsupported op '{name}'. Known ops are "
-                    f"defined in libs.quantum_library.kernels.gate_table "
+                    f"defined in libs.quantum_library.kernels.gates "
                     f"(unitary/control/special); refusing to silently skip."
                 )
 

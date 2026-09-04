@@ -14,13 +14,14 @@ from __future__ import annotations
 from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend
+# 单一真相源：门矩阵与权威 op 词汇表 resolve_unitary 同源于 kernels.gates
+# （run()/state() 共用，杜绝两处分叉）
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
     gate_rxx, gate_ryy, gate_rzz, gate_iswap_4x4, gate_swap_4x4,
+    resolve_unitary,
 )
-# 单一真相源：权威 op 词汇表 + 门矩阵解析（run()/state() 共用，杜绝两处分叉）
-from ....libs.quantum_library.kernels.gate_table import resolve_unitary
 from ....libs.quantum_library.kernels.statevector import (
     init_statevector,
     apply_1q_statevector,
@@ -61,7 +62,7 @@ class StatevectorEngine:
             if not isinstance(op, (list, tuple)) or not op:
                 continue
             name = op[0]
-            # 单一真相源分发：全部幺正门（1q/2q）经权威门表 gate_table.resolve_unitary
+            # 单一真相源分发：全部幺正门（1q/2q）经权威门表 gates.resolve_unitary
             # 解析为 (arity, qubits, matrix)，再用 statevector apply 内核施加。此前这里是
             # 手写门分支，缺 y/z/t/tdg/cy，且与 state() 各维护一套而分叉（cry 曾因此漏）。
             res = resolve_unitary(name, op, self.backend)
@@ -336,7 +337,7 @@ class StatevectorEngine:
                 # （y/z/t/tdg/cy/cry 类漏洞正是源于此前的静默跳过）
                 raise ValueError(
                     f"StatevectorEngine: unsupported op '{name}'. Known ops are "
-                    f"defined in libs.quantum_library.kernels.gate_table "
+                    f"defined in libs.quantum_library.kernels.gates "
                     f"(unitary/control/special); refusing to silently skip."
                 )
 

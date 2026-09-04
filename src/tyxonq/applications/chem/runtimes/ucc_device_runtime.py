@@ -109,7 +109,7 @@ class UCCDeviceRuntime:
     #    (arXiv:2005.14475), whose gate-level circuit matches its operator-level (civector)
     #    energies to 1e-10. FIXED by single-sourcing op dispatch (2026-09): each engine now
     #    has ONE dispatch loop (_evolve / run) driven by the authoritative
-    #    gate_table.resolve_unitary vocabulary (all 1q/2q unitaries + special + control ops);
+    #    gates.resolve_unitary vocabulary (all 1q/2q unitaries + special + control ops);
     #    run()/state()/expval()/expectation_pauli() all route through it, unknown/unsupported
     #    ops raise instead of silently skipping, and driver.run(shots=0) reuses the same run()
     #    output (no second state() call). gate mode matches numeric to ~1e-10 (H2 sweep, H4
