@@ -23,6 +23,7 @@ import numpy as np
 from pyscf import ao2mo
 
 from .fermion import SCIResult, SCIState, run_sqd_fermion, solve_sci
+from .samples import reverse_bitstring_halves
 
 _SUBSPACE_MODES = ("frozen", "refresh", "adaptive")
 
@@ -220,6 +221,9 @@ def lucj_sampler(
     seed: int | None = None,
     optimize: bool = False,
     init_maxiter: int = 100,
+    runtime: str = "numeric",
+    provider: str = "simulator",
+    device: str = "statevector",
 ) -> Callable[[np.ndarray, np.ndarray, int, tuple[int, int]], dict[str, int]]:
     """构造以 LUCJ 电路采样的 ``sampler``，链路对齐 ``examples/h2o_sqd.py``。
 
@@ -227,11 +231,31 @@ def lucj_sampler(
     即 ``CASCI(mf, norb, nelecas)`` 的默认选法。LUCJ 参数由同基下的活性空间
     frozen CCSD 的 t1/t2 初始化（只算一次，后续几何复用）。
     ``noise_p`` 是 probability 层的 depolarizing 混合强度（0 为无噪声）。
+
+    运行档（``runtime``）——SQD 的「上设备」与 UCCSD/HEA 架构不同：SQD 的量子
+    部分是**采样 LUCJ 电路得到 counts**（经典 selected-CI 才对角化），故设备选项
+    挂在采样器上、而非 solver_kwargs：
+
+    - ``"numeric"``（默认）：本地 ``StatevectorEngine`` 精确概率 + ``rng.choice(shots)``
+      抽样，``seed`` 可复现；
+    - ``"device"``：LUCJ 电路补满 ``measure_z`` 后经 ``devices.base.run`` 提交到
+      ``provider``/``device``（``shots`` 必须 >0）直接取回计数。与真机走**同一条**
+      提交入口，故 ``provider="simulator"`` 验证通过后，切真机只需改
+      ``provider``/``device`` 两个字符串（同 E10 第 5 节）；此档由设备自行采样，
+      ``seed`` 不生效。
+
+    两档返回的计数都是 TyxonQ/LUCJ raw order，末尾统一经 ``reverse_bitstring_halves``
+    转成 SQD/PySCF order。
     """
     from pyscf import cc
 
     from tyxonq.applications.chem.algorithms.lucj import LUCJ, initialize_lucj_parameters_from_ccsd
     from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
+
+    if runtime not in ("numeric", "device"):
+        raise ValueError(f"runtime must be 'numeric' or 'device', got {runtime!r}.")
+    if runtime == "device" and int(shots) <= 0:
+        raise ValueError("SQD device 采样需要 shots > 0（要有样本才能确定子空间）。")
 
     cached: dict = {}
 
@@ -263,17 +287,45 @@ def lucj_sampler(
             )
 
         circuit = LUCJ(norb, nelec_int, n_layers, topology).get_circuit(cached["params"])
-        probabilities = np.asarray(StatevectorEngine().probability(circuit), dtype=float).reshape(-1)
-        probabilities = probabilities / np.sum(probabilities)
-        if noise_p > 0.0:
-            alpha = min(1.0, 4.0 * float(noise_p) / 3.0)
-            probabilities = (1.0 - alpha) * probabilities + alpha / probabilities.size
-
-        rng = np.random.default_rng(seed)
-        samples = rng.choice(probabilities.size, size=int(shots), p=probabilities)
         n_qubits = 2 * norb
-        unique, counts = np.unique(samples, return_counts=True)
-        return {format(int(i), f"0{n_qubits}b"): int(c) for i, c in zip(unique, counts)}
+
+        if runtime == "device":
+            # 设备档：补满 measure_z 后经 devices.base.run 提交，直接取回计数。
+            # 与真机同一提交入口（切 provider/device 即可上真机）；噪声经 use_noise/noise
+            # 透传给引擎（depolarizing 与 numeric 档同物理）。
+            from tyxonq.devices import base as device_base
+
+            for q in range(n_qubits):
+                circuit.measure_z(q)
+            run_opts: dict = {"use_noise": noise_p > 0.0}
+            if noise_p > 0.0:
+                run_opts["noise"] = {"type": "depolarizing", "p": float(noise_p)}
+            tasks = device_base.run(
+                provider=provider,
+                device=device,
+                circuit=circuit,
+                shots=int(shots),
+                **run_opts,
+            )
+            payload = tasks[0].get_result(wait=False)
+            raw_counts = {str(bs): int(c) for bs, c in (payload.get("result") or {}).items()}
+        else:
+            # numeric 档：本地精确概率 + rng.choice 抽样（seed 可复现）。
+            probabilities = np.asarray(StatevectorEngine().probability(circuit), dtype=float).reshape(-1)
+            probabilities = probabilities / np.sum(probabilities)
+            if noise_p > 0.0:
+                alpha = min(1.0, 4.0 * float(noise_p) / 3.0)
+                probabilities = (1.0 - alpha) * probabilities + alpha / probabilities.size
+            rng = np.random.default_rng(seed)
+            samples = rng.choice(probabilities.size, size=int(shots), p=probabilities)
+            unique, counts = np.unique(samples, return_counts=True)
+            raw_counts = {format(int(i), f"0{n_qubits}b"): int(c) for i, c in zip(unique, counts)}
+
+        # 两档计数都是 TyxonQ/LUCJ raw order [alpha0.. | beta0..]（qubit0=MSB），每个自旋
+        # 半区需反转成 SQD/PySCF order [..alpha0 | ..beta0] 后再交给 run_sqd_fermion，否则
+        # bitstring_matrix_to_integers（MSB 优先）会把轨道序整体读反（HF 串 3 误读成 12）。
+        # 与 examples/h2o_sqd.py 一致（反转是调用方责任，run_sqd_fermion 内部不做）。
+        return {reverse_bitstring_halves(bs): int(c) for bs, c in raw_counts.items()}
 
     return sampler
 

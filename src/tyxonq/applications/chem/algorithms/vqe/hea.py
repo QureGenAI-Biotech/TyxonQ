@@ -5,10 +5,10 @@ from typing import List, Tuple, Sequence, Callable, Union
 import numpy as np
 from scipy.optimize import minimize
 
-from ..runtimes.hea_device_runtime import HEADeviceRuntime
-from ..runtimes.hea_numeric_runtime import HEANumericRuntime
+from .runtimes.hea_device_runtime import HEADeviceRuntime
+from .runtimes.hea_numeric_runtime import HEANumericRuntime
 from tyxonq.libs.circuits_library.blocks import build_hwe_ry_ops
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
+from tyxonq.applications.chem.hamiltonian_builders import (
     get_hop_from_integral,
     get_integral_from_hf,
 )
@@ -20,7 +20,7 @@ from tyxonq.libs.circuits_library.qiskit_real_amplitudes import (
 )
 
 from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
-from .ucc import UCC
+from .ucc_base import UCC
 from pyscf import gto,scf
 Hamiltonian = List[Tuple[float, List[Tuple[str, int]]]]
 
@@ -120,7 +120,7 @@ class HEA:
         UCCSD: Unitary Coupled Cluster Singles and Doubles algorithm.
         UCC: Base class for unitary coupled cluster methods.
         tyxonq.libs.circuits_library: Circuit building utilities.
-        tyxonq.applications.chem.runtimes: Execution runtime implementations.
+        tyxonq.applications.chem.algorithms.vqe.runtimes: Execution runtime implementations.
     """
     def __init__(self, 
     molecule: object | None = None, 

@@ -6,7 +6,7 @@ import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 
-from .ucc import UCC as _UCCBase
+from .ucc_base import UCC as _UCCBase
 
 
 logger = logging.getLogger(__name__)

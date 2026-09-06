@@ -10,8 +10,8 @@ Run:
 import numpy as np
 from pyscf import gto
 
-from tyxonq.applications.chem.algorithms.uccsd import UCCSD
-from tyxonq.applications.chem.algorithms.hea import HEA
+from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
+from tyxonq.applications.chem.algorithms.vqe.hea import HEA
 from tyxonq.applications.chem.molecule import h2,h4
 
 

@@ -1,4 +1,4 @@
-"""Dynamics numeric runtime
+"""Dynamics time-evolution runtime
 
 说明
 ----

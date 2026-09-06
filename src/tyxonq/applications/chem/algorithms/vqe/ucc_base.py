@@ -17,21 +17,21 @@ import os, base64, tempfile
 from scipy.optimize import minimize
 import logging
 
-from ..runtimes.ucc_device_runtime import UCCDeviceRuntime
-from ..runtimes.ucc_numeric_runtime import UCCNumericRuntime, apply_excitation as _apply_excitation_numeric
+from .runtimes.ucc_device_runtime import UCCDeviceRuntime
+from .runtimes.ucc_numeric_runtime import UCCNumericRuntime, apply_excitation as _apply_excitation_numeric
 from tyxonq.libs.circuits_library.analysis import get_circuit_summary
 from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
+from tyxonq.applications.chem.hamiltonian_builders import (
     get_integral_from_hf,
     get_hop_from_integral,
     get_h_from_integral,
     get_hop_hcb_from_integral
 )
 from tyxonq.libs.hamiltonian_encoding.pauli_io import reverse_qop_idx,canonical_mo_coeff
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings, get_addr as _get_addr_ci
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_ci_strings, get_addr as _get_addr_ci
 from tyxonq.applications.chem.classical_chem_cloud.config import create_classical_client, CloudClassicalConfig
 
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import statevector_to_civector,civector_to_statevector
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import statevector_to_civector,civector_to_statevector
 
 from pyscf import gto,scf
 from pyscf.mp import MP2 as _mp2

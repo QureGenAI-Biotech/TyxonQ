@@ -255,7 +255,7 @@ Optimized for exact computation:
 .. code-block:: python
 
     # Numeric path - exact computation
-    from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+    from tyxonq.applications.chem import UCCSD
     from tyxonq.applications.chem import molecule
     
     uccsd = UCCSD(molecule.h2)
@@ -295,7 +295,7 @@ Runtimes
 
 .. code-block:: python
 
-    # Located: src/tyxonq/applications/chem/runtimes/
+    # Located: src/tyxonq/applications/chem/algorithms/vqe/runtimes/
     # - hea_device_runtime.py
     # - hea_numeric_runtime.py  
     # - ucc_device_runtime.py

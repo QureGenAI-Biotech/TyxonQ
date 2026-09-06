@@ -2,18 +2,18 @@ import numpy as np
 import pytest
 
 from tyxonq.applications.chem import UCCSD
-from tyxonq.applications.chem.algorithms.uccsd import ROUCCSD
+from tyxonq.applications.chem.algorithms.vqe.uccsd import ROUCCSD
 from tyxonq.applications.chem.molecule import h2,h4
 import numpy as np
 import pytest
 from pyscf import M
 
 from tyxonq.applications.chem import UCCSD
-from tyxonq.applications.chem.runtimes.ucc_numeric_runtime import apply_excitation
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_init_civector
+from tyxonq.applications.chem.algorithms.vqe.runtimes.ucc_numeric_runtime import apply_excitation
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_init_civector
 #wrong version
 # from tyxonq.libs.circuits_library.qubit_state_preparation import get_init_circuit
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import get_init_circuit
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.statevector_ops import get_init_circuit
 import tyxonq as tq
 
 @pytest.fixture(autouse=True)

@@ -90,7 +90,7 @@ result = circuit.device(
 ```python
 # pip install pyscf  # required for UCCSD example
 import tyxonq as tq
-from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+from tyxonq.applications.chem import UCCSD
 from tyxonq.applications.chem import molecule
 
 tq.set_backend("numpy")
@@ -439,7 +439,7 @@ result = circuit.with_noise("phase_damping", l=0.05).run(shots=1024)
 - **Measurement and shots**: compiler‑driven grouping and shot scheduling enable deterministic, provider‑neutral execution.
 - **Properties**: RDM1/2 and basic property operators; dynamics numeric path caches MPO/term matrices to avoid rebuilds.
 - **Bridges**: OpenFermion I/O via `libs/hamiltonian_encoding`; tight interop with PySCF for references and integrals.
-- **Chem libs**: `applications/chem/chem_libs/` including `circuit_chem_library` (UCC family ansatz), `quantum_chem_library` (CI/civector ops), `hamiltonians_chem_library` (HF/integrals → Hamiltonians).
+- **Module layout** *(refined in v1.3.0)*: `applications/chem/` is organized by domain — `algorithms/vqe/` (UCC family + HEA, with `runtimes/` device/numeric backends and a `wavefunction/` CI/statevector library), `dynamics/` (time-evolution `evolution.py` + `models/{pyrazine,sbm}`), `hamiltonian_builders.py` (HF/integrals → Hamiltonians), and `interfaces/` (MD/QM-MM). Public API unchanged: `from tyxonq.applications.chem import UCCSD, HEA, ...`.
 - **MD / QM-MM ecosystem** (v1.2.0): `applications/chem/interfaces/` plugs TyxonQ into molecular-dynamics engines as the QM force provider — `qc_scanner` (energy/gradient facade with cluster **and periodic Ewald** electrostatic embedding, per-step environment update, MM back-reaction forces), `TyxonQCalculator` (ASE, region partitioning), `TyxonQDriver` (i-PI), OpenMM native QM/MM (`create_tyxonq_system` / `create_qmmm_ee_system`), and `TyxonQMdiEngine` (MDI dedicated line). All gradients are reused from PySCF; QM backends selectable via `method="uccsd" | "hea" | ...`, with HEA execution options (`shots`/`provider`/`device`) forwarded to simulators **or real quantum hardware**. 👉 **See [`examples/qmmm/`](examples/qmmm/) for 10 runnable tutorials (E1–E10; E10 targets simulators/real quantum hardware).**
 
 - **AIDD (AI Drug Design) field Feature**

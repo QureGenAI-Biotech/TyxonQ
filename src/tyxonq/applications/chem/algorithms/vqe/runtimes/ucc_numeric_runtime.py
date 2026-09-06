@@ -7,16 +7,16 @@ from functools import lru_cache
 import numpy as np
 from openfermion import QubitOperator
 
-from tyxonq.applications.chem.runtimes.hea_device_runtime import Hamiltonian
+from tyxonq.applications.chem.algorithms.vqe.runtimes.hea_device_runtime import Hamiltonian
 from tyxonq.core.ir.circuit import Circuit
 # Use Circuit.state() API instead of StatevectorEngine for modern interface
 from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import (
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import (
     get_ci_strings,
     statevector_to_civector,
     civector_to_statevector
 )
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.civector_ops import (
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.civector_ops import (
     get_civector,
     energy_and_grad_civector_nocache,
     get_civector_nocache,
@@ -24,18 +24,18 @@ from tyxonq.applications.chem.chem_libs.quantum_chem_library.civector_ops import
     apply_excitation_civector as _apply_excitation_civ,
     apply_excitation_civector_nocache as _apply_excitation_civ_nc,
 )
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import (
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.statevector_ops import (
     get_statevector,
     energy_and_grad_statevector
 )
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.civector_ops import apply_h_qubit_to_ci as _apply_h_qubit_to_ci
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.pyscf_civector import (
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.civector_ops import apply_h_qubit_to_ci as _apply_h_qubit_to_ci
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.pyscf_civector import (
     apply_excitation_pyscf as _apply_excitation_pyscf,
     get_civector_pyscf,
     get_energy_and_grad_pyscf
 )
 
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
+from tyxonq.applications.chem.hamiltonian_builders import apply_op
 from tyxonq.numerics import NumericBackend as nb
 
 
@@ -110,7 +110,7 @@ class UCCNumericRuntime:
         Returns:
             CI strings array
         """
-        from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
+        from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_ci_strings
         return get_ci_strings(n_qubits, n_elec_s_tuple, mode)
     
     @staticmethod
@@ -127,7 +127,7 @@ class UCCNumericRuntime:
         Returns:
             Tuple of (ci_strings, fperm, fphase, f2phase)
         """
-        from tyxonq.applications.chem.chem_libs.quantum_chem_library.civector_ops import get_operator_tensors
+        from tyxonq.applications.chem.algorithms.vqe.wavefunction.civector_ops import get_operator_tensors
         ex_ops = [tuple(op) for op in ex_ops_tuple]
         return get_operator_tensors(n_qubits, n_elec_s_tuple, ex_ops, mode)
     
@@ -371,7 +371,7 @@ def apply_excitation(state: np.ndarray, n_qubits: int, n_elec_s, ex_op: tuple, m
         state = civector_to_statevector(state, n_qubits, ci_strings)
 
     if numeric_engine == "statevector":
-        from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import apply_excitation_statevector as _apply_excitation_sv
+        from tyxonq.applications.chem.algorithms.vqe.wavefunction.statevector_ops import apply_excitation_statevector as _apply_excitation_sv
         
         res_state = _apply_excitation_sv(state, n_qubits, ex_op, mode)
     if numeric_engine == "civector":

@@ -57,7 +57,7 @@ _H4_CACHE: dict = {}
 
 def _h4_uccsd_ref():
     if not _H4_CACHE:
-        from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+        from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
         from tyxonq.applications.chem.molecule import h4
 
         u = UCCSD(h4)
@@ -69,7 +69,7 @@ def _h4_uccsd_ref():
 
 
 def _h4_device_runtime():
-    from tyxonq.applications.chem.runtimes.ucc_device_runtime import UCCDeviceRuntime
+    from tyxonq.applications.chem.algorithms.vqe.runtimes.ucc_device_runtime import UCCDeviceRuntime
 
     ref = _h4_uccsd_ref()
     u = ref["u"]
@@ -95,7 +95,7 @@ def test_large_system_sampling_bit_order():
 
     # HEA：水 CAS(4,4) parity（6 比特），固定收敛参数直连 device 采样档。
     from pyscf import gto
-    from tyxonq.applications.chem.algorithms.hea import HEA
+    from tyxonq.applications.chem.algorithms.vqe.hea import HEA
 
     _step("盲区① HEA 水 CAS(4,4) numeric 优化 + 采样档…")
     mol = gto.M(atom="O 0 0 0.1173; H 0 0.7572 -0.4692; H 0 -0.7572 -0.4692",
@@ -119,7 +119,7 @@ def test_device_shots0_analytic_path():
     门级能量面与数值路径严格等价（实测 H4 随机参数点 ~1e-14）。
     """
     from pyscf import gto
-    from tyxonq.applications.chem.runtimes.ucc_device_runtime import UCCDeviceRuntime
+    from tyxonq.applications.chem.algorithms.vqe.runtimes.ucc_device_runtime import UCCDeviceRuntime
 
     ref = _h4_uccsd_ref()
     u = ref["u"]
@@ -129,8 +129,8 @@ def test_device_shots0_analytic_path():
     e_a = rt.energy(ref["p"], shots=0, provider="simulator", device="statevector")
     assert e_a == pytest.approx(ref["e_num"], rel=1e-8)
 
-    from tyxonq.applications.chem.algorithms.hea import HEA
-    from tyxonq.applications.chem.runtimes.hea_device_runtime import HEADeviceRuntime
+    from tyxonq.applications.chem.algorithms.vqe.hea import HEA
+    from tyxonq.applications.chem.algorithms.vqe.runtimes.hea_device_runtime import HEADeviceRuntime
 
     _step("盲区② HEA 水 CAS(4,4) numeric 优化 + shots=0 解析分支…")
     mol = gto.M(atom="O 0 0 0.1173; H 0 0.7572 -0.4692; H 0 -0.7572 -0.4692",
@@ -177,9 +177,9 @@ def test_device_psr_gradient_two_shift_rule():
       H2 单激发含 trotter 化的 {2,4} 谐波，恰好覆盖两点规则的权重；
     - 采样档 smoke：8192 shots 梯度落在统计噪声带内。
     """
-    from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+    from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
     from tyxonq.applications.chem.molecule import h2
-    from tyxonq.applications.chem.runtimes.ucc_device_runtime import UCCDeviceRuntime
+    from tyxonq.applications.chem.algorithms.vqe.runtimes.ucc_device_runtime import UCCDeviceRuntime
 
     u = UCCSD(h2)
     u.kernel(shots=0, runtime="numeric")

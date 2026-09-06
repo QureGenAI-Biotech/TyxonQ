@@ -37,23 +37,23 @@ except Exception:
 
 # Legacy static API re-exports for tests during migration
 try:
-    from .algorithms.uccsd import UCCSD, ROUCCSD  # noqa: F401
+    from .algorithms.vqe.uccsd import UCCSD, ROUCCSD  # noqa: F401
 except Exception:
     pass
 try:
-    from .algorithms.ucc import UCC  # noqa: F401
+    from .algorithms.vqe.ucc_base import UCC  # noqa: F401
 except Exception:
     pass
 try:
-    from .algorithms.kupccgsd import KUPCCGSD  # noqa: F401
+    from .algorithms.vqe.kupccgsd import KUPCCGSD  # noqa: F401
 except Exception:
     pass
 try:
-    from .algorithms.puccd import PUCCD  # noqa: F401
+    from .algorithms.vqe.puccd import PUCCD  # noqa: F401
 except Exception:
     pass
 try:
-    from .algorithms.hea import parity  # noqa: F401
+    from .algorithms.vqe.hea import parity  # noqa: F401
 except Exception:
     pass
 
@@ -66,7 +66,7 @@ def clear_cache() -> None:
     """
     try:
         # example: optional caches in chem submodules
-        from .chem_libs.quantum_chem_library import ci_state_mapping as _cism  # type: ignore
+        from .algorithms.vqe.wavefunction import ci_state_mapping as _cism  # type: ignore
 
         for name in ("_CACHE", "CACHE", "cache"):
             c = getattr(_cism, name, None)

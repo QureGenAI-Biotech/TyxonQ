@@ -2,8 +2,19 @@ from typing import List, Tuple, Optional
 import numpy as np
 import tyxonq as tq
 
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings, civector_to_statevector
 from .utils import unpack_nelec
+
+
+def _civector_to_statevector(civector, n_qubits, ci_strings):
+    """把 CI 系数向量按 ``ci_strings`` 散射到完整 statevector（纯 NumPy）。
+
+    原先该逻辑与 pyscf 相关的 ``get_ci_strings`` 一并位于 chem 领域层，导致 libs
+    反向依赖 chem（依赖倒置）。现内联到 libs：CI 基矢 ``ci_strings`` 由 chem 侧
+    调用方注入，libs 保持领域无关（不依赖 pyscf/chem）。
+    """
+    statevector = np.zeros(1 << n_qubits, dtype=np.complex128)
+    statevector[np.asarray(ci_strings, dtype=int)] = np.asarray(civector, dtype=np.complex128)
+    return statevector
 
 
 def get_init_circuit(
@@ -13,6 +24,7 @@ def get_init_circuit(
     init_state=None,
     givens_swap: bool = False,
     *,
+    ci_strings=None,
     runtime: str = "numeric",
 ):
     """路由函数：根据 runtime 分流到设备/数值初始化。
@@ -35,6 +47,7 @@ def get_init_circuit(
             n_elec_s,
             mode,
             civector=civector,
+            ci_strings=ci_strings,
             givens_swap=givens_swap,
         )
     raise ValueError(f"Unsupported runtime: {runtime}")
@@ -132,11 +145,14 @@ def get_numeric_init_circuit(
     mode: str,
     *,
     civector: Optional[np.ndarray] = None,
+    ci_strings: Optional[np.ndarray] = None,
     givens_swap: bool = False,
 ) -> np.ndarray:
     """Return a statevector (numpy array) for numeric simulators; no Circuit usage.
 
     - If civector is provided, map it to full statevector according to (mode, n_elec_s).
+      此时必须由调用方注入 ``ci_strings``：CI 基矢由 pyscf 生成、属 chem 领域层，
+      libs 不再反向依赖 chem（修复依赖倒置）。
     - Else return HF/bitstring as a dense statevector.
     - For hcb with givens_swap=True, apply the index permutation consistent with gate order.
     """
@@ -165,9 +181,13 @@ def get_numeric_init_circuit(
         state[idx] = 1.0
         return state
 
-    # civector provided
-    ci_strings = get_ci_strings(n_qubits, n_elec_s, mode == "hcb")
-    statevector = civector_to_statevector(civector, n_qubits, ci_strings)
+    # civector provided: ci_strings 必须由调用方注入（pyscf 生成，位于 chem 领域层）
+    if ci_strings is None:
+        raise ValueError(
+            "get_numeric_init_circuit: 传入 civector 时必须同时注入 ci_strings"
+            "（由 chem.algorithms.vqe.wavefunction.ci_state_mapping.get_ci_strings 生成）。"
+        )
+    statevector = _civector_to_statevector(civector, n_qubits, ci_strings)
     if mode == "hcb" and givens_swap:
         statevector = statevector.reshape([2] * n_qubits)
         new_idx = list(range(n_qubits - na, n_qubits)) + list(range(n_qubits - na))

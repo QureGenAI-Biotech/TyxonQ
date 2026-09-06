@@ -19,6 +19,7 @@ from .civector_ops import get_operator_tensors
 from .ci_state_mapping import get_ci_strings, civector_to_statevector
 from math import comb
 from tyxonq.numerics import NumericBackend as nb
+from tyxonq.libs.quantum_library.kernels.statevector import apply_kqubit_unitary
 
 # from tyxonq.libs.circuits_library.qubit_state_preparation import get_init_circuit
 
@@ -37,7 +38,7 @@ def apply_excitation_statevector(statevector, n_qubits, f_idx, mode):
     else:
         assert len(qubit_idx) == 4
         U = adad_aa_hc
-    psi = _apply_kqubit_unitary(psi, U, qubit_idx, n)
+    psi = apply_kqubit_unitary(psi, U, qubit_idx, n, backend=nb)
 
     if mode != "fermion":
         return psi.reshape(-1)
@@ -116,27 +117,6 @@ def get_statevector(
     return psi
 
 
-def _apply_kqubit_unitary(state, unitary, qubit_idx: list[int], n_qubits: int):
-    """Apply k-qubit unitary to statevector (backend-agnostic).
-    
-    This function now delegates to the unified implementation in quantum_library.kernels.
-    Kept for backward compatibility with existing chem code.
-    
-    Args:
-        state: Statevector of shape (2^n_qubits,) - backend array/tensor
-        unitary: Unitary matrix of shape (2^k, 2^k)
-        qubit_idx: List of target qubit indices
-        n_qubits: Total number of qubits
-        
-    Returns:
-        Updated statevector in same backend format as input
-    """
-    from tyxonq.libs.quantum_library.kernels.statevector import apply_kqubit_unitary
-    
-    # Delegate to unified implementation，保持 backend 类型
-    return apply_kqubit_unitary(state, unitary, qubit_idx, n_qubits, backend=nb)
-
-
 def evolve_excitation(statevector, f_idx: tuple[int, ...], theta: float, mode: str):
     """Evolve excitation (backend-agnostic).
     
@@ -159,7 +139,7 @@ def evolve_excitation(statevector, f_idx: tuple[int, ...], theta: float, mode: s
         assert len(qubit_idx) == 4
         U2 = adad_aa_hc2
         U1 = adad_aa_hc
-    f2ket = _apply_kqubit_unitary(statevector, U2, qubit_idx, n_qubits)
+    f2ket = apply_kqubit_unitary(statevector, U2, qubit_idx, n_qubits, backend=nb)
     fket = apply_excitation_statevector(statevector, n_qubits, f_idx, mode)
     # Match TCC sign convention: sin term carries a negative sign
     # Use backend's cos/sin (supports PyTorch autograd for tensor theta)
@@ -219,7 +199,7 @@ def energy_and_grad_statevector(
     - 让 nb.value_and_grad 处理 float 转换和梯度计算
     - 这样 PyTorch backend 就能使用 autograd，NumPy backend 使用有限差分
     """
-    from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
+    from tyxonq.applications.chem.hamiltonian_builders import apply_op
 
     def _f(p):
         """计算能量（返回 tensor/array，保持梯度链）。"""
@@ -258,7 +238,7 @@ def energy_from_statevector(
     Returns:
         Real energy value
     """
-    from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
+    from tyxonq.applications.chem.hamiltonian_builders import apply_op
     
     H = get_sparse_operator(qop, n_qubits=n_qubits)
     # 使用新的 apply_op

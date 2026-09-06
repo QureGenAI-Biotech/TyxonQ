@@ -12,7 +12,11 @@ import pytest
 
 from pyscf import gto, scf, mcscf
 
-from tyxonq.applications.chem.algorithms.sqd import as_pyscf_solver
+from tyxonq.applications.chem.algorithms.sqd import (
+    as_pyscf_solver,
+    lucj_sampler,
+    reverse_bitstring_halves,
+)
 
 
 def _has_pyscf():
@@ -152,3 +156,47 @@ def test_stochastic_subspace_rejected_by_scanner_guard():
         allow_discontinuous=True,
     )
     assert scan.subspace == "adaptive"
+
+
+@pytest.mark.skipif(not _has_pyscf(), reason="PySCF not installed; skipping SQD solver tests.")
+def test_lucj_sampler_bitstring_order_freezes_correct_hf_determinants():
+    """用例 5：lucj_sampler 采样路径必须冻结到正确的低轨道 HF 行列式。
+
+    回归防护（SQD_KNOWN_ISSUES.md）：TyxonQ/LUCJ raw order 位串 [alpha0..|beta0..]
+    与 PySCF selected-CI 的 LSB 约定相反。修复前 lucj_sampler 直接返回 raw counts，
+    经 bitstring_matrix_to_integers（MSB 优先）把 HF 串 0b0011=3 读成 0b1100=12，
+    冻结到错误子空间，能量比全 CAS 高 ~3.02 Ha。修复后每个自旋半区先经
+    reverse_bitstring_halves 反转（与 examples/h2o_sqd.py 一致）。本用例直连
+    lucj_sampler→run_sqd_fermion 采样分支（用例 1-4 只走显式 ci_strs 冻结路径）。
+
+    实测基准（noise_p=0, shots=2048, seed=7，确定性）：
+      冻结串 alpha=beta=[3]；SQD 能量 - 全 CAS = +7.44e-03 Ha。
+    """
+    mol = _build_mol()
+    mf = scf.RHF(mol).run()
+    e_full = float(mcscf.CASCI(mf, NCAS, NELECAS).kernel()[0])
+
+    sampler = lucj_sampler(mf, n_layers=1, shots=2048, noise_p=0.0, seed=7)
+
+    # 采样器直接输出必须是 SQD/PySCF order（反转后的 HF 串），而非 raw order。
+    counts = sampler(None, None, NCAS, NELECAS)
+    top_bitstring = max(counts, key=counts.get)
+    assert top_bitstring == reverse_bitstring_halves("11001100") == "00110011"
+
+    solver = as_pyscf_solver(
+        subspace="frozen",
+        sampler=sampler,
+        sampler_kwargs={"samples_per_batch": 8, "num_batches": 4, "max_iterations": 5, "seed": 7},
+    )
+    mc = mcscf.CASCI(mf, NCAS, NELECAS)
+    mc.fcisolver = solver
+    e_sqd = float(mc.kernel()[0])
+
+    # 冻结子空间必须含正确的 HF 行列式 3（0b0011），而非位序读反的 12（0b1100）。
+    strs_a, strs_b = solver.frozen_strings
+    assert 3 in {int(s) for s in strs_a}
+    assert 3 in {int(s) for s in strs_b}
+    assert 12 not in {int(s) for s in strs_a}
+
+    # 能量接近全 CAS（+7.4e-03，变分上界）；位序读反会高出 ~1.4-3.0 Ha。
+    assert 0.0 < e_sqd - e_full < 0.05

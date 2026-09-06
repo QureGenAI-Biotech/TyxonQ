@@ -3,7 +3,7 @@ from pyscf import fci
 from pyscf.scf import RHF
 
 from tyxonq.applications.chem.molecule import _Molecule, h2o
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_integral_from_hf
+from tyxonq.applications.chem.hamiltonian_builders import get_integral_from_hf
 
 
 def test_molecule():

@@ -123,20 +123,25 @@ def _correct_partition(
     rng: np.random.Generator,
 ) -> None:
     """把某一半 bitstring 的 1 的数量修到目标值。"""
-    if not np.any(probabilities):
+    n_diff = int(np.sum(partition) - target_hamming)
+    if n_diff == 0:
         return
 
-    probabilities = probabilities / np.sum(probabilities)
-    n_diff = int(np.sum(partition) - target_hamming)
     if n_diff > 0:
         occupied = np.where(partition)[0]
-        p_choice = probabilities[partition] / np.sum(probabilities[partition])
+        p_choice = probabilities[partition]
+        # 严格 HF 占据可能使所有候选权重为零，此时均匀选择。
+        if not np.any(p_choice):
+            p_choice = np.ones(len(occupied), dtype=float)
+        p_choice = p_choice / np.sum(p_choice)
         to_flip = rng.choice(occupied, size=n_diff, replace=False, p=p_choice)
         partition[to_flip] = False
     elif n_diff < 0:
         empty = np.where(np.logical_not(partition))[0]
-        p_choice = probabilities[np.logical_not(partition)] / np.sum(
-            probabilities[np.logical_not(partition)]
-        )
+        p_choice = probabilities[np.logical_not(partition)]
+        # 严格空占据同样可能给出全零权重，仍需满足目标电子数。
+        if not np.any(p_choice):
+            p_choice = np.ones(len(empty), dtype=float)
+        p_choice = p_choice / np.sum(p_choice)
         to_flip = rng.choice(empty, size=abs(n_diff), replace=False, p=p_choice)
         partition[to_flip] = True

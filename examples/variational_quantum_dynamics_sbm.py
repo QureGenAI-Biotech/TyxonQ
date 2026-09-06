@@ -5,7 +5,7 @@ This example demonstrates quantum dynamics simulation using TyxonQ's built-in
 DynamicsNumericRuntime for chemistry applications.
 
 Based on:
-- src/tyxonq/applications/chem/runtimes/dynamics_numeric.py
+- src/tyxonq/applications/chem/dynamics/evolution.py
 - tests_mol_valid/test_dynamics.py
 
 Key Features:
@@ -40,12 +40,12 @@ except ImportError:
     print("\nSkipping example...")
     exit(0)
 
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library import sbm
+from tyxonq.applications.chem.dynamics.models import sbm
 from tyxonq.libs.hamiltonian_encoding.operator_encoding import (
     qubit_encode_op,
     qubit_encode_basis
 )
-from tyxonq.applications.chem.runtimes.dynamics_numeric import DynamicsNumericRuntime
+from tyxonq.applications.chem.dynamics.evolution import DynamicsNumericRuntime
 
 # ==============================================================================
 # Configuration
@@ -365,9 +365,9 @@ print("  - p-VQD: Projected VQD for better long-time stability")
 print("  - SBM: Two-level system coupled to bosonic bath")
 
 print("\n🔬 Implementation:")
-print("  - DynamicsNumericRuntime: src/tyxonq/applications/chem/runtimes/")
+print("  - DynamicsNumericRuntime: src/tyxonq/applications/chem/dynamics/")
 print("  - Tests: tests_mol_valid/test_dynamics.py")
-print("  - SBM library: applications/chem/chem_libs/hamiltonians_chem_library/")
+print("  - SBM library: applications/chem/dynamics/models/")
 
 print("\n💡 Tips:")
 print("  - Increase N_LAYERS for higher accuracy")

@@ -355,9 +355,9 @@ src/tyxonq/
 │
 ├── applications/                   # Domain specialization
 │   └── chem/                       # **Quantum chemistry applications**
-│       ├── algorithms/             # HEA/UCC series algorithms
-│       ├── runtimes/               # Device/numeric execution times
-│       └── chem_libs/              # Chemistry-specific libraries
+│       ├── algorithms/vqe/         # HEA/UCC series + runtimes + wavefunction (CI) library
+│       ├── dynamics/               # Time-evolution runtime + model Hamiltonians
+│       └── hamiltonian_builders.py # HF/integrals → Hamiltonians
 │
 └── libs/                           # General library components
     ├── circuits_library/           # Circuit template library
@@ -661,7 +661,7 @@ grad_uccsd = uccsd.energy_and_grad(uccsd.init_guess)  # Supports autograd
 
 ```python
 # Unified Hamiltonian builders supporting multiple output formats
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library import get_h_from_hf
+from tyxonq.applications.chem.hamiltonian_builders import get_h_from_hf
 
 # Single interface, multiple output formats
 H_sparse = get_h_from_hf(hf_object, mode="qubit", htype="sparse")
@@ -702,7 +702,7 @@ def group_molecular_measurements(hamiltonian, max_groups=10):
 
 ```python
 # Seamless PySCF integration for validation
-from tyxonq.applications.chem.chem_libs.quantum_chem_library import pyscf_civector
+from tyxonq.applications.chem.algorithms.vqe.wavefunction import pyscf_civector
 import pyscf
 
 def validate_against_pyscf(molecule, method="UCCSD"):

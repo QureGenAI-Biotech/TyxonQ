@@ -9,11 +9,11 @@ from pyscf.scf import RHF as _RHF
 
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
-from .ucc import UCC
+from .ucc_base import UCC
 from tyxonq.libs.circuits_library.qubit_state_preparation import get_circuit_givens_swap
 from pyscf import fci as _fci
 from pyscf.cc.addons import spatial2spin
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_ci_strings
 from pyscf.fci import cistring
 
 

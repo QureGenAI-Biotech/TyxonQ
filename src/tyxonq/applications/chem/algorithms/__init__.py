@@ -1,14 +1,14 @@
 __all__ = []
 
 try:
-    from .hea import HEA  # noqa: F401
+    from .vqe.hea import HEA  # noqa: F401
 
     __all__.append("HEA")
 except ImportError:
     pass
 
 try:
-    from .ucc import UCC  # noqa: F401
+    from .vqe.ucc_base import UCC  # noqa: F401
 
     __all__.append("UCC")
 except ImportError:

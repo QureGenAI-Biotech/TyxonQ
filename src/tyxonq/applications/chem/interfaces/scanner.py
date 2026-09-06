@@ -60,12 +60,12 @@ def _make_fcisolver(method: str, subspace: str, sampler, solver_kwargs: dict):
         return _sqd_solver.as_pyscf_solver(subspace=subspace, sampler=sampler, **solver_kwargs)
 
     # VQE 族：惰性导入，避免仅为用 SQD 的用户拉起 openfermion 电路栈。
-    # 入口文件是 algorithms/uccsd.py（UCCSD 闭壳 / ROUCCSD 开壳）与 hea.py。
+    # 入口文件是 algorithms/vqe/uccsd.py（UCCSD 闭壳 / ROUCCSD 开壳）与 vqe/hea.py。
     if method in ("uccsd", "rouccsd"):
         if method == "uccsd":
-            from ..algorithms.uccsd import UCCSD as _cls
+            from ..algorithms.vqe.uccsd import UCCSD as _cls
         else:
-            from ..algorithms.uccsd import ROUCCSD as _cls
+            from ..algorithms.vqe.uccsd import ROUCCSD as _cls
         # 真机/采样运行选项（shots/provider/device）不是 UCCSD 构造参数，
         # 打包成 device_opts 透传给 kernel（device 路径，含真机提交）。
         solver_kwargs.setdefault("runtime", "numeric")
@@ -77,7 +77,7 @@ def _make_fcisolver(method: str, subspace: str, sampler, solver_kwargs: dict):
             solver_kwargs["device_opts"] = merged
         return _cls.as_pyscf_solver(**solver_kwargs)
 
-    from ..algorithms.hea import HEA
+    from ..algorithms.vqe.hea import HEA
 
     # 真机/采样运行选项（shots/provider/device）不是 HEA 构造参数，
     # 打包成 device_opts 透传给 HEA.kernel（device 路径，含真机提交）。

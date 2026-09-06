@@ -11,8 +11,8 @@ from tyxonq.libs.hamiltonian_encoding.operator_encoding import (
     transform_op,
     get_subspace_idx,
 )
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library import pyrazine, sbm
-from tyxonq.applications.chem.runtimes.dynamics_numeric import DynamicsNumericRuntime as TimeEvolution
+from tyxonq.applications.chem.dynamics.models import pyrazine, sbm
+from tyxonq.applications.chem.dynamics.evolution import DynamicsNumericRuntime as TimeEvolution
 
 
 def test_transform():

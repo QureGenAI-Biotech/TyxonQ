@@ -1,7 +1,7 @@
 import numpy as np
 from tyxonq.applications.chem import molecule
-from tyxonq.applications.chem.algorithms.uccsd import UCCSD
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import (
+from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
+from tyxonq.applications.chem.hamiltonian_builders import (
     get_integral_from_hf,
     get_h_sparse_from_integral,
 )

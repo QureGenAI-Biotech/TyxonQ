@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import tyxonq as tq
 
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library import sbm
-from tyxonq.applications.chem.runtimes.dynamics_numeric import DynamicsNumericRuntime
+from tyxonq.applications.chem.dynamics.models import sbm
+from tyxonq.applications.chem.dynamics.evolution import DynamicsNumericRuntime
 from renormalizer import Op
 
 def test_dynamics_numeric_sbm_small_smoke():

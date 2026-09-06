@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from tyxonq.applications.chem.classical_chem_cloud.server import cpu_chem, gpu_chem
-from tyxonq.applications.chem.algorithms.uccsd import UCCSD
-from tyxonq.applications.chem.algorithms.hea import HEA
+from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
+from tyxonq.applications.chem.algorithms.vqe.hea import HEA
 
 
 import tyxonq as tq

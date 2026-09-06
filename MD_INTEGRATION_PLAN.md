@@ -353,9 +353,10 @@ H4 trotter 全 11 参数 ≤3e-3（残差为分数谐波 trotter 伪影 ~0.4%）
 | E8-B | `md_lammps_qmmm_pbc/` | **阶段 B：真周期 ✅ 已完成**。换 `pyscf.qmmm.pbc.add_mm_charges`（Ewald 背景电荷，含参考胞与周期镜像的静电互作用）；§6.1 验证门已执行完毕，`QCScanner` 的 `mm_lattice` 分支、用例 12、三进程教程均落地（回归 26/26）；RB5 降级已于 2026-09-01 复核后收回（`mm_gradient` 照交，文档化轨道响应缺口）。LAMMPS 侧 MM-MM 周期静电用 `kspace_style pppm`，与嵌入的 QM-MM 周期互补不重叠（QM 电荷置 0）。实跑验收：step-0 总势能 = E_QM(pbc 嵌入)+E_LJ+E_ewald(解析 Ewald，双 κ 互检) 一致到 1.04e-5 Ha（容差 2e-4）；验收含「大盒子极限收敛到阶段 A 簇嵌入」对照（用例 12） | lammps, ipi |
 | E9 | `md_mdi_qmmm_embedded.py` | **MDI 专线静电嵌入 ✅ 已完成**：自带手写 Python driver（两进程），不需带 MDI 包的 LAMMPS；三步验收：无嵌入基准 → 推晶格后 ΔE = +3.283e-3 Ha + MM 反作用力非零 → MM 平移 0.2 Å 能量跟随（`set_mm_charges` 重入）；与 E8-A 物理等价，簇嵌入对照见 E6b | pymdi |
 | E10 | `md_qmmm_device_hardware.py` | **QM/MM 上真机 ✅（2026-09-02）**：UCCSD 解析档（与 numeric 差 0）/采样档；HEA 采样档（为真机而生的工作形态）+ 选项穿透自检；静电嵌入 + 设备档（`mm_charges` 位移 + `mm_gradient`）；真机实践要点：HEA 嵌入档带噪优化需高 shots（实测 2048 → 偏差可达 0.1~0.25，8192 → ~1e-3，固定参数对照 ~1.6e-3 证明聚合链正确）；第 5 节给出 `provider="tyxonq"` + `tq.set_token` 真机切换模板（默认注释） | 仅 pyscf |
+| E11 | `md_qmmm_sqd_device.py` | **SQD 走 QM/MM ✅（2026-09-04）**：`method="sqd"` + `lucj_sampler` 采样冻结子空间——① 能量近全 CAS（+7.4e-3 Ha，变分上界）+ 解析梯度 FD 自检（1.3e-7）；② frozen vs refresh 机制对比（sampler 触发次数：frozen 全程 1 次、refresh 每帧 1 次 → §4.4 D 力噪声成因；refresh 被守卫拒绝）；③ 冻结 SQD 驱动 `pyscf.md.NVE` AIMD（15 步，漂移 7.3e-5 Ha）；④ 静电嵌入（`mm_charges` 位移 +3.4e-3 Ha + `mm_gradient`）；⑤ device 采样档穿透（`lucj_sampler(runtime="device", provider/device)`，与 numeric 差 0）+ 真机模板。**SQD 设备选项挂 sampler（非 solver_kwargs），因其量子部分是「采样 LUCJ 电路得 counts」而非「测量哈密顿量」**。原 E1 计划的 SQD 内容（frozen/refresh、AIMD）在此落地 | 仅 pyscf |
 
 每个 example 顶部注明：所需环境、预期运行时间、以及若依赖缺失时的优雅退出。
-E1/E2 必须能在纯 pyscf 环境跑通（这是 CI 唯一能覆盖的两个）。
+E1/E2/E11 必须能在纯 pyscf 环境跑通（CI 可覆盖；E11 另有 `test_qc_scanner_sqd_device.py` 守卫）。
 
 ---
 

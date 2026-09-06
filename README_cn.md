@@ -58,6 +58,16 @@ TyxonQ 实现了一个完整的量子-经典混合工作流，将高层量子算
 - **量子化学套件​**: 包含分子哈密顿量构建器与电子结构分析工具，兼容 [PySCF](https://pyscf.org/), [ByteQC](https://github.com/bytedance/byteqc) 和 [​​OpenMM](https://openmm.org/)​等经典量子化学与药物发现框架。
 - ​​**材料模拟库​**: 集成了 量子加速的密度泛函理论（DFT）模块，可用于预测新型材料的能带结构。
 
+## 🧪 分子动力学与 QM/MM 生态（v1.2.0 新增）
+
+TyxonQ 可作为量子化学力引擎接入分子动力学生态（`tyxonq.applications.chem.interfaces`）：
+
+- **`qc_scanner`**：能量/梯度统一门面，支持簇与周期 Ewald 静电嵌入、每步环境更新、MM 反作用力；核梯度全部复用 PySCF，不手写梯度
+- **多引擎接入**：`TyxonQCalculator`（ASE，含 QM/MM 区域划分）、`TyxonQDriver`（i-PI 三进程拓扑：LAMMPS + i-PI + TyxonQ）、`create_qmmm_ee_system`（OpenMM 原生静电嵌入）、`TyxonQMdiEngine`（MDI 专线）
+- **算法与真机**：QM 后端可选 `method="uccsd" | "hea" | ...`；HEA 的 `shots/provider/device` 参数可穿透到模拟器或**真实量子硬件**（TyxonQ/QCOS/Quafu）
+
+👉 **上手请看 [`examples/qmmm/`](examples/qmmm/) 下 10 个可运行教程（E1–E10；E10 面向模拟器/真机）。**
+
 ## 🚀 路线图与开发进度
 
 ### ✅ 当前功能 (v1.x)
@@ -66,7 +76,7 @@ TyxonQ 实现了一个完整的量子-经典混合工作流，将高层量子算
 - [x] 自动微分引擎
 - [x] 多后端支持（NumPy、PyTorch、TensorFlow、JAX）
 - [ ] 变分量子算法 (VQE,GQE,QAOA)
-- [ ] 量子化学工具包集成
+- [x] 量子化学工具包集成（v1.2.0：MD/QM-MM 生态，见 `examples/qmmm/`）
 
 ### 🔄 开发中 (v2.x)
 - [x] **量子 API 网关** - 面向量子硬件访问的 RESTful API

@@ -46,8 +46,8 @@ from pyscf.fci.addons import des_a, cre_a, des_b, cre_b  # type: ignore
 
 import tyxonq as tq
 from tyxonq.libs.circuits_library.utils import unpack_nelec
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_init_civector
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_init_civector
+from tyxonq.applications.chem.hamiltonian_builders import apply_op
 
 Tensor = Any
 

@@ -7,7 +7,7 @@ import numpy as np
 from openfermion import QubitOperator
 from tyxonq.numerics import NumericBackend as nb
 
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import apply_op
+from tyxonq.applications.chem.hamiltonian_builders import apply_op
 from .ci_state_mapping import get_ci_strings, get_init_civector
 # from .ci_operator_tensors import (
 #     get_operator_tensors,

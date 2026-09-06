@@ -6,9 +6,9 @@ import pytest
 
 from tyxonq.applications.chem.molecule import h2
 from tyxonq.applications.chem import UCCSD, KUPCCGSD, ROUCCSD,HEA
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_integral_from_hf, random_integral
+from tyxonq.applications.chem.hamiltonian_builders import get_integral_from_hf, random_integral
 from tyxonq.applications.chem.molecule import _random, h4, h8, h_chain, c4h4,h2
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import canonical_mo_coeff
+from tyxonq.applications.chem.hamiltonian_builders import canonical_mo_coeff
 import tyxonq as tq
 
 

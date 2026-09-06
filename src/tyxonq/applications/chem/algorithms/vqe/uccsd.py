@@ -11,8 +11,8 @@ from pyscf.fci import direct_spin1
 from pyscf import gto,scf
 
 import warnings as _warnings
-from .ucc import UCC
-from ..constants import DISCARD_EPS
+from .ucc_base import UCC
+from ...constants import DISCARD_EPS
 
 
 class UCCSD(UCC):

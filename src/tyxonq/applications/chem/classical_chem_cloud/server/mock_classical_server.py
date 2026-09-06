@@ -21,7 +21,7 @@ from pyscf import cc as _cc
 from pyscf import mp as _mp
 from pyscf import dft as _dft
 from pyscf import mcscf as _mcscf
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_integral_from_hf
+from tyxonq.applications.chem.hamiltonian_builders import get_integral_from_hf
 
 class MoleculeData(BaseModel):
     atom: str
