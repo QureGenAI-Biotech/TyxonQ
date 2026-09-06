@@ -153,9 +153,10 @@ Quantum Chemistry Stack
 
 **Components**:
 
-1. **Algorithms** (``algorithms/``): HEA, UCC/UCCSD, k-UpCCGSD, pUCCD
-2. **Runtimes** (``runtimes/``): Device runtime, numeric runtime  
-3. **Chem Libs** (``chem_libs/``): Circuit library, quantum library, Hamiltonian builders
+1. **Algorithms** (``algorithms/vqe/``): HEA, UCC/UCCSD, k-UpCCGSD, pUCCD
+2. **Runtimes** (``algorithms/vqe/runtimes/``): Device runtime, numeric runtime  
+3. **Dynamics** (``dynamics/``): time-evolution runtime (``evolution.py``) + model Hamiltonians (pyrazine, SBM)
+4. **Hamiltonian builders** (``hamiltonian_builders.py``): HF/integrals to qubit Hamiltonians
 
 **Integration**: PySCF (molecular input, HF, integrals), OpenFermion (fermion-to-qubit)
 
@@ -183,9 +184,11 @@ Source Code Organization
    │   └── backends/            # NumPy/PyTorch/CuPy
    ├── postprocessing/          # Unified postprocessing
    ├── applications/chem/       # Quantum chemistry
-   │   ├── algorithms/          # VQE algorithms
-   │   ├── runtimes/            # Dual runtimes
-   │   └── chem_libs/           # Chemistry libraries
+   │   ├── algorithms/vqe/      # UCC family + HEA
+   │   │   ├── runtimes/        # Device/numeric runtimes
+   │   │   └── wavefunction/    # CI/statevector library
+   │   ├── dynamics/            # Time-evolution + model Hamiltonians
+   │   └── hamiltonian_builders.py  # HF/integrals -> Hamiltonians
    └── libs/                    # General libraries
        ├── circuits_library/    # Circuit templates
        ├── quantum_library/     # Quantum kernels

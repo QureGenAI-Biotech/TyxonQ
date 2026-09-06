@@ -14,7 +14,7 @@ def _has_pyscf():
 def test_uccsd_energy_device_h2_smoke():
     import tyxonq as tq
     # Use legacy UCCSD explicitly from static path
-    from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+    from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
     from tyxonq.applications.chem import molecule
 
     # Build UCCSD with preset H2 molecule (RHF default)

@@ -13,7 +13,7 @@ Non-goals
 ---------
 - This module does NOT assume access to full pure quantum states, nor does it implement
   device execution or IR simulation. Numeric baselines (statevectors/CI) live in
-  chem/quantum_chem_library or dedicated libs/quantum_library files.
+  chem/algorithms/vqe/wavefunction or dedicated libs/quantum_library files.
 
 Notes & TODO
 ------------

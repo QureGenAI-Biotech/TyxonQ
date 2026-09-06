@@ -57,7 +57,7 @@ def run_hea_device_shots():
 def run_hea_open_shell_shots0():
     # Mirror tests_mol_valid/test_hea.py::test_open_shell core workload
     from tyxonq.applications.chem.molecule import h_chain
-    from tyxonq.applications.chem.algorithms.hea import HEA
+    from tyxonq.applications.chem.algorithms.vqe.hea import HEA
     m = h_chain(3, charge=0, spin=1)
     hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="device")
     _ = hea.kernel(shots=0, provider="simulator", device="statevector")

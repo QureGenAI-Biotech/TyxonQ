@@ -138,17 +138,17 @@ def test_unitary_preserves_normalization():
 
 
 def test_unitary_chem_module_integration():
-    """Test that chem module's _apply_kqubit_unitary uses unified implementation."""
-    from tyxonq.applications.chem.chem_libs.quantum_chem_library.statevector_ops import _apply_kqubit_unitary
+    """Test the unified apply_kqubit_unitary primitive (libs) that chem's statevector_ops delegates to."""
+    from tyxonq.libs.quantum_library.kernels.statevector import apply_kqubit_unitary
     
-    # Test that chem module function works correctly
+    # 冗余的 chem 包装已移除，直接验证 libs 统一原语。
     n_qubits = 3
     state = np.zeros(2**n_qubits, dtype=np.complex128)
     state[0] = 1.0  # |000⟩
     
     # Apply Hadamard on qubit 0
     h_matrix = np.array([[1, 1], [1, -1]], dtype=np.complex128) / np.sqrt(2)
-    state_out = _apply_kqubit_unitary(state, h_matrix, [0], n_qubits)
+    state_out = apply_kqubit_unitary(state, h_matrix, [0], n_qubits)
     
     # In LSB-first ordering (axis 0 = qubit 0):
     # H on qubit 0: |000⟩ → (|000⟩ + |100⟩)/√2

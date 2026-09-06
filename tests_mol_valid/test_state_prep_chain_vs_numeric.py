@@ -6,8 +6,8 @@ from tyxonq.libs.circuits_library.qubit_state_preparation import (
     get_device_init_circuit,
     get_numeric_init_circuit,
 )
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.pyscf_civector import get_init_civector
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_ci_strings
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.pyscf_civector import get_init_civector
 
 
 @pytest.mark.parametrize("mode,n_qubits,n_elec_s,givens_swap", [
@@ -29,7 +29,7 @@ def test_device_vs_numeric_state_prep(mode, n_qubits, n_elec_s, givens_swap):
     ci_strings = get_ci_strings(n_qubits, n_elec_s, mode == "hcb")
     civ = get_init_civector(len(ci_strings))
     psi_pyscf = get_numeric_init_circuit(
-        n_qubits, n_elec_s, mode, civector=civ, givens_swap=givens_swap
+        n_qubits, n_elec_s, mode, civector=civ, ci_strings=ci_strings, givens_swap=givens_swap
     )
 
     # up to global phase equality — align device to numeric, then compare with pyscf baseline

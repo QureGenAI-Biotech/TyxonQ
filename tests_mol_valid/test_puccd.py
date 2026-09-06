@@ -4,7 +4,7 @@ import pytest
 from tyxonq.applications.chem import PUCCD, UCC
 from tyxonq.applications.chem.molecule import h4, h5p
 from pyscf import fci
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import random_integral
+from tyxonq.applications.chem.hamiltonian_builders import random_integral
 from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
 
 import tyxonq as tq

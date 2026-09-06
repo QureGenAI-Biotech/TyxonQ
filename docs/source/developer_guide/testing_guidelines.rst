@@ -184,7 +184,7 @@ Testing quantum chemistry algorithms:
         def test_uccsd_algorithm(self):
             """Test UCCSD algorithm"""
             try:
-                from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+                from tyxonq.applications.chem import UCCSD
                 from tyxonq.applications.chem import molecule
                 
                 # Create UCCSD instance
@@ -202,7 +202,7 @@ Testing quantum chemistry algorithms:
         def test_dual_path_execution(self):
             """Test dual-path execution model"""
             try:
-                from tyxonq.applications.chem.algorithms.uccsd import UCCSD
+                from tyxonq.applications.chem import UCCSD
                 from tyxonq.applications.chem import molecule
                 
                 uccsd = UCCSD(molecule.h2)

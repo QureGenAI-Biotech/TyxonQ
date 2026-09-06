@@ -4,9 +4,9 @@ from renormalizer import Op
 
 from tyxonq import set_backend
 import tyxonq.applications.chem  # preload package path
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library import sbm
+from tyxonq.applications.chem.dynamics.models import sbm
 from tyxonq.libs.hamiltonian_encoding.operator_encoding import qubit_encode_op, qubit_encode_basis
-from tyxonq.applications.chem.runtimes.dynamics_numeric import DynamicsNumericRuntime as TimeEvolution
+from tyxonq.applications.chem.dynamics.evolution import DynamicsNumericRuntime as TimeEvolution
 
 
 @pytest.mark.parametrize("algorithm", ["vanilla", "include_phase", "p-VQD", "trotter"])

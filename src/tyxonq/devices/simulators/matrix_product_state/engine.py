@@ -16,9 +16,12 @@ from __future__ import annotations
 from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend, ArrayBackend
+# 单一真相源：门矩阵与权威 op 词汇表 resolve_unitary 同源于 kernels.gates
+# （与 statevector/density_matrix 引擎共用同一门表）
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
+    resolve_unitary,
 )
 from ....libs.quantum_library.kernels.matrix_product_state import (
     init_product_state,
@@ -68,76 +71,81 @@ class MatrixProductStateEngine:
     def _gate_cx(self):
         return gate_cx_4x4()
 
-    def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> Dict[str, Any]:
-        shots = int(shots or 0)
+    def _evolve(
+        self,
+        circuit: "Circuit",
+        *,
+        collect_measures: bool = False,
+        noise: Any = None,
+        z_atten: list[float] | None = None,
+    ):
+        """唯一 op 分发循环：把 circuit 演化到 MPS 末态（单一真相源）。
+
+        run() / state() / expectation_pauli() 全部经此，杜绝多套分发彼此分叉
+        （y/z/t/tdg/cy/iswap/swap/rxx/ryy/rzz 曾在 run()/state() 两处都被静默丢弃）。
+        幺正门经权威门表 gates.resolve_unitary 解析为 (arity, qubits, matrix)，
+        用 MPS apply_1q/apply_2q 原地施加；measure_z/barrier 为控制 op；MPS 不支持的
+        特殊 op（unitary/kraus/project_z/reset/pulse/pulse_inline）与任何未知 op 一律
+        loudly raise，绝不静默跳过。
+
+        返回 (state, measures)：state 为 MPSState（不重构态矢，保持 O(nχ) 内存）；
+        measures 仅在 collect_measures=True 时收集 measure_z 比特。
+        """
         n = int(getattr(circuit, "num_qubits", 0))
         state = self._init_state(n)
-        # unified noise interface (explicit switch)
-        use_noise = bool(kwargs.get("use_noise", False))
-        noise = kwargs.get("noise") if use_noise else None
-        z_atten = [1.0] * n if use_noise else None
+        use_noise = z_atten is not None
         measures: list[int] = []
         for op in circuit.ops:
             if not isinstance(op, (list, tuple)) or not op:
                 continue
             name = op[0]
-            if name == "h":
-                q = int(op[1])
-                state = self._apply_1q(state, gate_h(), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "rz":
-                q = int(op[1]); theta = float(op[2])
-                state = self._apply_1q(state, gate_rz(theta), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "rx":
-                q = int(op[1]); theta = float(op[2])
-                state = self._apply_1q(state, gate_rx(theta), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "ry":
-                q = int(op[1]); theta = float(op[2])
-                state = self._apply_1q(state, gate_ry(theta), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "cx":
-                q1, q2 = int(op[1]), int(op[2])
-                state = self._apply_2q(state, gate_cx_4x4(), q1, q2, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q1, q2])
-            elif name == "cry":
-                q1, q2 = int(op[1]), int(op[2])
-                theta = float(op[3])
-                state = self._apply_2q(state, gate_cry_4x4(theta), q1, q2, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q1, q2])
-            elif name == "cz":
-                q1, q2 = int(op[1]), int(op[2])
-                state = self._apply_2q(state, gate_cz_4x4(), q1, q2, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q1, q2])
-            elif name == "x":
-                q = int(op[1])
-                state = self._apply_1q(state, gate_x(), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "s":
-                q = int(op[1])
-                state = self._apply_1q(state, gate_s(), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
-            elif name == "sdg":
-                q = int(op[1])
-                state = self._apply_1q(state, gate_sd(), q, n)
-                if use_noise and z_atten is not None:
-                    self._attenuate(noise, z_atten, [q])
+            res = resolve_unitary(name, op, self.backend)
+            if res is not None:
+                kind, qubits, mat = res
+                if kind == "1q":
+                    q = int(qubits[0])
+                    state = self._apply_1q(state, mat, q, n)
+                    if use_noise:
+                        self._attenuate(noise, z_atten, [q])
+                else:
+                    q0, q1 = int(qubits[0]), int(qubits[1])
+                    state = self._apply_2q(state, mat, q0, q1, n)
+                    if use_noise:
+                        self._attenuate(noise, z_atten, [q0, q1])
             elif name == "measure_z":
-                measures.append(int(op[1]))
+                if collect_measures:
+                    measures.append(int(op[1]))
             elif name == "barrier":
-                # no-op
+                # Barrier 非量子门（编译/调度指令），对量子态无物理作用
                 continue
-        # Barrier 不是量子门（非幺正、无矩阵表示），它是编译/调度指令，用来限制优化重排或做分段同步，对量子态本身不产生物理作用。
+            elif name in ("unitary", "kraus", "project_z", "reset", "pulse", "pulse_inline"):
+                # MPS 表示不支持这些特殊 op（无通用 k 比特幺正 / Kraus / 投影 / 脉冲路径）
+                raise NotImplementedError(
+                    f"MatrixProductStateEngine 不支持 op '{name}'：MPS 引擎仅提供 1q/2q "
+                    f"幺正门与 measure_z/barrier；请改用 statevector 引擎"
+                    f"（Kraus 噪声可用 density_matrix 引擎）。"
+                )
+            else:
+                # 单一真相源：未知 op 必须 loudly raise，绝不静默跳过
+                raise ValueError(
+                    f"MatrixProductStateEngine: unsupported op '{name}'. Known ops are "
+                    f"defined in libs.quantum_library.kernels.gates "
+                    f"(unitary/control/special); refusing to silently skip."
+                )
+        return state, measures
+
+    def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> Dict[str, Any]:
+        shots = int(shots or 0)
+        n = int(getattr(circuit, "num_qubits", 0))
+        # unified noise interface (explicit switch)
+        use_noise = bool(kwargs.get("use_noise", False))
+        noise = kwargs.get("noise") if use_noise else None
+        z_atten = [1.0] * n if use_noise else None
+        # 单一真相源：唯一 op 分发在 _evolve（run()/state()/expectation_pauli() 共用），
+        # 覆盖权威门表全部幺正门 + measure_z/barrier；MPS 不支持的特殊 op 与未知 op loudly raise。
+        state, measures = self._evolve(
+            circuit, collect_measures=True, noise=noise, z_atten=z_atten
+        )
         # If shots requested and there are measurements, return sampled counts via reconstructed probabilities
         if shots > 0 and len(measures) > 0:
             nb = self.backend
@@ -197,10 +205,32 @@ class MatrixProductStateEngine:
             if use_noise and z_atten is not None:
                 val *= z_atten[q]
             expectations[f"Z{q}"] = val
-        return {"expectations": expectations, "metadata": {"shots": shots, "backend": getattr(self.backend, 'name', 'unknown')}}
+        # shots=0 解析档：顺带返回精确 probabilities / mps / statevector，供 driver 单一源
+        # 消费（state() 则直接取 "mps"，不重构态矢，保持 O(nχ) 内存）。
+        p_t = nb.square(nb.abs(psi_b)) if hasattr(nb, "square") else nb.abs(psi_b) ** 2
+        probs_full = np.asarray(nb.to_numpy(p_t), dtype=float)
+        return {
+            "expectations": expectations,
+            "probabilities": probs_full,
+            "mps": state,
+            "statevector": psi_b,
+            "metadata": {"shots": shots, "backend": getattr(self.backend, 'name', 'unknown')},
+        }
 
     def expval(self, circuit: "Circuit", obs: Any, **kwargs: Any) -> float:
-        return 0.0
+        # 单一真相源：复用 state()（经 _evolve 的唯一分发）求 MPS，再重构态矢算 <psi|H|psi>。
+        # 此前是 `return 0.0` 桩——driver.expval()/device_base 走 MPS 时会静默返回错误期望值。
+        try:
+            from openfermion.linalg import get_sparse_operator  # type: ignore
+        except Exception:
+            raise ImportError("expval requires openfermion installed")
+        n = int(getattr(circuit, "num_qubits", 0))
+        psi = np.asarray(
+            mps_to_statevector(self.state(circuit, **kwargs)), dtype=np.complex128
+        ).reshape(-1)
+        H = get_sparse_operator(obs, n_qubits=n)
+        e = np.vdot(psi, H.dot(psi))
+        return float(np.real(e))
 
     def state(self, circuit: "Circuit", **kwargs: Any) -> MPSState:
         """Execute circuit and return MPS representation directly.
@@ -215,36 +245,9 @@ class MatrixProductStateEngine:
         Returns:
             MPSState object with list of site tensors
         """
-        n = int(getattr(circuit, "num_qubits", 0))
-        state = self._init_state(n)
-        
-        for op in circuit.ops:
-            if not isinstance(op, (list, tuple)) or not op:
-                continue
-            name = op[0]
-            
-            if name == "h":
-                state = self._apply_1q(state, gate_h(), int(op[1]), n)
-            elif name == "rz":
-                state = self._apply_1q(state, gate_rz(float(op[2])), int(op[1]), n)
-            elif name == "rx":
-                state = self._apply_1q(state, gate_rx(float(op[2])), int(op[1]), n)
-            elif name == "ry":
-                state = self._apply_1q(state, gate_ry(float(op[2])), int(op[1]), n)
-            elif name == "cx":
-                state = self._apply_2q(state, gate_cx_4x4(), int(op[1]), int(op[2]), n)
-            elif name == "cry":
-                state = self._apply_2q(state, gate_cry_4x4(float(op[3])), int(op[1]), int(op[2]), n)
-            elif name == "cz":
-                state = self._apply_2q(state, gate_cz_4x4(), int(op[1]), int(op[2]), n)
-            elif name == "x":
-                state = self._apply_1q(state, gate_x(), int(op[1]), n)
-            elif name == "s":
-                state = self._apply_1q(state, gate_s(), int(op[1]), n)
-            elif name == "sdg":
-                state = self._apply_1q(state, gate_sd(), int(op[1]), n)
-                
-        return state
+        # 单一真相源：委托 _evolve 的唯一 op 分发循环，直接返回 MPS 表示（不重构态矢，
+        # 保持 O(nχ) 内存）。避免 run()/state() 各维护一套分发而分叉。
+        return self._evolve(circuit)[0]
 
     def expectation_pauli(self, circuit: "Circuit", pauli_ops: list, **kwargs: Any) -> Any:
         """Compute Pauli expectation value directly on MPS (O(nχ³)).

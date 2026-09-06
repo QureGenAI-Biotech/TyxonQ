@@ -3,7 +3,7 @@ import math
 
 def test_ucc_device_runtime_smoke():
     from openfermion import QubitOperator
-    from tyxonq.applications.chem.runtimes.ucc_device_runtime import UCCDeviceRuntime
+    from tyxonq.applications.chem.algorithms.vqe.runtimes.ucc_device_runtime import UCCDeviceRuntime
 
     # 2-qubit H = Z0 + Z1
     H = QubitOperator("Z0") + QubitOperator("Z1")

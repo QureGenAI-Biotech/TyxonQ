@@ -4,14 +4,14 @@ import pytest
 from scipy.sparse import linalg
 from pyscf import fci
 from openfermion.linalg import eigenspectrum
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import mpo_to_quoperator
+from tyxonq.applications.chem.hamiltonian_builders import mpo_to_quoperator
 
 
 from tyxonq.applications.chem import UCCSD
 from tyxonq.applications.chem.molecule import h4, h6, _random
-from tyxonq.applications.chem.chem_libs.hamiltonians_chem_library.hamiltonian_builders import get_h_from_hf
-from tyxonq.applications.chem.chem_libs.quantum_chem_library.ci_state_mapping import get_ci_strings
-from tyxonq.applications.chem.algorithms.hea import binary, parity
+from tyxonq.applications.chem.hamiltonian_builders import get_h_from_hf
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_ci_strings
+from tyxonq.applications.chem.algorithms.vqe.hea import binary, parity
 import tyxonq as tq 
 from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
 

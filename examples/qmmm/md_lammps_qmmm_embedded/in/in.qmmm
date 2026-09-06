@@ -1,0 +1,33 @@
+# E8-A — LAMMPS 侧（MM 力端）：水二聚体的 MM 部分
+#
+# 区域划分与防双计数约定（与 TyxonQ driver 的 -o 参数一一对应）：
+#   type 1 = O_qm（电荷 0，仅保留与 MM 的 LJ）
+#   type 2 = H_qm（电荷 0，无 LJ）
+#   type 3 = O_mm（TIP3P q=-0.834，有 LJ）
+#   type 4 = H_mm（TIP3P q=+0.417，无 LJ）
+# 总能量分工（严格无重叠）：
+#   E = E_QM(QM 水，极化于 MM 点电荷)          ← TyxonQ 返回（含嵌入能）
+#     + E_MM(MM-MM 全部：库仑+vdW；QM-MM vdW) ← 本脚本返回
+# 因此这里：
+#   - QM 原子电荷已置 0（见 water_dimer.lmp）→ 无 QM-MM 库仑，归嵌入算；
+#   - pair_coeff * * 先全置 0，再只打开 O-O 通道 → 无 QM-QM LJ，QM-MM vdW 保留；
+#   - MM-MM 库仑照常计算（含单个 MM 水内部的三对相互作用，截断 10 Å 无截断效应）。
+
+units           real
+atom_style      charge
+boundary        f f f
+
+read_data       water_dimer.lmp
+
+pair_style      lj/cut/coul/cut 10.0 10.0
+pair_coeff      * * 0.0 1.0 10.0
+pair_coeff      1 3 0.1521 3.1507 10.0
+pair_coeff      3 3 0.1521 3.1507 10.0
+
+timestep        0.5
+thermo_style    custom step pe ke etotal
+thermo          1
+
+# 端口占位符由 run.py 替换；手动运行时自行填入与 i-PI input.xml 一致的端口。
+fix             ipi all ipi 127.0.0.1 __PORT_LMP__
+run             8

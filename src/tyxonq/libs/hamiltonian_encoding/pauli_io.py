@@ -6,7 +6,7 @@ Purpose: tooling around OpenFermion/Qiskit qubit operator I/O, sparse representa
 index reversals, and minor chemistry-adjacent helpers (rdm transform, canonical coeff sign).
 
 This module is intentionally domain-agnostic enough to remain in libs; chemistry-specific
-numeric baselines are placed under applications/chem/quantum_chem_library.
+numeric baselines are placed under applications/chem/algorithms/vqe/wavefunction.
 
 TODO:
 - Expose stable dataclasses for operator transport (reduce ad-hoc tuples).

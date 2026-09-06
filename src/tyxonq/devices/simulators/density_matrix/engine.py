@@ -14,9 +14,12 @@ from typing import Any, Dict, TYPE_CHECKING
 import numpy as np
 from ....numerics.api import get_backend
 from ..noise import channels as noise_channels
+# 单一真相源：门矩阵与权威 op 词汇表 resolve_unitary 同源于 kernels.gates
+# （与 statevector/mps 引擎共用同一门表）
 from ....libs.quantum_library.kernels.gates import (
     gate_h, gate_rz, gate_rx, gate_cx_4x4,
     gate_x, gate_ry, gate_cz_4x4, gate_s, gate_sd, gate_cry_4x4,
+    resolve_unitary,
 )
 from ....libs.quantum_library.kernels.density_matrix import (
     init_density,
@@ -48,36 +51,18 @@ class DensityMatrixEngine:
             if not isinstance(op, (list, tuple)) or not op:
                 continue
             name = op[0]
-            if name == "h":
-                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_h(), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
-            elif name == "rz":
-                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rz(theta), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
-            elif name == "rx":
-                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rx(theta), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
-            elif name == "ry":
-                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_ry(theta), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
-            elif name == "cx":
-                c = int(op[1]); t = int(op[2]); rho = apply_2q_density(self.backend, rho, gate_cx_4x4(), c, t, n)
-                rho = self._apply_noise_if_any(rho, noise, [c, t], n)
-            elif name == "cz":
-                c = int(op[1]); t = int(op[2]); rho = apply_2q_density(self.backend, rho, gate_cz_4x4(), c, t, n)
-                rho = self._apply_noise_if_any(rho, noise, [c, t], n)
-            elif name == "cry":
-                c = int(op[1]); t = int(op[2]); theta = float(op[3]); rho = apply_2q_density(self.backend, rho, gate_cry_4x4(theta), c, t, n)
-                rho = self._apply_noise_if_any(rho, noise, [c, t], n)
-            elif name == "x":
-                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_x(), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
-            elif name == "s":
-                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_s(), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
-            elif name == "sdg":
-                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_sd(), q, n)
-                rho = self._apply_noise_if_any(rho, noise, [q], n)
+            # 单一真相源分发：全部幺正门（1q/2q）经权威门表 gates.resolve_unitary
+            # 解析为 (arity, qubits, matrix)，ρ → G ρ G†。此前这里是手写门分支，缺
+            # y/z/t/tdg/cy/iswap/swap/rxx/ryy/rzz/unitary，且对未知 op 静默跳过。
+            res = resolve_unitary(name, op, self.backend)
+            if res is not None:
+                kind, qubits, mat = res
+                if kind == "1q":
+                    q = int(qubits[0]); rho = apply_1q_density(self.backend, rho, mat, q, n)
+                    rho = self._apply_noise_if_any(rho, noise, [q], n)
+                else:
+                    q0, q1 = int(qubits[0]), int(qubits[1]); rho = apply_2q_density(self.backend, rho, mat, q0, q1, n)
+                    rho = self._apply_noise_if_any(rho, noise, [q0, q1], n)
             elif name == "measure_z":
                 measures.append(int(op[1]))
             elif name == "barrier":
@@ -88,6 +73,18 @@ class DensityMatrixEngine:
                 rho = self._project_z(rho, q, keep, n)
             elif name == "reset":
                 q = int(op[1]); rho = self._project_z(rho, q, 0, n)
+            elif name == "unitary":
+                # 自定义 k 比特幺正：ρ → U ρ U†（1q 用 apply_1q_density，2q 用 apply_2q_density）
+                if len(op) == 3:  # ("unitary", qubit, matrix_key)
+                    q = int(op[1]); mat_key = str(op[2])
+                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
+                    if matrix is not None:
+                        rho = apply_1q_density(self.backend, rho, matrix, q, n)
+                elif len(op) == 4:  # ("unitary", q0, q1, matrix_key)
+                    q0, q1 = int(op[1]), int(op[2]); mat_key = str(op[3])
+                    matrix = getattr(circuit, "_unitary_cache", {}).get(mat_key)
+                    if matrix is not None:
+                        rho = apply_2q_density(self.backend, rho, matrix, q0, q1, n)
             elif name == "kraus":
                 # Handle Kraus channel: ("kraus", qubit, kraus_key) or ("kraus", qubit, kraus_key, status)
                 # Note: status is ignored in density matrix simulation (exact evolution)
@@ -97,6 +94,19 @@ class DensityMatrixEngine:
                 if kraus_ops is not None:
                     rho = apply_kraus_density(rho, kraus_ops, q, n, backend=self.backend)
                     # Note: Kraus channels inherently model noise, no additional noise application needed
+            elif name in ("pulse", "pulse_inline"):
+                # 密度矩阵表示不提供脉冲级（含 3-level/哈密顿量）演化路径
+                raise NotImplementedError(
+                    f"DensityMatrixEngine 不支持 op '{name}'：密度矩阵引擎不做脉冲级演化，"
+                    f"请改用 statevector 引擎，或先把脉冲编译为幺正门再模拟。"
+                )
+            else:
+                # 单一真相源：未知 op 必须 loudly raise，绝不静默跳过
+                raise ValueError(
+                    f"DensityMatrixEngine: unsupported op '{name}'. Known ops are "
+                    f"defined in libs.quantum_library.kernels.gates "
+                    f"(unitary/control/special); refusing to silently skip."
+                )
 
         # If shots requested and there are measurements, return sampled counts from diagonal of rho
         if shots > 0 and len(measures) > 0:
@@ -145,7 +155,16 @@ class DensityMatrixEngine:
         for q in measures:
             e = exp_z_density(self.backend, rho, q, n)
             expectations[f"Z{q}"] = float(e)
-        return {"expectations": expectations, "metadata": {"shots": shots, "backend": self.backend.name}}
+        # shots=0 解析档：顺带返回精确 probabilities（rho 对角）/ density_matrix，
+        # 供 driver 单一源消费（消除对 eng.state() 的第二次独立分发调用）。
+        nb = self.backend
+        probs_np = np.asarray(nb.real(nb.diag(rho)), dtype=float)
+        return {
+            "expectations": expectations,
+            "probabilities": probs_np,
+            "density_matrix": rho,
+            "metadata": {"shots": shots, "backend": self.backend.name},
+        }
 
     def expval(self, circuit: "Circuit", obs: Any, **kwargs: Any) -> float:
         try:
@@ -153,25 +172,24 @@ class DensityMatrixEngine:
         except Exception:
             raise ImportError("expval requires openfermion installed")
         n = int(getattr(circuit, "num_qubits", 0))
-        # Build rho via run(shots=0)
-        _ = self.run(circuit, shots=0, **kwargs)
-        # Recompute rho explicitly for expectation (simple, consistent)
-        rho = init_density(n)
-        for op in circuit.ops:
-            if not isinstance(op, (list, tuple)) or not op:
-                continue
-            name = op[0]
-            if name == "h":
-                q = int(op[1]); rho = apply_1q_density(self.backend, rho, gate_h(), q, n)
-            elif name == "rz":
-                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rz(theta), q, n)
-            elif name == "rx":
-                q = int(op[1]); theta = float(op[2]); rho = apply_1q_density(self.backend, rho, gate_rx(theta), q, n)
-            elif name == "cx":
-                c = int(op[1]); t = int(op[2]); rho = apply_2q_density(self.backend, rho, gate_cx_4x4(), c, t, n)
+        # 单一真相源：复用 state() 的唯一 op 分发求 rho，消除第三套局部循环
+        # （此前 expval 自己重算且只覆盖 h/rz/rx/cx 四门，会静默算错含其他门的电路）
+        rho = np.asarray(self.state(circuit, **kwargs))
         H = get_sparse_operator(obs, n_qubits=n).toarray()
         e = np.trace(rho @ H)
         return float(np.real(e))
+
+    def state(self, circuit: "Circuit", **kwargs: Any) -> Any:
+        """返回密度矩阵 rho（2^n x 2^n）。
+
+        单一真相源：委托 run(shots=0) 的唯一 op 分发循环，避免 run()/expval()/state()
+        各维护一套分发而分叉（y/z/t/tdg/cy 等曾因此被静默丢弃）。
+        """
+        return self.run(circuit, shots=0, **kwargs)["density_matrix"]
+
+    def probabilities(self, circuit: "Circuit", **kwargs: Any) -> Any:
+        """返回计算基概率分布（rho 对角，实数、归一）。"""
+        return self.run(circuit, shots=0, **kwargs)["probabilities"]
 
     # helpers removed; using gates kernels
 

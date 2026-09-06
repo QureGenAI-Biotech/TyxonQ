@@ -1,0 +1,59 @@
+<simulation verbosity='medium'>
+  <!-- E7 — i-PI server 侧输入：同一个系统挂两个 forcefield，<forces> 加权求和。
+       tq     = TyxonQ driver（i-pi-driver-py -m custom，QM 力）
+       lammps = LAMMPS fix ipi client（MM 力）
+       占位符 __PORT_TQ__/__PORT_LMP__/__XYZ__ 由 run.py 运行时替换；
+       手动运行时自行填入实际端口与 water.xyz 绝对路径。 -->
+  <output prefix='qmmm'>
+    <properties filename='md' stride='1'>
+      [ step, time{femtosecond}, temperature{kelvin}, potential{kelvin}, kinetic_cv{kelvin} ]
+    </properties>
+    <trajectory filename='pos' stride='1' format='xyz' cell_units='angstrom'>
+      positions{angstrom}
+    </trajectory>
+  </output>
+  <total_steps> 8 </total_steps>
+  <prng> <seed> 42 </seed> </prng>
+
+  <ffsocket mode='inet' name='tq'>
+    <address>127.0.0.1</address>
+    <port> __PORT_TQ__ </port>
+    <timeout> 600 </timeout>
+  </ffsocket>
+
+  <ffsocket mode='inet' name='lammps'>
+    <address>127.0.0.1</address>
+    <port> __PORT_LMP__ </port>
+    <timeout> 600 </timeout>
+  </ffsocket>
+
+  <system>
+    <initialize nbeads='1'>
+      <file mode='xyz' units='angstrom'> __XYZ__ </file>
+      <velocities mode='thermal' units='kelvin'> 300 </velocities>
+    </initialize>
+    <forces>
+      <!-- 两个力分量直接相加（weight 可调，已取证 InputForceComponent.weight）。
+           生产固体 QM/MM 的典型配方（delta 学习、嵌入修正）就是通过这里的
+           权重与多个 client 组合实现的。 -->
+      <force forcefield='tq'/>
+      <force forcefield='lammps'/>
+    </forces>
+    <ensemble>
+      <temperature units='kelvin'> 300 </temperature>
+    </ensemble>
+    <motion mode='dynamics'>
+      <dynamics mode='nvt'>
+        <thermostat mode='langevin'>
+          <tau units='femtosecond'> 100 </tau>
+        </thermostat>
+        <timestep units='femtosecond'> 0.5 </timestep>
+      </dynamics>
+    </motion>
+    <!-- 分子演示体系：显式 20 Å 盒子（i-PI 会把它发给 LAMMPS 与 TyxonQ；
+         真实固体体系换成晶胞即可，TyxonQ 侧本期不支持周期应力，见风险表 R3）。 -->
+    <cell mode='manual' units='angstrom'>
+      [ 20.0, 0.0, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 20.0 ]
+    </cell>
+  </system>
+</simulation>

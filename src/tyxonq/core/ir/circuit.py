@@ -510,65 +510,23 @@ class Circuit:
             max_bond = self._device_opts.get("max_bond")
             eng = MatrixProductStateEngine(backend_name=backend, max_bond=max_bond)
             
-            # Run the circuit to get MPS state, then convert to statevector
-            result = eng.run(self, shots=0)
-            # For now, reconstruct statevector from MPS for compatibility
-            # TODO: Return native MPS representation in future
-            from ...libs.quantum_library.kernels.matrix_product_state import init_product_state
-            mps_state = init_product_state(self.num_qubits)
-            
-            # Re-execute circuit to build MPS state
-            for op in self.ops:
-                if not isinstance(op, (list, tuple)) or not op:
-                    continue
-                name = op[0]
-                if name in ("h", "rz", "rx", "ry", "x", "s", "sdg"):
-                    from ...libs.quantum_library.kernels.matrix_product_state import apply_1q as mps_apply_1q
-                    from ...libs.quantum_library.kernels.gates import (
-                        gate_h, gate_rz, gate_rx, gate_ry, gate_x, gate_s, gate_sd
-                    )
-                    q = int(op[1])
-                    if name == "h":
-                        mps_apply_1q(mps_state, gate_h(), q)
-                    elif name == "rz":
-                        mps_apply_1q(mps_state, gate_rz(float(op[2])), q)
-                    elif name == "rx":
-                        mps_apply_1q(mps_state, gate_rx(float(op[2])), q)
-                    elif name == "ry":
-                        mps_apply_1q(mps_state, gate_ry(float(op[2])), q)
-                    elif name == "x":
-                        mps_apply_1q(mps_state, gate_x(), q)
-                    elif name == "s":
-                        mps_apply_1q(mps_state, gate_s(), q)
-                    elif name == "sdg":
-                        mps_apply_1q(mps_state, gate_sd(), q)
-                elif name in ("cx", "cz", "cy", "cry"):
-                    from ...libs.quantum_library.kernels.matrix_product_state import apply_2q as mps_apply_2q
-                    from ...libs.quantum_library.kernels.gates import (
-                        gate_cx_4x4, gate_cz_4x4, gate_cry_4x4
-                    )
-                    q1, q2 = int(op[1]), int(op[2])
-                    if name == "cx":
-                        mps_apply_2q(mps_state, gate_cx_4x4(), q1, q2, max_bond=max_bond)
-                    elif name == "cz":
-                        mps_apply_2q(mps_state, gate_cz_4x4(), q1, q2, max_bond=max_bond)
-                    elif name == "cry":
-                        mps_apply_2q(mps_state, gate_cry_4x4(float(op[3])), q1, q2, max_bond=max_bond)
-            
+            # 单一真相源：eng.state() 走 MPS 引擎内唯一 _evolve 分发（覆盖权威门表
+            # 全部幺正门 + measure_z/barrier，不支持的 op loudly raise），返回 MPS
+            # 表示（O(nχ) 内存），再转态矢兼容旧语义（契约见本方法 docstring：mps
+            # 分支返回重构的 1D 态矢）。此前此处 eng.run(shots=0) 结果被丢弃，另起
+            # 一段内联重执行循环——仅覆盖 h/rz/rx/ry/x/s/sdg/cx/cz/cy/cry，静默丢弃
+            # y/z/t/tdg/iswap/swap/rxx/ryy/rzz，是引擎之外的又一套分发分叉。
+            mps_state = eng.state(self)
             return mps_to_statevector(mps_state)
         
         elif engine == "density_matrix":
             from ...devices.simulators.density_matrix.engine import DensityMatrixEngine
             eng = DensityMatrixEngine(backend_name=backend)
-            # Density matrix engines don't have a direct .state() method
-            # We need to reconstruct the density matrix from run() results
-            result = eng.run(self, shots=0)
-            # For density matrix, return the reconstructed density matrix
-            # This requires adding a .density_matrix() method to the engine
-            # For now, fall back to statevector
-            from ...devices.simulators.statevector.engine import StatevectorEngine
-            fallback_eng = StatevectorEngine(backend_name=backend)
-            state_result = fallback_eng.state(self)
+            # 单一真相源：调用 dm 引擎新增的 state()（走引擎内唯一分发，ρ→GρG†），
+            # 返回密度矩阵 ρ（契约见本方法 docstring：density_matrix 分支返回 2D 矩阵）。
+            # 此前 dm 无 state()，此处静默回退 StatevectorEngine.state() 返回纯态矢——
+            # 与请求的 density_matrix 语义不符，丢失全部退相干/混合信息。
+            state_result = eng.state(self)
             
             # Handle output format: default is backend tensor
             if form == "numpy":
@@ -1882,12 +1840,16 @@ class Circuit:
             apply_2q_statevector,
         )
         
-        # Get statevector (density matrix engine falls back to statevector for state())
-        psi = self.state(engine="density_matrix")
-        
-        # Apply the same statevector method
-        # TODO: Implement true density matrix expectation Tr(ρO)
-        psi_transformed = nb.copy(psi)
+        # 单一真相源：dm 引擎 state() 走引擎内唯一 op 分发，返回真实密度矩阵 ρ（2^n x 2^n）。
+        # 此前 state() 对 density_matrix 静默回退 statevector 返回纯态矢 ψ，本方法遂退化成
+        # ⟨ψ|O|ψ⟩（原 TODO 自认未实现 Tr(ρO)），丢失全部混合态/退相干信息。现按定义实现
+        # Tr(ρO) = Tr(Oρ)：把 O 的每个局部因子依次左乘到 ρ（逐列复用已测的 statevector
+        # 内核，backend=None 恒走 numpy，约定一致：qubit0=最高有效位），再取迹。复杂度
+        # O(m·4^n) 与密度矩阵表示同阶，无需构造 2^n×2^n 的 O 再做 O(8^n) 矩乘。
+        import numpy as np
+        rho = np.asarray(nb.to_numpy(self.state(engine="density_matrix")), dtype=np.complex128)
+        dim = 2 ** n
+        orho = rho.copy()  # 逐步左乘演化为 Oρ
         
         for gate_spec in pauli_ops:
             if not isinstance(gate_spec, (tuple, list)) or len(gate_spec) != 2:
@@ -1895,28 +1857,31 @@ class Circuit:
             
             gate, qubits = gate_spec
             
-            # Extract gate matrix
+            # Extract gate matrix（观测量为常量算符 → numpy，无需 autograd）
             if hasattr(gate, 'tensor'):
-                gate_matrix = nb.asarray(gate.tensor)
+                gate_matrix = np.asarray(nb.to_numpy(gate.tensor), dtype=np.complex128)
             elif hasattr(gate, '__call__'):
-                gate_matrix = nb.asarray(gate())
+                gate_matrix = np.asarray(nb.to_numpy(gate()), dtype=np.complex128)
             else:
-                gate_matrix = nb.asarray(gate)
+                gate_matrix = np.asarray(nb.to_numpy(gate), dtype=np.complex128)
             
             if not isinstance(qubits, (list, tuple)):
                 qubits = [qubits]
             
+            # 把该局部因子左乘到 ρ 的每一列：(G ρ)[:, j] = G · ρ[:, j]
             if len(qubits) == 1:
                 q = int(qubits[0])
-                psi_transformed = apply_1q_statevector(nb, psi_transformed, gate_matrix, q, n)
+                for j in range(dim):
+                    orho[:, j] = apply_1q_statevector(None, orho[:, j].copy(), gate_matrix, q, n)
             elif len(qubits) == 2:
                 q1, q2 = int(qubits[0]), int(qubits[1])
-                psi_transformed = apply_2q_statevector(nb, psi_transformed, gate_matrix, q1, q2, n)
+                for j in range(dim):
+                    orho[:, j] = apply_2q_statevector(None, orho[:, j].copy(), gate_matrix, q1, q2, n)
             else:
                 raise NotImplementedError(f"Pauli products on {len(qubits)} qubits not yet supported")
         
-        result = nb.tensordot(nb.conj(psi_transformed), psi, axes=1)
-        return nb.real(result)
+        # ρ、O 均 Hermitian ⇒ Tr(ρO) 为实数
+        return float(np.real(np.trace(orho)))
     
     # --- draw() typing overloads to improve IDE/linter navigation ---
     @overload

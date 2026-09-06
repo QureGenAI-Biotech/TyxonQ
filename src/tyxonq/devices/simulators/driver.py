@@ -100,6 +100,7 @@ def run(
 
     def _one(c: Any) -> Any:
         error = ''
+        out: Dict[str, Any] = {}
         try:
             out = eng.run(c, shots=shots, **opts)
         except Exception as e:
@@ -113,17 +114,17 @@ def run(
         prob = None
         statevec = None
         if int(shots) == 0:
-            try:
-                import numpy as _np
-                # Compute probabilities from exact state without changing engine API
-                psi = eng.state(c)
-                prob = _np.abs(_np.asarray(psi)) ** 2
-                meta.setdefault("num_qubits", int(getattr(c, "num_qubits", 0)))
-                statevec = _np.asarray(psi)
-            except Exception as e:
-                error = str(e)
-                prob = None
-                statevec = None
+            # 单一真相源：概率/态矢直接取自 run() 已算出的同一态输出（各引擎 run(shots=0)
+            # 均顺带返回 probabilities，适用时返回 statevector），不再二次独立调用 eng.state()。
+            # 此前 driver 既 run() 又 state()＝两套分发；且 density_matrix 无 state() 时会静默失败。
+            import numpy as _np
+            p = out.get("probabilities")
+            if p is not None:
+                prob = _np.asarray(p)
+            sv = out.get("statevector")
+            if sv is not None:
+                statevec = _np.asarray(sv)
+            meta.setdefault("num_qubits", int(getattr(c, "num_qubits", 0)))
         result = {
             'result': counts,
             'expectations': expectations,

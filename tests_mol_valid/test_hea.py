@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from tyxonq.applications.chem import UCCSD
-from tyxonq.applications.chem.algorithms.hea import HEA
+from tyxonq.applications.chem.algorithms.vqe.hea import HEA
 from tyxonq.libs.hamiltonian_encoding.fermion_to_qubit import parity
 from tyxonq.applications.chem.molecule import h2, h_chain
 from qiskit.circuit.library import real_amplitudes
@@ -195,7 +195,7 @@ def test_open_shell():
         es.append(hea.kernel(shots=0))
     e1 = min(es)
 
-    from tyxonq.applications.chem.algorithms.uccsd import ROUCCSD
+    from tyxonq.applications.chem.algorithms.vqe.uccsd import ROUCCSD
     ucc = ROUCCSD(m,run_fci=True)
     e2 = ucc.kernel(shots=0)
 

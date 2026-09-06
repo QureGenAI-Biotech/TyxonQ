@@ -122,7 +122,10 @@ def state_function(params):
     This function is used by QNG to compute Fisher information.
     Uses Circuit.state() method for convenient statevector access.
     """
-    c = hardware_efficient_ansatz(N_QUBITS, N_LAYERS, params)
+    # 从 params 形状 [nlayers, n, 2] 推断 ansatz 维度，避免调用方（如测试）
+    # 使用与模块默认值 N_QUBITS/N_LAYERS 不同的系统规模时 reshape 失败。
+    nlayers, n = int(params.shape[0]), int(params.shape[1])
+    c = hardware_efficient_ansatz(n, nlayers, params)
     return c.state()
 
 
