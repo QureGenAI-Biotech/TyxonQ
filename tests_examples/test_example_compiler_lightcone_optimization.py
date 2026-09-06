@@ -107,7 +107,7 @@ def test_benchmark_efficiency_runs():
             K = tq.set_backend("pytorch")
             K.set_dtype("complex64")
             
-            vg = K.jit(K.value_and_grad(module.loss_function), static_argnums=(1, 2, 3))
+            vg = K.jit(K.value_and_grad(module.loss_function))
             params = K.ones([2 * 4 * 2])
             _ = vg(params, 4, 2, True)
         

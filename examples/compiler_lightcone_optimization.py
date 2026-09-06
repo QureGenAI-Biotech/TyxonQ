@@ -37,7 +37,7 @@ def brickwall_ansatz(c, params, gatename, nlayers):
         Updated circuit
     """
     K = tq.get_backend()
-    n = c._nqubits
+    n = c.num_qubits
     params = K.reshape(params, [nlayers, n, 2])
     
     for j in range(nlayers):
@@ -92,7 +92,7 @@ def benchmark_efficiency():
     K.set_dtype("complex64")
     
     # JIT compile for fair comparison
-    vg = K.jit(K.value_and_grad(loss_function), static_argnums=(1, 2, 3))
+    vg = K.jit(K.value_and_grad(loss_function))
     
     results = []
     
@@ -165,7 +165,7 @@ def correctness_validation(n=7, nlayers=3):
     K = tq.set_backend("pytorch")
     K.set_dtype("complex64")
     
-    vg = K.jit(K.value_and_grad(loss_function), static_argnums=(1, 2, 3))
+    vg = K.jit(K.value_and_grad(loss_function))
     
     print(f"\nTesting with {n} qubits, {nlayers} layers, random parameters...")
     
@@ -222,7 +222,7 @@ def demonstrate_partial_measurement_benefit():
         
         return K.real(exp0 + exp1)
     
-    vg_partial = K.jit(K.value_and_grad(loss_partial), static_argnums=(1, 2, 3))
+    vg_partial = K.jit(K.value_and_grad(loss_partial))
     
     print("\nWhen measuring only 2 qubits, lightcone dramatically reduces work:\n")
     print(f"{'#Qubits':<10} {'w/ LC (ms)':<15} {'w/o LC (ms)':<15} {'Speedup':<10}")
