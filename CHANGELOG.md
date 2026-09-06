@@ -4,11 +4,6 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog (https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-- **LQCloud Provider**: Added optional `lqcloud==0.4.2` gate-circuit submission, dynamic device discovery, polling, cancellation, result normalization, example, and Chinese usage guide.
-- **Guodun Provider**: Added optional `cqlib==1.3.11` integration for official QCIS gate circuits, native gate pulse templates, waveform queries, task submission, result polling, cancellation, and device discovery.
 
 ### [1.3.0] - 2026-09-01
 ### Added
@@ -46,6 +41,8 @@ and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.
   - PySCF integration: `SQDFCISolver`, `as_pyscf_solver`, `lucj_sampler`; closed-shell workflow correction
   - Example `examples/h2o_sqd.py`, doc `LUCJ_SQD.md`
 - **RiverONE QML adapter** (`tyxonq.applications.qml.riverone`): example `examples/riverone_qml.py`, doc `RIVERONE.md`
+- **LQCloud Provider**: Added optional `lqcloud==0.4.2` gate-circuit submission, dynamic device discovery, polling, cancellation, result normalization, example, and Chinese usage guide.
+- **Guodun Provider**: Added optional `cqlib==1.3.11` integration for official QCIS gate circuits, native gate pulse templates, waveform queries, task submission, result polling, cancellation, and device discovery.
 
 ### [1.1.0] - 2026-05-07
 ### Added

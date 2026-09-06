@@ -871,6 +871,9 @@ class Circuit:
                 provider=dev_provider,
                 device=dev_device,
                 source=lqcloud_circuit,
+                shots=dev_shots,
+                **dev_opts,
+            )
         # Guodun provider 固定使用本地 QCIS 编译链；不复用其他 provider 的旧产物。
         elif dev_provider == "guodun":
             physical_qubits = dev_opts.pop("physical_qubits", None)

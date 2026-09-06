@@ -238,6 +238,8 @@ def resolve_driver(provider: str, device: str):
         return drv
     if provider == "lqcloud":
         from .hardware.lqcloud import driver as drv
+
+        return drv
     if provider == "guodun":
         from .hardware.guodun import driver as drv
 
@@ -309,13 +311,11 @@ def run(
 
     prov = provider or hwcfg.get_default_provider()
     dev = device or hwcfg.get_default_device()
-    # 显式 token 优先；其他供应商不能误用 TyxonQ 平台自己的全局密钥。
     # 显式 token 优先；其他 provider 不能误用 TyxonQ 云的全局密钥。
     explicit_token = opts.pop("token", None)
     tok = explicit_token or hwcfg.get_token(
         provider=prov,
         device=dev,
-        env_fallback=prov == "tyxonq",
         env_fallback=(prov == "tyxonq"),
     )
 
@@ -460,10 +460,6 @@ def list_all_devices(*, provider: Optional[str] = None, token: Optional[str] = N
     prov = provider or hwcfg.get_default_provider()
     dev = hwcfg.get_default_device()
     tok = token or hwcfg.get_token(provider=prov, env_fallback=prov == "tyxonq")
-    tok = token or hwcfg.get_token(
-        provider=prov,
-        env_fallback=(prov == "tyxonq"),
-    )
 
     # Aggregate simulators and provider-specific hardware list
     sim_list = [
