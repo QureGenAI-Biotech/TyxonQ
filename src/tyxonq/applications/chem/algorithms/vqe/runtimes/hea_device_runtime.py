@@ -61,7 +61,7 @@ class HEADeviceRuntime:
         noise: dict | None = None,
         **device_kwargs,
     ) -> List[Dict]:
-        """Execute a batch of circuits using device_base.run() with proper Pauli postprocessing.
+        """统一链式 Circuit.run() 批量执行线路，并做 Pauli 后处理。
         
         Args:
             circuits: List of Circuit objects to execute
@@ -76,22 +76,23 @@ class HEADeviceRuntime:
         Returns:
             List of processed result dictionaries with extracted energies
         """
-        from tyxonq.devices import base as device_base
         from tyxonq.postprocessing import apply_postprocessing
-        
-        # Use device_base.run() for proper hardware support
-        tasks = device_base.run(
-            provider=provider,
-            device=device,
-            circuit=circuits,
-            shots=shots,
-            noise=noise,
-            **device_kwargs
-        )
-        
+
+        # 统一走链式 .run()：simulator 与真机都由 Circuit.run() 内部消化
+        # （真机自动按 provider 编译成 source 再提交；模拟器专属参数在设备层提交真机时被丢弃），
+        # 调用方无需按 provider 分叉，保持“统一链式 .run”这一核心特色。
+        circ_list = list(circuits) if isinstance(circuits, (list, tuple)) else [circuits]
+        # 真机（异步硬件）必须等待结果就绪再取计数，否则 run() 立即返回空 counts、能量算成 0；
+        # 模拟器/本地是同步的，保持不等待（避免多余轮询）。调用方可用 device_kwargs 显式覆盖。
+        run_kwargs = dict(device_kwargs)
+        run_kwargs.setdefault("wait_async_result", provider not in (None, "simulator", "local", "default"))
+        payloads: List[Dict] = []
+        for circ in circ_list:
+            out = circ.run(provider=provider, device=device, shots=shots, noise=noise, **run_kwargs)
+            payloads.extend(out if isinstance(out, (list, tuple)) else [out])
+
         results = []
-        for k, t in enumerate(tasks):
-            rr = t.get_result(wait=False)
+        for k, rr in enumerate(payloads):
             # Apply Pauli-based postprocessing with per-circuit Pauli items
             pp_opts = dict(postprocessing or {})
             if pauli_items_list and k < len(pauli_items_list):

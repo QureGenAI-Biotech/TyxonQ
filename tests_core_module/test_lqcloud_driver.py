@@ -225,6 +225,33 @@ def test_device_layer_prefers_explicit_token_and_ignores_global(monkeypatch):
     assert fake_driver.run.call_args.args[1] is None
 
 
+def test_device_layer_drops_simulator_only_opts_for_hardware(monkeypatch):
+    """真机提交前必须丢弃模拟器专属参数（noise/use_noise），但保留 physical_qubits 等真机参数。
+
+    这是“统一链式 .run”的关键保障：调用方无需按 provider 区分参数，
+    设备层在向真机 driver 提交时统一过滤掉只有模拟器才认识的键，
+    避免各家 driver 因不认识 noise/use_noise 而直接报错。
+    """
+    fake_task = SimpleNamespace(async_result=True)
+    fake_driver = SimpleNamespace(run=MagicMock(return_value=[fake_task]))
+    monkeypatch.setattr(base, "resolve_driver", lambda provider, device: fake_driver)
+
+    base.run(
+        provider="lqcloud",
+        device="QZ02",
+        source=object(),
+        shots=1,
+        token="explicit",
+        noise={"type": "depolarizing", "p": 0.1},
+        use_noise=True,
+        physical_qubits=[0, 1],
+    )
+    kwargs = fake_driver.run.call_args.kwargs
+    assert "noise" not in kwargs
+    assert "use_noise" not in kwargs
+    assert kwargs.get("physical_qubits") == [0, 1]
+
+
 def test_failed_status_stops_unified_polling(monkeypatch):
     handle = SimpleNamespace(async_result=True)
     fake_driver = SimpleNamespace(

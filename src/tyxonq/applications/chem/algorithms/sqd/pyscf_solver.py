@@ -290,24 +290,18 @@ def lucj_sampler(
         n_qubits = 2 * norb
 
         if runtime == "device":
-            # 设备档：补满 measure_z 后经 devices.base.run 提交，直接取回计数。
-            # 与真机同一提交入口（切 provider/device 即可上真机）；噪声经 use_noise/noise
-            # 透传给引擎（depolarizing 与 numeric 档同物理）。
-            from tyxonq.devices import base as device_base
-
+            # 设备档：补满 measure_z 后走统一链式 Circuit.run() 提交，直接取回计数。
+            # simulator 与真机同一入口（切 provider/device 即可上真机）：真机由 Circuit.run()
+            # 内部按 provider 编译成 source，模拟器专属的 use_noise/noise 在设备层提交真机时被丢弃。
             for q in range(n_qubits):
                 circuit.measure_z(q)
             run_opts: dict = {"use_noise": noise_p > 0.0}
             if noise_p > 0.0:
                 run_opts["noise"] = {"type": "depolarizing", "p": float(noise_p)}
-            tasks = device_base.run(
-                provider=provider,
-                device=device,
-                circuit=circuit,
-                shots=int(shots),
-                **run_opts,
-            )
-            payload = tasks[0].get_result(wait=False)
+            # 真机（异步硬件）必须等待结果就绪再取计数；模拟器/本地同步、不等待。
+            run_opts.setdefault("wait_async_result", provider not in (None, "simulator", "local", "default"))
+            out = circuit.run(provider=provider, device=device, shots=int(shots), **run_opts)
+            payload = out[0] if isinstance(out, (list, tuple)) else out
             raw_counts = {str(bs): int(c) for bs, c in (payload.get("result") or {}).items()}
         else:
             # numeric 档：本地精确概率 + rng.choice 抽样（seed 可复现）。

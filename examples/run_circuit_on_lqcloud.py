@@ -68,7 +68,8 @@ def main() -> None:
     circuit = build_circuit()
 
     # 转换是纯本地操作，用于先检查官方 SDK 最终收到的门。
-    from tyxonq.devices.hardware.lqcloud.translator import to_lqcloud
+    # IR->对象 直译已提升为一等 compile_engine，从新位置导入。
+    from tyxonq.compiler.compile_engine.lqcloud import to_lqcloud
 
     native_circuit = to_lqcloud(circuit)
     print("逻辑到物理映射:", physical_qubits or "由 LQCloud 自动选择")

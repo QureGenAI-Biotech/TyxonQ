@@ -13,6 +13,8 @@ def _resolve_stage(name: str) -> "Pass":
 
     Supported names (initial skeleton):
       - "decompose"
+      - "decompose/rotations"
+      - "decompose/matchgate"
       - "rewrite/measurement"
       - "layout"
       - "scheduling"
@@ -27,6 +29,12 @@ def _resolve_stage(name: str) -> "Pass":
         from ...stages.decompose.rotations import RotationsDecomposePass
 
         return RotationsDecomposePass()
+    if name == "decompose/matchgate":
+        # fSim 家族 2-qubit 数守恒 matchgate（two_mode_fock）-> 原生 {rz,rx,h,cx}。
+        # 与方言无关的一等分解特色；lqcloud 等 lowering 复用同一实现。
+        from ...stages.decompose.matchgate import MatchgateDecomposePass
+
+        return MatchgateDecomposePass()
     if name == "rewrite/measurement":
         from ...stages.rewrite.measurement import MeasurementRewritePass
 

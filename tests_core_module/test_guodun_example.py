@@ -1,8 +1,19 @@
-"""国盾终端示例必须在取得 query ID 后停止，不自动查询。"""
+"""国盾终端示例的离线回归测试。
+
+示例脚本位于仓库根的 ``examples/`` 目录（无 ``__init__.py``，是命名空间包），而
+site-packages 里可能被其它库装入同名的 ``examples`` 常规包（含 ``__init__.py``）。
+按 Python 导入规则，常规包永远优先于命名空间包，``from examples import ...`` 会命中
+site-packages 从而 ImportError。因此这里统一用 importlib 按**文件路径**加载示例脚本，
+彻底规避包名遮蔽——这是加载仓库内脚本作为模块的标准做法。
+
+被测契约：示例默认只本地编译并打印 QCIS，不登录/不下载配置/不提交；只有显式
+``--run-online`` 才提交，且提交成功取得 query ID 后立即停止，不自动查询结果。
+"""
 
 from __future__ import annotations
 
 import importlib.util
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -14,9 +25,20 @@ pytestmark = pytest.mark.skipif(
     reason="需要可选依赖 cqlib==1.3.11",
 )
 
+_EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
+
+
+def _load_example(module_name: str):
+    """按文件路径把 examples/<module_name>.py 加载为模块，规避 site-packages 同名包遮蔽。"""
+    path = _EXAMPLES_DIR / f"{module_name}.py"
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 def test_x_example_uses_single_qubit_default_mapping(monkeypatch, capsys):
-    from examples import run_circuit_on_guodun as example
+    example = _load_example("run_circuit_on_guodun")
 
     monkeypatch.delenv("TYXONQ_GUODUN_TOKEN", raising=False)
     monkeypatch.setattr(
@@ -35,7 +57,7 @@ def test_x_example_uses_single_qubit_default_mapping(monkeypatch, capsys):
 def test_online_example_submits_once_prints_id_and_does_not_query(
     monkeypatch, capsys
 ):
-    from examples import run_circuit_on_guodun as example
+    example = _load_example("run_circuit_on_guodun")
 
     handle = SimpleNamespace(id="example-query-id")
     fake_run = MagicMock(return_value=[SimpleNamespace(handle=handle)])
@@ -74,16 +96,12 @@ def test_online_example_submits_once_prints_id_and_does_not_query(
 
 
 def test_variational_tutorial_example_runs_offline(monkeypatch, capsys):
-    from examples import run_guodun_variational as example
+    example = _load_example("run_guodun_variational")
 
     monkeypatch.delenv("TYXONQ_GUODUN_TOKEN", raising=False)
     monkeypatch.setattr(
         "sys.argv",
-        [
-            "run_guodun_variational.py",
-            "--physical-qubits",
-            "0,6,12,7,1",
-        ],
+        ["run_guodun_variational.py", "--physical-qubits", "0,6,12,7,1"],
     )
 
     example.main()

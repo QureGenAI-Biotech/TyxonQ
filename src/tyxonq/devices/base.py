@@ -263,6 +263,9 @@ def init(*, provider: Optional[str] = None, device: Optional[str] = None, token:
 _NOISE_ENABLED: bool = False
 _NOISE_CONFIG: Dict[str, Any] | None = None
 _DEFAULT_NOISE: Dict[str, Any] = {"type": "depolarizing", "p": 0.0}
+# 仅对模拟器有意义的运行参数：真机噪声由硬件自身决定，各家驱动也不认识这些键，
+# 故在设备层向真机提交前统一丢弃，调用方（含链式 .run）无需按 provider 区分参数。
+_SIMULATOR_ONLY_RUN_OPTS = {"noise", "use_noise"}
 
 def enable_noise(enabled: bool = True, config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     global _NOISE_ENABLED, _NOISE_CONFIG
@@ -361,6 +364,10 @@ def run(
             raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **_inject_noise(opts)))
         else:
             #hardware just send source to cloud hardware
+            # 真机：模拟器专属参数（noise/use_noise）对真机无意义（真机噪声由硬件自身决定），
+            # 且各家驱动不认识这些键会直接报错，故提交前统一丢弃。
+            if prov not in ("simulator", "local"):
+                opts = {k: v for k, v in opts.items() if k not in _SIMULATOR_ONLY_RUN_OPTS}
             raw = _normalize(drv.run(dev, tok, source=source, shots=shots, **opts))
     else:
         # circuit path (simulator/local only). Support single or batched circuits uniformly.
@@ -515,6 +522,21 @@ def get_task_details(task: Any, *, wait: bool = False, poll_interval: float = 2.
         if uni_status in ('failed', 'error', 'cancelled', 'canceled'):
             return unified
         if wait and (time.perf_counter() - start_time) >= timeout:
+            # 等待超时：状态仍非终止（queued/running/unknown），说明真机排队或执行耗时
+            # 超过等待上限。此处发 RuntimeWarning 后照常返回（结果可能为空/不完整），
+            # 以便调用方区分「超时」与「线路/执行错误」——否则空计数会被静默当成能量 0。
+            import warnings
+
+            _elapsed = time.perf_counter() - start_time
+            warnings.warn(
+                f"[{getattr(task, 'provider', '?')}::{getattr(task, 'device', '?')}] "
+                f"异步任务等待超时（{_elapsed:.1f}s ≥ timeout={timeout:.0f}s，"
+                f"当前状态={uni_status!r}），返回结果可能为空/不完整。"
+                f"这通常是真机排队或执行耗时超过等待上限，而非线路或编译错误；"
+                f"如需区分请增大等待超时后重试。",
+                RuntimeWarning,
+                stacklevel=2,
+            )
             return unified
         if wait:
             time.sleep(max(0.05, poll_interval))

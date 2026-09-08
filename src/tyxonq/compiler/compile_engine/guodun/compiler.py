@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Dict, Sequence, TYPE_CHECKING
 
-from ..qiskit import QiskitCompiler
+from .lowering import lower_circuit_to_gate_qcis
 
 if TYPE_CHECKING:
     from ...api import CompileResult
@@ -67,48 +67,6 @@ def _validate_physical_qubits(
     return mapped
 
 
-def _load_qasm2_circuit(qasm2: str):
-    """重新解析 OpenQASM 2，确保 QCIS 确实来自约定的中间层。"""
-    try:
-        from qiskit.qasm2 import loads
-
-        return loads(qasm2)
-    except Exception as exc:  # pragma: no cover - 由 Qiskit 版本决定
-        raise RuntimeError(f"无法解析 Qiskit 生成的 OpenQASM 2：{exc}") from exc
-
-
-def _qiskit_to_gate_qcis(qiskit_circuit: Any, physical_qubits: Sequence[int]) -> str:
-    """把已降门的 Qiskit 线路转成 gd_sim1 验证过的门级 QCIS。"""
-    qcis_lines: list[str] = []
-    for instruction in qiskit_circuit.data:
-        operation = instruction.operation
-        name = operation.name
-        logical_qubits = [
-            int(qiskit_circuit.find_bit(qubit).index)
-            for qubit in instruction.qubits
-        ]
-        mapped_qubits = [physical_qubits[index] for index in logical_qubits]
-
-        if name == "barrier":
-            continue
-        if name == "x":
-            qcis_lines.append(f"X Q{mapped_qubits[0]}")
-        elif name == "h":
-            qcis_lines.append(f"H Q{mapped_qubits[0]}")
-        elif name == "rz":
-            angle = float(operation.params[0])
-            qcis_lines.append(f"RZ Q{mapped_qubits[0]} {angle:.9g}")
-        elif name == "cz":
-            qcis_lines.append(
-                f"CZ Q{mapped_qubits[0]} Q{mapped_qubits[1]}"
-            )
-        elif name == "measure":
-            qcis_lines.append(f"M Q{mapped_qubits[0]}")
-        else:
-            raise ValueError(f"Qiskit 降门后仍包含未支持指令 {name!r}")
-    return "\n".join(qcis_lines)
-
-
 def _validate_qcis_instructions(qcis: str) -> Dict[str, int]:
     """确认 cqlib 输出只包含本期允许提交的门线路指令。"""
     gate_stats: Dict[str, int] = {}
@@ -126,7 +84,7 @@ def _validate_qcis_instructions(qcis: str) -> Dict[str, int]:
 
 
 class GuodunCompiler:
-    """TyxonQ Circuit -> Qiskit 基础门 -> QASM2 -> 门级 QCIS。"""
+    """TyxonQ Circuit -> 门级 QCIS（IR 直译降门，不经 QASM 文本、不依赖 Qiskit）。"""
 
     name = "guodun"
 
@@ -141,60 +99,23 @@ class GuodunCompiler:
         if output != "qcis":
             raise ValueError("Guodun 编译器当前只支持 output='qcis'")
 
-        # 国盾不会替用户猜测测量；线路必须显式 add_measure/measure_z。
-        has_measure_op = any(op and op[0] == "measure_z" for op in circuit.ops)
-        has_measure_instruction = any(
-            instruction and instruction[0] == "measure"
-            for instruction in circuit.instructions
-        )
-        if not (has_measure_op or has_measure_instruction):
-            raise ValueError(
-                "Guodun 线路必须显式调用 add_measure(...) 或 measure_z(...)"
-            )
-
-        # 兼容 Circuit.add_measure() 的 instruction 表示，统一交给 Qiskit。
-        qiskit_circuit = circuit
-        if has_measure_instruction:
-            from copy import copy
-
-            qiskit_circuit = copy(circuit)
-            qiskit_circuit.ops = list(circuit.ops)
-            measured_in_ops = {
-                int(op[1]) for op in circuit.ops if op and op[0] == "measure_z"
-            }
-            for name, qubits in circuit.instructions:
-                if name != "measure":
-                    continue
-                for qubit in qubits:
-                    if int(qubit) not in measured_in_ops:
-                        qiskit_circuit.ops.append(("measure_z", int(qubit)))
-                        measured_in_ops.add(int(qubit))
-
         physical_qubits = _validate_physical_qubits(
             opts.pop("physical_qubits", None), circuit.num_qubits
         )
         CqlibCircuit = _load_cqlib_circuit()
 
-        # gd_sim1 已验证的门集合是 X/H/RZ/CZ/M；不生成 X2P/Y2M。
-        qiskit_options = dict(opts)
-        qiskit_options.update(
-            {
-                "output": "qasm2",
-                "transpile": True,
-                # 已在上面确认存在显式测量，因此这里不会触发自动 measure_all。
-                "add_measures": True,
-                "basis_gates": ["x", "h", "rz", "cz"],
-                "optimization_level": int(opts.get("optimization_level", 0)),
-            }
+        # 直译：TyxonQ IR -> 门级 QCIS（不经 QASM 文本、不依赖 Qiskit/cqlib 分解）。
+        # lowering 内部完成 measure 归一、显式测量校验、递归降门到 {X,H,RZ,CZ,M}；
+        # 每条分解恒等式已由离线数值 unitary 等价校验（允许全局相位差）。
+        qcis, gate_stats, _basis_ops = lower_circuit_to_gate_qcis(
+            circuit, physical_qubits
         )
-        qasm_result = QiskitCompiler().compile(qiskit_circuit, options=qiskit_options)
-        qasm2 = qasm_result["compiled_source"]
-        lowered_qiskit_circuit = _load_qasm2_circuit(qasm2)
-        qcis = _qiskit_to_gate_qcis(lowered_qiskit_circuit, physical_qubits)
-        gate_stats = _validate_qcis_instructions(qcis)
 
+        # 双保险：确认只含允许提交的门级指令（gd_sim1 已验证 X/H/RZ/CZ/M）。
+        _validate_qcis_instructions(qcis)
         # 用 cqlib 自己的解析器做一次离线语法验收。
         CqlibCircuit.load(qcis)
+
         mapping = {index: qubit for index, qubit in enumerate(physical_qubits)}
         metadata = {
             "output": "qcis",
@@ -202,8 +123,7 @@ class GuodunCompiler:
             "logical_physical_mapping": mapping,
             "physical_qubits": list(physical_qubits),
             "gate_stats": gate_stats,
-            "conversion": "qasm2_to_gate_qcis",
-            "qiskit": qasm_result.get("metadata", {}),
+            "conversion": "ir_to_gate_qcis_direct",
         }
         return {
             "circuit": circuit,

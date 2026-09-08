@@ -862,15 +862,24 @@ class Circuit:
                 shots=dev_shots,
                 **dev_opts,
             )
-        # LQCloud provider: convert directly to the official SDK circuit.
+        # LQCloud provider 走一等 compile_engine（IR -> SDK QuantumCircuit 对象直译）。
+        # 与 guodun 的关键区别：physical_qubits 是运行期 backend 参数（映射 SDK initial_layout），
+        # 保留在 dev_opts 中流向驱动，而非像 guodun 那样烘焙进编译产物。
         elif dev_provider == "lqcloud":
-            from ...devices.hardware.lqcloud.translator import to_lqcloud
-
-            lqcloud_circuit = to_lqcloud(self)
+            compiled = self.compile(
+                compile_engine="lqcloud",
+                output="lqcloud",
+                options=dict(self._compile_opts),
+            )
+            source_to_submit = (
+                compiled.get("compiled_source")
+                if isinstance(compiled, dict)
+                else self._compiled_source
+            )
             tasks = device_base.run(
                 provider=dev_provider,
                 device=dev_device,
-                source=lqcloud_circuit,
+                source=source_to_submit,
                 shots=dev_shots,
                 **dev_opts,
             )

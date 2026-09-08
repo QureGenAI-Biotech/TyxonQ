@@ -295,6 +295,15 @@ def compile(
         result = GuodunCompiler().compile(circuit=circuit, options=opts)  # type: ignore[arg-type]
         circuit._compiled_source = result["compiled_source"]
         return result
+    if compile_engine == "lqcloud":
+        # 一等 compile_engine：IR -> lqcloud SDK QuantumCircuit 对象直译（无 qasm/文本中间层）。
+        # 注意 physical_qubits 是运行期 backend 参数（映射 SDK initial_layout），随 dev_opts 流向驱动，
+        # 不在编译期消费，故此处 options 不含它。
+        from .compile_engine.lqcloud import LQCloudCompiler
+
+        result = LQCloudCompiler().compile(circuit=circuit, options=opts)  # type: ignore[arg-type]
+        circuit._compiled_source = result["compiled_source"]
+        return result
     if compile_engine == "qiskit":
         from .compile_engine.qiskit import QiskitCompiler
 
