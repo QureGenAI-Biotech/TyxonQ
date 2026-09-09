@@ -276,7 +276,7 @@ def create_waveform(
     circuit_name: Optional[str] = None,
 ) -> GuodunWaveformTask:
     """创建恰好一个 waveform 任务；不在本函数内查询或重建。"""
-    from tyxonq.compiler.compile_engine.guodun.pulse import validate_pulse_qcis
+    from tyxonq.compiler.platforms.guodun.pulse import validate_pulse_qcis
 
     validate_pulse_qcis(source, get_pulse=context.get_pulse)
     _validate_topology([source], context.get_pulse.config)
@@ -325,7 +325,7 @@ def run(
     if _contains_pulse_instructions(sources):
         if machine != "gd_qc1":
             raise ValueError("pulse-QCIS 当前只允许提交到 gd_qc1")
-        from tyxonq.compiler.compile_engine.guodun.pulse import validate_pulse_qcis
+        from tyxonq.compiler.platforms.guodun.pulse import validate_pulse_qcis
 
         # GetPulse 初始化会下载提交时刻的当前标定；所有脉冲逐点通过后才提交。
         get_pulse = _load_get_pulse_class()(platform=platform)

@@ -30,7 +30,7 @@ Date: 2024
 
 import tyxonq as tq
 from tyxonq.compiler.api import compile, compile_pulse
-from tyxonq.compiler.pulse_compile_engine.native.qasm3_importer import qasm3_to_circuit
+from tyxonq.compiler.pulse_compiler.native.qasm3_importer import qasm3_to_circuit
 from tyxonq.devices.simulators.driver import run as driver_run
 
 

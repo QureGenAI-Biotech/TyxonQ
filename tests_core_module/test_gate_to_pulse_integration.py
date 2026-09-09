@@ -4,7 +4,7 @@
 import sys
 from tyxonq.core.ir.pulse import PulseProgram
 from tyxonq.core.ir.circuit import Circuit
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 def test_gate_to_pulse_with_pulse_program():
     """Test: GateToPulsePass can process PulseProgram with replace(ops=...)."""

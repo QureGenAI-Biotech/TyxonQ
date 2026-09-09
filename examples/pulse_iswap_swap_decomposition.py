@@ -50,7 +50,7 @@ Date: 2025
 
 import tyxonq as tq
 from tyxonq import Circuit
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 
 def example_1_basic_iswap():
@@ -328,7 +328,7 @@ def main():
     print("   - Ready for cloud submission and hybrid execution")
     print("\n📖 For more information:")
     print("   - tests_core_module/test_iswap_swap_pulse_decomposition.py")
-    print("   - src/tyxonq/compiler/pulse_compile_engine/native/gate_to_pulse.py")
+    print("   - src/tyxonq/compiler/pulse_compiler/native/gate_to_pulse.py")
 
 
 if __name__ == "__main__":

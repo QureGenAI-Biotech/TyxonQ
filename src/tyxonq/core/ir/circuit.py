@@ -655,7 +655,7 @@ class Circuit:
         n_mc = sum(1 for op in self.ops if "multicontrol" in str(op[0]).lower())
         depth = None
         try:
-            from ...compiler.compile_engine.qiskit.dialect import to_qiskit  # type: ignore
+            from ...compiler.platforms.qiskit.dialect import to_qiskit  # type: ignore
             qc = to_qiskit(self, add_measures=False)
             depth = qc.depth()
         except Exception:
@@ -771,55 +771,82 @@ class Circuit:
     def to_openqasm(self) -> str:
         """Serialize this IR circuit to OpenQASM 2 using the compiler facade.
 
-        Delegates to compiler API (compile_engine='qiskit', output='qasm2').
+        Delegates to compiler API (platform='qiskit', output='qasm2').
         """
-        compiled = self.compile(compile_engine="qiskit", output="qasm2")
+        compiled = self.compile(platform="qiskit", output="qasm2")
         # compile() returns self with compiled_source stored in _compiled_source
         return compiled._compiled_source  # type: ignore[return-value]
 
     @overload
-    def compile(self, *, provider: None = ..., output: None = ..., target: Any | None = ..., options: Dict[str, Any] | None = ...) -> "Circuit": ...
-
-    @overload
-    def compile(self, *, provider: str = ..., output: str = ..., target: Any | None = ..., options: Dict[str, Any] | None = ...) -> Any: ...
+    def compile(self, *, platform: Optional[str] = ..., output: Optional[str] = ..., options: Dict[str, Any] | None = ...) -> "Circuit": ...
 
     def compile(
         self,
         *,
-        compile_engine: Optional[str] = None,
+        platform: Optional[str] = None,
         output: Optional[str] = None,
+        basis_gates: Optional[list] = None,
+        decompose: Any = True,
+        route: Any = False,
+        optimize: int = 0,
+        simplify: bool = False,
+        device_rule: Optional[Dict[str, Any]] = None,
         target: Any | None = None,
         options: Dict[str, Any] | None = None,
+        compile_engine: Optional[str] = None,
     ) -> Any:
-        """Delegate to compiler.api.compile or act as chainable setter when no args.
+        """委托 compiler.api.compile，或在无参时作为链式 no-op（仅标记意图）。
 
-        - Chainable模式：若 provider/output/target/options 全为 None，则返回 self（不触发编译）。
-        - 编译模式：转发到 compiler.api.compile，options 与已记录的 _compile_opts 合并。
+        - 链式模式：若未指定任何编译意图（platform/compile_engine/output/target/options/
+          device_rule/basis_gates 均为 None，且 decompose/route/optimize/simplify 保持默认），
+          返回 self（不触发编译）。
+        - 编译模式：转发类型化关键字到 compiler.api.compile，options 与已记录的 _compile_opts 合并。
+        - compile_engine= 为过渡别名，等价于 platform=。
         """
-        # Chainable: no explicit args means only marking intent
-        if compile_engine is None and output is None and target is None and options is None:
+        # 链式 no-op：无任何显式编译意图（全部保持默认）
+        if (
+            platform is None and compile_engine is None and output is None
+            and target is None and options is None and device_rule is None
+            and basis_gates is None
+            and decompose is True and route is False and int(optimize) == 0 and simplify is False
+        ):
             return self
 
+        prov = platform or compile_engine or "default"
 
-        # 这里需要判断一下 是不是已经编译过了。
-        if self._compile_engine == compile_engine and self._compile_output == output and \
-            self._compile_opts == options:
-            # If a direct source is present, skip compilation entirely 
+        # 已用相同请求编译过且已缓存产物：直接复用，避免重复编译。
+        if self._compile_engine == prov and self._compile_output == output and \
+                self._compile_opts == options:
             if self._compiled_source is not None:
                 return self
 
-        # Delegate to compiler facade exactly following its contract
-        prov = compile_engine or "default"
         out = output or "ir"
         merged_opts = dict(self._compile_opts)
         if options:
             merged_opts.update(options)
-        # compiler/api.compile 现在只接受 (circuit, compile_engine, output, options)
-        res = compile_api(self, compile_engine=prov, output=out, options=merged_opts)
-        
+        # device_rule / route 只走显式关键字：从 options 里剔除。run() 会先把它们从
+        # _compile_opts 取出来、结合运行期发现的设备拓扑再作为关键字传下来；若不剔除，
+        # 这里重新合并 _compile_opts 会把**陈旧**的 device_rule 又塞回 options，既让上游的
+        # pop 失效，也可能在平台分支里覆盖掉刚发现的拓扑。
+        merged_opts.pop("device_rule", None)
+        merged_opts.pop("route", None)
+        # 转发类型化关键字到统一编译入口（platform= 取代 compile_engine=）。
+        res = compile_api(
+            self,
+            platform=prov,
+            output=out,
+            basis_gates=basis_gates,
+            decompose=decompose,
+            route=route,
+            optimize=optimize,
+            simplify=simplify,
+            device_rule=device_rule,
+            options=merged_opts,
+        )
+
         # 关键优化：如果编译结果是字符串（TQASM/QASM），缓存到 _source 避免重复编译
         # 这样后续 .run() 时会直接使用缓存的 source，不会重新编译
-        self._compiled_source = res.get("compiled_source",None)
+        self._compiled_source = res.get("compiled_source", None)
         return self
     
 
@@ -853,7 +880,7 @@ class Circuit:
 
         # QCOS provider: convert directly to Qiskit QuantumCircuit
         if dev_provider == "qcos":
-            from ...compiler.compile_engine.qiskit.dialect import to_qiskit
+            from ...compiler.platforms.qiskit.dialect import to_qiskit
             qiskit_circuit = to_qiskit(self)
             tasks = device_base.run(
                 provider=dev_provider,
@@ -862,15 +889,47 @@ class Circuit:
                 shots=dev_shots,
                 **dev_opts,
             )
-        # LQCloud provider 走一等 compile_engine（IR -> SDK QuantumCircuit 对象直译）。
+        # LQCloud provider 走一等平台（IR -> SDK QuantumCircuit 对象直译）。
         # 与 guodun 的关键区别：physical_qubits 是运行期 backend 参数（映射 SDK initial_layout），
         # 保留在 dev_opts 中流向驱动，而非像 guodun 那样烘焙进编译产物。
         elif dev_provider == "lqcloud":
+            # 硬件感知编译：提交前发现设备拓扑（1 天 TTL 持久化缓存），据此让核心编译器
+            # 做布局 / SWAP 插入。拓扑拿不到时退回纯直译（与本能力引入前行为一致）。
+            compile_options = dict(self._compile_opts)
+            device_rule: Dict[str, Any] = dict(compile_options.pop("device_rule", None) or {})
+            route = bool(compile_options.pop("route", False))
+            if not device_rule.get("coupling_map"):
+                try:
+                    from ...devices.hardware.topology import get_device_rule
+
+                    discovered = get_device_rule(
+                        "lqcloud", dev_device, token=dev_opts.get("token")
+                    )
+                except Exception as exc:  # 拓扑发现绝不能阻断提交
+                    warnings.warn(
+                        f"lqcloud::{dev_device} 拓扑发现失败（{exc}）；跳过路由，按直译提交。",
+                        RuntimeWarning,
+                    )
+                    discovered = {}
+                if discovered:
+                    device_rule.update(discovered)
+                    # 有耦合图才值得路由；设备未声明拓扑（空列表）时保持直译。
+                    route = bool(device_rule.get("coupling_map"))
+            # 用户显式给的 physical_qubits 即运行期 initial_layout，路由以它为初始布局。
+            user_layout = dev_opts.get("physical_qubits")
+            if user_layout is not None and not device_rule.get("initial_layout"):
+                device_rule["initial_layout"] = [int(q) for q in user_layout]
             compiled = self.compile(
-                compile_engine="lqcloud",
+                platform="lqcloud",
                 output="lqcloud",
-                options=dict(self._compile_opts),
+                route=route,
+                device_rule=device_rule or None,
+                options=compile_options,
             )
+            # 路由选定的物理比特子集要作为运行期 initial_layout 下发（本地比特 j -> 物理 layout[j]）。
+            routed_layout = device_rule.get("initial_layout")
+            if route and routed_layout and user_layout is None:
+                dev_opts["physical_qubits"] = list(routed_layout)
             source_to_submit = (
                 compiled.get("compiled_source")
                 if isinstance(compiled, dict)
@@ -890,7 +949,7 @@ class Circuit:
             if physical_qubits is not None:
                 compile_options["physical_qubits"] = physical_qubits
             compiled = self.compile(
-                compile_engine="guodun",
+                platform="guodun",
                 output="qcis",
                 options=compile_options,
             )
@@ -1919,7 +1978,7 @@ class Circuit:
         - If Qiskit is not installed, return a minimal textual `gate_summary()` string.
         """
         try:
-            from ...compiler.compile_engine.qiskit.dialect import to_qiskit  # type: ignore
+            from ...compiler.platforms.qiskit.dialect import to_qiskit  # type: ignore
 
             qc = to_qiskit(self, add_measures=True)
             # Resolve default output: prefer per-circuit _draw_output, else 'text'

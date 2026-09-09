@@ -17,7 +17,7 @@ import pytest
 import numpy as np
 
 from tyxonq import Circuit, waveforms
-from tyxonq.compiler.pulse_compile_engine import PulseCompiler
+from tyxonq.compiler.pulse_compiler import PulseCompiler
 
 
 class TestPulseCompilerBasics:
@@ -108,7 +108,7 @@ class TestGateToPulsePass:
     
     def test_x_gate_to_drag_pulse(self):
         """Test X gate decomposes to Drag pulse."""
-        from tyxonq.compiler.pulse_compile_engine.native import GateToPulsePass
+        from tyxonq.compiler.pulse_compiler.native import GateToPulsePass
         
         c = Circuit(1)
         c.x(0)
@@ -132,7 +132,7 @@ class TestPulseLoweringPass:
     
     def test_pulse_lowering_inlines_waveforms(self):
         """Test that pulse lowering inlines waveform definitions."""
-        from tyxonq.compiler.pulse_compile_engine.native import PulseLoweringPass
+        from tyxonq.compiler.pulse_compiler.native import PulseLoweringPass
         
         c = Circuit(1)
         
@@ -157,7 +157,7 @@ class TestPulseSchedulingPass:
     
     def test_scheduling_adds_timing_metadata(self):
         """Test that scheduling adds timing information."""
-        from tyxonq.compiler.pulse_compile_engine.native import PulseSchedulingPass
+        from tyxonq.compiler.pulse_compiler.native import PulseSchedulingPass
         
         c = Circuit(2)
         

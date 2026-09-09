@@ -13,7 +13,7 @@ Test organization:
 """
 
 import pytest
-from tyxonq.compiler.pulse_compile_engine.native.qasm3_importer import qasm3_to_circuit
+from tyxonq.compiler.pulse_compiler.native.qasm3_importer import qasm3_to_circuit
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.compiler.api import compile
 

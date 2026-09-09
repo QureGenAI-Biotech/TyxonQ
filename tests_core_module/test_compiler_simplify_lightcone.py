@@ -1,10 +1,11 @@
-# lightcone 简化 pass 测试合并：仅测量部分量子位时裁剪无关算符、assume_measure_all
-# 行为、多测量点的纠缠传播，以及 reset/project 指令的保留规则。
+# lightcone 化简步骤单测：仅测量部分量子位时裁剪无关算符、assume_measure_all 行为、
+# 多测量点的纠缠传播，以及 reset/project 指令的保留规则。
+# （直接实例化 LightconeSimplify 并 apply，取代旧字符串 DSL build_plan。）
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.compile_engine.native.compile_plan import build_plan
+from tyxonq.compiler.gate_compiler.stages.simplify.lightcone import LightconeSimplify
 
 
-def test_lightcone_pass_prunes_irrelevant_ops():
+def test_lightcone_prunes_irrelevant_ops():
     # Ops on qubit 2 should be pruned since only qubit 1 is measured
     c = Circuit(num_qubits=3, ops=[
         ("h", 0),
@@ -13,24 +14,24 @@ def test_lightcone_pass_prunes_irrelevant_ops():
         ("rz", 2, 0.3),
         ("measure_z", 1),
     ])
-    p = build_plan(["simplify/lightcone"])  # lightcone enabled
-    c2 = p.execute_plan(c, device_rule={})
+    step = LightconeSimplify()
+    c2 = step.apply(c, device_rule={})
     assert ("h", 2) not in c2.ops
     assert not any(op[0] == "rz" and op[1] == 2 for op in c2.ops)
     # ops that influence measured qubit are kept
     assert ("h", 0) in c2.ops and ("cx", 0, 1) in c2.ops and ("measure_z", 1) in c2.ops
 
 
-def test_lightcone_pass_keeps_all_when_assume_measure_all():
+def test_lightcone_keeps_all_when_assume_measure_all():
     # Without explicit measure, default keeps circuit; with assume_measure_all, treat all qubits as measured
     c = Circuit(num_qubits=2, ops=[
         ("h", 0), ("cx", 0, 1)
     ])
-    p = build_plan(["simplify/lightcone"])  # default: no measures → no change
-    c2 = p.execute_plan(c, device_rule={})
+    step = LightconeSimplify()
+    c2 = step.apply(c, device_rule={})  # default: no measures → no change
     assert len(c2.ops) == len(c.ops)
     # assume all measured → still no pruning (all qubits in lightcone)
-    c3 = p.execute_plan(c, device_rule={}, assume_measure_all=True)
+    c3 = step.apply(c, device_rule={}, assume_measure_all=True)
     assert len(c3.ops) == len(c.ops)
 
 
@@ -44,8 +45,8 @@ def test_lightcone_multiple_measures_propagation():
         ("rz", 3, 0.123),
         ("measure_z", 2),
     ])
-    p = build_plan(["simplify/lightcone"])
-    c2 = p.execute_plan(c, device_rule={})
+    step = LightconeSimplify()
+    c2 = step.apply(c, device_rule={})
     kept = set(c2.ops)
     assert ("h", 0) in kept
     assert ("cx", 0, 1) in kept
@@ -65,8 +66,8 @@ def test_lightcone_respects_reset_and_project():
         ("measure_z", 0),
         ("measure_z", 1),
     ])
-    p = build_plan(["simplify/lightcone"])
-    c2 = p.execute_plan(c, device_rule={})
+    step = LightconeSimplify()
+    c2 = step.apply(c, device_rule={})
     ops = set(c2.ops)
     assert ("reset", 0) in ops
     assert ("project_z", 1, 1) in ops

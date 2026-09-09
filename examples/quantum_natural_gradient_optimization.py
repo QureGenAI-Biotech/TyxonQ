@@ -29,7 +29,7 @@ References:
 ", arXiv:1909.05074
 
 Migrated from: examples-ng/quantumng.py
-Utilizes: src/tyxonq/compiler/stages/gradients/qng.py
+Utilizes: src/tyxonq/libs/optimizer/qng.py
 """
 
 import time
@@ -37,7 +37,7 @@ import numpy as np
 import torch
 
 import tyxonq as tq
-from tyxonq.compiler.stages.gradients.qng import qng_metric
+from tyxonq.libs.optimizer.qng import qng_metric
 
 
 # ==================== Problem Setup ====================

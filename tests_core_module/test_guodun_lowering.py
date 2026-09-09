@@ -3,9 +3,11 @@
 纯离线：不依赖 Qiskit、不依赖 cqlib、不提交云端，因此在任何环境都应可跑。
 
 守卫两类不变量：
-  1. 数值等价——gates.py 权威词汇表 UNITARY_1Q / UNITARY_2Q 的每个门，降门到
-     {x, h, rz, cz} 后的序列 unitary 与原门 unitary 相等（允许全局相位差，
-     因为全局相位对测量计数无影响）。这是"直译无损耗"的核心证据。
+  1. 数值等价——lowering 仍自译的门（1q fixed h/x/y/z/s/sdg/t/tdg、cx/cy/cz/iswap/swap、
+     具名双比特旋转 cry）降门到 {x, h, rz, cz} 后的序列 unitary 与原门 unitary 相等
+     （允许全局相位差，因全局相位对测量计数无影响）。这是"直译无损耗"的核心证据。
+     注：rx/ry/rxx/ryy/rzz 的参数化旋转分解自 C2 起由核心 RotationsDecompose 统一接管，
+     其数值等价覆盖已迁至 tests_core_module/test_decompose_rotations.py。
   2. 结构契约——emit 出的门级 QCIS 只含 {X, H, RZ, CZ, M}；逻辑->物理映射正确；
      缺显式测量 / 特殊 op / 未知门 loudly raise；barrier 被丢弃；add_measure
      (instructions) 与 measure_z (ops) 两条测量写法产出一致。
@@ -18,7 +20,7 @@ import math
 import numpy as np
 import pytest
 
-from tyxonq.compiler.compile_engine.guodun.lowering import (
+from tyxonq.compiler.platforms.guodun.lowering import (
     _lower_op,
     lower_circuit_to_gate_qcis,
 )
@@ -78,7 +80,9 @@ def test_single_qubit_fixed_gates_equivalent(name):
     _assert_equiv_up_to_global_phase((name, 0), 1)
 
 
-@pytest.mark.parametrize("name", ["rx", "ry", "rz"])
+# rx/ry 自 C2 起由核心 RotationsDecompose 分解（覆盖见 test_decompose_rotations.py）；
+# lowering 只保留 rz 的原生透传（rz 已在 QCIS basis 内）。
+@pytest.mark.parametrize("name", ["rz"])
 @pytest.mark.parametrize("theta", _THETAS)
 def test_single_qubit_rotation_gates_equivalent(name, theta):
     _assert_equiv_up_to_global_phase((name, 0, theta), 1)
@@ -89,7 +93,9 @@ def test_two_qubit_fixed_gates_equivalent(name):
     _assert_equiv_up_to_global_phase((name, 0, 1), 2)
 
 
-@pytest.mark.parametrize("name", ["cry", "rxx", "ryy", "rzz"])
+# rxx/ryy/rzz 自 C2 起由核心 RotationsDecompose 分解（覆盖见 test_decompose_rotations.py）；
+# cry 是核心不分解的具名双比特门，仍由 lowering 直译（内部 ry 已就地内联）。
+@pytest.mark.parametrize("name", ["cry"])
 @pytest.mark.parametrize("theta", _THETAS)
 def test_two_qubit_rotation_gates_equivalent(name, theta):
     _assert_equiv_up_to_global_phase((name, 0, 1, theta), 2)
@@ -127,10 +133,20 @@ def test_add_measure_and_measure_z_produce_identical_qcis():
     assert qcis_ops == qcis_instr
 
 
-def test_two_qubit_rotations_only_use_allowed_mnemonics():
-    circuit = Circuit(2)
-    circuit.iswap(0, 1).rxx(0, 1, 0.2).ryy(0, 1, -0.3).rzz(0, 1, 0.4)
-    circuit.measure_z(0).measure_z(1)
+def test_named_two_qubit_gates_only_use_allowed_mnemonics():
+    """lowering 直译的具名双比特门（iswap/cy/cry/swap）只产出允许的 QCIS 助记符。
+
+    注：rxx/ryy/rzz 等参数化旋转自 C2 起由核心 RotationsDecompose 分解，其“只含允许
+    助记符”的结构契约改由 compile 路径覆盖（见 test_guodun_compiler.py::
+    test_iswap_and_two_qubit_rotations_lower_to_allowed_qcis）。
+    """
+    circuit = Circuit(
+        num_qubits=2,
+        ops=[
+            ("iswap", 0, 1), ("cy", 0, 1), ("cry", 0, 1, 0.4), ("swap", 0, 1),
+            ("measure_z", 0), ("measure_z", 1),
+        ],
+    )
     _qcis, stats, basis_ops = lower_circuit_to_gate_qcis(circuit, [0, 1])
     assert set(stats) <= _ALLOWED_MNEMONIC
     assert stats["CZ"] > 0

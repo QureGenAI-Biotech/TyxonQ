@@ -1,7 +1,8 @@
-"""Core package exposing IR, operations, and measurement primitives.
+"""Core package exposing the device-independent IR primitives.
 
-At this stage of the refactor, only `ir` is provided. Operations and
-measurements will be added in subsequent increments.
+Only `ir` (Circuit / Hamiltonian) is provided. The former `operations` and
+`measurements` scaffolding packages were removed as dead code (no production
+consumers); measurement/observable handling lives with the IR and postprocessing.
 """
 
 from .ir import Circuit, Hamiltonian

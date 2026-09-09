@@ -28,8 +28,8 @@ import numpy as np
 from typing import Dict, List
 
 from tyxonq import Circuit, waveforms
-from tyxonq.compiler.pulse_compile_engine import DefcalLibrary
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler import DefcalLibrary
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 
 # ==================== Helper Functions ====================

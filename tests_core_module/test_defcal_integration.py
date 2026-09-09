@@ -18,11 +18,11 @@ import numpy as np
 from pathlib import Path
 from unittest.mock import Mock, MagicMock, patch
 
-from tyxonq.compiler.pulse_compile_engine.defcal_library import (
+from tyxonq.compiler.pulse_compiler.defcal_library import (
     DefcalLibrary,
     CalibrationData,
 )
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 try:
     from tyxonq import Circuit, apis

@@ -6,6 +6,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from tyxonq.core.ir import Circuit
     from tyxonq.core.ir.pulse import PulseProgram
     from tyxonq.devices import DeviceRule
+    from .gate_compiler.specs import DecomposeSpec, RoutingSpec
 
 
 
@@ -24,107 +25,75 @@ class PulseCompileResult(TypedDict):
     metadata: Dict[str, Any]
 
 
-class Pass(Protocol):
-    """Compilation pass that transforms a circuit for a given target."""
+class CompileStep(Protocol):
+    """编译步骤协议：把一个线路变换为更接近目标平台 / 原生门集合的线路。
 
-    def execute_plan(self, circuit: "Circuit", **opts: Any) -> "Circuit": ...
+    每个步骤实现 ``apply(circuit, **opts)``，从 ``opts`` 自取所需参数（basis_gates、
+    device_rule 等）并返回新线路。核心编译器按类型化参数装配一串 ``CompileStep``
+    后顺序施加（见 ``gate_compiler.steps.build_compile_steps`` / ``apply_steps``）。
+    """
+
+    def apply(self, circuit: "Circuit", **opts: Any) -> "Circuit": ...
 
 
 def compile(
     circuit: "Circuit",
     *,
-    compile_engine: str = "default",
+    platform: str = "tyxonq",
     output: str = "ir",
-    compile_plan: list | None = None,
-    device_rule: Dict[str, Any] | None = None,
+    basis_gates: list | None = None,
+    decompose: "bool | DecomposeSpec" = True,
+    route: "bool | RoutingSpec" = False,
+    optimize: int = 0,
+    simplify: bool = False,
+    device_rule: "DeviceRule | None" = None,
     options: Dict[str, Any] | None = None,
+    compile_engine: str | None = None,
 ) -> CompileResult:
-    """Unified compilation entry point for quantum circuits.
+    """量子线路的统一编译入口（类型化关键字参数）。
 
-    This function provides a high-level interface for compiling TyxonQ circuits
-    to various target formats and backends. It supports multiple compilation
-    engines and output formats while providing a consistent API.
+    编译能力由**类型化参数**描述（取代旧的字符串列表 DSL ``compile_plan``）：核心
+    编译器 ``gate_compiler`` 按这些参数装配一串 ``CompileStep`` 顺序施加，各硬件平台
+    适配器（``platforms/*``）统一委托核心后再翻译为自身方言。
 
     Args:
-        circuit (Circuit): Input TyxonQ circuit to compile.
-        
-        compile_engine (str, optional): Compilation backend to use.
-            Supported values:
-            - "default" or "tyxonq" or "native": TyxonQ native compiler
-            - "pulse": Pulse-level compilation (TyxonQ core feature)
-            - "qiskit": Qiskit-based compilation (requires qiskit)
-            Defaults to "default".
-            
-        output (str, optional): Target output format.
-            Supported values:
-            - "ir": TyxonQ intermediate representation (default)
-            - "qasm2": OpenQASM 2.0 format
-            - "qiskit": Qiskit QuantumCircuit object
-            Defaults to "ir".
-            
-        compile_plan (list, optional): Custom compilation pipeline stages.
-            List of pass names to execute in order. If None, uses default
-            pipeline with essential normalization passes.
-            
-        device_rule (Dict[str, Any], optional): Device-specific constraints
-            and optimization rules. Used for hardware-aware compilation.
-            
-        options (Dict[str, Any], optional): Engine-specific compilation options.
-            Common options:
-            - "basis_gates" (list): Target gate set for decomposition
-            - "optimization_level" (int): Optimization level (0-3)
-            - "shot_plan" or "total_shots": Shot allocation planning
-            - "device_params" (dict): Device physical parameters (for pulse compilation)
-            - "calibrations" (dict): Custom pulse calibrations (for pulse compilation)
-            - "mode" (str): Pulse compilation mode - "hybrid", "pulse_only", "auto_lower"
-            
+        circuit: 待编译的 TyxonQ 线路（或 PulseProgram）。
+        platform: 目标编译平台。取值：
+            - "tyxonq"（默认；别名 "default"/"native" 归一到此）：TyxonQ 核心，输出 ir/qasm2/qasm3/qiskit；
+            - "pulse"：脉冲级编译；
+            - "lqcloud"/"guodun"/"qiskit"：对应硬件平台方言。
+        output: 目标输出格式（"ir"/"qasm2"/"qasm3"/"qiskit"/平台专属如 "lqcloud"/"qcis"）。
+        basis_gates: 目标原生门集合，透传给规范化/分解步骤与平台方言。
+        decompose: ``bool | DecomposeSpec``。True（默认）→ 分解 2-qubit 数守恒 matchgate；
+            ``DecomposeSpec(matchgate=, rotations=, two_qubit_unitary=)`` 提供细粒度控制；
+            False → 不分解。
+        route: ``bool | RoutingSpec``。True → 按 ``device_rule`` 的耦合图委托 qiskit.transpile 路由；
+            ``RoutingSpec(coupling_map=, initial_layout=, algorithm=, optimization_level=)`` 细粒度控制；
+            False（默认）→ 不路由。
+        optimize: 优化级别（0-3）；>=1 时启用相邻门合并/恒等剪枝。
+        simplify: 为真时启用光锥化简（裁剪不影响测量结果的算符）。
+        device_rule: 设备能力描述（可携带 coupling_map/num_qubits 等），流向所有平台分支。
+        options: 平台专属逃生舱（如 pulse 的 device_params/calibrations/mode）。
+        compile_engine: **过渡别名**，等价于 ``platform``（供旧代码使用）；非 None 时覆盖 platform。
+
     Returns:
-        CompileResult: Dictionary containing compiled circuit and metadata:
-            {
-                "circuit": Circuit | QuantumCircuit | str,  # Compiled circuit
-                "metadata": Dict[str, Any]  # Compilation metadata
-            }
+        CompileResult: ``{"circuit", "compiled_source", "metadata"}``。
 
     Examples:
-        >>> # Basic compilation to TyxonQ IR
-        >>> c = Circuit(2)
-        >>> c.h(0).cx(0, 1)
-        >>> result = compile(c)
-        >>> compiled_circuit = result["circuit"]
-        
-        >>> # Compile to OpenQASM with custom basis gates
-        >>> result = compile(c, 
-        ...     compile_engine="native",
-        ...     output="qasm2",
-        ...     options={"basis_gates": ["cx", "h", "rz"]})
-        >>> qasm_code = result["circuit"]
-        
-        >>> # Hardware-aware compilation with device constraints
-        >>> device_rule = {"coupling_map": [[0, 1], [1, 2]], "max_qubits": 3}
-        >>> result = compile(c,
-        ...     device_rule=device_rule,
-        ...     options={"optimization_level": 2})
-        
-        >>> # Custom compilation pipeline
-        >>> custom_plan = ["rewrite/gate_fusion", "optimize/commute_cnots"]
-        >>> result = compile(c, compile_plan=custom_plan)
+        >>> c = Circuit(2); c.h(0).cx(0, 1)
+        >>> result = compile(c)                       # 默认 platform="tyxonq", output="ir"
+        >>> result = compile(c, platform="qiskit", output="qasm2")
+        >>> # 硬件感知：按设备耦合图路由
+        >>> result = compile(c, platform="lqcloud", route=True,
+        ...                  device_rule={"coupling_map": [[0, 1], [1, 2]]})
 
     Notes:
-        - The "homebrew_s2" device automatically forces "qasm2" output for gate circuits
-        - The "homebrew_s2" device automatically forces "tyxonq_homebrew_tqasm" output for pulse circuits
-        - Native compiler includes essential normalization passes by default
-        - Qiskit engine requires qiskit installation for QASM/Qiskit output
-        - Compilation falls back to native engine if requested engine unavailable
-        - Shot planning enables optimized measurement scheduling
-        
-    Raises:
-        RuntimeError: If required compilation engine is not available.
-        ValueError: If invalid compilation options are provided.
-        
+        - "homebrew_s2" 设备对门电路强制 qasm2 输出、对脉冲电路强制 tyxonq_homebrew_tqasm 输出。
+        - 检测到脉冲操作或显式脉冲模式时，platform=tyxonq 会自动切换到 pulse 编译。
+
     See Also:
-        Circuit.compile: Instance method for circuit compilation.
-        CompileResult: Type definition for compilation results.
-        tyxonq.compiler.passes: Available compilation passes.
+        Circuit.compile: 线路实例方法（转发本函数的类型化关键字）。
+        gate_compiler.specs: DecomposeSpec / RoutingSpec 类型化规格。
     """
     
     def _has_pulse_ops(circuit_or_pulse: Any) -> bool:
@@ -170,6 +139,12 @@ def compile(
     # cap_target: Dict[str, Any] = _parse_target(target_device) if isinstance(target_device, str) else {}
     opts = dict(options or {})
 
+    # 类型化参数落地到 opts：basis_gates 供规范化/分解步骤与平台方言消费。
+    # （optimize 不在此注入 optimization_level：它经显式参数流向 GateCompiler 内部归一，
+    #   且 qiskit 方言需自行把 opt_level 映射为 optimization_level，提前注入会破坏该映射。）
+    if basis_gates is not None:
+        opts["basis_gates"] = list(basis_gates)
+
     # 判断逻辑：
     # 1. 检查 circuit 中是否有脉冲操作（pulse, pulse_inline, play 等）
     # 2. 检查是否显式调用 use_pulse() 或指定了脉冲编译模式
@@ -211,12 +186,18 @@ def compile(
     if output:
         opts["output"] = output
 
-    compile_engine = (compile_engine or "default").lower()
-    
+    # 过渡别名：compile_engine= 等价于 platform=（同时给出时以 compile_engine 覆盖）。
+    if compile_engine is not None:
+        platform = compile_engine
+    platform = (platform or "tyxonq").lower()
+    # 归一化平台别名：default/native → tyxonq（历史 compile_engine 取值）。
+    if platform in ("default", "native"):
+        platform = "tyxonq"
+
     # 智能推断：如果检测到脉冲操作或显式脉冲编译模式，自动启用 pulse 编译
     # 注意：output="qasm3" 等不再直接触发脉冲编译，只在有实际脉冲操作时才启用
-    if is_pulse_compilation and compile_engine in ("default", "tyxonq", "native"):
-        compile_engine = "pulse"
+    if is_pulse_compilation and platform == "tyxonq":
+        platform = "pulse"
         import warnings
         warnings.warn(
             f"检测到脉冲操作或脉冲编译模式，自动启用 pulse compiler。"
@@ -224,19 +205,28 @@ def compile(
             UserWarning,
             stacklevel=2
         )
-    
-    if compile_engine in ("default", "tyxonq", "native"):
-        from .compile_engine.native.native_compiler import NativeCompiler
 
-        result = NativeCompiler().compile(circuit = circuit,compile_plan= compile_plan, device_rule=device_rule, options = opts)  # type: ignore[arg-type]
-        
+    if platform == "tyxonq":
+        from .platforms.tyxonq import TyxonQCompiler
+
+        result = TyxonQCompiler().compile(
+            circuit,
+            basis_gates=basis_gates,
+            decompose=decompose,
+            route=route,
+            optimize=optimize,
+            simplify=simplify,
+            device_rule=device_rule,
+            options=opts,
+        )  # type: ignore[arg-type]
+
         # 缓存编译源代码到 _source，避免重复编译
         circuit._compiled_source = result["compiled_source"]
-        
+
         return result
-    if compile_engine == "pulse":
+    if platform == "pulse":
         # Pulse-level compilation (TyxonQ core feature)
-        from .pulse_compile_engine import PulseCompiler
+        from .pulse_compiler import PulseCompiler
         
         # 关键修复：如果 circuit 没有显式调用 use_pulse()，但指定了 pulse 编译
         # 则自动设置 _compile_engine 和 _compile_opts，以便云端提交时能正确编译
@@ -289,37 +279,63 @@ def compile(
         # 缓存编译源代码（TQASM/QASM3 等）
         circuit._compiled_source = compiled_source
         return compiled_circuit
-    if compile_engine == "guodun":
-        from .compile_engine.guodun import GuodunCompiler
+    if platform == "guodun":
+        from .platforms.guodun import GuodunCompiler
 
-        result = GuodunCompiler().compile(circuit=circuit, options=opts)  # type: ignore[arg-type]
+        # decompose/route/device_rule 流向 GuodunCompiler（C 阶段起委托 gate_compiler 核心，
+        # 对齐 lqcloud）。注：guodun 的 QCIS 原生基固定，内部强制 matchgate+rotations 分解；
+        # route 默认 False（暂不接拓扑发现，为后续增量）。physical_qubits 经 options 流入，
+        # 在编译期烘焙进 QCIS 文本（区别于 lqcloud 的运行期 initial_layout）。
+        result = GuodunCompiler().compile(
+            circuit=circuit,
+            decompose=decompose,
+            route=route,
+            device_rule=device_rule,
+            options=opts,
+        )  # type: ignore[arg-type]
         circuit._compiled_source = result["compiled_source"]
         return result
-    if compile_engine == "lqcloud":
-        # 一等 compile_engine：IR -> lqcloud SDK QuantumCircuit 对象直译（无 qasm/文本中间层）。
+    if platform == "lqcloud":
+        # 一等平台：IR -> lqcloud SDK QuantumCircuit 对象（无 qasm/文本中间层）。
+        # decompose/route/device_rule 流向 LQCloudCompiler（R1 起委托 gate_compiler 核心）。
         # 注意 physical_qubits 是运行期 backend 参数（映射 SDK initial_layout），随 dev_opts 流向驱动，
         # 不在编译期消费，故此处 options 不含它。
-        from .compile_engine.lqcloud import LQCloudCompiler
+        from .platforms.lqcloud import LQCloudCompiler
 
-        result = LQCloudCompiler().compile(circuit=circuit, options=opts)  # type: ignore[arg-type]
+        result = LQCloudCompiler().compile(
+            circuit=circuit,
+            decompose=decompose,
+            route=route,
+            device_rule=device_rule,
+            options=opts,
+        )  # type: ignore[arg-type]
         circuit._compiled_source = result["compiled_source"]
         return result
-    if compile_engine == "qiskit":
-        from .compile_engine.qiskit import QiskitCompiler
+    if platform == "qiskit":
+        from .platforms.qiskit import QiskitCompiler
 
-        result = QiskitCompiler().compile(circuit= circuit, options = opts)  # type: ignore[arg-type]
-        
+        result = QiskitCompiler().compile(circuit=circuit, device_rule=device_rule, options=opts)  # type: ignore[arg-type]
+
         # 缓存编译源代码到 _source，避免重复编译
         circuit._compiled_source = result["compiled_source"]
-        
+
         return result
-    # Fallback to native
-    from .compile_engine.native.native_compiler import NativeCompiler
-    result = NativeCompiler().compile(circuit = circuit,compile_plan=compile_plan, device_rule=device_rule,options = opts)  # type: ignore[arg-type]
-    
+    # Fallback：委托 gate_compiler 公用核心（TyxonQ 平台）
+    from .platforms.tyxonq import TyxonQCompiler
+    result = TyxonQCompiler().compile(
+        circuit,
+        basis_gates=basis_gates,
+        decompose=decompose,
+        route=route,
+        optimize=optimize,
+        simplify=simplify,
+        device_rule=device_rule,
+        options=opts,
+    )  # type: ignore[arg-type]
+
     # 缓存编译源代码到 _source，避免重复编译
     circuit._compiled_source = result["compiled_source"]
-    
+
     return result
 
 
@@ -433,7 +449,7 @@ def compile_pulse(
     # 5. 缓存机制
     result = compile(
         pulse_program,
-        compile_engine="pulse",  # 强制使用脉冲编译
+        platform="pulse",  # 强制使用脉冲编译
         output=output,
         options=opts
     )

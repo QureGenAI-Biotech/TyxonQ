@@ -212,5 +212,9 @@ build_log.txt
 .qoder/work_summary/
 .qoder/quests/
 
+# 设备拓扑发现缓存（运行期抓取，按 provider 落在 devices/hardware/<provider>/ 下）
+.topology_cache.json
+**/.topology_cache.json
+
 
 docs/superpowers

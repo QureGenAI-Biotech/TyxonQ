@@ -15,7 +15,7 @@ Coverage:
 
 import math
 import pytest
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 
 class TestVirtualZOptimization:

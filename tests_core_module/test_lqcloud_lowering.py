@@ -1,7 +1,7 @@
 """LQCloud 直译降门（lowering）测试；默认不要求安装官方 SDK。
 
 canonical 实现已提升为一等 compile_engine：
-``tyxonq.compiler.compile_engine.lqcloud.lowering.to_lqcloud``（与 guodun 的
+``tyxonq.compiler.platforms.lqcloud.lowering.to_lqcloud``（与 guodun 的
 lowering 对称）。原设备层 ``devices/hardware/lqcloud/translator.py`` 已删除，
 本测试直接针对新位置，行为契约不变。
 """
@@ -17,7 +17,7 @@ from types import SimpleNamespace
 import pytest
 
 import tyxonq as tq
-from tyxonq.compiler.compile_engine.lqcloud import to_lqcloud
+from tyxonq.compiler.platforms.lqcloud import to_lqcloud
 
 
 class _FakeGate:
@@ -164,11 +164,11 @@ def _two_mode_fock(v):
     return m
 
 
-def test_two_qubit_matchgate_decomposes_to_native_gates(fake_lqcloud):
-    """2-qubit 数守恒 matchgate（LUCJ/SQD 的 two_mode_fock 块）分解为原生 rz/rx/h/cx。
+def test_two_qubit_unitary_requires_core_decomposition(fake_lqcloud):
+    """R1 起 lowering 不再自带 2-qubit 酉分解（消除与核心 MatchgateDecompose 的重复实现）。
 
-    SDK 的 su2 只吃单比特 2x2，故 2-qubit 酉块按 fSim 家族结构分解：
-    partial-iSWAP 部分用 cx（RXX/RYY），相位部分用 rz。不应报错、不应出现 su2。
+    数守恒 matchgate 必须由核心先分解为原生门（经委托路径，见 test_lqcloud_delegation.py）；
+    直接把裸 2-qubit unitary 交给 to_lqcloud 应清晰报错，指引“先由核心分解”。
     """
     import numpy as np
     theta, phi = 0.4, 0.7
@@ -178,13 +178,8 @@ def test_two_qubit_matchgate_decomposes_to_native_gates(fake_lqcloud):
         dtype=complex,
     )
     circuit = tq.Circuit(2).unitary(0, 1, matrix=_two_mode_fock(v)).measure_z(0).measure_z(1)
-    native = to_lqcloud(circuit)
-    names = _names(native)
-    # partial-iSWAP = RXX·RYY 共 4 个 cx；两侧 ZXZ + e^{iμN} 用 rz；无 su2（那是单比特）。
-    assert names.count("cx") == 4
-    assert "h" in names and "rx" in names and "rz" in names
-    assert "su2" not in names
-    assert names[-2:] == ["measure", "measure"]
+    with pytest.raises(NotImplementedError, match="核心"):
+        to_lqcloud(circuit)
 
 
 def test_non_matchgate_two_qubit_unitary_is_rejected(fake_lqcloud):
@@ -198,65 +193,6 @@ def test_non_matchgate_two_qubit_unitary_is_rejected(fake_lqcloud):
     circuit = tq.Circuit(2).unitary(0, 1, matrix=mat).measure_z(0).measure_z(1)
     with pytest.raises(NotImplementedError, match="matchgate"):
         to_lqcloud(circuit)
-
-
-def test_two_qubit_matchgate_decomposition_is_numerically_exact():
-    """正确性关键：分解后的原生门序列必须精确重建 two_mode_fock(v)（忽略全局相位）。
-
-    用 TyxonQ statevector 引擎对 4 个计算基态分别作用「分解门序」与「原 unitary op」，
-    拼成 4x4 酉矩阵后比保真度 |Tr(U_dec† U_tgt)|/4，应 ≈ 1（随机 v + Givens 形式 v）。
-    """
-    import numpy as np
-    from tyxonq.compiler.compile_engine.lqcloud.lowering import _decompose_two_qubit_unitary
-    from tyxonq.devices.simulators.statevector.engine import StatevectorEngine
-
-    eng = StatevectorEngine()
-
-    def _apply_ops(c, ops):
-        for op in ops:
-            name = op[0]
-            if name in ("h", "x"):
-                getattr(c, name)(op[1])
-            elif name in ("rx", "ry", "rz"):
-                getattr(c, name)(op[1], op[2])
-            elif name == "cx":
-                c.cx(op[1], op[2])
-            else:
-                raise AssertionError(f"unexpected op {name}")
-
-    def unitary_of(build):
-        U = np.zeros((4, 4), dtype=complex)
-        for idx in range(4):
-            c = tq.Circuit(2)
-            if (idx >> 1) & 1:
-                c.x(0)
-            if idx & 1:
-                c.x(1)
-            build(c)
-            U[:, idx] = np.asarray(eng.state(c)).reshape(-1)
-        return U
-
-    rng = np.random.default_rng(0)
-    cases = []
-    for _ in range(15):  # 随机 U(2)
-        A = rng.normal(size=(2, 2)) + 1j * rng.normal(size=(2, 2))
-        cases.append(np.linalg.qr(A)[0])
-    for _ in range(15):  # Givens 形式（LUCJ 实际发射）
-        t, p = rng.uniform(0, 2 * np.pi), rng.uniform(0, 2 * np.pi)
-        cases.append(np.array([[np.cos(t), np.sin(t) * np.exp(1j * p)],
-                               [-np.sin(t) * np.exp(-1j * p), np.cos(t)]], dtype=complex))
-    # 退化情形：v=I（b=0）、b=π、纯对角相位
-    cases += [np.eye(2, dtype=complex),
-              np.array([[0, 1], [-1, 0]], dtype=complex),
-              np.array([[np.exp(0.3j), 0], [0, np.exp(-0.7j)]], dtype=complex)]
-
-    for v in cases:
-        target = _two_mode_fock(v)
-        ops = _decompose_two_qubit_unitary(target, 0, 1)
-        U_dec = unitary_of(lambda c, _o=ops: _apply_ops(c, _o))
-        U_tgt = unitary_of(lambda c, _m=target: c.unitary(0, 1, matrix=_m))
-        fid = abs(np.trace(U_dec.conj().T @ U_tgt)) / 4.0
-        assert fid > 1 - 1e-9, f"decomposition mismatch for v={v}, fidelity={fid}"
 
 
 def test_barrier_after_measure_is_tolerated(fake_lqcloud):

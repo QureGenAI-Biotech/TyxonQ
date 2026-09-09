@@ -62,13 +62,24 @@ class DeviceRule(TypedDict, total=False):
 
     Keys are optional to keep forward compatibility. Concrete devices may
     expose additional metadata fields as needed.
+
+    拓扑相关字段（由 `devices.hardware.topology` 发现并缓存）供编译器路由使用：
+    - ``coupling_map``：物理比特可交互边列表，形如 ``[[0, 1], [1, 2], ...]``；
+      为空表示全连接（无需路由）。
+    - ``initial_layout``：逻辑比特到物理比特的初始映射（``None`` 表示交给路由
+      算法自行选择）。
+    - ``num_qubits``：设备物理比特总数（``max_qubits`` 的别名语义，用于拓扑发现
+      结果直接落盘/回填）。
     """
 
-    native_gates: set[str]
+    native_gates: Any  # set[str] 或拓扑发现回填的 JSON 友好 list[str]
     max_qubits: int
     connectivity: Any
     supports_shots: bool
     supports_batch: bool
+    coupling_map: List[List[int]]
+    initial_layout: Optional[List[int]]
+    num_qubits: int
 
 
 class RunResult(TypedDict, total=False):

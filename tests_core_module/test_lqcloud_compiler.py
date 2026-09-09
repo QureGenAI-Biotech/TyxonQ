@@ -90,7 +90,8 @@ def test_bell_add_measure_compiles_to_sdk_object(fake_lqcloud):
     meta = result["metadata"]
     assert meta["output"] == "lqcloud"
     assert meta["target"] == "lqcloud.QuantumCircuit"
-    assert meta["conversion"] == "ir_to_lqcloud_object_direct"
+    # R1 起先委托 gate_compiler 核心再直译，conversion 标注随之变更。
+    assert meta["conversion"] == "core_compile_then_ir_to_lqcloud_object"
     assert meta["num_qubits"] == 2
     assert meta["gate_stats"]["h"] == 1
     assert meta["gate_stats"]["cx"] == 1
@@ -125,9 +126,15 @@ def test_physical_qubits_is_not_baked_into_object(fake_lqcloud):
     assert measured == [0, 1]
 
 
-def test_missing_explicit_measurement_fails(fake_lqcloud):
-    with pytest.raises(ValueError, match="显式调用"):
-        _compile(Circuit(1).h(0))
+def test_missing_measurement_is_auto_added_by_core(fake_lqcloud):
+    # 委托核心后，无显式测量的线路由核心 AutoMeasure 自动补 Z 测量（带警告），
+    # 不再直接抛错；而 to_lqcloud 直译路径仍要求显式测量（见 test_lqcloud_lowering）。
+    circuit = Circuit(1).h(0)
+    with pytest.warns(UserWarning, match="自动补"):
+        result = _compile(circuit)
+    qc = result["compiled_source"]
+    measured = [item[1][0].index for item in qc.data if item[0].name == "measure"]
+    assert measured == [0]
 
 
 def test_unsupported_gate_is_rejected(fake_lqcloud):
@@ -177,4 +184,4 @@ def test_official_sdk_object_via_compiler(monkeypatch):
     result = compile_ir(circuit, compile_engine="lqcloud", output="lqcloud")
     qc = result["compiled_source"]
     assert qc.__class__.__module__.startswith("lqcloud.")
-    assert result["metadata"]["conversion"] == "ir_to_lqcloud_object_direct"
+    assert result["metadata"]["conversion"] == "core_compile_then_ir_to_lqcloud_object"

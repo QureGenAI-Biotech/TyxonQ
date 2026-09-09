@@ -15,6 +15,14 @@ from tyxonq.libs.quantum_library.kernels.density_matrix import (
     apply_2q_density,
     exp_z_density,
 )
+from tyxonq.libs.quantum_library.kernels.unitary import get_unitary
+from tyxonq.libs.quantum_library.kernels.pauli import (
+    ps2xyz,
+    xyz2ps,
+    pauli_string_to_matrix,
+    pauli_string_sum_dense,
+    heisenberg_hamiltonian,
+)
 
 
 def _all_backends():
@@ -42,5 +50,59 @@ def test_density_matrix_kernels_basic():
         rho = apply_1q_density(K, rho, gate_rz(0.0), 0, 1)
         e = exp_z_density(K, rho, 0, 1)
         assert abs(e - 1.0) < 1e-9
+
+
+# 以下用例迁自已删除的 test_core_operations.py（core.operations/core.measurements 属
+# 死脚手架）；仅保留真正有物理价值、且依赖存活模块（kernels.unitary / kernels.pauli）
+# 的断言：单比特/双比特门矩阵定义与 Pauli 字符串核函数。
+def test_h_unitary_matches_definition():
+    u = get_unitary("h")
+    expected = (1.0 / np.sqrt(2.0)) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=np.complex128)
+    np.testing.assert_allclose(u, expected, rtol=0, atol=1e-12)
+
+
+def test_rz_unitary_matches_definition():
+    theta = np.pi
+    u = get_unitary("rz", theta)
+    # RZ(theta) = exp(-i theta/2 Z) = diag(e^{-i theta/2}, e^{i theta/2})
+    expected = np.diag([np.exp(-1j * theta / 2.0), np.exp(1j * theta / 2.0)])
+    np.testing.assert_allclose(u, expected, rtol=0, atol=1e-12)
+
+
+def test_cx_unitary_shape_and_action():
+    u = get_unitary("cx")
+    assert u.shape == (4, 4)
+    # |10> -> |11>, |11> -> |10>, others unchanged
+    basis = np.eye(4, dtype=np.complex128)
+    out_10 = u @ basis[:, 2]
+    out_11 = u @ basis[:, 3]
+    np.testing.assert_allclose(out_10, basis[:, 3])
+    np.testing.assert_allclose(out_11, basis[:, 2])
+
+
+def test_ps2xyz_and_back_xyz2ps():
+    ps = [1, 2, 2, 0, 3]
+    xyz = ps2xyz(ps)
+    assert set(xyz.keys()) == {"x", "y", "z"}
+    ps_back = xyz2ps(xyz, n=len(ps))
+    assert ps_back == ps
+
+
+def test_pauli_string_to_matrix_single_qubit():
+    X = pauli_string_to_matrix([1])
+    expected = np.array([[0, 1], [1, 0]], dtype=np.complex128)
+    np.testing.assert_allclose(X, expected)
+
+
+def test_pauli_string_sum_dense_zz_on_two_qubits():
+    H = pauli_string_sum_dense([[3, 3]])
+    expected = np.diag([1, -1, -1, 1]).astype(np.complex128)
+    np.testing.assert_allclose(H, expected)
+
+
+def test_heisenberg_hamiltonian_line2_with_zz_only():
+    H = heisenberg_hamiltonian(2, [(0, 1)], hzz=1.0, hxx=0.0, hyy=0.0)
+    expected = np.diag([1, -1, -1, 1]).astype(np.complex128)
+    np.testing.assert_allclose(H, expected)
 
 

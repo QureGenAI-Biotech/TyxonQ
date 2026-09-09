@@ -6,7 +6,7 @@ import importlib
 import pytest
 
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.compile_engine.qiskit.dialect import (
+from tyxonq.compiler.platforms.qiskit.dialect import (
     DEFAULT_BASIS_GATES,
     DEFAULT_OPT_LEVEL,
     comment_dict,
@@ -25,7 +25,7 @@ _qiskit_missing = importlib.util.find_spec("qiskit") is None
 @pytest.mark.skipif(_qiskit_missing, reason="qiskit not installed")
 def test_qiskit_compiler_minimal_contract():
     from qiskit import QuantumCircuit
-    from tyxonq.compiler.compile_engine.qiskit import QiskitCompiler
+    from tyxonq.compiler.platforms.qiskit import QiskitCompiler
 
     comp = QiskitCompiler()
     circ = Circuit(num_qubits=2, ops=[("h", 0), ("cx", 0, 1), ("measure_z", 1)])
@@ -49,7 +49,7 @@ def test_ir_qasm_roundtrip_minimal():
 
 @pytest.mark.skipif(_qiskit_missing, reason="qiskit not installed")
 def test_ir_to_qiskit_and_back_minimal_roundtrip():
-    from tyxonq.compiler.compile_engine.qiskit.qiskit_compiler import ir_to_qiskit, qiskit_to_ir
+    from tyxonq.compiler.platforms.qiskit.qiskit_compiler import ir_to_qiskit, qiskit_to_ir
 
     circ = Circuit(num_qubits=2, ops=[("h", 0), ("cx", 0, 1), ("rz", 1, 0.3), ("measure_z", 0)])
     qc = ir_to_qiskit(circ)
@@ -104,3 +104,25 @@ def test_qasm_roundtrip_with_free_pi_comments():
     qasm = ir_to_qasm(c)
     c2 = qasm_to_ir(qasm)
     assert c2.ops[0][0] == "rz" and pytest.approx(c2.ops[0][2]) == c.ops[0][2]
+
+
+@pytest.mark.skipif(_qiskit_missing, reason="qiskit not installed")
+def test_controlled_rotations_roundtrip():
+    # crx/cry/crz 必须在 to_qiskit/from_qiskit 双向承接：真机路由（route=True）经此往返把 IR
+    # 转成 qiskit 跑 SABRE 再读回。缺任一方向都会让 UCCSD 的 cry 在真机 NotImplementedError，
+    # 而离线（route=False）不经本适配器，故该缺口只在真机暴露。
+    theta = 0.7
+    c = Circuit(num_qubits=2, ops=[
+        ("crx", 0, 1, theta), ("cry", 0, 1, -theta), ("crz", 1, 0, theta / 2),
+        ("measure_z", 0), ("measure_z", 1),
+    ])
+    c2 = from_qiskit(to_qiskit(c))
+    by_name = {op[0]: op for op in c2.ops if op[0] in ("crx", "cry", "crz")}
+    assert set(by_name) == {"crx", "cry", "crz"}
+    # op = (name, control, target, theta)：控制/目标比特与角度都须原样往返
+    for name, (ctrl, tgt, ang) in {
+        "crx": (0, 1, theta), "cry": (0, 1, -theta), "crz": (1, 0, theta / 2)
+    }.items():
+        op = by_name[name]
+        assert (int(op[1]), int(op[2])) == (ctrl, tgt)
+        assert float(op[3]) == pytest.approx(ang)

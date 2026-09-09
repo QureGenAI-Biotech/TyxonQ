@@ -8,7 +8,7 @@ from openfermion import QubitOperator
 
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.compiler.api import compile as compile_api
-from tyxonq.compiler.utils.hamiltonian_grouping import (
+from tyxonq.libs.hamiltonian_encoding.hamiltonian_grouping import (
     group_qubit_operator_terms,
 )
  

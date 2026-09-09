@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pytest
 
-from tyxonq.compiler.compile_engine.guodun.pulse import (
+from tyxonq.compiler.platforms.guodun.pulse import (
     compile_native_gate_pulse,
     validate_pulse_qcis,
 )

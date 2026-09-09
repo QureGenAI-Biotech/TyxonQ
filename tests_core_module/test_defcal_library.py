@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from tyxonq.compiler.pulse_compile_engine.defcal_library import (
+from tyxonq.compiler.pulse_compiler.defcal_library import (
     DefcalLibrary,
     CalibrationData,
 )
@@ -526,7 +526,7 @@ class TestDefcalLibraryJsonSerialization:
         lib2 = DefcalLibrary(hardware="Hardware_B")
         
         # Should not raise, but log warning
-        with patch('tyxonq.compiler.pulse_compile_engine.defcal_library.logger') as mock_logger:
+        with patch('tyxonq.compiler.pulse_compiler.defcal_library.logger') as mock_logger:
             lib2.import_from_json(json_file)
             # Verify warning was logged
             assert mock_logger.warning.called
@@ -537,7 +537,7 @@ class TestGateToPulseIntegration:
     
     def test_gate_to_pulse_with_defcal_library(self):
         """Test that GateToPulsePass uses DefcalLibrary when provided."""
-        from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+        from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
         
         # Create library with calibration
         lib = DefcalLibrary()
@@ -551,7 +551,7 @@ class TestGateToPulseIntegration:
     
     def test_gate_to_pulse_without_defcal_library(self):
         """Test that GateToPulsePass works without DefcalLibrary."""
-        from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+        from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
         
         compiler = GateToPulsePass()
         
@@ -559,7 +559,7 @@ class TestGateToPulseIntegration:
     
     def test_extract_qubits(self):
         """Test qubit extraction from gate operation."""
-        from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+        from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
         
         compiler = GateToPulsePass()
         

@@ -30,7 +30,7 @@ import numpy as np
 import math
 
 from tyxonq import Circuit, waveforms
-from tyxonq.compiler.pulse_compile_engine.native import GateToPulsePass
+from tyxonq.compiler.pulse_compiler.native import GateToPulsePass
 
 
 class TestCXGateDecomposition:

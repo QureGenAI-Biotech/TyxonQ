@@ -70,9 +70,12 @@ def test_iswap_and_two_qubit_rotations_lower_to_allowed_qcis():
     assert result["metadata"]["gate_stats"]["CZ"] > 0
 
 
-def test_missing_explicit_measurement_fails():
-    with pytest.raises(ValueError, match="显式调用"):
-        _compile(Circuit(1).h(0))
+def test_missing_explicit_measurement_is_auto_added():
+    """委托核心后，缺显式测量由核心 AutoMeasure 自动补 Z 测量并发 UserWarning（对齐 lqcloud R1）。"""
+    with pytest.warns(UserWarning, match="自动补"):
+        result = _compile(Circuit(1).h(0))
+    # 单比特线路自动补一个 M。
+    assert result["metadata"]["gate_stats"].get("M") == 1
 
 
 @pytest.mark.parametrize(

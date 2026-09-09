@@ -23,8 +23,8 @@ from datetime import datetime
 from typing import Dict, Any, Tuple
 
 from tyxonq import Circuit, waveforms
-from tyxonq.compiler.pulse_compile_engine import DefcalLibrary
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler import DefcalLibrary
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 
 # ==================== DEMO 1: Basic Calibration Creation ====================

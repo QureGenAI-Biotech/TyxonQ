@@ -9,7 +9,7 @@ import numpy as np
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.libs.circuits_library.blocks import build_hwe_ry_ops
 from tyxonq.libs.circuits_library.qiskit_real_amplitudes import build_circuit_from_template
-from tyxonq.compiler.utils.hamiltonian_grouping import (
+from tyxonq.libs.hamiltonian_encoding.hamiltonian_grouping import (
     group_hamiltonian_pauli_terms,
 )
 from openfermion import QubitOperator

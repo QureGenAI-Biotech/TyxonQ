@@ -12,7 +12,7 @@ Both gates are decomposed into CX chains following:
 
 import pytest
 from tyxonq import Circuit
-from tyxonq.compiler.pulse_compile_engine.native.gate_to_pulse import GateToPulsePass
+from tyxonq.compiler.pulse_compiler.native.gate_to_pulse import GateToPulsePass
 
 
 class TestISWAPSWAPDecomposition:

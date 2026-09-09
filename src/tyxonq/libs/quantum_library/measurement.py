@@ -13,7 +13,7 @@ def term_expectation_from_counts(counts: Dict[str, int], idxs: List[int]) -> flo
 
 
 def group_qubit_operator(qop, n_qubits: int) -> Tuple[float, Dict[Tuple[str, ...], List[Tuple[Tuple[Tuple[int, str], ...], float]]]]:
-    """[DEPRECATED] Use compiler.rewrite.measurement grouping and metadata instead.
+    """[DEPRECATED] Use tyxonq.libs.hamiltonian_encoding.hamiltonian_grouping instead.
 
     此函数将逐步废弃，当前仅用于过渡期。
     """
@@ -31,7 +31,7 @@ def group_qubit_operator(qop, n_qubits: int) -> Tuple[float, Dict[Tuple[str, ...
 
 
 def group_hamiltonian_terms(hamiltonian, n_qubits: int) -> Tuple[float, Dict[Tuple[str, ...], List[Tuple[Tuple[Tuple[int, str], ...], float]]]]:
-    """[DEPRECATED] Use compiler.rewrite.measurement grouping and metadata instead.
+    """[DEPRECATED] Use tyxonq.libs.hamiltonian_encoding.hamiltonian_grouping instead.
 
     Hamiltonian is List[(coeff, [(P,q), ...])].
     """
