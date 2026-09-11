@@ -50,7 +50,7 @@ def _qasm_to_ir_if_needed(circuit: Any, source: Any) -> Any:
         # Import native QASM3 importer (TyxonQ's own implementation)
         from ...compiler.pulse_compiler.native.qasm3_importer import qasm3_to_circuit  # type: ignore
         # Fall back to Qiskit for QASM2
-        from ...compiler.platforms.qiskit.dialect import qasm_to_ir  # type: ignore
+        from ...compiler.gate_compiler.interop.qiskit_interop import qasm_to_ir  # type: ignore
 
         # Helper to detect and parse a single QASM string
         def parse_qasm(qasm_str: str) -> Any:

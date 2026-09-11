@@ -1,12 +1,12 @@
-# qiskit provider 测试合并：QiskitCompiler 契约、IR<->qiskit 与 IR<->QASM 往返、
-# 以及 dialect 纯函数（basis/opt 归一化、free_pi、注释生成）。需要 qiskit 的用例通过
-# skipif 单独跳过；dialect 纯函数用例不依赖 qiskit，故不加标记。
+# qiskit 互操作测试合并：compile(output="qiskit") 契约、IR<->qiskit 与 IR<->QASM 往返、
+# 以及 qiskit_interop 纯函数（basis/opt 归一化、free_pi、注释生成）。需要 qiskit 的用例通过
+# skipif 单独跳过；纯函数用例不依赖 qiskit，故不加标记。
 import importlib
 
 import pytest
 
 from tyxonq.core.ir import Circuit
-from tyxonq.compiler.platforms.qiskit.dialect import (
+from tyxonq.compiler.gate_compiler.interop.qiskit_interop import (
     DEFAULT_BASIS_GATES,
     DEFAULT_OPT_LEVEL,
     comment_dict,
@@ -25,11 +25,11 @@ _qiskit_missing = importlib.util.find_spec("qiskit") is None
 @pytest.mark.skipif(_qiskit_missing, reason="qiskit not installed")
 def test_qiskit_compiler_minimal_contract():
     from qiskit import QuantumCircuit
-    from tyxonq.compiler.platforms.qiskit import QiskitCompiler
+    from tyxonq.compiler.api import compile as compile_ir
 
-    comp = QiskitCompiler()
     circ = Circuit(num_qubits=2, ops=[("h", 0), ("cx", 0, 1), ("measure_z", 1)])
-    res = comp.compile(circuit = circ, device_rule= {"native_gates": set()}, options =  {"opt_level": 1}, output = "qiskit")  # type: ignore[arg-type]
+    # platform="qiskit" 已降级为互操作别名：归一到核心 tyxonq 通道，output="qiskit" 走 to_qiskit。
+    res = compile_ir(circ, platform="qiskit", output="qiskit", options={"opt_level": 1})
     assert isinstance(res["circuit"], QuantumCircuit)
     assert "options" in res["metadata"]
 
@@ -49,7 +49,7 @@ def test_ir_qasm_roundtrip_minimal():
 
 @pytest.mark.skipif(_qiskit_missing, reason="qiskit not installed")
 def test_ir_to_qiskit_and_back_minimal_roundtrip():
-    from tyxonq.compiler.platforms.qiskit.qiskit_compiler import ir_to_qiskit, qiskit_to_ir
+    from tyxonq.compiler.gate_compiler.interop.qiskit_interop import ir_to_qiskit, qiskit_to_ir
 
     circ = Circuit(num_qubits=2, ops=[("h", 0), ("cx", 0, 1), ("rz", 1, 0.3), ("measure_z", 0)])
     qc = ir_to_qiskit(circ)

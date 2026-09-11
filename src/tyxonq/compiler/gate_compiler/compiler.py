@@ -48,6 +48,12 @@ class GateCompiler:
             basis_gates = list(basis_gates)
             opts["basis_gates"] = basis_gates
 
+        # qasm2 输出：qelib1.inc 门集有限，若未显式指定 basis_gates，默认先降级到 qelib1
+        # 兼容基，保证 GateQASM2Exporter 不会遇到 iswap/rxx/ryy/rzz 等非 qelib1 门。
+        if output in ("qasm", "qasm2") and not basis_gates:
+            basis_gates = ["cx", "h", "rz", "rx", "cz"]
+            opts["basis_gates"] = basis_gates
+
         # optimize 与 options.optimization_level 归一（options 显式值优先）。
         optimization_level = int(opts.get("optimization_level", optimize))
         opts["optimization_level"] = optimization_level
@@ -85,32 +91,19 @@ class GateCompiler:
             qasm3_code = exporter.export(lowered)
             return {"circuit": circuit, "compiled_source": qasm3_code, "metadata": metadata}
         if output in ("qasm", "qasm2"):
-            # 若本地未实现 QASM 降级，薄转发到 qiskit 实现
-            # output = tyxonq equals to qasm2
-            try:
-                from ..platforms.qiskit import QiskitCompiler  # type: ignore
+            # 纯 QASM2 exporter（对齐 qasm3，零外部依赖，不再绕道 qiskit）。
+            # 上面已保证降到 qelib1 兼容基，故此处直译即可拿到真正的 QASM2 字符串。
+            from .exporters.gate_qasm2_exporter import GateQASM2Exporter
 
-                qk_opts = dict(opts)
-                # 若未显式指定，使用 qiskit 偏好门集合
-                if not qk_opts.get("basis_gates"):
-                    qk_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
-                qk_opts["output"] = "qasm2"
-                # 需要将 lowered 作为输入传给 qiskit 方言适配
-                return QiskitCompiler().compile({"circuit": lowered, "options": qk_opts})  # type: ignore[arg-type]
-            except Exception:
-                # 降级失败则仍返回 IR
-                return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}
+            qasm2_code = GateQASM2Exporter().export(lowered)
+            return {"circuit": circuit, "compiled_source": qasm2_code, "metadata": metadata}
         if output == "qiskit":
-            try:
-                from ..platforms.qiskit import QiskitCompiler  # type: ignore
+            # qiskit 互操作输出目标：纯 IR → qiskit.QuantumCircuit 转换（不做 transpile，
+            # 布局布线是 routing 步骤的职责）。qiskit 不可用时 to_qiskit 会抛清晰错误。
+            from .interop.qiskit_interop import to_qiskit
 
-                qk_opts = dict(opts)
-                # 若未显式指定，使用 qiskit 偏好门集合
-                if not qk_opts.get("basis_gates"):
-                    qk_opts["basis_gates"] = ["cx", "h", "rz", "rx", "cz"]
-                qk_opts["output"] = "qiskit"
-                return QiskitCompiler().compile({"circuit": lowered, "options": qk_opts})  # type: ignore[arg-type]
-            except Exception:
-                return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}
+            add_measures = bool(opts.get("add_measures", True))
+            qc = to_qiskit(lowered, add_measures=add_measures)
+            return {"circuit": qc, "compiled_source": qc, "metadata": metadata}
         # 未识别的 output：返回 IR
         return {"circuit": circuit, "compiled_source": lowered, "metadata": metadata}

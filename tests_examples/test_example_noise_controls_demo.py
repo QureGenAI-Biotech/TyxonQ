@@ -15,8 +15,13 @@ def test_example_runs_with_noise_controls():
     assert hasattr(mod.tq, 'get_noise_config')
 
     # Switch to local simulator for offline testing
-    mod.tq.enable_noise(True, {"type": "depolarizing", "p": 0.0})
-    # Should not raise
-    mod.demo_noise_controls()
+    try:
+        mod.tq.enable_noise(True, {"type": "depolarizing", "p": 0.0})
+        # Should not raise
+        mod.demo_noise_controls()
+    finally:
+        # 收尾复原全局噪声开关：enable_noise 改写的是 devices.base 的模块级全局态，
+        # 不关闭会泄漏到同进程后续测试（如 tests_mol_valid 的 UCC 设备路径）。
+        mod.tq.enable_noise(False)
 
 

@@ -655,7 +655,7 @@ class Circuit:
         n_mc = sum(1 for op in self.ops if "multicontrol" in str(op[0]).lower())
         depth = None
         try:
-            from ...compiler.platforms.qiskit.dialect import to_qiskit  # type: ignore
+            from ...compiler.gate_compiler.interop.qiskit_interop import to_qiskit  # type: ignore
             qc = to_qiskit(self, add_measures=False)
             depth = qc.depth()
         except Exception:
@@ -880,7 +880,7 @@ class Circuit:
 
         # QCOS provider: convert directly to Qiskit QuantumCircuit
         if dev_provider == "qcos":
-            from ...compiler.platforms.qiskit.dialect import to_qiskit
+            from ...compiler.gate_compiler.interop.qiskit_interop import to_qiskit
             qiskit_circuit = to_qiskit(self)
             tasks = device_base.run(
                 provider=dev_provider,
@@ -1978,7 +1978,7 @@ class Circuit:
         - If Qiskit is not installed, return a minimal textual `gate_summary()` string.
         """
         try:
-            from ...compiler.platforms.qiskit.dialect import to_qiskit  # type: ignore
+            from ...compiler.gate_compiler.interop.qiskit_interop import to_qiskit  # type: ignore
 
             qc = to_qiskit(self, add_measures=True)
             # Resolve default output: prefer per-circuit _draw_output, else 'text'

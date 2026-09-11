@@ -11,7 +11,7 @@ import pytest
 from tyxonq.compiler.api import compile as compile_ir
 from tyxonq.compiler.gate_compiler.specs import DecomposeSpec
 from tyxonq.compiler.gate_compiler.steps import apply_steps, build_compile_steps
-from tyxonq.compiler.gate_compiler.translation.mpo_converters import contract_mpo_to_matrix
+from tyxonq.compiler.gate_compiler.interop.mpo_converters import contract_mpo_to_matrix
 from tyxonq.core.ir import Circuit
 
 

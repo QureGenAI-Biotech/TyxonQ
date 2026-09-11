@@ -171,47 +171,55 @@ class Circuit:
 - **Genericity**: `ops` field has open type, allowing different backends to define their own interpretation methods
 - **Type Safety**: Combines compile-time static checking with runtime dynamic validation
 
-#### 2.2.2 Pluggable Compiler Architecture
+#### 2.2.2 Two-Layer Compiler Architecture
+
+TyxonQ separates **device-agnostic compilation** from **hardware-dialect translation**. A single `gate_compiler` core collects the state-of-the-art, device-independent passes (decomposition, routing, optimization, simplification); each `platforms/*` adapter (`tyxonq`/`lqcloud`/`guodun`) delegates to that core and then translates the compiled IR into its own native format. Compilation logic therefore lives in exactly one place instead of being reimplemented per vendor.
 
 ```mermaid
 classDiagram
-    class CompilerEngine {
-        <<interface>>
-        +compile(circuit: Circuit, options: Dict) CompileResult
+    class CompileStep {
+        <<protocol>>
+        +apply(circuit, opts) Circuit
     }
     
-    class NativeCompiler {
-        -name: str = "tyxonq"
-        +compile(circuit: Circuit, options: Dict) CompileResult
-        +build_plan() List[Pass]
+    class GateCompiler {
+        +name: str = "tyxonq"
+        +compile(circuit, decompose, route, optimize, simplify) CompileResult
     }
     
-    class QiskitCompiler {
-        -name: str = "qiskit"
-        +compile(circuit: Circuit, options: Dict) CompileResult
-        +transpile() QuantumCircuit
+    class Routing {
+        +apply(circuit, opts) Circuit
+    }
+    class MatchgateDecompose {
+        +apply(circuit, opts) Circuit
     }
     
-    class MeasurementRewritePass {
-        +execute(circuit: Circuit) Circuit
-        +group_measurements() Dict
+    class LQCloudCompiler {
+        +name: str = "lqcloud"
+        +compile(circuit) CompileResult
     }
     
-    class ShotSchedulerPass {
-        +execute(circuit: Circuit) Dict
-        +allocate_shots() List[int]
+    class GuodunCompiler {
+        +name: str = "guodun"
+        +compile(circuit) CompileResult
+    }
+    class LightconeSimplify {
+        +apply(circuit, opts) Circuit
     }
     
-    CompilerEngine <|-- NativeCompiler
-    CompilerEngine <|-- QiskitCompiler
-    NativeCompiler --> MeasurementRewritePass
-    NativeCompiler --> ShotSchedulerPass
+    GateCompiler --> CompileStep : assembles typed pipeline
+    CompileStep <|-- MatchgateDecompose
+    CompileStep <|-- Routing
+    CompileStep <|-- LightconeSimplify
+    LQCloudCompiler --> GateCompiler : delegates then translates
+    GuodunCompiler --> GateCompiler : delegates then translates
 ```
 
 **Compiler Innovations:**
-1. **Measurement Grouping Metadata**: Elevates measurement optimization from device layer to compiler layer
-2. **Deterministic Shot Scheduling**: Generates predictable execution plans based on grouping information
-3. **Compiler Adapters**: Supports multiple compilation engines while maintaining compatibility with mainstream ecosystems
+1. **Two-Layer Design (core + dialects)**: A device-agnostic `gate_compiler` core performs decomposition, routing, optimization and simplification; hardware `platforms/*` adapters delegate to it and handle only dialect translation, eliminating per-vendor duplication.
+2. **Typed Step Pipeline**: Capabilities are declared as typed specs (`DecomposeSpec`/`RoutingSpec`) that assemble an ordered `CompileStep` sequence (normalize → decompose → route → optimize → simplify), replacing the earlier string-based DSL and its no-op placeholder passes.
+3. **SABRE Routing as a First-Class Step**: Qubit layout and SWAP insertion are delegated to `qiskit.transpile` and executed in a local index space with a reproducible seed; measurement logical order is preserved and the source IR is never rewritten (the physical mapping flows to the device as a runtime `initial_layout`).
+4. **Exporter / Interop Separation**: QASM2/QASM3 are pure zero-dependency text exporters, while conversions to external framework objects (Qiskit `QuantumCircuit`) and formats (tensor-network MPO) live in a shared `interop/` layer — Qiskit is an interoperability target and routing engine, not a pseudo hardware platform.
 
 #### 2.2.3 Unified Device Abstraction Layer
 

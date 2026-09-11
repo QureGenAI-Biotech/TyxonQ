@@ -326,7 +326,7 @@ class Routing:
         """
         from qiskit import transpile as qk_transpile
 
-        from ....platforms.qiskit.dialect import from_qiskit, to_qiskit
+        from ...interop.qiskit_interop import from_qiskit, to_qiskit
 
         try:
             qc_before = to_qiskit(circuit, add_measures=True)

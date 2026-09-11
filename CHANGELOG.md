@@ -5,6 +5,26 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.html).
 
 
+### [1.4.0] - 2026-09-11
+### Added
+- **Two-layer compiler architecture**: a device-agnostic `gate_compiler` core plus per-hardware `platforms/*` dialects (`tyxonq`/`lqcloud`/`guodun`). Each platform adapter delegates to the core for device-independent compilation, then translates the result into its own dialect — compilation logic is no longer duplicated per vendor
+- **Typed step pipeline** (`gate_compiler/steps.py`, `specs.py`): compilation capabilities are expressed as typed specs (`DecomposeSpec`/`RoutingSpec`) that assemble an ordered `CompileStep` sequence (normalize → decompose → route → optimize → simplify), replacing the old string-based `compile_plan` DSL and its `NoOp*` placeholder passes
+- **SABRE routing as a first-class step** (`gate_compiler/stages/layout/routing.py`): layout + SWAP insertion delegated to `qiskit.transpile`, executed in a local index space with a reproducible seed, preserving measurement logical order and never rewriting the source IR (routing info flows to the device as a runtime `initial_layout`)
+- **Pure QASM2 exporter** (`gate_compiler/exporters/gate_qasm2_exporter.py`): zero-external-dependency IR → OpenQASM 2.0 text, aligned with the existing QASM3 exporter
+- **Interop layer** (`gate_compiler/interop/`): `qiskit_interop` (IR ↔ Qiskit `QuantumCircuit`) and `mpo_converters` (tensor-network MPO → dense matrix), shared by routing (SABRE), `draw`/`depth`, QCOS submission and the simulator driver
+- **Tests**: `tests_core_module/test_gate_qasm2_exporter.py` (QASM2 exporter coverage); Qiskit provider tests rewritten around `compile(output="qiskit")` + `qiskit_interop`
+
+### Changed
+- **Qiskit demoted from pseudo-platform to interop alias**: `platform="qiskit"` now normalizes to the `tyxonq` core (defaulting `output="qiskit"` when unspecified); the standalone `platforms/qiskit` compiler/dialect package was removed. Qiskit is an interoperability target and routing engine, not a hardware dialect
+- **Three-layer separation of concerns**: `exporters/` (IR → standard text: QASM2/QASM3), `interop/` (IR ↔ external framework objects/formats: Qiskit, tensor-network MPO), `platforms/` (hardware dialects) are now semantically parallel
+- **`output="qiskit"` no longer implies transpilation**: layout/routing is exclusively the `route=True` step's responsibility, making behavior predictable
+- **`translation/` merged into `interop/`**: the (dormant) MPO converters moved to `gate_compiler/interop/mpo_converters.py` to consolidate all external-format conversion in one layer
+- **LQCloud compiler delegates decomposition to the core**: `platforms/lqcloud` now routes matchgate/rotations decomposition + routing through `gate_compiler`, so the matchgate decomposition exists in exactly one place (resolves the prior duplicated-implementation pitfall)
+
+### Fixed
+- **`output="qasm2"` silently falling back to IR**: previously the QASM2 path detoured IR → Qiskit → transpile → QASM2 and could quietly return the IR object; it now emits a real OpenQASM 2.0 string via `GateQASM2Exporter` (benefits `homebrew_s2`/`quafu` submission)
+- **`tests_examples` / `tests_mol_valid` regressions**: source-level fixes restored the example and molecule-validation suites to green
+
 ### [1.3.0] - 2026-09-01
 ### Added
 - **MD / QM-MM ecosystem integration** (`tyxonq.applications.chem.interfaces`): TyxonQ as a quantum-chemistry force engine; all nuclear gradients reused from PySCF:

@@ -40,7 +40,9 @@ def test_quantum_circuit_forward():
         assert output.shape == (9,)
         
         # Check output is real (expectations should be real)
-        assert torch.all(torch.abs(torch.imag(output)) < 1e-6)
+        # 输出是实数 float32 张量（示例用 K.real 取期望值实部），torch.imag 只接受复数输入，
+        # 故这里直接断言其非复数 dtype。
+        assert not torch.is_complex(output)
         
     except ImportError as e:
         pytest.skip(f"Missing dependency: {e}")
@@ -55,7 +57,8 @@ def test_model_construction():
         model = module.HybridQuantumClassicalModel(n_qubits=9, n_layers=2)
         
         # Check model has expected components
-        assert hasattr(model, 'quantum_layer')
+        # 量子层参数在示例中命名为 quantum_weights（nn.Parameter），并非 quantum_layer。
+        assert hasattr(model, 'quantum_weights')
         assert hasattr(model, 'fc')
         assert hasattr(model, 'sigmoid')
         

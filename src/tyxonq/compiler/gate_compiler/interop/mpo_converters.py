@@ -94,5 +94,3 @@ def from_quimb_mpo(qb_mpo: Any) -> np.ndarray:
     """
     tensors = [getattr(t, "data") for t in getattr(qb_mpo, "tensors")]
     return contract_mpo_to_matrix(tensors)
-
-

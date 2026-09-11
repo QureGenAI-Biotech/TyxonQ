@@ -61,7 +61,8 @@ def compile(
         platform: 目标编译平台。取值：
             - "tyxonq"（默认；别名 "default"/"native" 归一到此）：TyxonQ 核心，输出 ir/qasm2/qasm3/qiskit；
             - "pulse"：脉冲级编译；
-            - "lqcloud"/"guodun"/"qiskit"：对应硬件平台方言。
+            - "lqcloud"/"guodun"：对应硬件平台方言；
+            - "qiskit"：**互操作别名**（非硬件平台），归一到 tyxonq 核心；未显式指定 output 时默认输出 qiskit 对象。
         output: 目标输出格式（"ir"/"qasm2"/"qasm3"/"qiskit"/平台专属如 "lqcloud"/"qcis"）。
         basis_gates: 目标原生门集合，透传给规范化/分解步骤与平台方言。
         decompose: ``bool | DecomposeSpec``。True（默认）→ 分解 2-qubit 数守恒 matchgate；
@@ -194,6 +195,15 @@ def compile(
     if platform in ("default", "native"):
         platform = "tyxonq"
 
+    # qiskit 不是硬件平台，而是「第三方框架互操作」的过渡别名：归一到核心 tyxonq 通道。
+    # 未显式指定 output（None/"ir"）时默认输出 qiskit 对象，保住无 output 的历史调用
+    # （如 circuit_chain_demo）；显式 output（qasm2/qiskit/...）则由核心按 output 分派。
+    if platform == "qiskit":
+        platform = "tyxonq"
+        if output in (None, "ir"):
+            output = "qiskit"
+            opts["output"] = output
+
     # 智能推断：如果检测到脉冲操作或显式脉冲编译模式，自动启用 pulse 编译
     # 注意：output="qasm3" 等不再直接触发脉冲编译，只在有实际脉冲操作时才启用
     if is_pulse_compilation and platform == "tyxonq":
@@ -310,15 +320,6 @@ def compile(
             options=opts,
         )  # type: ignore[arg-type]
         circuit._compiled_source = result["compiled_source"]
-        return result
-    if platform == "qiskit":
-        from .platforms.qiskit import QiskitCompiler
-
-        result = QiskitCompiler().compile(circuit=circuit, device_rule=device_rule, options=opts)  # type: ignore[arg-type]
-
-        # 缓存编译源代码到 _source，避免重复编译
-        circuit._compiled_source = result["compiled_source"]
-
         return result
     # Fallback：委托 gate_compiler 公用核心（TyxonQ 平台）
     from .platforms.tyxonq import TyxonQCompiler

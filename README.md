@@ -196,7 +196,10 @@ This document provides:
 
 ### Key features
 - **Chain API**: `Circuit.compile().device(...).postprocessing(...).run()`.
-- **Compiler passes**: measurement rewrite/grouping, light‑cone simplify, shot scheduling.
+- **Two-layer compiler (refactored in v1.4)**: a device-agnostic `gate_compiler` core assembles a typed step pipeline — normalize → decompose (matchgate/rotations) → route → optimize → simplify (light‑cone) — while per-hardware `platforms/*` dialects (`tyxonq`/`lqcloud`/`guodun`) delegate to the core, then translate to their native format, so no compilation logic is duplicated per vendor.
+  - **Routing**: SABRE layout + SWAP insertion delegated to `qiskit.transpile`, run in a local index space with a reproducible seed and measurement-order preservation; the source IR is never rewritten.
+  - **Clean layering**: `exporters/` = pure zero-dependency QASM2/QASM3 text; `interop/` = IR ↔ Qiskit `QuantumCircuit` and tensor-network MPO; `platforms/` = hardware dialects. Qiskit is now an interop target, not a pseudo hardware platform.
+  - **Fix**: `output="qasm2"` now emits a real OpenQASM 2.0 string instead of silently falling back to IR (benefits `homebrew_s2`/`quafu` submission).
 - **Devices**: statevector/density‑matrix/MPS simulators and hardware drivers (e.g., `tyxonq:homebrew_s2`).
 - **Numerics**: one ArrayBackend for NumPy/PyTorch/CuPyNumeric powering simulators and research kernels.
 - **Libraries**: `libs/circuits_library` (templates: VQE/QAOA/trotter/state‑prep), `libs/quantum_library` (numeric kernels), `libs/hamiltonian_encoding` (OpenFermion I/O, encodings), `libs/optimizer` (interop).

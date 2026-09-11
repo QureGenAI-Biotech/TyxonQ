@@ -1,10 +1,24 @@
+"""IR ↔ Qiskit 互操作适配器（provider-scoped）。
+
+这些适配器把 TyxonQ IR ``Circuit`` 与 qiskit ``QuantumCircuit`` 双向转换，供以下**调用点**
+共享使用（qiskit 只是第三方库、并非硬件平台，故不再放在 ``platforms/`` 下）：
+
+- 路由引擎：``stages/layout/routing.py`` 借 ``qiskit.transpile``（SABRE）做布局布线；
+- 电路工具：``core/ir/circuit.py`` 的 ``draw()``/``depth()``；
+- qcos 提交：wuyue/qcos SDK 原生接收 qiskit ``QuantumCircuit``；
+- 模拟器驱动：``devices/simulators/driver.py`` 解析 QASM2 字符串回 IR。
+
+其中 ``ir_to_qasm`` 已改为委托**纯 QASM2 exporter**（零 qiskit 依赖），仅 ``qasm_to_ir``
+（QASM2 文本 → IR）仍借 qiskit 解析器。
+"""
+
 from __future__ import annotations
 
 import re
 from typing import Any, Dict, List
 
 try:
-    # Optional import: only required when user chooses qiskit provider
+    # Optional import: only required when user chooses qiskit interop
     from qiskit import QuantumCircuit, ClassicalRegister  # type: ignore
 except Exception:  # pragma: no cover - keep import optional
     QuantumCircuit = None  # type: ignore
@@ -146,15 +160,6 @@ def _add_measure_all_if_none(qc: Any) -> Any:
     return qc
 
 
-def qasm2_dumps_compat(qc: Any) -> str:
-    try:
-        from qiskit.qasm2 import dumps  # type: ignore
-
-        return dumps(qc)
-    except Exception:
-        return qc.qasm()  # type: ignore[attr-defined]
-
-
 # -------- IR <-> Qiskit adapters (provider-scoped) --------
 
 def to_qiskit(circuit: Circuit, *, add_measures: bool = True) -> Any:
@@ -288,7 +293,7 @@ def from_qiskit(qc: Any) -> Circuit:
     return Circuit(num_qubits=qc.num_qubits, ops=ops)
 
 
-# -------- OpenQASM adapters via Qiskit provider --------
+# -------- OpenQASM adapters --------
 
 def qasm_to_ir(qasm_str: str) -> Circuit:
     """Parse OpenQASM 2 string to IR `Circuit` using Qiskit if available."""
@@ -304,7 +309,33 @@ def qasm_to_ir(qasm_str: str) -> Circuit:
 
 
 def ir_to_qasm(circuit: Circuit) -> str:
-    """Serialize IR `Circuit` to OpenQASM 2 string via Qiskit."""
-    qc = to_qiskit(circuit, add_measures=True)
-    return qasm2_dumps_compat(qc)
+    """Serialize IR `Circuit` to OpenQASM 2 string.
 
+    直接委托纯 ``GateQASM2Exporter``（零 qiskit 依赖），不再经 qiskit 对象中转。
+    """
+    from ..exporters.gate_qasm2_exporter import GateQASM2Exporter
+
+    return GateQASM2Exporter().export(circuit)
+
+
+# -------- 兼容别名（历史命名） --------
+
+ir_to_qiskit = to_qiskit
+qiskit_to_ir = from_qiskit
+
+
+__all__ = [
+    "OP_MAPPING",
+    "DEFAULT_BASIS_GATES",
+    "DEFAULT_OPT_LEVEL",
+    "normalize_transpile_options",
+    "free_pi",
+    "comment_qasm",
+    "comment_dict",
+    "to_qiskit",
+    "from_qiskit",
+    "ir_to_qiskit",
+    "qiskit_to_ir",
+    "qasm_to_ir",
+    "ir_to_qasm",
+]
