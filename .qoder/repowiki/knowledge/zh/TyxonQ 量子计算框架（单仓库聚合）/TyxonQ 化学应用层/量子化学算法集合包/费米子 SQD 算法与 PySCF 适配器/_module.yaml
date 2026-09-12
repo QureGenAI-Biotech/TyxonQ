@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/sqd
+title: 费米子 SQD 算法与 PySCF 适配器
+scope:
+    - src/tyxonq/applications/chem/algorithms/sqd/
+source_files: []
+depends_on: []
+related_to: []

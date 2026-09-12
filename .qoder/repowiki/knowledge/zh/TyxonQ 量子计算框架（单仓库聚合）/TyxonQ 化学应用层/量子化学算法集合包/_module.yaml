@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms
+title: 量子化学算法集合包
+scope:
+    - src/tyxonq/applications/chem/algorithms/
+source_files: []
+depends_on: []
+related_to: []

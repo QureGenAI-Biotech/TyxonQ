@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: applications_chem
+title: TyxonQ 化学应用层
+scope:
+    - src/tyxonq/applications/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,15 @@
+schema_version: 1
+module_path: core_framework
+title: 核心框架与数值后端（IR、Numerics、配置）
+scope:
+    - src/tyxonq/core/
+    - src/tyxonq/numerics/
+    - src/tyxonq/waveforms.py
+    - src/tyxonq/config.py
+    - src/tyxonq/utils.py
+    - src/tyxonq/about.py
+    - src/tyxonq/__init__.py
+source_files: []
+depends_on: []
+related_to:
+    - path: docs

@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: compiler/pulse_compiler
+title: Pulse 级编译引擎（Gate→Pulse 流水线）
+scope:
+    - src/tyxonq/compiler/pulse_compiler/
+source_files: []
+depends_on: []
+related_to:
+    - path: compiler/gate_compiler

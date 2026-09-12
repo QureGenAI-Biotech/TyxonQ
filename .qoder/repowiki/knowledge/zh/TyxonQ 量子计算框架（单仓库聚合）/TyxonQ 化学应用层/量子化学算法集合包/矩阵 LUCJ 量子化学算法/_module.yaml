@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/lucj
+title: 矩阵 LUCJ 量子化学算法
+scope:
+    - src/tyxonq/applications/chem/algorithms/lucj/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: libs
+title: 量子算法与算子库集合（libs）
+scope:
+    - src/tyxonq/libs/
+source_files: []
+depends_on: []
+related_to: []

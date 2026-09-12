@@ -1,56 +1,114 @@
-# Native Compiler
+# Gate Compiler Architecture
 
 <cite>
 **Referenced Files in This Document**   
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py)
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py)
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py)
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py)
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py)
+- [compiler.py](file://src/tyxonq/compiler/gate_compiler/compiler.py)
+- [steps.py](file://src/tyxonq/compiler/gate_compiler/steps.py)
+- [api.py](file://src/tyxonq/compiler/api.py)
+- [auto_measure.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py)
+- [gates_transform.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py)
+- [lqcloud_compiler.py](file://src/tyxonq/compiler/platforms/lqcloud/compiler.py)
+- [guodun_compiler.py](file://src/tyxonq/compiler/platforms/guodun/compiler.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Replaced outdated NativeCompiler documentation with new GateCompiler architecture
+- Updated all references from compile_engine/native to gate_compiler structure
+- Added platform-specific compiler information for LQCloud and Guodun
+- Updated compilation pipeline description to reflect type-based parameter system
+- Removed deprecated compile_plan parameter references
 
 ## Table of Contents
 1. [Introduction](#introduction)
-2. [Default Compilation Pipeline](#default-compilation-pipeline)
-3. [Normalization Passes](#normalization-passes)
-4. [Custom Optimization with compile_plan](#custom-optimization-with-compile_plan)
-5. [Shot Scheduling Integration](#shot-scheduling-integration)
-6. [Output Format Handling](#output-format-handling)
-7. [Practical Usage Examples](#practical-usage-examples)
-8. [Troubleshooting Common Issues](#troubleshooting-common-issues)
+2. [Gate Compiler Core Architecture](#gate-compiler-core-architecture)
+3. [Default Compilation Pipeline](#default-compilation-pipeline)
+4. [Normalization Passes](#normalization-passes)
+5. [Type-Based Optimization Configuration](#type-based-optimization-configuration)
+6. [Platform-Specific Compilers](#platform-specific-compilers)
+7. [Output Format Handling](#output-format-handling)
+8. [Practical Usage Examples](#practical-usage-examples)
+9. [Troubleshooting Common Issues](#troubleshooting-common-issues)
 
 ## Introduction
-The NativeCompiler is the default compilation engine within TyxonQ's backend compilers, designed to provide a lightweight, dependency-free compilation path optimized for the internal execution ecosystem. It operates directly on TyxonQ's intermediate representation (IR) and enables efficient circuit transformation and optimization without requiring external quantum software frameworks. The compiler supports customizable optimization workflows and integrates seamlessly with device-specific execution constraints through modular compilation passes.
+The GateCompiler is TyxonQ's unified compilation engine that provides a lightweight, dependency-free compilation path optimized for the internal execution ecosystem. It operates directly on TyxonQ's intermediate representation (IR) and enables efficient circuit transformation and optimization without requiring external quantum software frameworks. The compiler uses a type-based parameter system instead of string DSLs, supporting customizable optimization workflows through modular compilation passes. Platform-specific compilers for LQCloud and Guodun delegate to this core while translating results into their respective dialects.
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L12-L98)
+**Section sources**   
+- [compiler.py:14-23](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L23)
+- [api.py:39-98](file://src/tyxonq/compiler/api.py#L39-L98)
+
+## Gate Compiler Core Architecture
+The GateCompiler serves as the central compilation hub, collecting state-of-the-art device-independent passes including decomposition, routing, optimization, and simplification. Unlike the previous NativeCompiler which had its own implementation, the GateCompiler provides a unified interface that platform-specific compilers delegate to. The architecture separates device-agnostic compilation from hardware-dialect translation, ensuring compilation logic lives in exactly one place rather than being reimplemented per vendor.
+
+```mermaid
+classDiagram
+class GateCompiler {
++name : str = "tyxonq"
++compile(circuit, basis_gates, decompose, route, optimize, simplify, device_rule, options) CompileResult
+}
+class CompileStep {
+<<protocol>>
++apply(circuit, opts) Circuit
+}
+class AutoMeasure
+class GatesTransform
+class MatchgateDecompose
+class Routing
+class MergePrune
+class LightconeSimplify
+GateCompiler --> CompileStep : builds pipeline
+CompileStep <|-- AutoMeasure
+CompileStep <|-- GatesTransform
+CompileStep <|-- MatchgateDecompose
+CompileStep <|-- Routing
+CompileStep <|-- MergePrune
+CompileStep <|-- LightconeSimplify
+```
+
+**Diagram sources**   
+- [compiler.py:14-109](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L109)
+- [steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
+
+**Section sources**   
+- [compiler.py:14-23](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L23)
+- [steps.py:1-8](file://src/tyxonq/compiler/gate_compiler/steps.py#L1-L8)
 
 ## Default Compilation Pipeline
-The NativeCompiler constructs its default compilation pipeline by automatically prepending essential normalization passes to any user-specified optimization sequence. This ensures consistent preprocessing regardless of the requested optimization level. The pipeline begins with two mandatory passes: 'rewrite/auto_measure' and 'rewrite/gates_transform'. These are followed by any additional passes specified in the `compile_plan` parameter. The pipeline execution is managed by the `build_plan` function, which resolves stage names into executable `Pass` instances and composes them into a `CompilePlan`. The final pipeline is executed sequentially on the input circuit, producing a transformed circuit that adheres to the specified optimization and device constraints.
+The GateCompiler constructs its default compilation pipeline by automatically prepending essential normalization passes to any user-specified optimization sequence. The pipeline begins with two mandatory passes: 'rewrite/auto_measure' and 'rewrite/gates_transform'. These are followed by optional decomposition, routing, optimization, and simplification passes based on the provided type-based parameters. The pipeline execution is managed by the `build_compile_steps` function, which resolves typed parameters into executable `CompileStep` instances and composes them into an ordered sequence.
 
 ```mermaid
 flowchart TD
 Start([Input Circuit]) --> AutoMeasure["rewrite/auto_measure"]
 AutoMeasure --> GatesTransform["rewrite/gates_transform"]
-GatesTransform --> CustomPasses["User-defined Passes<br/>from compile_plan"]
-CustomPasses --> Execution["Execute Plan"]
-Execution --> OutputCircuit["Optimized Circuit"]
+GatesTransform --> Decompose{"decompose<br/>enabled?"}
+Decompose --> |Yes| Matchgate["decompose/matchgate"]
+Matchgate --> Rotations{"rotations<br/>enabled?"}
+Rotations --> |Yes| RotationDecomp["decompose/rotations"]
+Rotations --> |No| RouteCheck{"route<br/>enabled?"}
+RouteCheck --> |Yes| Routing["layout/routing"]
+RouteCheck --> |No| OptimizeCheck{"optimize >= 1?"}
+OptimizeCheck --> |Yes| MergePrune["rewrite/merge_prune"]
+OptimizeCheck --> |No| SimplifyCheck{"simplify<br/>enabled?"}
+SimplifyCheck --> |Yes| Lightcone["simplify/lightcone"]
+SimplifyCheck --> |No| OutputCircuit["Optimized Circuit"]
+MergePrune --> SimplifyCheck
+Lightcone --> OutputCircuit
+Routing --> OutputCircuit
+RotationDecomp --> RouteCheck
 ```
 
-**Diagram sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L50-L60)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L91-L94)
+**Diagram sources**   
+- [steps.py:56-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L56-L91)
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L50-L65)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L91-L94)
+**Section sources**   
+- [steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
+- [compiler.py:64-73](file://src/tyxonq/compiler/gate_compiler/compiler.py#L64-L73)
 
 ## Normalization Passes
-The NativeCompiler automatically inserts two critical normalization passes at the beginning of every compilation pipeline to ensure circuit consistency and gate compatibility.
+The GateCompiler automatically inserts two critical normalization passes at the beginning of every compilation pipeline to ensure circuit consistency and gate compatibility.
 
 ### Auto-Measurement Pass
-The `AutoMeasurePass` ensures that all circuits contain explicit measurement operations. When no `measure_z` operations are present in the input circuit, this pass automatically appends Z-basis measurements on all qubits. This behavior prevents execution failures due to missing measurements while maintaining circuit semantics. A non-fatal warning is emitted to inform users of this automatic insertion, promoting transparency in the compilation process.
+The `AutoMeasure` pass ensures that all circuits contain explicit measurement operations. When no `measure_z` operations are present in the input circuit, this pass automatically appends Z-basis measurements on all qubits. This behavior prevents execution failures due to missing measurements while maintaining circuit semantics. A non-fatal warning is emitted to inform users of this automatic insertion, promoting transparency in the compilation process.
 
 ```mermaid
 flowchart TD
@@ -62,11 +120,11 @@ NoOp --> End([Output Circuit])
 EmitWarning --> End
 ```
 
-**Diagram sources**
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py#L10-L34)
+**Diagram sources**   
+- [auto_measure.py:10-34](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L10-L34)
 
 ### Gate Transformation Pass
-The `GatesTransformPass` rewrites quantum gates according to the specified basis gate set. By default, it targets the native basis gates ["h", "rx", "rz", "cx", "cz"]. The pass performs gate substitutions such as converting X gates to RX(π) when RX is available, and Y gates to RY(π) when RY is supported. Gates that are already in the basis set are preserved, while unsupported gates remain unchanged to maintain circuit integrity. This transformation ensures compatibility with the target execution environment's native gate set.
+The `GatesTransform` pass rewrites quantum gates according to the specified basis gate set. By default, it targets the native basis gates ["h", "rx", "rz", "cx", "cz"]. The pass performs gate substitutions such as converting X gates to RX(π) when RX is available, and Y gates to RY(π) when RY is supported. Gates that are already in the basis set are preserved, while unsupported gates remain unchanged to maintain circuit integrity. This transformation ensures compatibility with the target execution environment's native gate set.
 
 ```mermaid
 flowchart TD
@@ -83,79 +141,144 @@ ConvertToRX --> Output
 ConvertToRY --> Output
 ```
 
-**Diagram sources**
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L9-L49)
+**Diagram sources**   
+- [gates_transform.py:9-49](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L9-L49)
 
-**Section sources**
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py#L10-L34)
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L9-L49)
+**Section sources**   
+- [auto_measure.py:10-34](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L10-L34)
+- [gates_transform.py:9-49](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L9-L49)
 
-## Custom Optimization with compile_plan
-The `compile_plan` parameter enables customization of the optimization workflow by allowing users to specify additional compilation passes beyond the default normalization steps. When provided, these passes are appended to the fixed sequence of 'rewrite/auto_measure' and 'rewrite/gates_transform'. The parameter accepts either a single pass name or a list of pass names, which are resolved into executable `Pass` instances by the `build_plan` function. This modular design allows for flexible optimization strategies, such as adding lightcone simplification (`simplify/lightcone`) or parameter shift gradient computation (`gradients/parameter_shift`). The optimization level, controlled by the `optimization_level` option, can be used to select predefined optimization strategies or enable specific passes conditionally.
+## Type-Based Optimization Configuration
+The GateCompiler uses a type-based parameter system that replaces the old string DSL approach. Key parameters include:
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L55-L60)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L15-L94)
+- **basis_gates**: Target native gate set for gate transformation
+- **decompose**: Boolean or `DecomposeSpec` controlling decomposition steps (matchgate, rotations, two_qubit_unitary)
+- **route**: Boolean or `RoutingSpec` controlling routing steps with coupling map and layout specifications
+- **optimize**: Integer optimization level (0-3) enabling adjacent gate merging and identity pruning
+- **simplify**: Boolean enabling lightcone simplification for cutting operators that don't affect measurements
 
-## Shot Scheduling Integration
-The NativeCompiler integrates shot planning functionality through the `schedule` function when shot-related options are present in the compilation request. When either `shot_plan` or `total_shots` is specified in the options, the compiler invokes the shot scheduler to generate an execution plan. The scheduler operates in two modes: explicit and group-based. In explicit mode, it creates one segment per entry in the provided `shot_plan`. In group-based mode, it distributes `total_shots` across measurement groups using `estimated_shots_per_group` as weights. The resulting job plan includes segments with shot counts, measurement bases, wire mappings, and batch identifiers when supported by the device. The scheduler also respects device constraints such as `max_shots_per_job` by splitting oversized segments and supports batch execution when `supports_batch` is enabled.
+This approach provides better type safety and IDE support compared to the previous string-based configuration system.
+
+**Section sources**   
+- [api.py:39-98](file://src/tyxonq/compiler/api.py#L39-L98)
+- [steps.py:27-55](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L55)
+
+## Platform-Specific Compilers
+TyxonQ now features platform-specific compilers that delegate to the GateCompiler core while translating results into their respective dialects.
+
+### LQCloud Compiler
+The `LQCloudCompiler` compiles TyxonQ circuits to LQCloud's official QuantumCircuit objects. It delegates to the GateCompiler for device-independent decomposition and routing, then performs 1:1 translation to LQCloud SDK objects without network requests. Physical qubits are treated as runtime backend parameters (initial_layout) rather than compilation-time parameters.
+
+### Guodun Compiler  
+The `GuodunCompiler` compiles TyxonQ circuits to QCIS format for the Guodun platform. It enforces specific basis gates (X, H, RZ, CZ, M) and validates output instructions against allowed sets. Physical qubits are compilation-time parameters baked into the QCIS text. The compiler includes version checking for cqlib dependency and performs offline syntax validation.
 
 ```mermaid
 flowchart TD
-Start([Compilation Request]) --> HasShotOptions{"shot_plan or<br/>total_shots?"}
-HasShotOptions --> |No| NoScheduling[No Job Plan]
-HasShotOptions --> |Yes| CheckMode{"shot_plan<br/>provided?"}
-CheckMode --> |Yes| ExplicitMode["Create segment<br/>per shot_plan entry"]
-CheckMode --> |No| GroupMode["Distribute total_shots<br/>by group weights"]
-ExplicitMode --> ApplyConstraints[Respect max_shots_per_job]
-GroupMode --> ApplyConstraints
-ApplyConstraints --> CheckBatching{"supports_batch?"}
-CheckBatching --> |Yes| AssignBatches["Assign batch_id<br/>to segments"]
-CheckBatching --> |No| Finalize[Finalize Segments]
-AssignBatches --> Finalize
-Finalize --> OutputPlan["Return job_plan"]
+UserCircuit([TyxonQ Circuit]) --> GateCompilerCore["GateCompiler Core"]
+GateCompilerCore --> DeviceIndependent["Device-Independent<br/>Compilation"]
+DeviceIndependent --> LQCloudCompiler["LQCloudCompiler"]
+DeviceIndependent --> GuodunCompiler["GuodunCompiler"]
+LQCloudCompiler --> LQCloudObject["LQCloud QuantumCircuit Object"]
+GuodunCompiler --> QCISText["QCIS Text"]
 ```
 
-**Diagram sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L43-L118)
+**Diagram sources**   
+- [lqcloud_compiler.py:50-109](file://src/tyxonq/compiler/platforms/lqcloud/compiler.py#L50-L109)
+- [guodun_compiler.py:88-173](file://src/tyxonq/compiler/platforms/guodun/compiler.py#L88-L173)
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L67-L75)
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L43-L118)
+**Section sources**   
+- [lqcloud_compiler.py:50-113](file://src/tyxonq/compiler/platforms/lqcloud/compiler.py#L50-L113)
+- [guodun_compiler.py:88-177](file://src/tyxonq/compiler/platforms/guodun/compiler.py#L88-L177)
 
 ## Output Format Handling
-The NativeCompiler handles multiple output formats through conditional delegation logic. For IR output (specified as "ir" or "tyxonq"), it returns the optimized circuit directly in TyxonQ's native intermediate representation. For QASM2 and Qiskit outputs, the compiler delegates to the `QiskitCompiler` when the requested format is "qasm", "qasm2", or "qiskit". This delegation occurs through a thin forwarding layer that converts the native IR to Qiskit's `QuantumCircuit` format using the `ir_to_qiskit` adapter. The delegation includes appropriate basis gate settings and transpilation options before invoking Qiskit's compilation pipeline. If the Qiskit dependency is unavailable or the compilation fails, the fallback behavior returns the native IR representation to ensure compilation success. This hybrid approach leverages external tools for industry-standard format support while maintaining independence from external dependencies for core functionality.
+The GateCompiler handles multiple output formats through conditional delegation logic:
+
+- **IR/TyxonQ**: Returns optimized circuit in TyxonQ's native intermediate representation
+- **QASM2/QASM3**: Uses dedicated exporters (`GateQASM2Exporter`, `GateQASM3Exporter`) for pure QASM output without external dependencies
+- **Qiskit**: Converts to Qiskit's `QuantumCircuit` format using the `to_qiskit` adapter when Qiskit is available
+- **Platform-specific**: LQCloud returns SDK objects, Guodun returns QCIS text strings
+
+For QASM2 output, the compiler automatically sets a compatible basis gate set (cx, h, rz, rx, cz) to ensure qelib1 compatibility before exporting.
 
 ```mermaid
 flowchart TD
 Start([Output Format]) --> FormatCheck{Format}
 FormatCheck --> |ir, tyxonq| ReturnIR[Return Native IR]
-FormatCheck --> |qasm, qasm2, qiskit| Delegate["Delegate to QiskitCompiler"]
-Delegate --> ImportQiskit{"Qiskit Available?"}
-ImportQiskit --> |Yes| ConvertIR["Convert to QuantumCircuit"]
-ImportQiskit --> |No| Fallback[Return Native IR]
-ConvertIR --> Transpile["Apply Transpilation"]
-Transpile --> ReturnOutput[Return Qiskit Output]
-Fallback --> ReturnOutput
+FormatCheck --> |qasm2| QASM2Export["GateQASM2Exporter.export()"]
+FormatCheck --> |qasm3| QASM3Export["GateQASM3Exporter.export()"]
+FormatCheck --> |qiskit| QiskitInterop["to_qiskit() conversion"]
+FormatCheck --> |lqcloud| LQCloudObject["SDK QuantumCircuit object"]
+FormatCheck --> |qcis| QCISText["QCIS text string"]
+ReturnIR --> Output
+QASM2Export --> Output
+QASM3Export --> Output
+QiskitInterop --> Output
+LQCloudObject --> Output
+QCISText --> Output
 ```
 
-**Diagram sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L77-L98)
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L19-L76)
+**Diagram sources**   
+- [compiler.py:84-109](file://src/tyxonq/compiler/gate_compiler/compiler.py#L84-L109)
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L77-L98)
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L19-L76)
+**Section sources**   
+- [compiler.py:84-109](file://src/tyxonq/compiler/gate_compiler/compiler.py#L84-L109)
 
 ## Practical Usage Examples
-The NativeCompiler can be invoked with various optimization levels and basis gate configurations to suit different use cases. For basic compilation with default settings, users can call the compiler without specifying a custom plan, relying on the automatic insertion of normalization passes. To apply aggressive optimization, users can include the `simplify/lightcone` pass in the `compile_plan` parameter. When targeting specific hardware with limited gate support, the `basis_gates` option can be used to constrain the output gate set. For execution planning, the `total_shots` parameter triggers shot scheduling, generating a structured job plan for efficient measurement execution. These examples demonstrate the flexibility of the NativeCompiler in adapting to diverse compilation requirements while maintaining a consistent interface.
+The GateCompiler can be invoked with various optimization levels and basis gate configurations through the unified API:
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L20-L98)
+```python
+from tyxonq.compiler import compile
+from tyxonq.core.ir import Circuit
+
+# Basic compilation with default settings
+circuit = Circuit(2)
+circuit.h(0).cx(0, 1)
+result = compile(circuit)
+
+# With custom basis gates
+result = compile(circuit, basis_gates=["cx", "h", "rz"])
+
+# Aggressive optimization with decomposition and routing
+result = compile(circuit, 
+                 decompose=True, 
+                 route=True, 
+                 optimize=2,
+                 simplify=True)
+
+# Platform-specific compilation
+lqcloud_result = compile(circuit, platform="lqcloud")
+guodun_result = compile(circuit, platform="guodun")
+
+# Qiskit interoperability
+qiskit_result = compile(circuit, platform="qiskit", output="qiskit")
+```
+
+**Section sources**   
+- [api.py:83-98](file://src/tyxonq/compiler/api.py#L83-L98)
 
 ## Troubleshooting Common Issues
-Common issues when using the NativeCompiler include unexpected IR output and failed QASM2 fallbacks. Unexpected IR output may occur when the input circuit lacks explicit measurements, triggering the automatic insertion of Z-measurements by the `AutoMeasurePass`. Users should verify their circuit contains the expected measurement operations or explicitly disable auto-measurement if needed. QASM2 fallback failures typically result from missing Qiskit dependencies or incompatible circuit structures. When Qiskit is unavailable, the compiler gracefully falls back to returning native IR, but users expecting QASM2 output should ensure Qiskit is properly installed. Other issues may arise from incorrect `compile_plan` specifications or unsupported basis gates; validating pass names and gate sets against the available stages can prevent these errors. Monitoring compilation metadata provides insight into the applied optimization pipeline and output format decisions.
+Common issues when using the GateCompiler include:
 
-**Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L77-L98)
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py#L10-L34)
+### Unexpected IR Output
+Unexpected IR output may occur when the input circuit lacks explicit measurements, triggering the automatic insertion of Z-measurements by the `AutoMeasure` pass. Users should verify their circuit contains the expected measurement operations or explicitly disable auto-measurement if needed.
+
+### Missing Dependencies
+- **Qiskit**: Required for Qiskit output format; gracefully falls back to IR when unavailable
+- **cqlib**: Required for Guodun compilation; version must match 1.3.11 exactly
+- **LQCloud SDK**: Required for LQCloud compilation; imported only when needed
+
+### Incorrect Parameter Types
+The type-based parameter system provides better error detection than the previous string DSL. Ensure proper types for:
+- `decompose`: Use boolean or `DecomposeSpec` instance
+- `route`: Use boolean or `RoutingSpec` instance  
+- `basis_gates`: Use list of strings
+
+### Platform-Specific Issues
+- **LQCloud**: Physical qubits are runtime parameters, not compilation-time
+- **Guodun**: Physical qubits are compilation-time parameters baked into QCIS text
+- **Basis gates**: Guodun enforces strict basis gate validation
+
+**Section sources**   
+- [auto_measure.py:10-34](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L10-L34)
+- [guodun_compiler.py:27-43](file://src/tyxonq/compiler/platforms/guodun/compiler.py#L27-L43)
+- [compiler.py:51-55](file://src/tyxonq/compiler/gate_compiler/compiler.py#L51-L55)

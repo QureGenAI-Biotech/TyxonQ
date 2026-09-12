@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: compiler/platform_backends
+title: 硬件平台编译器适配器（Guodun/LQCloud/TyxonQ）
+scope:
+    - src/tyxonq/compiler/platforms/
+source_files: []
+depends_on: []
+related_to:
+    - path: devices/hardware_drivers

@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/vqe/wavefunction_utils
+title: VQE 波函数与 CI 向量数值库
+scope:
+    - src/tyxonq/applications/chem/algorithms/vqe/wavefunction/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations

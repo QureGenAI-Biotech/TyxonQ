@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/vqe/runtimes
+title: VQE 算法运行时（UCC/HEA 数值与设备后端）
+scope:
+    - src/tyxonq/applications/chem/algorithms/vqe/runtimes/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations

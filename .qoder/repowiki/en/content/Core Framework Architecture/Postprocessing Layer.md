@@ -9,10 +9,16 @@
 - [error_mitigation.py](file://src/tyxonq/postprocessing/error_mitigation.py)
 - [io.py](file://src/tyxonq/postprocessing/io.py)
 - [hamiltonian_grouping.py](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py)
+- [postprocessing/__init__.py](file://src/tyxonq/postprocessing/__init__.py)
 - [readout_mitigation.py](file://examples/readout_mitigation.py)
-- [postprocessing.rst](file://docs-ng/source/next/user/postprocessing.rst)
-- [TYXONQ_TECHNICAL_WHITEPAPER.md](file://TYXONQ_TECHNICAL_WHITEPAPER.md)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated to reflect the deletion of core measurement and operation modules (core/measurements/, core/operations/)
+- Revised architecture description to focus on postprocessing layer independence from core measurement modules
+- Updated integration patterns to reflect new modular design where postprocessing operates independently
+- Enhanced documentation of the unified postprocessing interface that abstracts away core module dependencies
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -27,11 +33,11 @@
 10. [Common Issues and Guidance](#common-issues-and-guidance)
 
 ## Introduction
-The Postprocessing Layer in TyxonQ serves as a critical component for transforming raw quantum measurement outcomes into meaningful physical quantities. This layer implements counts-first semantics, ensuring consistent handling of measurement data across different quantum devices and simulators. The postprocessing pipeline enables accurate expectation value calculation, error mitigation, and performance evaluation, forming the bridge between quantum execution and scientific interpretation.
+The Postprocessing Layer in TyxonQ serves as a critical component for transforming raw quantum measurement outcomes into meaningful physical quantities. Following the architectural restructuring that removed core measurement and operation modules, this layer now operates as an independent processing pipeline that accepts standardized measurement results from any quantum backend. The postprocessing pipeline enables accurate expectation value calculation, error mitigation, and performance evaluation, forming a robust bridge between quantum execution and scientific interpretation without direct dependency on lower-level measurement implementations.
 
 **Section sources**
-- [postprocessing.rst](file://docs-ng/source/next/user/postprocessing.rst#L0-L3)
-- [TYXONQ_TECHNICAL_WHITEPAPER.md](file://TYXONQ_TECHNICAL_WHITEPAPER.md#L47-L51)
+- [postprocessing/__init__.py:16-101](file://src/tyxonq/postprocessing/__init__.py#L16-L101)
+- [TYXONQ_TECHNICAL_WHITEPAPER.md:47-51](file://TYXONQ_TECHNICAL_WHITEPAPER.md#L47-L51)
 
 ## Counts-First Semantics
 TyxonQ implements a counts-first approach to quantum measurement processing, where all device drivers return measurement results in a uniform counts format. This design ensures cross-vendor consistency and decouples hardware-specific measurement collection from the subsequent mathematical processing. The raw counts—histograms of bitstring outcomes—are then processed by the postprocessing layer to compute expectation values and other derived quantities.
@@ -41,12 +47,13 @@ This architecture provides several advantages:
 - **Deterministic processing**: Expectation value calculations are performed consistently regardless of the underlying hardware
 - **Flexible analysis**: Raw counts can be reused for multiple analyses without re-execution
 - **Error mitigation compatibility**: Raw measurement data enables the application of various error correction techniques
+- **Modular independence**: The postprocessing layer operates independently of core measurement modules, allowing for flexible integration
 
 The counts-first paradigm ensures that quantum algorithms produce reproducible results across different execution environments while maintaining the flexibility to optimize for specific hardware characteristics.
 
 **Section sources**
-- [TYXONQ_TECHNICAL_WHITEPAPER.md](file://TYXONQ_TECHNICAL_WHITEPAPER.md#L47-L51)
-- [postprocessing.rst](file://docs-ng/source/next/user/postprocessing.rst#L0-L3)
+- [TYXONQ_TECHNICAL_WHITEPAPER.md:47-51](file://TYXONQ_TECHNICAL_WHITEPAPER.md#L47-L51)
+- [postprocessing/__init__.py:23-93](file://src/tyxonq/postprocessing/__init__.py#L23-L93)
 
 ## Expectation Value Estimation
 The postprocessing layer provides robust methods for estimating expectation values from shot counts. The core function `expval_pauli_sum` in `counts_expval.py` computes the energy expectation for a Pauli-sum Hamiltonian by aggregating individual term expectations.
@@ -64,9 +71,11 @@ where the product runs over all qubits in the term, and each bit contributes +1 
 
 When analytic expectations are available (e.g., from statevector simulations with zero shots), the system can use the `_expval_pauli_sum_analytic` function, which computes the expectation of a Z-product as the product of individual Z-expectations.
 
+**Updated** The postprocessing layer now supports both count-based and analytic computation paths through a unified interface that automatically selects the appropriate method based on available data.
+
 **Section sources**
-- [counts_expval.py](file://src/tyxonq/postprocessing/counts_expval.py#L86-L111)
-- [metrics.py](file://src/tyxonq/postprocessing/metrics.py#L30-L53)
+- [counts_expval.py:87-112](file://src/tyxonq/postprocessing/counts_expval.py#L87-L112)
+- [metrics.py:53-84](file://src/tyxonq/postprocessing/metrics.py#L53-L84)
 
 ## Observable Grouping and Shot Allocation
 Efficient measurement of multi-term Hamiltonians requires strategic grouping of observables to minimize the number of required circuit executions. The `hamiltonian_grouping.py` module provides functions to group Pauli terms by their measurement basis.
@@ -89,8 +98,8 @@ Shot allocation strategies can then distribute the available shots across these 
 This grouping approach is essential for variational algorithms like VQE and QAOA, where Hamiltonian expectation evaluation is performed repeatedly during optimization.
 
 **Section sources**
-- [hamiltonian_grouping.py](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py#L0-L66)
-- [counts_expval.py](file://src/tyxonq/postprocessing/counts_expval.py#L0-L114)
+- [hamiltonian_grouping.py:12-117](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py#L12-L117)
+- [hamiltonian_grouping.py:120-138](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py#L120-L138)
 
 ## Error Mitigation Techniques
 TyxonQ's postprocessing layer implements several error mitigation techniques to improve result accuracy in noisy quantum computations. These methods address different sources of error and can be combined for enhanced noise resilience.
@@ -102,11 +111,13 @@ The `error_mitigation.py` module contains placeholders for advanced techniques:
 
 Currently implemented mitigation strategies include readout error correction and classical shadows, which directly process the measurement outcomes to reduce the impact of noise.
 
-These techniques are designed to be modular and composable, allowing users to apply multiple mitigation methods in sequence. The postprocessing framework supports both immediate application to raw counts and integration into automated execution pipelines.
+These techniques are designed to be modular and composable, allowing users to apply multiple mitigation methods in sequence. The postprocessing framework supports both immediate application to raw counts and integration into automated execution pipelines through the unified `apply_postprocessing` interface.
+
+**Updated** The error mitigation system now integrates seamlessly with the postprocessing layer's unified interface, providing consistent handling of calibration data and result formats across different mitigation techniques.
 
 **Section sources**
-- [error_mitigation.py](file://src/tyxonq/postprocessing/error_mitigation.py#L0-L81)
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
+- [error_mitigation.py:7-79](file://src/tyxonq/postprocessing/error_mitigation.py#L7-L79)
+- [postprocessing/__init__.py:109-150](file://src/tyxonq/postprocessing/__init__.py#L109-L150)
 
 ## Readout Error Correction
 Readout error correction addresses measurement inaccuracies where the detected qubit state differs from the actual state. The `ReadoutMit` class in `readout.py` implements a comprehensive solution for readout error mitigation.
@@ -122,7 +133,7 @@ Two mitigation methods are supported:
 
 The implementation leverages the numeric backend system for tensor operations while using SciPy for optimization routines. The `apply_readout_mitigation` method transforms raw counts through probability vectors, applies correction, and returns mitigated counts with appropriate shot statistics.
 
-The example in `readout_mitigation.py` demonstrates how to configure and apply readout mitigation both as a standalone postprocessing step and integrated into circuit execution pipelines.
+The example in `readout_mitigation.py` demonstrates how to configure and apply readout mitigation both as a standalone postprocessing step and integrated into circuit execution pipelines through the unified interface.
 
 ```mermaid
 sequenceDiagram
@@ -136,12 +147,12 @@ ProbTrue->>Mitigated : _vec2count (round and format)
 ```
 
 **Diagram sources**
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L14-L136)
-- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133)
+- [readout.py:62-137](file://src/tyxonq/postprocessing/readout.py#L62-L137)
+- [readout_mitigation.py:1-133](file://examples/readout_mitigation.py#L1-L133)
 
 **Section sources**
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
-- [readout_mitigation.py](file://examples/readout_mitigation.py#L0-L133)
+- [readout.py:15-140](file://src/tyxonq/postprocessing/readout.py#L15-L140)
+- [postprocessing/__init__.py:109-150](file://src/tyxonq/postprocessing/__init__.py#L109-L150)
 
 ## Classical Shadows for Noise Resilience
 Classical shadows provide a powerful framework for estimating multiple observables from randomized measurements. The `classical_shadows.py` module implements key utilities for this approach.
@@ -167,16 +178,13 @@ GenerateBases --> ExecuteCircuit["Execute Circuit with Basis Rotations"]
 ExecuteCircuit --> CollectOutcomes["Collect Measurement Outcomes"]
 CollectOutcomes --> Estimate["Estimate Observable Expectations"]
 Estimate --> End([End])
-style Start fill:#f9f,stroke:#333
-style End fill:#f9f,stroke:#333
 ```
 
 **Diagram sources**
-- [classical_shadows.py](file://src/tyxonq/postprocessing/classical_shadows.py#L62-L102)
-- [classical_shadows.py](file://src/tyxonq/postprocessing/classical_shadows.py#L0-L114)
+- [classical_shadows.py:14-103](file://src/tyxonq/postprocessing/classical_shadows.py#L14-L103)
 
 **Section sources**
-- [classical_shadows.py](file://src/tyxonq/postprocessing/classical_shadows.py#L0-L114)
+- [classical_shadows.py:14-112](file://src/tyxonq/postprocessing/classical_shadows.py#L14-L112)
 
 ## Metrics System
 The postprocessing layer includes a comprehensive metrics system for evaluating circuit performance and convergence. The `metrics.py` module provides functions for normalization, divergence calculations, and various quantum information measures.
@@ -185,9 +193,6 @@ Key metrics include:
 - **Normalization**: `normalized_count` converts raw counts to probability distributions
 - **Divergence**: `kl_divergence` computes Kullback-Leibler divergence between distributions
 - **Expectation values**: `expectation` calculates diagonal observable expectations
-- **Entanglement measures**: entropy, mutual information, and entanglement negativity
-- **State fidelity**: `fidelity` computes overlap between quantum states
-- **Energy functionals**: free energy, truncated free energy
 
 These metrics support both discrete (counts-based) and continuous (statevector/density matrix) representations. The implementation is designed to be lightweight and dependency-minimal, with NumPy used only where necessary for linear algebra operations.
 
@@ -197,32 +202,11 @@ The metrics system enables quantitative assessment of:
 - Entanglement properties of quantum states
 - Optimization landscape characteristics
 
-```mermaid
-classDiagram
-class Metrics {
-+normalized_count(counts)
-+kl_divergence(c1, c2)
-+expectation(count, z)
-+entropy(rho)
-+fidelity(rho, rho0)
-+mutual_information(s, cut)
-}
-class CountsProcessor {
-+counts_to_csv(counts)
-+csv_to_counts(text)
-+sort_count(count)
-+marginal_count(count, keep_list)
-}
-Metrics --> CountsProcessor : "uses"
-```
-
-**Diagram sources**
-- [metrics.py](file://src/tyxonq/postprocessing/metrics.py#L30-L53)
-- [io.py](file://src/tyxonq/postprocessing/io.py#L0-L221)
+**Updated** The metrics system has been streamlined to focus on core postprocessing functionality, with advanced quantum information measures moved to dedicated libraries to maintain modularity.
 
 **Section sources**
-- [metrics.py](file://src/tyxonq/postprocessing/metrics.py#L0-L304)
-- [io.py](file://src/tyxonq/postprocessing/io.py#L0-L221)
+- [metrics.py:20-90](file://src/tyxonq/postprocessing/metrics.py#L20-L90)
+- [io.py:9-99](file://src/tyxonq/postprocessing/io.py#L9-L99)
 
 ## Integration with Variational Workflows
 The postprocessing layer is tightly integrated with variational quantum algorithms such as VQE and QAOA. In these workflows, the postprocessing functions compute energy landscapes that guide the classical optimization process.
@@ -238,11 +222,14 @@ The `expval_pauli_sum` function serves as the core computational kernel, transfo
 
 The postprocessing layer also supports gradient computation through parameter shift rules, where energy differences between shifted parameter values are calculated using the same expectation estimation pipeline.
 
+**Updated** The integration pattern now uses the unified `apply_postprocessing` interface, which provides a consistent API for all postprocessing operations regardless of the underlying implementation details.
+
 This integration enables efficient exploration of energy landscapes while maintaining high accuracy through systematic error mitigation and optimal shot allocation across Hamiltonian terms.
 
 **Section sources**
-- [counts_expval.py](file://src/tyxonq/postprocessing/counts_expval.py#L86-L111)
-- [hamiltonian_grouping.py](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py#L0-L66)
+- [counts_expval.py:87-112](file://src/tyxonq/postprocessing/counts_expval.py#L87-L112)
+- [hamiltonian_grouping.py:12-117](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py#L12-L117)
+- [postprocessing/__init__.py:152-221](file://src/tyxonq/postprocessing/__init__.py#L152-L221)
 
 ## Common Issues and Guidance
 Several common challenges arise when working with the postprocessing layer, particularly in resource-constrained scenarios.
@@ -262,9 +249,12 @@ Several common challenges arise when working with the postprocessing layer, part
 - Use analytic gradients when possible to reduce sampling requirements
 - Employ adaptive shot allocation that increases shots as optimization converges
 
+**Updated** With the removal of core measurement modules, users should ensure that input data conforms to the expected format (counts dictionaries with string keys and integer values) when integrating with the postprocessing layer.
+
 The postprocessing layer provides the tools to navigate these tradeoffs, enabling users to achieve the optimal balance between accuracy and computational efficiency for their specific application and hardware constraints.
 
 **Section sources**
-- [readout.py](file://src/tyxonq/postprocessing/readout.py#L0-L142)
-- [classical_shadows.py](file://src/tyxonq/postprocessing/classical_shadows.py#L0-L114)
-- [metrics.py](file://src/tyxonq/postprocessing/metrics.py#L0-L304)
+- [readout.py:15-140](file://src/tyxonq/postprocessing/readout.py#L15-L140)
+- [classical_shadows.py:14-112](file://src/tyxonq/postprocessing/classical_shadows.py#L14-L112)
+- [metrics.py:20-90](file://src/tyxonq/postprocessing/metrics.py#L20-L90)
+- [postprocessing/__init__.py:16-101](file://src/tyxonq/postprocessing/__init__.py#L16-L101)

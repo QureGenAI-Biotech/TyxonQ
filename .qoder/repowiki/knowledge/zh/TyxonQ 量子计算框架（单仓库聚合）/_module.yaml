@@ -1,0 +1,34 @@
+schema_version: 1
+module_path: ""
+title: TyxonQ 量子计算框架（单仓库聚合）
+scope:
+    - README.md
+    - CONTRIBUTING.md
+    - .gitignore
+    - pyproject.toml
+    - TYXONQ_TECHNICAL_WHITEPAPER.md
+    - main.py
+    - scripts/
+    - .readthedocs.yaml
+    - CHANGELOG.md
+    - GUODUN_CHANGES.md
+    - LICENSE
+    - LUCJ_SQD.md
+    - MANIFEST.in
+    - MD_INTEGRATION_PLAN.md
+    - MD_INTEGRATION_RESEARCH.md
+    - QCOS_CHANGES.md
+    - README_cn.md
+    - README_jp.md
+    - RIVERONE.md
+    - TyxonQ_HANDOFF.md
+    - h-4-chain.npz
+    - log.lammps
+    - md_energy_conservation.png
+    - vqd_sbm_results.png
+    - water.md
+    - water.pos_0.xyz
+    - water.pos_1.xyz
+source_files: []
+depends_on: []
+related_to: []

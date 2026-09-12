@@ -8,7 +8,19 @@
 - [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py)
 - [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py)
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
+- [lucj_circuit_builder.py](file://src/tyxonq/applications/chem/algorithms/lucj/circuit_builder.py)
+- [sqd_fermion.py](file://src/tyxonq/applications/chem/algorithms/sqd/fermion.py)
+- [sqd_pyscf_solver.py](file://src/tyxonq/applications/chem/algorithms/sqd/pyscf_solver.py)
+- [h2o_sqd.py](file://examples/h2o_sqd.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Added comprehensive documentation for LUCJ (Local Unitary Coupled Cluster with Justifications) algorithm
+- Added detailed coverage of SQD (Stochastic Quantum Diagonalization) framework
+- Updated configuration options to include LUCJ and SQD parameters
+- Enhanced code examples with LUCJ-SQD workflow demonstrations
+- Added mathematical foundations and implementation details for both new algorithms
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -16,21 +28,27 @@
 3. [HEA Algorithm](#hea-algorithm)
 4. [k-UpCCGSD Algorithm](#k-upccgsd-algorithm)
 5. [PUCCD Algorithm](#puccd-algorithm)
-6. [Base UCC Class and Inheritance](#base-ucc-class-and-inheritance)
-7. [Configuration and Runtime Options](#configuration-and-runtime-options)
-8. [Code Examples and Usage](#code-examples-and-usage)
-9. [Energy Evaluation and Optimization](#energy-evaluation-and-optimization)
-10. [Chemical Accuracy and Validation](#chemical-accuracy-and-validation)
-11. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
+6. [LUCJ Algorithm](#lucj-algorithm)
+7. [SQD Algorithm](#sqd-algorithm)
+8. [Base UCC Class and Inheritance](#base-ucc-class-and-inheritance)
+9. [Configuration and Runtime Options](#configuration-and-runtime-options)
+10. [Code Examples and Usage](#code-examples-and-usage)
+11. [Energy Evaluation and Optimization](#energy-evaluation-and-optimization)
+12. [Chemical Accuracy and Validation](#chemical-accuracy-and-validation)
+13. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
 
 ## Introduction
-This document provides a comprehensive overview of quantum chemistry algorithms implemented in the TyxonQ framework, focusing on UCCSD, HEA, k-UpCCGSD, and PUCCD methods for molecular energy calculations. These algorithms leverage quantum computing to solve electronic structure problems by constructing parameterized quantum circuits that represent electronic wavefunctions. The document explains the theoretical foundations, implementation details, and practical usage of these methods, including their integration with classical computational chemistry tools like PySCF for molecular initialization, active space selection, and amplitude initialization.
+This document provides a comprehensive overview of quantum chemistry algorithms implemented in the TyxonQ framework, focusing on UCCSD, HEA, k-UpCCGSD, PUCCD, LUCJ, and SQD methods for molecular energy calculations. These algorithms leverage quantum computing to solve electronic structure problems by constructing parameterized quantum circuits that represent electronic wavefunctions. The document explains the theoretical foundations, implementation details, and practical usage of these methods, including their integration with classical computational chemistry tools like PySCF for molecular initialization, active space selection, and amplitude initialization.
 
-**Section sources**
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
-- [kupccgsd.py](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
-- [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+The framework now includes advanced algorithms such as LUCJ (Local Unitary Coupled Cluster with Justifications), which implements matrix-based unitary coupled cluster ansatzes optimized for near-term quantum devices, and SQD (Stochastic Quantum Diagonalization), a stochastic approach to selected configuration interaction that combines quantum sampling with classical diagonalization.
+
+**Section sources**   
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+- [hea.py:27-648](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
+- [kupccgsd.py:14-292](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
+- [puccd.py:19-186](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+- [lucj_circuit_builder.py:33-155](file://src/tyxonq/applications/chem/algorithms/lucj/circuit_builder.py#L33-L155)
+- [sqd_fermion.py:111-166](file://src/tyxonq/applications/chem/algorithms/sqd/fermion.py#L111-L166)
 
 ## UCCSD Algorithm
 The UCCSD (Unitary Coupled Cluster Singles and Doubles) algorithm implements a quantum version of the classical coupled cluster method, using a unitary ansatz to represent the electronic wavefunction. It constructs an excitation operator that includes all single and double excitations from a Hartree-Fock reference state, ensuring the wavefunction remains normalized. The algorithm initializes with PySCF integration, allowing for seamless transition from classical to quantum computational chemistry workflows.
@@ -76,13 +94,13 @@ class UCCSD {
 UCC <|-- UCCSD
 ```
 
-**Diagram sources**
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+**Diagram sources**   
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
 
-**Section sources**
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+**Section sources**   
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
 
 ## HEA Algorithm
 The HEA (Hardware-Efficient Ansatz) algorithm implements a parameterized quantum circuit designed for near-term quantum devices with limited connectivity and coherence times. Unlike problem-inspired ansätze like UCCSD, HEA uses a hardware-efficient structure consisting of alternating layers of single-qubit rotations and entangling gates, typically CNOT chains. This structure is more resilient to hardware noise and can be implemented with fewer gate operations.
@@ -106,11 +124,11 @@ style Start fill:#f9f,stroke:#333
 style End fill:#f9f,stroke:#333
 ```
 
-**Diagram sources**
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
+**Diagram sources**   
+- [hea.py:27-648](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
 
-**Section sources**
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
+**Section sources**   
+- [hea.py:27-648](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
 
 ## k-UpCCGSD Algorithm
 The k-UpCCGSD (k-layer Unitary Pair Coupled Cluster Generalized Singles and Doubles) algorithm implements a generalized version of the pair coupled cluster method with multiple layers. This approach extends the standard UCC framework by using generalized excitation operators that are not restricted to the canonical orbital basis, potentially providing better convergence properties and reduced circuit depth.
@@ -138,11 +156,11 @@ class KUPCCGSD {
 UCC <|-- KUPCCGSD
 ```
 
-**Diagram sources**
-- [kupccgsd.py](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
+**Diagram sources**   
+- [kupccgsd.py:14-292](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
 
-**Section sources**
-- [kupccgsd.py](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
+**Section sources**   
+- [kupccgsd.py:14-292](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
 
 ## PUCCD Algorithm
 The PUCCD (Pair-UCCD) algorithm implements a pair-coupled cluster approach that specifically targets electron pair correlations. This method uses a restricted set of excitation operators that only include paired excitations, where both spin-up and spin-down electrons are excited together from the same spatial orbital. This restriction significantly reduces the number of parameters compared to full UCCSD while still capturing important correlation effects.
@@ -166,11 +184,87 @@ class PUCCD {
 UCC <|-- PUCCD
 ```
 
-**Diagram sources**
-- [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+**Diagram sources**   
+- [puccd.py:19-186](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
 
-**Section sources**
-- [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+**Section sources**   
+- [puccd.py:19-186](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+
+## LUCJ Algorithm
+The LUCJ (Local Unitary Coupled Cluster with Justifications) algorithm implements a matrix-based unitary coupled cluster ansatz optimized for near-term quantum devices. LUCJ uses a structured approach with orbital rotations and diagonal Coulomb interactions arranged in layers, providing efficient representation of electron correlation while maintaining compatibility with quantum hardware constraints.
+
+The LUCJ algorithm constructs circuits following the pattern: closed-shell RHF reference → U† → diagonal Coulomb J → U, where U represents orbital rotations and J represents diagonal Coulomb interactions. The algorithm supports different topologies (square, hex, linear) for arranging interaction pairs, allowing flexibility in circuit design based on hardware connectivity requirements.
+
+Key features of LUCJ include:
+- **Matrix-based parameterization**: Uses unitary matrices for orbital rotations and real symmetric matrices for diagonal Coulomb interactions
+- **Layered structure**: Supports configurable number of layers for balancing accuracy and circuit depth
+- **Spin-balanced**: Designed for closed-shell systems with equal numbers of alpha and beta electrons
+- **Hardware-friendly**: Decomposes complex operations into native gates supported by quantum devices
+
+The LUCJ implementation includes sophisticated parameter initialization from CCSD amplitudes, enabling the use of classical computational chemistry results to initialize quantum optimizations. The algorithm also supports optional final orbital rotations and provides comprehensive metadata about the generated circuits for debugging and analysis.
+
+```mermaid
+classDiagram
+class LUCJ {
++n_orbitals : int
++n_electrons : int
++layers : int
++topology : str
++num_qubits : int
++parameter_shapes(with_final_orbital_rotation : bool) dict
++get_circuit(params) Circuit
++__init__(n_orbitals, n_electrons, layers, topology)
+}
+class LUCJBuilder {
++build_lucj_circuit(n_orbitals, n_electrons, layers, topology, params) Circuit
++_append_reference_state(circuit, logical_ops, n_electrons, n_orbitals)
++_append_orbital_rotation(circuit, logical_ops, orbital_rotation, n_orbitals, block, layer)
++_append_diag_coulomb(circuit, logical_ops, diag_coulomb_mats, n_orbitals, topology, layer)
+}
+LUCJ <.. LUCJBuilder
+```
+
+**Diagram sources**   
+- [lucj_circuit_builder.py:33-155](file://src/tyxonq/applications/chem/algorithms/lucj/circuit_builder.py#L33-L155)
+
+**Section sources**   
+- [lucj_circuit_builder.py:33-155](file://src/tyxonq/applications/chem/algorithms/lucj/circuit_builder.py#L33-L155)
+
+## SQD Algorithm
+The SQD (Stochastic Quantum Diagonalization) algorithm implements a hybrid quantum-classical approach to selected configuration interaction (SCI). SQD combines quantum sampling with classical diagonalization to efficiently solve electronic structure problems by iteratively refining the configuration space based on quantum measurements.
+
+The SQD algorithm works through an iterative process:
+1. **Quantum Sampling**: Generate bitstring samples from a quantum circuit (typically LUCJ)
+2. **Configuration Recovery**: Post-select and recover valid configurations with correct particle numbers
+3. **Classical Diagonalization**: Solve the SCI problem within the sampled configuration space
+4. **Convergence Check**: Monitor energy and occupancy convergence to determine termination
+
+Key components of SQD include:
+- **SCIState and SCIResult**: Data structures for storing selected CI states and results
+- **Sample processing**: Tools for converting between bitstrings, counts, and determinant representations
+- **Configuration recovery**: Methods to fix incorrect particle numbers in sampled configurations
+- **Subsampling**: Techniques for managing sample batches and improving convergence
+
+The SQD implementation integrates seamlessly with PySCF's selected CI solver, providing a bridge between quantum sampling and classical electronic structure calculations. It supports various subspace strategies including frozen, refresh, and adaptive modes for different computational scenarios.
+
+```mermaid
+flowchart TD
+Samples["Quantum Samples"] --> Recovery["Configuration Recovery"]
+Recovery --> Subsampling["Subsampling"]
+Subsampling --> Diagonalization["Classical Diagonalization"]
+Diagonalization --> Convergence{"Converged?"}
+Convergence --> |No| Recovery
+Convergence --> |Yes| Result["SCI Result"]
+style Samples fill:#ccf,stroke:#333
+style Result fill:#cfc,stroke:#333
+```
+
+**Diagram sources**   
+- [sqd_fermion.py:169-339](file://src/tyxonq/applications/chem/algorithms/sqd/fermion.py#L169-L339)
+
+**Section sources**   
+- [sqd_fermion.py:111-166](file://src/tyxonq/applications/chem/algorithms/sqd/fermion.py#L111-L166)
+- [sqd_fermion.py:169-339](file://src/tyxonq/applications/chem/algorithms/sqd/fermion.py#L169-L339)
 
 ## Base UCC Class and Inheritance
 The UCC (Unitary Coupled Cluster) class serves as the base implementation for all coupled cluster algorithms in the framework, providing common functionality and a consistent interface. This inheritance hierarchy allows for code reuse and ensures that all derived algorithms share the same core capabilities while enabling specialization for specific ansatz types.
@@ -254,11 +348,11 @@ UCC <|-- KUPCCGSD
 UCC <|-- PUCCD
 ```
 
-**Diagram sources**
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+**Diagram sources**   
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
 
-**Section sources**
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+**Section sources**   
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
 
 ## Configuration and Runtime Options
 The quantum chemistry algorithms in TyxonQ support a comprehensive set of configuration options that control various aspects of the calculation. These options are accessible through parameters in the class constructors and method calls, allowing users to customize the behavior of the algorithms for specific use cases.
@@ -270,14 +364,28 @@ Key configuration options include:
 - **runtime**: Specifies the execution environment, with options including "device" (quantum device or simulator) and "numeric" (classical numerical simulation).
 - **numeric_engine**: Selects the numerical backend for classical simulation, with options including "statevector", "civector", "civector-large", and "pyscf".
 
+For LUCJ-specific configurations:
+- **layers**: Number of LUCJ layers in the circuit (default: 1)
+- **topology**: Interaction topology ("square", "hex", "linear")
+- **shots**: Number of measurement shots for device execution
+- **noise_p**: Depolarizing noise probability for noisy simulations
+
+For SQD-specific configurations:
+- **samples_per_batch**: Number of samples per batch for SQD iterations
+- **num_batches**: Number of batches for parallel processing
+- **max_iterations**: Maximum number of SQD iterations
+- **max_dim**: Maximum dimension of selected CI space
+- **subspace**: Subspace strategy ("frozen", "refresh", "adaptive")
+
 The algorithms also support cloud-based classical computations through the `classical_provider` parameter, which can be set to "local" for local execution or "tyxonq" for cloud execution. This enables offloading computationally intensive classical calculations (HF, MP2, CCSD, FCI) to powerful cloud servers, reducing the computational burden on the local machine.
 
-**Section sources**
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
-- [kupccgsd.py](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
-- [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+**Section sources**   
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+- [hea.py:27-648](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
+- [kupccgsd.py:14-292](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
+- [puccd.py:19-186](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+- [sqd_pyscf_solver.py:66-92](file://src/tyxonq/applications/chem/algorithms/sqd/pyscf_solver.py#L66-L92)
 
 ## Code Examples and Usage
 The following code examples demonstrate the usage of the quantum chemistry algorithms in TyxonQ, showing how to construct molecules, instantiate algorithms, and evaluate energies. These examples are based on the `cloud_uccsd_hea_demo.py` file in the examples directory.
@@ -308,10 +416,42 @@ e_hea_cloud = hea_cloud.kernel(shots=0, provider="simulator", device="statevecto
 print("HEA cloud(HF) e:", e_hea_cloud)
 ```
 
+For LUCJ and SQD workflows:
+
+```python
+from tyxonq.applications.chem.algorithms.lucj import LUCJ, initialize_lucj_parameters_from_ccsd
+from tyxonq.applications.chem.algorithms.sqd import run_sqd_fermion
+
+# Initialize LUCJ parameters from CCSD
+params = initialize_lucj_parameters_from_ccsd(
+    t2_amplitudes,
+    t1=t1_amplitudes,
+    n_spatial_orbitals=norb,
+    n_layers=1,
+    topology="square",
+    optimize=True,
+    maxiter=100
+)
+
+# Build LUCJ circuit and run SQD
+lucj_circuit = LUCJ(norb, nelec, n_layers=1, topology="square").get_circuit(params)
+sqd_result = run_sqd_fermion(
+    one_body_tensor,
+    two_body_tensor,
+    samples,
+    samples_per_batch=8,
+    norb=norb,
+    nelec=(nelec//2, nelec//2),
+    num_batches=4,
+    max_iterations=5
+)
+```
+
 These examples show four different calculation scenarios: local UCCSD, cloud-assisted UCCSD, local HEA, and cloud-assisted HEA. The cloud-assisted versions offload the classical Hartree-Fock calculation and integral computation to a cloud provider, while the quantum part of the calculation (VQE optimization) is performed locally. The `shots=0` parameter indicates the use of exact statevector simulation rather than sampling, which provides noise-free results for algorithm development and validation.
 
-**Section sources**
-- [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py#L0-L56)
+**Section sources**   
+- [cloud_uccsd_hea_demo.py:0-56](file://examples/cloud_uccsd_hea_demo.py#L0-L56)
+- [h2o_sqd.py:262-336](file://examples/h2o_sqd.py#L262-L336)
 
 ## Energy Evaluation and Optimization
 The energy evaluation and optimization process in the quantum chemistry algorithms follows a variational principle, where the ground state energy is found by minimizing the expectation value of the Hamiltonian with respect to the parameters of the ansatz. This process is implemented through the `kernel` method, which performs the optimization using classical optimizers from SciPy.
@@ -320,17 +460,26 @@ The optimization process begins with an initial guess for the parameters, which 
 
 For device-based calculations, the energy evaluation involves measuring the expectation value of the Hamiltonian by grouping commuting terms and measuring them in shared bases. This measurement process can be performed with a finite number of shots (samples) to simulate realistic quantum hardware conditions, or with infinite shots (shots=0) for exact simulation. The parameter shift method for gradient computation requires evaluating the circuit at parameter values shifted by π/2, which doubles the number of circuit evaluations needed for gradient computation.
 
-**Section sources**
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
-- [kupccgsd.py](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
-- [puccd.py](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+For SQD, the energy evaluation follows a different approach: quantum sampling generates bitstring distributions, which are then used to construct a selected CI problem solved classically. This hybrid approach leverages quantum computers for sampling while using classical methods for the actual diagonalization.
+
+**Section sources**   
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+- [hea.py:27-648](file://src/tyxonq/applications/chem/algorithms/hea.py#L27-L648)
+- [kupccgsd.py:14-292](file://src/tyxonq/applications/chem/algorithms/kupccgsd.py#L14-L292)
+- [puccd.py:19-186](file://src/tyxonq/applications/chem/algorithms/puccd.py#L19-L186)
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+- [sqd_fermion.py:169-339](file://src/tyxonq/applications/chem/algorithms/sqd/fermion.py#L169-L339)
 
 ## Chemical Accuracy and Validation
 The accuracy of the quantum chemistry algorithms is validated against classical computational chemistry methods and exact solutions where available. The primary metrics for validation include comparison with Full Configuration Interaction (FCI) energies, which represent the exact solution within the given basis set, and comparison with established quantum chemistry methods like CCSD.
 
 The UCCSD algorithm typically achieves chemical accuracy (within 1 kcal/mol or ~1.6 mHa of the exact energy) for small molecules in minimal basis sets. The accuracy can be improved by using larger basis sets, although this increases the computational cost. The k-UpCCGSD and PUCCD algorithms may have different accuracy profiles depending on the molecule and basis set, with k-UpCCGSD potentially offering better accuracy for strongly correlated systems due to its multi-layer structure.
+
+For LUCJ and SQD, accuracy depends on several factors:
+- **LUCJ quality**: How well the matrix LUCJ ansatz captures electron correlation
+- **Sampling statistics**: Number of shots and convergence of quantum sampling
+- **SQD convergence**: Number of iterations and quality of selected configurations
+- **Active space size**: Appropriateness of the chosen active space for the system
 
 Validation is performed by comparing the computed energies with reference values from classical calculations. The framework provides access to reference energies from HF, MP2, CCSD, and FCI calculations through properties like `e_hf`, `e_mp2`, `e_ccsd`, and `e_fci`. These reference values allow users to assess the quality of the quantum calculation and the amount of correlation energy recovered.
 
@@ -351,13 +500,13 @@ style A fill:#ccf,stroke:#333
 style H fill:#cfc,stroke:#333
 ```
 
-**Diagram sources**
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+**Diagram sources**   
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
 
-**Section sources**
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
+**Section sources**   
+- [uccsd.py:17-229](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L17-L229)
+- [ucc.py:59-1086](file://src/tyxonq/applications/chem/algorithms/ucc.py#L59-L1086)
 
 ## HOMO-LUMO Gap Analysis
 The HOMO-LUMO gap analysis functionality has been enhanced in the TyxonQ framework to provide detailed information about the highest occupied molecular orbital (HOMO) and lowest unoccupied molecular orbital (LUMO) energy gap. This feature is available through both the `get_homo_lumo_gap()` method and the `homo_lumo_gap` property in both the UCC and HEA classes.
@@ -390,10 +539,10 @@ class HEA {
 UCC <|-- HEA
 ```
 
-**Diagram sources**
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
+**Diagram sources**   
+- [ucc.py:1089-1246](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
+- [hea.py:729-815](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
 
-**Section sources**
-- [ucc.py](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)
+**Section sources**   
+- [ucc.py:1089-1246](file://src/tyxonq/applications/chem/algorithms/ucc.py#L1089-L1246)
+- [hea.py:729-815](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L815)

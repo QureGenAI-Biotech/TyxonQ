@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: docs
+title: TyxonQ 文档站点（Sphinx + i18n）
+scope:
+    - docs/
+source_files: []
+depends_on: []
+related_to:
+    - path: core_framework

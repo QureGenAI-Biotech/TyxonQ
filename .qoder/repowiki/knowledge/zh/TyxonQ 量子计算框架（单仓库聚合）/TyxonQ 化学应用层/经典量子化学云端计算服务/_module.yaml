@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: applications_chem/classical_chem_cloud
+title: 经典量子化学云端计算服务
+scope:
+    - src/tyxonq/applications/chem/classical_chem_cloud/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/interfaces
+    - path: examples

@@ -2,72 +2,99 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py)
-- [rotations.py](file://src/tyxonq/compiler/stages/decompose/rotations.py)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py)
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py)
-- [merge_prune.py](file://src/tyxonq/compiler/stages/rewrite/merge_prune.py)
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py)
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py)
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py)
-- [hamiltonian_grouping.py](file://src/tyxonq/compiler/utils/hamiltonian_grouping.py)
+- [compiler.py](file://src/tyxonq/compiler/gate_compiler/compiler.py)
+- [steps.py](file://src/tyxonq/compiler/gate_compiler/steps.py)
+- [rotations.py](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py)
+- [matchgate.py](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py)
+- [auto_measure.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py)
+- [gates_transform.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py)
+- [merge_prune.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/merge_prune.py)
+- [lightcone.py](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated all stage references from old `compiler/stages/` to new `gate_compiler/stages/` structure
+- Replaced compilation pipeline architecture with new type-based step system
+- Removed gradient processing stage as it's no longer part of the core compilation pipeline
+- Updated decomposition stage to include matchgate decomposition alongside rotation decomposition
+- Added layout/routing stage documentation for qubit mapping and routing
+- Updated all file paths and imports to reflect new module structure
+- Simplified scheduling stage as shot allocation is now handled by device-specific compilers
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Compilation Pipeline Architecture](#compilation-pipeline-architecture)
 3. [Decomposition Stage](#decomposition-stage)
 4. [Rewriting Stage](#rewriting-stage)
-5. [Simplification Stage](#simplification-stage)
-6. [Scheduling Stage](#scheduling-stage)
-7. [Gradient Processing Stage](#gradient-processing-stage)
-8. [Integration with Device Constraints and Numerics](#integration-with-device-constraints-and-numerics)
-9. [Common Issues and Best Practices](#common-issues-and-best-practices)
-10. [Conclusion](#conclusion)
+5. [Layout and Routing Stage](#layout-and-routing-stage)
+6. [Simplification Stage](#simplification-stage)
+7. [Integration with Device Constraints and Numerics](#integration-with-device-constraints-and-numerics)
+8. [Common Issues and Best Practices](#common-issues-and-best-practices)
+9. [Conclusion](#conclusion)
 
 ## Introduction
 
-The TyxonQ compiler implements a modular, composable pipeline for quantum circuit compilation. This document details the five core stages of the compilation process: decomposition, rewriting, simplification, scheduling, and gradient processing. Each stage operates as a transformation pass on the Intermediate Representation (IR), progressively optimizing the circuit for execution on target hardware or simulation backends. The pipeline is designed to be flexible, allowing users to chain stages according to their specific requirements while ensuring compatibility with device constraints and numerical backends.
+The TyxonQ compiler implements a modular, composable pipeline for quantum circuit compilation through its new gate compiler architecture. This document details the four core stages of the compilation process: decomposition, rewriting, layout/routing, and simplification. Each stage operates as a transformation pass on the Intermediate Representation (IR), progressively optimizing the circuit for execution on target hardware or simulation backends. The pipeline uses a type-based step system that allows users to configure compilation capabilities through structured parameters while ensuring compatibility with device constraints and numerical backends.
 
 **Section sources**
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L44-L94)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L12-L98)
+- [compiler.py:14-23](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L23)
+- [steps.py:1-8](file://src/tyxonq/compiler/gate_compiler/steps.py#L1-L8)
 
 ## Compilation Pipeline Architecture
 
-The compilation pipeline is orchestrated by the `CompilePlan` class, which manages a sequence of `Pass` instances. Each pass implements the `execute_plan` method to transform the circuit IR. The `build_plan` function constructs a `CompilePlan` from a list of stage names, resolving them via the `_resolve_stage` function.
+The compilation pipeline is orchestrated by the `GateCompiler` class, which uses a type-based step system managed by `build_compile_steps`. Unlike the previous string-based DSL approach, the new system uses structured configuration objects (`DecomposeSpec`, `RoutingSpec`) to control compilation capabilities. The pipeline follows a fixed order: normalization → decomposition → routing → optimization → simplification.
 
-The `NativeCompiler` serves as the primary entry point, which by default prepends essential normalization passes (`rewrite/auto_measure` and `rewrite/gates_transform`) to any user-specified pipeline. This ensures circuit consistency before applying domain-specific optimizations.
+The `apply_steps` function sequentially applies each compiled step to transform the circuit IR. Each step implements a common interface with an `apply` method that takes the circuit and optional parameters, enabling flexible composition while maintaining mathematical correctness.
 
 ```mermaid
 flowchart TD
-A[Circuit IR] --> B[AutoMeasurePass]
-B --> C[GatesTransformPass]
-C --> D[User-Specified Stages]
-D --> E[Final Optimized IR]
+A[Circuit IR] --> B[AutoMeasure]
+B --> C[GatesTransform]
+C --> D{Decompose?}
+D --> |Yes| E[MatchgateDecompose/RotationsDecompose]
+D --> |No| F{Route?}
+E --> F
+F --> |Yes| G[Routing]
+F --> |No| H{Optimize?}
+G --> H
+H --> |Yes| I[MergePrune]
+H --> |No| J{Simplify?}
+I --> J
+J --> |Yes| K[LightconeSimplify]
+J --> |No| L[Final Circuit]
+K --> L
 ```
 
 **Diagram sources**
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L69-L88)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L12-L98)
+- [steps.py:38-43](file://src/tyxonq/compiler/gate_compiler/steps.py#L38-L43)
+- [compiler.py:64-73](file://src/tyxonq/compiler/gate_compiler/compiler.py#L64-L73)
 
 **Section sources**
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L69-L88)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L12-L98)
+- [compiler.py:14-23](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L23)
+- [steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
 
 ## Decomposition Stage
 
-The decomposition stage, implemented by `RotationsDecomposePass`, breaks down complex parametric rotation gates into a standardized basis set of {H, RZ, CX}. This stage is crucial for ensuring compatibility with hardware that may not natively support all rotation types.
+The decomposition stage consists of two complementary passes that break down complex gates into native gate sets:
 
-The pass applies standard quantum identities:
+### Matchgate Decomposition
+The `MatchgateDecompose` pass handles 2-qubit number-conserving matchgates (fSim family) by decomposing them into native gates {rz, rx, h, cx}. This is particularly important for quantum chemistry applications using LUCJ/SQD algorithms where two-mode fock matrices need to be implemented on hardware.
+
+The decomposition follows the mathematical identity:
+- fSim(θ, φ) = exp(-i·θ/2·(XX+YY)) · diag(1, 1, 1, e^{-iφ})
+- Decomposed via ZXZ Euler angles and partial-iSWAP implementation
+- Zero-angle blocks are pruned to reduce gate count
+
+### Rotation Decomposition  
+The `RotationsDecompose` pass converts parametric rotation gates to the standard basis {H, RZ, CX}:
 - RX(θ) → H · RZ(θ) · H
 - RY(θ) → S† · H · RZ(θ) · H · S
 - RZZ(θ) → CX · RZ(θ) · CX
 - RXX(θ) → H⊗H · CX · RZ(θ) · CX · H⊗H
 - RYY(θ) → (S†H)⊗(S†H) · CX · RZ(θ) · CX · (HS)⊗(HS)
 
-This decomposition enables uniform handling of rotation gates across different backends and facilitates further optimization in subsequent stages.
+Both decomposition passes use `rebuild_circuit` to preserve metadata like `_unitary_cache`, ensuring subsequent compilation steps can access matrix information when needed.
 
 ```mermaid
 flowchart LR
@@ -82,51 +109,63 @@ H4 --> S[S]
 ```
 
 **Diagram sources**
-- [rotations.py](file://src/tyxonq/compiler/stages/decompose/rotations.py#L10-L66)
+- [rotations.py:13-25](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py#L13-L25)
 
 **Section sources**
-- [rotations.py](file://src/tyxonq/compiler/stages/decompose/rotations.py#L10-L66)
+- [matchgate.py:152-197](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py#L152-L197)
+- [rotations.py:13-73](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py#L13-L73)
 
 ## Rewriting Stage
 
-The rewriting stage consists of multiple passes that transform the circuit structure for optimization and compatibility. Key components include:
+The rewriting stage performs circuit normalization and optimization through three key passes:
+
+### Auto Measurement
+The `AutoMeasure` pass automatically adds Z measurements to all qubits when no explicit measurements exist in the circuit. This ensures consistent measurement behavior across different compilation targets and provides warnings when implicit measurements are added.
 
 ### Gate Transformation
-The `GatesTransformPass` rewrites single-qubit gates according to a specified basis set (default: ["h", "rx", "rz", "cx", "cz"]). It converts X and Y gates to their parametric equivalents (RX(π) and RY(π)) when the basis allows, ensuring the circuit adheres to device-specific gate sets.
-
-### Measurement Grouping
-The `MeasurementRewritePass` performs observable grouping to optimize measurement efficiency. It groups measurement operations by non-overlapping wires and consistent measurement bases, enabling shot reuse and reducing total measurement settings. The pass supports both explicit measurement specifications and Hamiltonian-based inputs, grouping Pauli terms into commuting sets.
+The `GatesTransform` pass rewrites gates according to a specified basis set (default: ["h", "rx", "rz", "cx", "cz"]). It converts X and Y gates to their parametric equivalents (RX(π) and RY(π)) when the basis allows, ensuring compatibility with device-specific gate sets while preserving other gates for later decomposition.
 
 ### Circuit Pruning
-The `MergePrunePass` applies local circuit optimizations by merging adjacent single-qubit gates and removing identity operations. It uses a rule-based system to combine gates (e.g., RZ(θ₁) followed by RZ(θ₂) becomes RZ(θ₁+θ₂)) and eliminates redundant operations, reducing circuit depth.
+The `MergePrune` pass applies local optimizations by merging adjacent single-qubit gates and removing identity operations. It uses a rule-based system combining gates (e.g., RZ(θ₁) followed by RZ(θ₂) becomes RZ(θ₁+θ₂)) and eliminates redundant operations, reducing circuit depth and improving performance.
 
 ```mermaid
 flowchart TD
-A[Circuit] --> B[Gate Transform]
-B --> C[Measurement Grouping]
-C --> D[Circuit Pruning]
+A[Circuit] --> B[AutoMeasure]
+B --> C[GatesTransform]
+C --> D[MergePrune]
 D --> E[Optimized Circuit]
 ```
 
 **Diagram sources**
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L9-L49)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L9-L88)
-- [merge_prune.py](file://src/tyxonq/compiler/stages/rewrite/merge_prune.py#L24-L82)
+- [auto_measure.py:13-25](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L13-L25)
+- [gates_transform.py:12-27](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L12-L27)
+- [merge_prune.py:27-33](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/merge_prune.py#L27-L33)
 
 **Section sources**
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L9-L49)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L9-L88)
-- [merge_prune.py](file://src/tyxonq/compiler/stages/rewrite/merge_prune.py#L24-L82)
+- [auto_measure.py:13-50](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L13-L50)
+- [gates_transform.py:12-50](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L12-L50)
+- [merge_prune.py:27-86](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/merge_prune.py#L27-L86)
+
+## Layout and Routing Stage
+
+The layout and routing stage handles qubit mapping and connectivity constraints through the `Routing` pass. This stage delegates to Qiskit's transpiler to map logical qubits to physical qubits and insert SWAP gates as needed to satisfy device connectivity requirements.
+
+The routing stage is controlled by the `RoutingSpec` parameter and is only included when explicitly enabled. It respects device topology information provided through the `device_rule` parameter, ensuring that the final circuit can be executed on the target hardware without violating connectivity constraints.
+
+This stage is particularly important for real hardware execution where qubit connectivity is limited compared to idealized simulation environments.
+
+**Section sources**
+- [steps.py:74-79](file://src/tyxonq/compiler/gate_compiler/steps.py#L74-L79)
 
 ## Simplification Stage
 
-The simplification stage employs lightcone-based circuit reduction through the `LightconeSimplifyPass`. This pass performs a backward slice from measurement operations to identify and retain only the operations that influence the final measurement outcomes.
+The simplification stage employs lightcone-based circuit reduction through the `LightconeSimplify` pass. This pass performs backward slicing from measurement operations to identify and retain only the operations that influence the final measurement outcomes.
 
 The algorithm works as follows:
-1. Collect all measured qubits from explicit `measure_z` operations or assume all qubits are measured if `assume_measure_all` is enabled.
-2. Traverse the circuit operations in reverse order, maintaining an "active" set of qubits.
-3. For each operation, if it acts on any active qubit, include it in the reduced circuit and update the active set.
-4. For entangling gates (CX, CZ, etc.), propagate dependencies to both qubits.
+1. Collect all measured qubits from explicit `measure_z` operations or assume all qubits are measured if `assume_measure_all` is enabled
+2. Traverse the circuit operations in reverse order, maintaining an "active" set of qubits
+3. For each operation, if it acts on any active qubit, include it in the reduced circuit and update the active set
+4. For entangling gates (CX, CZ, etc.), propagate dependencies to both qubits
 
 This approach significantly reduces circuit depth by eliminating operations that do not contribute to the final observable, improving simulation efficiency and reducing noise in hardware execution.
 
@@ -140,92 +179,40 @@ E --> F[Reduced Circuit]
 ```
 
 **Diagram sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L9-L95)
+- [lightcone.py:12-18](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L18)
 
 **Section sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L9-L95)
-
-## Scheduling Stage
-
-The scheduling stage, implemented by `ShotSchedulerPass`, plans the execution of measurements by allocating shots across different measurement groups. It operates in two modes:
-
-1. **Explicit Mode**: Uses a user-provided `shot_plan` to define the number of shots for each measurement segment.
-2. **Group-Based Mode**: Automatically distributes a `total_shots` budget across measurement groups using their `estimated_shots_per_group` as weights.
-
-The scheduler respects device constraints such as `max_shots_per_job` by splitting large segments into smaller ones. It also supports batching when the device allows, assigning `batch_id` to segments for efficient execution.
-
-The `schedule` function generates a plan with segments containing `shots`, `basis`, `wires`, and `basis_map`, enabling executors to reuse measurement settings and minimize overhead.
-
-```mermaid
-flowchart TD
-A[Measurement Groups] --> B{Explicit Plan?}
-B --> |Yes| C[Use shot_plan]
-B --> |No| D[Distribute total_shots]
-D --> E[Weight by estimated_shots_per_group]
-E --> F[Respect max_shots_per_job]
-F --> G[Assign batch_id if supported]
-G --> H[Execution Plan]
-```
-
-**Diagram sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L121-L133)
-
-**Section sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L121-L133)
-
-## Gradient Processing Stage
-
-The gradient processing stage, implemented by `ParameterShiftPass`, prepares circuits for gradient computation using the parameter-shift rule. This pass generates shifted circuit variants for a specified gate type (e.g., "rz") by creating `plus` and `minus` circuits with parameters shifted by ±π/2.
-
-The pass populates the circuit metadata with gradient information, including the shifted circuits and metadata for reconstruction. This enables efficient gradient computation in variational algorithms without requiring additional compilation steps.
-
-The parameter shift method is particularly valuable for noisy intermediate-scale quantum (NISQ) devices, as it provides exact gradients and is robust to certain types of noise.
-
-```mermaid
-flowchart TD
-A[Original Circuit] --> B[ParameterShiftPass]
-B --> C[Plus Circuit: θ + π/2]
-B --> D[Minus Circuit: θ - π/2]
-C --> E[Gradient = (Plus - Minus)/2]
-D --> E
-```
-
-**Diagram sources**
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py#L11-L28)
-
-**Section sources**
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py#L11-L28)
+- [lightcone.py:12-97](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L97)
 
 ## Integration with Device Constraints and Numerics
 
-The compilation pipeline integrates with device constraints through the `device_rule` parameter passed to each pass. This allows stages to adapt their behavior based on hardware capabilities, such as maximum shots per job, supported gate sets, and connectivity constraints.
+The compilation pipeline integrates with device constraints through the `device_rule` parameter passed to each step. This allows stages to adapt their behavior based on hardware capabilities, such as maximum shots per job, supported gate sets, and connectivity constraints.
 
-For numerical backends, the pipeline is designed to work with various numerics implementations (NumPy, CuPy, PyTorch) through the numerics API. The transformations preserve the mathematical equivalence of circuits while optimizing for the target backend's performance characteristics.
+For numerical backends, the pipeline preserves mathematical equivalence while optimizing for target backend performance characteristics. The `GateCompiler` class provides a unified interface that handles output format selection (IR, QASM2, QASM3, or Qiskit circuits) and ensures compatibility with various numerics implementations.
 
-The `NativeCompiler` ensures compatibility by defaulting to a standard basis set and providing fallback mechanisms when specific optimizations are not supported by the target backend.
+The type-based configuration system enables precise control over compilation capabilities, allowing users to enable or disable specific optimization passes based on their target platform requirements.
 
 **Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L12-L98)
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L121-L133)
+- [compiler.py:27-38](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L38)
+- [steps.py:27-55](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L55)
 
 ## Common Issues and Best Practices
 
 ### Common Issues
 1. **Non-convergent Simplifications**: Lightcone simplification may not reduce circuit depth when all operations are in the lightcone of measurements. This is expected behavior for circuits where every gate affects the output.
-2. **Incorrect Gradient Applications**: Applying parameter shift to non-parametric gates or gates with non-linear parameter dependence can produce incorrect gradients.
-3. **Measurement Grouping Limitations**: The greedy grouping algorithm may not find optimal groupings for complex Hamiltonians with many non-commuting terms.
+2. **Matchgate Decomposition Failures**: Non-number-conserving matchgates cannot be decomposed using the fSim-based algorithm and will either be preserved or raise errors depending on strict mode settings.
+3. **Routing Dependencies**: Routing requires Qiskit to be installed and may fail if device topology information is incomplete or incorrect.
 
 ### Best Practices
-1. **Stage Chaining**: Always include `rewrite/gates_transform` early in the pipeline to ensure gate set compatibility.
-2. **Measurement Optimization**: Use `rewrite/measurement` before `scheduling/shot_scheduler` to enable efficient shot allocation.
-3. **Device-Aware Compilation**: Provide accurate `device_rule` information to enable constraint-aware scheduling and optimization.
-4. **Testing**: Validate compilation results with small circuits before scaling to larger problems.
+1. **Step Configuration**: Use the type-based configuration system (`DecomposeSpec`, `RoutingSpec`) instead of boolean flags for fine-grained control over compilation capabilities.
+2. **Device-Aware Compilation**: Provide accurate `device_rule` information including coupling maps and gate sets to enable constraint-aware optimization.
+3. **Output Selection**: Choose appropriate output formats (IR, QASM2, QASM3, or Qiskit) based on your target execution environment.
+4. **Testing Strategy**: Validate compilation results with small circuits before scaling to larger problems, especially when using custom device rules.
 
 **Section sources**
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py#L44-L94)
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L9-L95)
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py#L11-L28)
+- [steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
+- [matchgate.py:46-93](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py#L46-L93)
 
 ## Conclusion
 
-The TyxonQ compilation pipeline provides a comprehensive, modular framework for quantum circuit optimization. By separating concerns into distinct stages—decomposition, rewriting, simplification, scheduling, and gradient processing—the system enables flexible, targeted optimizations while maintaining mathematical correctness. The integration of device constraints and numerical backend requirements ensures that compiled circuits are both efficient and executable on real hardware. Understanding the invocation relationships and domain models of each stage allows users to chain them effectively for their specific quantum computing tasks.
+The TyxonQ gate compiler provides a comprehensive, modular framework for quantum circuit optimization through its new type-based step system. By separating concerns into distinct stages—decomposition, rewriting, layout/routing, and simplification—the system enables flexible, targeted optimizations while maintaining mathematical correctness. The integration of device constraints and numerical backend requirements ensures that compiled circuits are both efficient and executable on real hardware. Understanding the invocation relationships and domain models of each stage allows users to chain them effectively for their specific quantum computing tasks through the structured configuration system.

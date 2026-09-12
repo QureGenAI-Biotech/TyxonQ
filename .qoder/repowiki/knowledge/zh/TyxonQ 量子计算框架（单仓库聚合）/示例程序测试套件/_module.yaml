@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: tests_examples
+title: 示例程序测试套件
+scope:
+    - tests_examples/
+source_files: []
+depends_on: []
+related_to:
+    - path: examples

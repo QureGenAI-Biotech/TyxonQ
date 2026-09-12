@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: compiler/gate_compiler
+title: 门电路通用编译器（GateCompiler）
+scope:
+    - src/tyxonq/compiler/gate_compiler/
+source_files: []
+depends_on: []
+related_to:
+    - path: compiler/pulse_compiler
+    - path: tests_core_module

@@ -2,9 +2,18 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py)
+- [qiskit_interop.py](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py)
+- [compiler.py](file://src/tyxonq/compiler/gate_compiler/compiler.py)
+- [routing.py](file://src/tyxonq/compiler/gate_compiler/stages/layout/routing.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated to reflect the migration of Qiskit compiler integration from `compile_engine/qiskit/` to `gate_compiler/interop/qiskit_interop.py`
+- Replaced references to old QiskitCompiler class with new GateCompiler-based architecture
+- Updated documentation to reflect enhanced functionality in the new location
+- Revised component analysis to match the new modular structure
+- Updated troubleshooting guidance for the new implementation
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -18,105 +27,99 @@
 
 ## Introduction
 
-The QiskitCompiler is a critical component within TyxonQ's Backend Compilers framework, serving as a bridge between TyxonQ's Intermediate Representation (IR) and IBM Quantum's Qiskit ecosystem. This compiler enables seamless integration with IBM Quantum hardware by leveraging Qiskit's comprehensive transpilation framework, allowing users to target specific quantum devices with optimized circuit configurations. The QiskitCompiler facilitates bidirectional conversion between TyxonQ's IR and Qiskit's QuantumCircuit representation, providing access to Qiskit's extensive optimization passes, device-aware compilation, and hardware-specific constraints.
+The Qiskit interoperability system in TyxonQ has been restructured to provide seamless integration with IBM Quantum hardware and Qiskit's rich transpilation framework. The functionality previously located in `compile_engine/qiskit/` has been moved to `gate_compiler/interop/qiskit_interop.py` with enhanced capabilities and improved modularity. This new architecture serves as a bridge between TyxonQ's IR and Qiskit's QuantumCircuit representation, enabling users to leverage Qiskit's comprehensive optimization passes, device-aware compilation, and hardware-specific constraints while maintaining compatibility with TyxonQ's internal circuit representation.
 
-This documentation details the implementation of the QiskitCompiler, focusing on its core conversion utilities, transpilation management, and qubit mapping extraction capabilities. The compiler supports multiple output formats including native Qiskit circuits, OpenQASM 2.0, and TyxonQ's IR, making it a versatile tool for quantum circuit development and execution across different platforms.
+The updated implementation provides bidirectional conversion utilities, enhanced transpilation management, and sophisticated qubit mapping extraction capabilities. It supports multiple output formats including native Qiskit circuits, OpenQASM 2.0, and TyxonQ's IR, making it a versatile tool for quantum circuit development and execution across different platforms.
 
 ## Core Components
 
-The QiskitCompiler implementation consists of two primary files: `qiskit_compiler.py` which contains the main compiler class and execution logic, and `dialect.py` which provides the conversion utilities and supporting functions. The compiler integrates with Qiskit's transpile function to perform circuit optimization and device-specific compilation, while maintaining compatibility with TyxonQ's internal circuit representation.
+The Qiskit interoperability system now consists of a modular architecture centered around the `qiskit_interop.py` module, which provides essential conversion utilities and supporting functions. The system integrates with the GateCompiler framework to perform circuit optimization and device-specific compilation, while maintaining backward compatibility with existing APIs through alias functions.
+
+**Updated** The Qiskit compiler integration has been moved from `compile_engine/qiskit/` to `gate_compiler/interop/qiskit_interop.py`, providing enhanced functionality and better integration with TyxonQ's gate compiler infrastructure.
 
 **Section sources**
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L1-L83)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L1-L247)
+- [qiskit_interop.py:1-342](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L1-L342)
+- [compiler.py:1-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L1-L110)
 
 ## Architecture Overview
 
-The QiskitCompiler follows a modular architecture that separates the compilation orchestration from the low-level conversion logic. The main `QiskitCompiler` class coordinates the compilation process, while the `dialect.py` module handles the actual translation between representations. This separation of concerns allows for maintainable code and clear responsibility boundaries.
+The new architecture follows a modular design that separates the Qiskit interoperability logic from the core compilation orchestration. The `GateCompiler` class coordinates the overall compilation process, while the `qiskit_interop.py` module handles the specific translation between representations. This separation allows for maintainable code and clear responsibility boundaries.
 
 ```mermaid
 graph TD
-A[QiskitCompiler] --> B[compile method]
-B --> C[ir_to_qiskit conversion]
-C --> D[Qiskit QuantumCircuit]
-D --> E[Qiskit transpile]
-E --> F[Optimized QuantumCircuit]
-F --> G[_get_logical_physical_mapping]
-F --> H[_get_positional_logical_mapping]
-F --> I[qasm2_dumps_compat]
-B --> J[Compilation Metadata]
-J --> K[logical_physical_mapping]
-J --> L[positional_logical_mapping]
-J --> M[transpilation options]
+A[GateCompiler] --> B[compile method]
+B --> C[qiskit_interop.to_qiskit]
+C --> D[QuantumCircuit]
+D --> E[Optional routing via qiskit.transpile]
+E --> F[_get_logical_physical_mapping]
+F --> G[_get_positional_logical_mapping]
+G --> H[Output Format Selection]
+H --> I[QuantumCircuit]
+H --> J[QASM string]
+H --> K[TyxonQ IR]
 ```
 
-**Diagram sources **
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L19-L76)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L79-L121)
+**Diagram sources**
+- [compiler.py:27-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L110)
+- [qiskit_interop.py:165-342](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L165-L342)
 
 ## Detailed Component Analysis
 
-### QiskitCompiler Class Analysis
+### GateCompiler Integration
 
-The `QiskitCompiler` class serves as the entry point for Qiskit-based compilation within the TyxonQ framework. It implements the standard compiler interface while providing Qiskit-specific functionality for circuit transpilation and device integration.
+The `GateCompiler` class now serves as the primary entry point for Qiskit-based compilation within the TyxonQ framework. It implements a unified compilation interface that supports multiple output formats and integrates seamlessly with the gate compiler pipeline.
 
 #### Class Structure
 ```mermaid
 classDiagram
-class QiskitCompiler {
+class GateCompiler {
 +string name
-+compile(circuit : Circuit, options : Dict[str, Any]) CompileResult
++compile(circuit : Circuit, options : Dict) CompileResult
 }
-QiskitCompiler --> normalize_transpile_options : "uses"
-QiskitCompiler --> ir_to_qiskit : "uses"
-QiskitCompiler --> qk_transpile : "uses"
-QiskitCompiler --> _get_logical_physical_mapping_from_qiskit : "uses"
-QiskitCompiler --> _get_positional_logical_mapping_from_qiskit : "uses"
-QiskitCompiler --> qasm2_dumps_compat : "uses"
+GateCompiler --> normalize_transpile_options : "uses"
+GateCompiler --> to_qiskit : "uses"
+GateCompiler --> from_qiskit : "uses"
+GateCompiler --> GateQASM2Exporter : "uses"
+GateCompiler --> GateQASM3Exporter : "uses"
 ```
 
-**Diagram sources **
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L19-L20)
+**Diagram sources**
+- [compiler.py:14-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L110)
 
 **Section sources**
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L19-L76)
+- [compiler.py:14-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L110)
 
 ### Compilation Process Flow
 
-The compilation process follows a sequential workflow that transforms TyxonQ's IR into executable quantum circuits, with optional transpilation and format conversion steps.
+The compilation process follows a streamlined workflow that transforms TyxonQ's IR into executable quantum circuits, with optional transpilation and format conversion steps.
 
 #### Compilation Sequence
 ```mermaid
 sequenceDiagram
 participant User as "User/Application"
-participant QiskitCompiler as "QiskitCompiler"
-participant Dialect as "dialect.py"
+participant GateCompiler as "GateCompiler"
+participant QiskitInterop as "qiskit_interop"
 participant Qiskit as "Qiskit Framework"
-User->>QiskitCompiler : compile(circuit, options)
-QiskitCompiler->>QiskitCompiler : normalize_transpile_options(options)
-QiskitCompiler->>Dialect : ir_to_qiskit(circuit)
-Dialect-->>QiskitCompiler : QuantumCircuit
-alt Transpilation Required
-QiskitCompiler->>Qiskit : qk_transpile(qc, tp_opts)
-Qiskit-->>QiskitCompiler : compiled_qc
-QiskitCompiler->>Dialect : _get_logical_physical_mapping(compiled_qc, qc)
-QiskitCompiler->>Dialect : _get_positional_logical_mapping(qc)
+User->>GateCompiler : compile(circuit, options)
+GateCompiler->>GateCompiler : build_compile_steps()
+alt Output = qiskit
+GateCompiler->>QiskitInterop : to_qiskit(lowered_circuit)
+QiskitInterop-->>GateCompiler : QuantumCircuit
+else Output = qasm2/qasm3
+GateCompiler->>GateCompiler : Export to QASM
+else Output = ir
+GateCompiler-->>User : Original IR
 end
-QiskitCompiler->>QiskitCompiler : Generate metadata
-alt Output Format
-QiskitCompiler-->>User : QuantumCircuit
-QiskitCompiler-->>User : QASM string
-QiskitCompiler-->>User : Original IR
-end
+GateCompiler-->>User : CompileResult with metadata
 ```
 
-**Diagram sources **
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L22-L76)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L26-L39)
+**Diagram sources**
+- [compiler.py:27-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L110)
+- [qiskit_interop.py:165-342](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L165-L342)
 
 ### Conversion Utilities Analysis
 
-The dialect.py module provides essential utilities for bidirectional conversion between TyxonQ's IR and Qiskit's QuantumCircuit representation. These functions form the foundation of the interoperability between the two frameworks.
+The `qiskit_interop.py` module provides essential utilities for bidirectional conversion between TyxonQ's IR and Qiskit's QuantumCircuit representation. These functions form the foundation of the interoperability between the two frameworks.
 
 #### IR to Qiskit Conversion Logic
 ```mermaid
@@ -147,8 +150,8 @@ HandleNoMeasures --> AddMeasureAll["Add measure_all()"]
 AddMeasureAll --> End([Return QuantumCircuit])
 ```
 
-**Diagram sources **
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L124-L179)
+**Diagram sources**
+- [qiskit_interop.py:165-242](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L165-L242)
 
 ### Transpilation Options Normalization
 
@@ -174,32 +177,33 @@ UseProvidedOpt --> ReturnOptions
 ReturnOptions --> End([End])
 ```
 
-**Diagram sources **
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L26-L39)
+**Diagram sources**
+- [qiskit_interop.py:56-69](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L56-L69)
 
 ## Dependency Analysis
 
-The QiskitCompiler has a well-defined dependency structure that isolates Qiskit-specific functionality while maintaining integration with the broader TyxonQ framework. The compiler depends on Qiskit only when required for specific operations, allowing the rest of the system to function without this external dependency.
+The Qiskit interoperability system has a well-defined dependency structure that isolates Qiskit-specific functionality while maintaining integration with the broader TyxonQ framework. The system depends on Qiskit only when required for specific operations, allowing the rest of the system to function without this external dependency.
 
 ```mermaid
 graph TD
-A[QiskitCompiler] --> B[dialect.py]
+A[GateCompiler] --> B[qiskit_interop.py]
 B --> C[Qiskit QuantumCircuit]
-B --> D[Qiskit transpile]
-B --> E[Qiskit qasm2]
-A --> F[TyxonQ Core IR]
-F --> G[Circuit]
-A --> H[TyxonQ Compiler API]
-H --> I[CompileResult]
+B --> D[Qiskit ClassicalRegister]
+B --> E[GateQASM2Exporter]
+B --> F[GateQASM3Exporter]
+A --> G[TyxonQ Core IR]
+G --> H[Circuit]
+A --> I[TyxonQ Compiler API]
+I --> J[CompileResult]
 ```
 
-**Diagram sources **
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L1-L83)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L1-L247)
+**Diagram sources**
+- [compiler.py:1-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L1-L110)
+- [qiskit_interop.py:1-342](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L1-L342)
 
 ## Performance Considerations
 
-The QiskitCompiler is designed with performance in mind, minimizing unnecessary operations and leveraging Qiskit's efficient transpilation pipeline. The compiler only imports Qiskit components when required for specific operations, reducing startup overhead. The transpilation options are filtered to remove non-relevant parameters before being passed to Qiskit's transpile function, ensuring optimal performance. The bidirectional conversion utilities are implemented with direct operation mapping, avoiding intermediate representations that could introduce latency.
+The updated Qiskit interoperability system is designed with performance in mind, minimizing unnecessary operations and leveraging efficient conversion pipelines. The system uses optional imports for Qiskit components, reducing startup overhead when Qiskit is not available. The conversion utilities are implemented with direct operation mapping, avoiding intermediate representations that could introduce latency. The GateCompiler integration ensures optimal compilation steps are applied based on the target output format.
 
 ## Troubleshooting Guide
 
@@ -207,19 +211,28 @@ The QiskitCompiler is designed with performance in mind, minimizing unnecessary 
 
 | Issue | Cause | Solution |
 |------|------|----------|
-| "qiskit not available" error | Qiskit package not installed | Install Qiskit using `pip install qiskit` |
+| "qiskit is not available" error | Qiskit package not installed | Install Qiskit using `pip install qiskit` |
 | Transpilation failures | Invalid transpilation options | Validate options against Qiskit's transpile function documentation |
 | Incorrect qubit mappings | Measurement operations not properly handled | Ensure measurement operations are correctly specified in the IR circuit |
 | Empty output circuits | No operations in input circuit | Verify the input circuit contains valid quantum operations |
+| Unsupported operation errors | Gate not supported by Qiskit adapter | Check OP_MAPPING in qiskit_interop.py for supported gates |
+
+### Migration from Old Location
+
+**Updated** Users migrating from the old `compile_engine/qiskit/` location should update their imports and usage patterns:
+
+- Replace `from tyxonq.compiler.compile_engine.qiskit import QiskitCompiler` with `from tyxonq.compiler.gate_compiler.interop.qiskit_interop import to_qiskit, from_qiskit`
+- Update compilation calls to use the GateCompiler instead of direct QiskitCompiler instantiation
+- Utilize the enhanced functionality available in the new location
 
 ### Dependency Management
 
-The QiskitCompiler uses optional imports for Qiskit components, which means the compiler can be imported and instantiated even when Qiskit is not available. However, attempting to perform compilation operations that require Qiskit will raise a RuntimeError with a descriptive message indicating the missing dependency.
+The Qiskit interoperability system uses optional imports for Qiskit components, which means the compiler can be imported and instantiated even when Qiskit is not available. However, attempting to perform compilation operations that require Qiskit will raise a RuntimeError with a descriptive message indicating the missing dependency.
 
 **Section sources**
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L30-L37)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L5-L10)
+- [qiskit_interop.py:20-25](file://src/tyxonq/compiler/gate_compiler/interop/qiskit_interop.py#L20-L25)
+- [compiler.py:100-107](file://src/tyxonq/compiler/gate_compiler/compiler.py#L100-L107)
 
 ## Conclusion
 
-The QiskitCompiler provides a robust bridge between TyxonQ's Intermediate Representation and IBM Quantum's Qiskit framework, enabling seamless integration with IBM Quantum hardware and access to Qiskit's advanced transpilation capabilities. Through its well-structured implementation, the compiler offers flexible output formats, comprehensive transpilation options, and detailed qubit mapping metadata. The separation of conversion logic from compilation orchestration ensures maintainability and extensibility, while the careful dependency management allows for graceful degradation when Qiskit is not available. This implementation positions TyxonQ as a versatile platform for quantum algorithm development that can leverage the strengths of both frameworks.
+The updated Qiskit interoperability system provides a robust bridge between TyxonQ's Intermediate Representation and IBM Quantum's Qiskit framework, enabling seamless integration with IBM Quantum hardware and access to Qiskit's advanced transpilation capabilities. Through its restructured implementation in `gate_compiler/interop/qiskit_interop.py`, the system offers flexible output formats, comprehensive transpilation options, and detailed qubit mapping metadata. The separation of conversion logic from compilation orchestration ensures maintainability and extensibility, while the careful dependency management allows for graceful degradation when Qiskit is not available. This enhanced implementation positions TyxonQ as a versatile platform for quantum algorithm development that can leverage the strengths of both frameworks while providing a cleaner, more modular architecture.

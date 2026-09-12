@@ -2,17 +2,25 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py)
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py)
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py)
-- [dynamics_numeric.py](file://src/tyxonq/applications/chem/runtimes/dynamics_numeric.py)
+- [hea_device_runtime.py](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py)
+- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py)
+- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py)
+- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py)
+- [evolution.py](file://src/tyxonq/applications/chem/dynamics/evolution.py)
 - [statevector/engine.py](file://src/tyxonq/devices/simulators/statevector/engine.py)
 - [blocks.py](file://src/tyxonq/libs/circuits_library/blocks.py)
 - [qiskit_real_amplitudes.py](file://src/tyxonq/libs/circuits_library/qiskit_real_amplitudes.py)
-- [hamiltonian_grouping.py](file://src/tyxonq/compiler/utils/hamiltonian_grouping.py)
+- [hamiltonian_grouping.py](file://src/tyxonq/libs/hamiltonian_encoding/hamiltonian_grouping.py)
 - [apply_postprocessing.py](file://src/tyxonq/postprocessing/__init__.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated file paths to reflect VQE runtimes restructuring under `algorithms/vqe/runtimes/`
+- Enhanced HEA device runtime with improved circuit execution and parameter shift optimization
+- Improved UCC device runtime with advanced two-shift gradient computation for even harmonics
+- Separated dynamics runtime into dedicated module under `dynamics/evolution.py`
+- Added enhanced caching mechanisms and performance optimizations across all runtimes
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -28,6 +36,8 @@
 ## Introduction
 The TyxonQ quantum chemistry framework provides a dual-path execution model for quantum algorithm runtimes, supporting both device-based execution with sampling and numeric simulation with exact computation. This architecture enables researchers to seamlessly switch between realistic hardware simulation with shot noise and idealized exact computation for algorithm development and validation. The runtime system abstracts away execution details while maintaining consistent interfaces across different algorithm families, including Hardware-Efficient Ansatz (HEA) and Unitary Coupled Cluster (UCC) methods. This document details the implementation and usage of these runtimes, focusing on their design patterns, configuration options, and performance characteristics.
 
+**Updated** The VQE runtimes have been restructured under `algorithms/vqe/runtimes/` with separate HEA and UCCSD implementations supporting both numeric simulation and device execution modes, providing enhanced performance and better organization.
+
 ## Dual-Path Runtime Architecture
 The execution runtime system follows a dual-path architecture that separates device-based execution from numeric simulation. This design allows quantum chemistry algorithms to be executed in two distinct modes: through quantum device interfaces that simulate real hardware constraints and through exact numeric computation that provides idealized results. The architecture maintains a consistent interface across both execution paths, enabling seamless switching between them based on research requirements or production constraints.
 
@@ -36,13 +46,15 @@ The dual-path approach addresses the fundamental trade-off between physical real
 This architecture enables researchers to develop and debug algorithms using exact numeric simulation before deploying them on quantum devices, where sampling noise and hardware constraints affect performance. The consistent interface across both paths ensures that algorithm logic remains unchanged when switching between execution modes, reducing development complexity and improving reproducibility.
 
 **Section sources**
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
 
 ## HEA Runtime Implementations
 
 ### HEADeviceRuntime
 The HEADeviceRuntime class implements the device-based execution path for Hardware-Efficient Ansatz (HEA) algorithms. This runtime evaluates variational energy and computes gradients through parameter shift methods, using quantum device interfaces to simulate circuit execution. The implementation supports both default RY-only ansatz circuits and custom circuit templates, providing flexibility for different quantum hardware architectures.
+
+**Updated** The runtime now features enhanced batched circuit execution with unified postprocessing pipeline, improved Hamiltonian term grouping, and optimized parameter shift gradient computation. It employs sophisticated caching mechanisms for measurement prefixes and circuit variants to minimize redundant computations.
 
 The runtime employs Hamiltonian term grouping to optimize measurement efficiency, reducing the number of required circuit executions by measuring commuting Pauli terms simultaneously. Measurement prefixes are cached to avoid redundant computation across multiple energy evaluations. For gradient computation, the implementation batches base energy evaluation with parameter-shifted variants in a single device submission, minimizing communication overhead and improving computational efficiency.
 
@@ -52,14 +64,15 @@ Energy evaluation follows a measurement-based approach where the expectation val
 sequenceDiagram
 participant User
 participant HEADeviceRuntime
+participant Circuit
 participant DeviceBase
 participant Postprocessor
 User->>HEADeviceRuntime : energy(params, shots=1024)
 HEADeviceRuntime->>HEADeviceRuntime : Build base circuit
 HEADeviceRuntime->>HEADeviceRuntime : Group Hamiltonian terms
 loop For each measurement group
-HEADeviceRuntime->>HEADeviceRuntime : Extend circuit with basis rotations
-HEADeviceRuntime->>DeviceBase : Submit circuit
+HEADeviceRuntime->>Circuit : Extend with basis rotations
+Circuit->>DeviceBase : Submit batched circuits
 end
 DeviceBase-->>HEADeviceRuntime : Return measurement results
 loop For each result
@@ -69,55 +82,59 @@ end
 HEADeviceRuntime-->>User : Total energy
 ```
 
-**Diagram sources **
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
+**Diagram sources**
+- [hea_device_runtime.py:121-176](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L121-L176)
 
 **Section sources**
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
 
 ### HEANumericRuntime
-The HEANumericRuntime class provides the numeric simulation path for HEA algorithms, performing exact statevector computations to evaluate energy and gradients. This implementation uses the StatevectorEngine to compute quantum state evolution and expectation values without sampling noise, providing deterministic results for algorithm development and validation.
+The HEANumericRuntime class provides the numeric simulation path for HEA algorithms, performing exact statevector computations to evaluate energy and gradients. This implementation uses the Circuit.state() API to compute quantum state evolution and expectation values without sampling noise, providing deterministic results for algorithm development and validation.
+
+**Updated** The numeric runtime now leverages the modern Circuit.state() API instead of direct StatevectorEngine calls, providing better backend abstraction and autograd support. It supports multiple backends including NumPy and PyTorch, with automatic differentiation through the NumericBackend for efficient gradient computation.
 
 The numeric runtime supports multiple backend engines, including statevector simulation and matrix product state (MPS) methods, with statevector being the default. Qubit operators are cached using LRU caching to avoid redundant construction across multiple evaluations. The implementation leverages automatic differentiation through the NumericBackend to compute gradients efficiently, avoiding the need for finite difference methods.
 
-Energy evaluation in the numeric path computes the expectation value ⟨ψ|H|ψ⟩ directly from the statevector and Hamiltonian operator. The runtime constructs the full Hamiltonian matrix in sparse format and computes the expectation value using vector-matrix multiplication. This approach provides exact results but scales exponentially with system size, making it suitable for small to medium-sized quantum systems.
+Energy evaluation in the numeric path computes the expectation value ⟨ψ|H|ψ⟩ directly from the statevector and Hamiltonian operator. The runtime constructs the full Hamiltonian matrix in dense format and computes the expectation value using vector-matrix multiplication. This approach provides exact results but scales exponentially with system size, making it suitable for small to medium-sized quantum systems.
 
 ```mermaid
 sequenceDiagram
 participant User
 participant HEANumericRuntime
-participant StatevectorEngine
+participant Circuit
 participant NumericBackend
 User->>HEANumericRuntime : energy(params, get_circuit)
 HEANumericRuntime->>HEANumericRuntime : Build circuit from parameters
-HEANumericRuntime->>StatevectorEngine : Compute statevector
-StatevectorEngine-->>HEANumericRuntime : Quantum state
-HEANumericRuntime->>HEANumericRuntime : Construct QubitOperator
-HEANumericRuntime->>StatevectorEngine : Compute expectation value
-StatevectorEngine-->>HEANumericRuntime : Energy value
-HEANumericRuntime-->>User : Energy
+HEANumericRuntime->>Circuit : Compute statevector via .state()
+Circuit-->>HEANumericRuntime : Quantum state tensor
+HEANumericRuntime->>HEANumericRuntime : Construct Hamiltonian matrix
+HEANumericRuntime->>NumericBackend : Compute expectation value
+NumericBackend-->>HEANumericRuntime : Energy tensor
+HEANumericRuntime-->>User : Energy value
 User->>HEANumericRuntime : energy_and_grad(params, get_circuit)
 HEANumericRuntime->>NumericBackend : Apply value_and_grad
 NumericBackend->>HEANumericRuntime : Forward pass
-HEANumericRuntime->>StatevectorEngine : Compute energy
-StatevectorEngine-->>NumericBackend : Energy
+HEANumericRuntime->>Circuit : Compute energy
+Circuit-->>NumericBackend : Energy tensor
 NumericBackend-->>User : Energy and gradient
 ```
 
-**Diagram sources **
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
+**Diagram sources**
+- [hea_numeric_runtime.py:71-103](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L71-L103)
 
 **Section sources**
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
 
 ## UCC Runtime Implementations
 
 ### UCCDeviceRuntime
 The UCCDeviceRuntime class implements device-based execution for Unitary Coupled Cluster (UCC) algorithms, supporting both fermionic and qubit-based excitations. This runtime evaluates energy and gradients through parameterized ansatz circuits executed on quantum devices or simulators, with support for various excitation operators and parameter mappings.
 
+**Updated** The implementation now features an advanced two-shift parameter shift rule specifically designed for UCC energy surfaces with even harmonics. This addresses the limitation of traditional ±π/2 shifts which yield zero gradients for UCC circuits due to the mathematical structure of unitary coupled cluster operators.
+
 The implementation constructs UCC circuits from excitation operators and parameter identifiers, allowing flexible configuration of the ansatz structure. Hartree-Fock initial state preparation is integrated into the circuit construction process, with qubit initialization following standard quantum chemistry conventions. The runtime supports Trotterization and multicontrol gate decomposition, enabling execution on hardware with limited connectivity.
 
-Gradient computation follows the parameter shift rule with π/2 shifts, batching multiple circuit evaluations to minimize device communication overhead. The implementation supports both finite difference (FD) and small-step gradient methods, with FD being the default. Measurement grouping optimizes the evaluation process by combining commuting Hamiltonian terms, reducing the total number of required circuit executions.
+Gradient computation now uses a sophisticated two-shift rule: g = 2·[E(θ+π/8) − E(θ−π/8)] + (1−√2)·[E(θ+π/4) − E(θ−π/4)], which is exact for the even harmonics {2,4} present in UCC energy surfaces. This replaces the traditional parameter shift rule that fails for UCC circuits. The implementation supports both finite difference (FD) and small-step gradient methods, with FD being the default.
 
 ```mermaid
 classDiagram
@@ -153,14 +170,16 @@ UCCDeviceRuntime --> Circuit : "constructs"
 UCCDeviceRuntime --> QubitOperator : "uses for Hamiltonian"
 ```
 
-**Diagram sources **
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
+**Diagram sources**
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
 
 **Section sources**
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
 
 ### UCCNumericRuntime
 The UCCNumericRuntime class provides numeric simulation for UCC algorithms, supporting multiple computational engines for exact and approximate quantum chemistry calculations. This implementation offers various numeric backends, including full statevector simulation, configuration interaction (CI) vector methods, and integration with external quantum chemistry libraries like PySCF.
+
+**Updated** The runtime now features enhanced CI vector caching, improved statevector alignment for OpenFermion compatibility, and better integration with the modern Circuit.state() API. It supports sophisticated caching mechanisms for CI strings and operator tensors across multiple instances.
 
 The numeric runtime supports different excitation semantics and mode configurations, enabling simulation of fermionic, qubit, and hard-core boson systems. CI vector construction is optimized for sparse representation, reducing memory requirements for large systems. The implementation provides compatibility with legacy quantum chemistry methods while maintaining the same interface as device-based execution.
 
@@ -171,7 +190,7 @@ flowchart TD
 Start([UCCNumericRuntime Initialization]) --> Config["Configure parameters:<br/>n_qubits, n_elec_s,<br/>ex_ops, param_ids,<br/>numeric_engine"]
 Config --> EngineCheck{"numeric_engine =?"}
 EngineCheck --> |statevector| StatevectorPath["Use full statevector<br/>embedding in CI space"]
-EngineCheck --> |civector| CIPath["Use CI vector methods<br/>with caching"]
+EngineCheck --> |civector| CIPath["Use CI vector methods<br/>with global caching"]
 EngineCheck --> |civector-large| CILargePath["Use CI vector methods<br/>without caching"]
 EngineCheck --> |pyscf| PySCFPath["Interface with PySCF<br/>for energy and gradients"]
 EngineCheck --> |mps| MPSPath["Use Matrix Product State<br/>simulation (fallback)"]
@@ -184,14 +203,16 @@ EnergyCalc --> GradCalc["energy_and_grad():<br/>Compute energy and<br/>analytic 
 GradCalc --> End([Return energy and gradient])
 ```
 
-**Diagram sources **
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
+**Diagram sources**
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
 
 **Section sources**
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
 
 ## Dynamics Numeric Runtime
-The dynamics_numeric.py runtime provides time evolution simulation capabilities for quantum systems using variational methods. This implementation supports both variational quantum dynamics (VQD) and projected VQD (pVQD) algorithms, enabling simulation of quantum system evolution under time-dependent Hamiltonians.
+The dynamics runtime provides time evolution simulation capabilities for quantum systems using variational methods. This implementation supports both variational quantum dynamics (VQD) and projected VQD (pVQD) algorithms, enabling simulation of quantum system evolution under time-dependent Hamiltonians.
+
+**Updated** The dynamics runtime has been separated into its own dedicated module under `applications/chem/dynamics/evolution.py`, providing better organization and focused functionality for time evolution simulations.
 
 The runtime constructs a variational ansatz from Hamiltonian terms, using Trotter-like decomposition to approximate time evolution. Each layer of the ansatz applies exponentials of individual Hamiltonian terms with variational parameters, allowing optimization of the time evolution process. The implementation supports both Runge-Kutta and variational integration methods for time stepping.
 
@@ -221,11 +242,11 @@ DynamicsNumericRuntime->>DynamicsNumericRuntime : Update state and time
 DynamicsNumericRuntime-->>User : New parameters
 ```
 
-**Diagram sources **
-- [dynamics_numeric.py](file://src/tyxonq/applications/chem/runtimes/dynamics_numeric.py#L0-L224)
+**Diagram sources**
+- [evolution.py:54-225](file://src/tyxonq/applications/chem/dynamics/evolution.py#L54-L225)
 
 **Section sources**
-- [dynamics_numeric.py](file://src/tyxonq/applications/chem/runtimes/dynamics_numeric.py#L0-L224)
+- [evolution.py:54-225](file://src/tyxonq/applications/chem/dynamics/evolution.py#L54-L225)
 
 ## Runtime Configuration and Selection
 Runtime selection in the TyxonQ framework is controlled through configuration parameters that specify the execution mode and backend options. The primary selection mechanism uses the runtime parameter, which can be set to 'device' for device-based execution or 'numeric' for exact simulation. This parameter determines which runtime class is instantiated and governs the computational approach for energy and gradient evaluation.
@@ -271,17 +292,17 @@ RuntimeConfig --> HEANumericRuntime : "configures via numeric_engine"
 RuntimeConfig --> UCCNumericRuntime : "configures via numeric_engine"
 ```
 
-**Diagram sources **
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
+**Diagram sources**
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
 
 **Section sources**
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
 
 ## Performance Trade-offs
 The dual-path runtime architecture presents fundamental performance trade-offs between computational accuracy and physical realism. Device-based execution introduces sampling noise proportional to 1/√shots, requiring many measurements to achieve high precision, while numeric simulation provides exact results but with exponential memory and time complexity.
@@ -290,13 +311,15 @@ For small quantum systems (≤20 qubits), numeric runtimes offer superior perfor
 
 Device-based execution scales more favorably in memory, requiring only O(N) space for state representation, but incurs significant overhead from measurement repetition. The number of required measurements depends on Hamiltonian complexity, with O(L×ε^-2) scaling where L is the number of measurement groups and ε is the desired precision. This makes device-based execution more suitable for larger systems where exact simulation becomes infeasible.
 
+**Updated** Recent enhancements include improved gradient computation methods, particularly the two-shift parameter shift rule for UCC circuits, which significantly improves convergence and reduces the number of required circuit evaluations. Enhanced caching mechanisms reduce redundant computations across multiple energy and gradient evaluations.
+
 The choice between runtimes depends on the research phase and computational requirements. Numeric runtimes are preferred for algorithm development, convergence testing, and analytical gradient validation, while device-based runtimes are essential for assessing algorithm robustness to noise and hardware constraints. Hybrid approaches can leverage numeric runtimes for initial optimization followed by device-based validation.
 
 **Section sources**
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
 
 ## Usage Examples
 Runtime selection is accomplished through direct instantiation of the appropriate runtime class or through factory methods that abstract the selection process. The following examples demonstrate common usage patterns for quantum chemistry simulations.
@@ -342,22 +365,24 @@ for i in range(10):
 ```
 
 **Section sources**
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
-- [dynamics_numeric.py](file://src/tyxonq/applications/chem/runtimes/dynamics_numeric.py#L0-L224)
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
+- [evolution.py:54-225](file://src/tyxonq/applications/chem/dynamics/evolution.py#L54-L225)
 
 ## Conclusion
 The execution runtime system in TyxonQ provides a comprehensive framework for quantum chemistry simulations with support for both device-based and numeric computation paths. The dual-path architecture enables researchers to balance physical realism with computational efficiency, choosing the appropriate execution mode based on their specific requirements.
+
+**Updated** The recent restructuring of VQE runtimes under `algorithms/vqe/runtimes/` provides better organization and enhanced functionality, including improved gradient computation methods and better caching mechanisms. The separation of dynamics runtime into its own module further improves modularity and maintainability.
 
 The consistent interface across runtime implementations simplifies algorithm development and allows seamless switching between execution modes. This design supports the full research lifecycle, from algorithm development with exact numeric simulation to validation on quantum devices with realistic noise models.
 
 Future development may focus on enhancing the integration between execution paths, enabling hybrid approaches that combine the strengths of both methods. Performance optimizations for large-scale simulations and improved support for distributed computation could further extend the capabilities of the runtime system.
 
 **Section sources**
-- [hea_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_device_runtime.py#L22-L190)
-- [hea_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/hea_numeric_runtime.py#L14-L97)
-- [ucc_device_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_device_runtime.py#L25-L302)
-- [ucc_numeric_runtime.py](file://src/tyxonq/applications/chem/runtimes/ucc_numeric_runtime.py#L40-L241)
-- [dynamics_numeric.py](file://src/tyxonq/applications/chem/runtimes/dynamics_numeric.py#L0-L224)
+- [hea_device_runtime.py:21-299](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_device_runtime.py#L21-L299)
+- [hea_numeric_runtime.py:15-106](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/hea_numeric_runtime.py#L15-L106)
+- [ucc_device_runtime.py:25-448](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_device_runtime.py#L25-L448)
+- [ucc_numeric_runtime.py:42-411](file://src/tyxonq/applications/chem/algorithms/vqe/runtimes/ucc_numeric_runtime.py#L42-L411)
+- [evolution.py:54-225](file://src/tyxonq/applications/chem/dynamics/evolution.py#L54-L225)

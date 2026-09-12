@@ -3,19 +3,26 @@
 <cite>
 **Referenced Files in This Document**   
 - [api.py](file://src/tyxonq/compiler/api.py)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py)
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py)
-- [rotations.py](file://src/tyxonq/compiler/stages/decompose/rotations.py)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py)
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py)
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py)
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py)
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py)
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py)
-- [merge_prune.py](file://src/tyxonq/compiler/stages/rewrite/merge_prune.py)
+- [gate_compiler/__init__.py](file://src/tyxonq/compiler/gate_compiler/__init__.py)
+- [gate_compiler/compiler.py](file://src/tyxonq/compiler/gate_compiler/compiler.py)
+- [gate_compiler/steps.py](file://src/tyxonq/compiler/gate_compiler/steps.py)
+- [gate_compiler/stages/decompose/matchgate.py](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py)
+- [gate_compiler/stages/decompose/rotations.py](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py)
+- [gate_compiler/stages/rewrite/auto_measure.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py)
+- [gate_compiler/stages/rewrite/gates_transform.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py)
+- [gate_compiler/stages/rewrite/merge_prune.py](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/merge_prune.py)
+- [gate_compiler/stages/simplify/lightcone.py](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py)
+- [platforms/tyxonq/__init__.py](file://src/tyxonq/compiler/platforms/tyxonq/__init__.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated compiler architecture from monolithic compile_engine to modular gate_compiler structure
+- Replaced old compilation stages with new staged pipeline in gate_compiler/stages/
+- Updated all references to reflect the new GateCompiler class and CompileStep protocol
+- Modified optimization passes to use new stage-based implementation
+- Updated backend system documentation to reflect platform adapter pattern
+- Revised API interface to document type-safe parameter specification
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -24,26 +31,20 @@
    - [Decomposition](#decomposition)
    - [Rewriting](#rewriting)
    - [Simplification](#simplification)
-   - [Scheduling](#scheduling)
-   - [Gradient Processing](#gradient-processing)
 4. [Optimization Passes](#optimization-passes)
    - [Measurement Rewriting](#measurement-rewriting)
    - [Lightcone Simplification](#lightcone-simplification)
-   - [Shot Scheduling](#shot-scheduling)
 5. [Backend System](#backend-system)
-   - [Native Backend](#native-backend)
-   - [Qiskit Backend](#qiskit-backend)
+   - [Platform Adapters](#platform-adapters)
    - [Dialect Translation](#dialect-translation)
-   - [Round-Trip Capabilities](#round-trip-capabilities)
 6. [API Interface](#api-interface)
-   - [Compilation Workflows](#compilation-workflows)
+   - [Type-Safe Compilation](#type-safe-compilation)
    - [Optimization Configuration](#optimization-configuration)
 7. [Practical Examples](#practical-examples)
    - [VQE Circuit Compilation](#vqe-circuit-compilation)
    - [QAOA Circuit Compilation](#qaoa-circuit-compilation)
 8. [Integration Points](#integration-points)
    - [Device Constraints](#device-constraints)
-   - [Numerics Backend Requirements](#numerics-backend-requirements)
 9. [Troubleshooting](#troubleshooting)
    - [Failed Passes](#failed-passes)
    - [Suboptimal Reductions](#suboptimal-reductions)
@@ -52,84 +53,118 @@
 
 ## Introduction
 
-The TyxonQ compiler pipeline provides a modular framework for quantum circuit compilation with support for multiple optimization stages, pluggable backends, and advanced scheduling capabilities. This document details the architecture, stages, optimization passes, and integration points of the compiler system, enabling users to effectively compile and optimize quantum circuits for various execution targets.
+The TyxonQ compiler pipeline provides a modular framework for quantum circuit compilation with support for multiple optimization stages, pluggable backends, and advanced scheduling capabilities. The system has been refactored from a monolithic compile_engine architecture to a modular gate_compiler structure with distinct compilation stages that can be configured through a flexible API.
+
+**Updated** The compiler now uses a type-safe parameter system with DecomposeSpec and RoutingSpec for precise control over compilation behavior, replacing the previous string-based DSL approach.
 
 **Section sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
+- [api.py:39-98](file://src/tyxonq/compiler/api.py#L39-L98)
+- [gate_compiler/__init__.py:1-21](file://src/tyxonq/compiler/gate_compiler/__init__.py#L1-L21)
 
 ## Compiler Architecture Overview
 
-The TyxonQ compiler follows a modular architecture with distinct compilation stages that can be configured through a flexible API. The system supports both native compilation and integration with external frameworks like Qiskit, providing a unified interface for quantum circuit compilation.
+The TyxonQ compiler follows a modular architecture centered around the GateCompiler class, which orchestrates a sequence of CompileStep instances. Each step implements a specific transformation and can be conditionally included based on type-safe parameters.
 
 ```mermaid
 graph TD
-A[Circuit Input] --> B[Decomposition]
-B --> C[Rewriting]
-C --> D[Simplification]
-D --> E[Scheduling]
-E --> F[Gradient Processing]
-F --> G[Backend Compilation]
-G --> H[Compiled Output]
-I[API Interface] --> A
-J[Device Constraints] --> G
-K[Numerics Backend] --> G
+A[Circuit Input] --> B[GateCompiler.compile]
+B --> C[build_compile_steps]
+C --> D[AutoMeasure]
+D --> E[GatesTransform]
+E --> F{Decompose?}
+F --> |Yes| G[MatchgateDecompose/RotationsDecompose]
+F --> |No| H{Route?}
+G --> H
+H --> |Yes| I[Routing]
+H --> |No| J{Optimize?}
+I --> J
+J --> |Yes| K[MergePrune]
+J --> |No| L{Simplify?}
+K --> L
+L --> |Yes| M[LightconeSimplify]
+L --> |No| N[Apply Steps]
+M --> N
+N --> O[Export/Output]
 ```
 
 **Diagram sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
+- [gate_compiler/compiler.py:27-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L110)
+- [gate_compiler/steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
 
 **Section sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
+- [gate_compiler/compiler.py:14-110](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L110)
+- [gate_compiler/steps.py:1-109](file://src/tyxonq/compiler/gate_compiler/steps.py#L1-L109)
 
 ## Compilation Stages
 
-The compiler pipeline consists of five distinct stages that transform quantum circuits through various optimization and preparation steps.
+The compiler pipeline consists of five distinct stages that transform quantum circuits through various optimization and preparation steps. Each stage is implemented as a CompileStep with an apply method.
 
 ### Decomposition
 
-The decomposition stage breaks down complex quantum operations into fundamental gate sets supported by target hardware. The `RotationsDecomposePass` handles parametric rotations by decomposing them into standard gate identities.
+The decomposition stage breaks down complex quantum operations into fundamental gate sets supported by target hardware. Two key decomposition passes are available:
 
-```mermaid
-graph TD
-A[RX(θ)] --> B[H · RZ(θ) · H]
-C[RY(θ)] --> D[S† · H · RZ(θ) · H · S]
-E[RZZ(θ)] --> F[CX · RZ(θ) · CX]
-G[RXX(θ)] --> H[H⊗H · CX · RZ(θ) · CX · H⊗H]
-I[RYY(θ)] --> J[(S†H)⊗(S†H) · CX · RZ(θ) · CX · (HS)⊗(HS)]
-```
-
-**Diagram sources**
-- [rotations.py](file://src/tyxonq/compiler/stages/decompose/rotations.py#L0-L69)
-
-**Section sources**
-- [rotations.py](file://src/tyxonq/compiler/stages/decompose/rotations.py#L0-L69)
-
-### Rewriting
-
-The rewriting stage transforms circuit components according to specified rules and constraints. This includes gate basis transformations, measurement handling, and circuit normalization.
+#### Matchgate Decomposition
+The `MatchgateDecompose` pass handles 2-qubit number-conserving matchgates (fSim family) by decomposing them into native gates {rz, rx, h, cx}. This is particularly important for quantum chemistry applications using LUCJ/SQD algorithms.
 
 ```mermaid
 flowchart TD
-A[Input Circuit] --> B[Gates Transform]
-B --> C[Auto Measure]
-C --> D[Measurement Rewrite]
-D --> E[Merge Prune]
-E --> F[Output Circuit]
+A[fSim(θ,φ)] --> B[Number Conservation Check]
+B --> C{Is matchgate?}
+C --> |Yes| D[ZXZ Euler Angle Decomposition]
+D --> E[Rz(a)·Rx(b)·Rz(c)]
+E --> F[Partial-iSWAP = RYY(b/2)·RXX(b/2)]
+F --> G[Native Gates: rz, rx, h, cx]
+C --> |No| H[Keep Original or Raise Error]
 ```
 
 **Diagram sources**
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L0-L52)
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py#L0-L37)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L0-L164)
-- [merge_prune.py](file://src/tyxonq/compiler/stages/rewrite/merge_prune.py#L0-L85)
+- [gate_compiler/stages/decompose/matchgate.py:65-149](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py#L65-L149)
+
+#### Rotation Decomposition
+The `RotationsDecompose` pass transforms parametric rotations into standard gate identities:
+- RX(θ) → H · RZ(θ) · H
+- RY(θ) → S† · H · RZ(θ) · H · S  
+- RZZ(θ) → CX · RZ(θ) · CX
+- RXX(θ) → H⊗H · CX · RZ(θ) · CX · H⊗H
+- RYY(θ) → (S†H)⊗(S†H) · CX · RZ(θ) · CX · (HS)⊗(HS)
 
 **Section sources**
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L0-L52)
-- [auto_measure.py](file://src/tyxonq/compiler/stages/rewrite/auto_measure.py#L0-L37)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L0-L164)
-- [merge_prune.py](file://src/tyxonq/compiler/stages/rewrite/merge_prune.py#L0-L85)
+- [gate_compiler/stages/decompose/matchgate.py:152-198](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py#L152-L198)
+- [gate_compiler/stages/decompose/rotations.py:13-76](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py#L13-L76)
+
+### Rewriting
+
+The rewriting stage transforms circuit components according to specified rules and constraints. This includes automatic measurement insertion, gate basis transformations, and circuit normalization.
+
+#### Auto Measure
+The `AutoMeasure` pass automatically adds Z measurements to all qubits when no explicit measurements are present, ensuring proper execution semantics.
+
+#### Gates Transform
+The `GatesTransform` pass rewrites gates according to preferred basis gates, handling simple transformations like x→rx(π) and y→ry(π) while preserving more complex gates for later decomposition.
+
+#### Merge Prune
+The `MergePrune` pass merges adjacent gates using identity rules and prunes identity operations, improving circuit efficiency.
+
+```mermaid
+flowchart TD
+A[Input Circuit] --> B[AutoMeasure]
+B --> C[GatesTransform]
+C --> D{Optimization Level ≥ 1?}
+D --> |Yes| E[MergePrune]
+D --> |No| F[Continue]
+E --> F
+F --> G[Output Circuit]
+```
+
+**Diagram sources**
+- [gate_compiler/stages/rewrite/auto_measure.py:13-53](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L13-L53)
+- [gate_compiler/stages/rewrite/gates_transform.py:12-53](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L12-L53)
+- [gate_compiler/stages/rewrite/merge_prune.py:27-88](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/merge_prune.py#L27-L88)
+
+**Section sources**
+- [gate_compiler/stages/rewrite/auto_measure.py:13-53](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L13-L53)
+- [gate_compiler/stages/rewrite/gates_transform.py:12-53](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L12-L53)
+- [gate_compiler/stages/rewrite/merge_prune.py:27-88](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/merge_prune.py#L27-L88)
 
 ### Simplification
 
@@ -146,86 +181,21 @@ F --> G[Simplified Circuit]
 ```
 
 **Diagram sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 **Section sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
-
-### Scheduling
-
-The scheduling stage prepares circuits for execution by organizing measurement operations and allocating shot budgets. The shot scheduler converts measurement grouping metadata into executable segments.
-
-```mermaid
-sequenceDiagram
-participant Circuit
-participant MeasurementGroups
-participant ShotScheduler
-participant ExecutionSegments
-Circuit->>MeasurementGroups : Provide circuit with measurement_groups metadata
-MeasurementGroups->>ShotScheduler : Request scheduling plan
-ShotScheduler->>ShotScheduler : Calculate weights from estimated_shots_per_group
-ShotScheduler->>ShotScheduler : Distribute total_shots proportionally
-ShotScheduler->>ShotScheduler : Apply device constraints (max_shots_per_job)
-ShotScheduler->>ShotScheduler : Assign batch IDs if supported
-ShotScheduler->>ExecutionSegments : Return segments with shots, basis, wires
-```
-
-**Diagram sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
-
-**Section sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
-
-### Gradient Processing
-
-The gradient processing stage prepares circuits for gradient-based optimization by generating parameter-shift circuits. The parameter shift pass creates metadata for computing gradients through finite differences.
-
-```mermaid
-flowchart TD
-A[Input Circuit] --> B[ParameterShiftPass]
-B --> C{grad_op specified?}
-C --> |Yes| D[Generate Shifted Circuits]
-D --> E[Plus Circuit]
-D --> F[Minus Circuit]
-D --> G[Gradient Metadata]
-C --> |No| H[Return Original Circuit]
-E --> I[Store in metadata.gradients]
-F --> I
-G --> I
-```
-
-**Diagram sources**
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py#L0-L31)
-
-**Section sources**
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py#L0-L31)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 ## Optimization Passes
 
 ### Measurement Rewriting
 
-The measurement rewriting pass groups measurement operations to enable shot reuse and optimize execution efficiency. It supports both explicit measurement instructions and Hamiltonian-based observable grouping.
+The measurement rewriting functionality is now integrated into the AutoMeasure pass, which ensures all qubits have appropriate measurements for proper execution. This replaces the previous separate measurement rewrite stage.
 
-```mermaid
-classDiagram
-class MeasurementRewritePass {
-+execute_plan(circuit, opts)
--_group_measurements(measurements)
--_parse_pauli_support(obs, wires)
-}
-class Circuit {
-+metadata : Dict[str, Any]
-+ops : List[Tuple]
-+num_qubits : int
-}
-MeasurementRewritePass --> Circuit : transforms
-```
-
-**Diagram sources**
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L0-L164)
+**Updated** Measurement handling is now part of the core rewriting pipeline rather than a separate stage, providing better integration with other compilation passes.
 
 **Section sources**
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L0-L164)
+- [gate_compiler/stages/rewrite/auto_measure.py:13-53](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/auto_measure.py#L13-L53)
 
 ### Lightcone Simplification
 
@@ -249,239 +219,161 @@ K --> |Yes| L[Return filtered circuit]
 ```
 
 **Diagram sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 **Section sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
-
-### Shot Scheduling
-
-The shot scheduler converts measurement grouping metadata into an executable plan with shot allocation. It supports both explicit shot plans and automatic distribution based on grouping weights.
-
-```mermaid
-erDiagram
-CIRCUIT {
-int num_qubits PK
-list ops
-dict metadata
-}
-MEASUREMENT_GROUPS {
-int group_index PK
-tuple wires
-string basis
-dict basis_map
-int estimated_shots_per_group
-list items
-}
-EXECUTION_SEGMENTS {
-int segment_id PK
-int shots
-tuple wires
-string basis
-dict basis_map
-int batch_id
-}
-CIRCUIT ||--o{ MEASUREMENT_GROUPS : contains
-MEASUREMENT_GROUPS }o--|| EXECUTION_SEGMENTS : scheduled_as
-```
-
-**Diagram sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
-
-**Section sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 ## Backend System
 
-### Native Backend
+### Platform Adapters
 
-The native backend provides TyxonQ's default compilation pipeline with support for IR output and integration with the native execution system. It implements a configurable compilation plan with optimization levels.
+The backend system now uses a platform adapter pattern where each hardware platform provides a thin adapter that delegates to the core GateCompiler. This eliminates code duplication across platforms while maintaining platform-specific optimizations.
 
 ```mermaid
 classDiagram
-class NativeCompiler {
-+compile(circuit, options, compile_plan, device_rule)
--build_plan(pipeline)
+class GateCompiler {
++compile(circuit, options)
++name : "tyxonq"
 }
-class CompilePlan {
-+execute_plan(circuit, options)
+class TyxonQCompiler {
++name : "tyxonq"
 }
-NativeCompiler --> CompilePlan : uses
-NativeCompiler --> api : implements
+class LQCloudCompiler {
++name : "lqcloud"
+}
+class GuodunCompiler {
++name : "guodun"
+}
+GateCompiler <|-- TyxonQCompiler
+GateCompiler <|-- LQCloudCompiler
+GateCompiler <|-- GuodunCompiler
 ```
 
 **Diagram sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py)
+- [gate_compiler/compiler.py:14-26](file://src/tyxonq/compiler/gate_compiler/compiler.py#L14-L26)
+- [platforms/tyxonq/__init__.py:12-18](file://src/tyxonq/compiler/platforms/tyxonq/__init__.py#L12-L18)
+
+**Updated** The previous monolithic compile_engine structure has been replaced with this modular platform adapter pattern, making it easier to add new platforms and maintain existing ones.
 
 **Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
-- [compile_plan.py](file://src/tyxonq/compiler/compile_engine/native/compile_plan.py)
-
-### Qiskit Backend
-
-The Qiskit backend enables integration with the Qiskit framework for transpilation and execution on IBM quantum devices. It provides bidirectional conversion between TyxonQ IR and Qiskit circuits.
-
-```mermaid
-sequenceDiagram
-participant TyxonQ
-participant QiskitAdapter
-participant Qiskit
-TyxonQ->>QiskitAdapter : to_qiskit(circuit)
-QiskitAdapter->>Qiskit : QuantumCircuit
-Qiskit->>Qiskit : transpile(**options)
-Qiskit->>QiskitAdapter : Compiled QuantumCircuit
-QiskitAdapter->>TyxonQ : from_qiskit(compiled_qc)
-```
-
-**Diagram sources**
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L0-L83)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L0-L246)
-
-**Section sources**
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L0-L83)
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L0-L246)
+- [platforms/tyxonq/__init__.py:1-19](file://src/tyxonq/compiler/platforms/tyxonq/__init__.py#L1-L19)
 
 ### Dialect Translation
 
-The dialect translation system provides bidirectional conversion between TyxonQ IR and Qiskit circuits. This enables interoperability with the broader quantum computing ecosystem.
+The dialect translation system provides bidirectional conversion between TyxonQ IR and external formats like QASM and Qiskit circuits. The GateCompiler handles output format selection internally.
 
 ```mermaid
 flowchart LR
-A[TyxonQ IR] --> B[to_qiskit]
-B --> C[Qiskit QuantumCircuit]
-C --> D[transpile]
-D --> E[Optimized QuantumCircuit]
-E --> F[from_qiskit]
-F --> G[Optimized TyxonQ IR]
+A[TyxonQ IR] --> B[GateCompiler.export]
+B --> C{Output Format}
+C --> |qasm2| D[GateQASM2Exporter]
+C --> |qasm3| E[GateQASM3Exporter]
+C --> |qiskit| F[to_qiskit]
+C --> |ir| G[Return IR]
+D --> H[QASM2 String]
+E --> I[QASM3 String]
+F --> J[QuantumCircuit]
+G --> K[Circuit Object]
 ```
 
 **Diagram sources**
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L0-L246)
+- [gate_compiler/compiler.py:84-109](file://src/tyxonq/compiler/gate_compiler/compiler.py#L84-L109)
 
 **Section sources**
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L0-L246)
-
-### Round-Trip Capabilities
-
-The compiler supports round-trip translation between TyxonQ IR and Qiskit circuits, preserving circuit semantics through the conversion process. This enables hybrid workflows that leverage both frameworks.
-
-```mermaid
-graph LR
-A[Original Circuit] --> B[to_qiskit]
-B --> C[Qiskit Processing]
-C --> D[from_qiskit]
-D --> E[Reconstructed Circuit]
-E --> F{Equivalent to Original?}
-F --> |Yes| G[Successful Round-Tip]
-F --> |No| H[Information Loss]
-```
-
-**Diagram sources**
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L0-L246)
-
-**Section sources**
-- [dialect.py](file://src/tyxonq/compiler/compile_engine/qiskit/dialect.py#L0-L246)
+- [gate_compiler/compiler.py:84-109](file://src/tyxonq/compiler/gate_compiler/compiler.py#L84-L109)
 
 ## API Interface
 
-### Compilation Workflows
+### Type-Safe Compilation
 
-The unified compile API provides a single entry point for all compilation operations, supporting multiple backends and output formats.
+The unified compile API now uses type-safe parameters instead of string-based DSLs. Key parameters include:
+
+- `basis_gates`: Target native gate set
+- `decompose`: Boolean or DecomposeSpec for fine-grained control
+- `route`: Boolean or RoutingSpec for routing configuration  
+- `optimize`: Integer optimization level (0-3)
+- `simplify`: Boolean flag for lightcone simplification
 
 ```mermaid
 sequenceDiagram
 participant User
 participant CompilerAPI
-participant NativeCompiler
-participant QiskitCompiler
-User->>CompilerAPI : compile(circuit, compile_engine="native")
-CompilerAPI->>NativeCompiler : Delegate compilation
-NativeCompiler->>CompilerAPI : Return result
-CompilerAPI->>User : CompileResult
-User->>CompilerAPI : compile(circuit, compile_engine="qiskit", output="qasm2")
-CompilerAPI->>QiskitCompiler : Delegate compilation
-QiskitCompiler->>CompilerAPI : Return result
-CompilerAPI->>User : CompileResult
+participant GateCompiler
+participant Steps
+User->>CompilerAPI : compile(circuit, decompose=True, optimize=1)
+CompilerAPI->>GateCompiler : Delegate to platform compiler
+GateCompiler->>Steps : build_compile_steps()
+Steps->>Steps : Assemble CompileStep list
+Steps->>GateCompiler : Return steps
+GateCompiler->>GateCompiler : apply_steps(circuit, steps)
+GateCompiler->>User : CompileResult
 ```
 
 **Diagram sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
-- [qiskit_compiler.py](file://src/tyxonq/compiler/compile_engine/qiskit/qiskit_compiler.py#L0-L83)
+- [api.py:39-98](file://src/tyxonq/compiler/api.py#L39-L98)
+- [gate_compiler/compiler.py:27-73](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L73)
+- [gate_compiler/steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
 
 **Section sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
+- [api.py:39-98](file://src/tyxonq/compiler/api.py#L39-L98)
 
 ### Optimization Configuration
 
-The API supports configuration of optimization levels and custom compilation plans, allowing users to balance compilation time with circuit quality.
+The API supports configuration of optimization levels and custom compilation plans through type-safe specifications. The optimization_level parameter controls which passes are enabled:
 
-```mermaid
-flowchart TD
-A[User Request] --> B{compile_plan specified?}
-B --> |Yes| C[Use custom plan]
-B --> |No| D[Use default pipeline]
-C --> E[Add essential passes]
-D --> E
-E --> F[Apply optimization_level]
-F --> G[Execute compilation]
-G --> H[Return result]
-```
-
-**Diagram sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
+- Level 0: Basic compilation only
+- Level 1+: Enable merge/prune optimizations
+- Level 2+: Additional optimizations
+- Level 3: Maximum optimization
 
 **Section sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
+- [gate_compiler/compiler.py:57-59](file://src/tyxonq/compiler/gate_compiler/compiler.py#L57-L59)
+- [gate_compiler/steps.py:81-84](file://src/tyxonq/compiler/gate_compiler/steps.py#L81-L84)
 
 ## Practical Examples
 
 ### VQE Circuit Compilation
 
-The compilation of VQE circuits involves specific optimization considerations for variational quantum algorithms.
+The compilation of VQE circuits involves specific optimization considerations for variational quantum algorithms, particularly for matchgate decomposition used in quantum chemistry applications.
 
 ```mermaid
 flowchart TD
 A[VQE Ansatz] --> B[Decomposition]
-B --> C[Measurement Grouping]
-C --> D[Lightcone Simplification]
-D --> E[Parameter Shift Setup]
-E --> F[Shot Scheduling]
-F --> G[Execution]
+B --> C[Matchgate Decomposition]
+C --> D[Rotation Decomposition]
+D --> E[Lightcone Simplification]
+E --> F[Execution]
 ```
 
 **Section sources**
-- [parameter_shift_pass.py](file://src/tyxonq/compiler/stages/gradients/parameter_shift_pass.py#L0-L31)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L0-L164)
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
+- [gate_compiler/stages/decompose/matchgate.py:152-198](file://src/tyxonq/compiler/gate_compiler/stages/decompose/matchgate.py#L152-L198)
+- [gate_compiler/stages/decompose/rotations.py:13-76](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py#L13-L76)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 ### QAOA Circuit Compilation
 
-QAOA circuits benefit from specific optimization passes that handle the alternating structure of mixer and cost Hamiltonians.
+QAOA circuits benefit from specific optimization passes that handle the alternating structure of mixer and cost Hamiltonians, with particular attention to rotation decomposition and gate merging.
 
 ```mermaid
 flowchart TD
 A[QAOA Circuit] --> B[Gate Basis Transformation]
-B --> C[Measurement Rewriting]
+B --> C[Rotation Decomposition]
 C --> D[Lightcone Analysis]
 D --> E[Entangling Gate Optimization]
-E --> F[Shot Allocation]
-F --> G[Execution Plan]
+E --> F[Execution Plan]
 ```
 
 **Section sources**
-- [gates_transform.py](file://src/tyxonq/compiler/stages/rewrite/gates_transform.py#L0-L52)
-- [measurement.py](file://src/tyxonq/compiler/stages/rewrite/measurement.py#L0-L164)
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
+- [gate_compiler/stages/rewrite/gates_transform.py:12-53](file://src/tyxonq/compiler/gate_compiler/stages/rewrite/gates_transform.py#L12-L53)
+- [gate_compiler/stages/decompose/rotations.py:13-76](file://src/tyxonq/compiler/gate_compiler/stages/decompose/rotations.py#L13-L76)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 ## Integration Points
 
 ### Device Constraints
 
-The compiler integrates with device rules to respect hardware limitations and optimize for specific quantum processors.
+The compiler integrates with device rules through the DeviceRule parameter, which provides hardware limitations and capabilities to the compilation process. Device constraints flow through all platform branches and affect routing and optimization decisions.
 
 ```mermaid
 classDiagram
@@ -491,44 +383,23 @@ class DeviceRule {
 +max_segments_per_batch : int
 +basis_gates : List[str]
 }
-class ShotScheduler {
-+schedule(circuit, shot_plan, total_shots, device_rule)
+class GateCompiler {
++compile(circuit, device_rule, ...)
 }
-DeviceRule --> ShotScheduler : constrains
+DeviceRule --> GateCompiler : constrains compilation
 ```
 
 **Diagram sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
+- [gate_compiler/compiler.py:27-38](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L38)
 
 **Section sources**
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
-
-### Numerics Backend Requirements
-
-The compiler interacts with numerics backends to ensure compatibility between compiled circuits and numerical computation requirements.
-
-```mermaid
-flowchart TD
-A[Circuit Compilation] --> B{Numerics Backend}
-B --> C[CUPY]
-B --> D[NumPy]
-B --> E[PyTorch]
-C --> F[GPU Acceleration]
-D --> G[CPU Computation]
-E --> H[Automatic Differentiation]
-F --> I[Optimized Execution]
-G --> I
-H --> I
-```
-
-**Section sources**
-- [numerics/backends](file://src/tyxonq/numerics/backends)
+- [gate_compiler/compiler.py:27-38](file://src/tyxonq/compiler/gate_compiler/compiler.py#L27-L38)
 
 ## Troubleshooting
 
 ### Failed Passes
 
-When compilation passes fail, the system provides diagnostic information through metadata and error handling.
+When compilation passes fail, the system provides diagnostic information through metadata and error handling. Each CompileStep can raise specific exceptions with detailed error messages.
 
 ```mermaid
 flowchart TD
@@ -541,12 +412,11 @@ F --> G[User Notification]
 ```
 
 **Section sources**
-- [api.py](file://src/tyxonq/compiler/api.py#L0-L65)
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
+- [gate_compiler/steps.py:94-105](file://src/tyxonq/compiler/gate_compiler/steps.py#L94-L105)
 
 ### Suboptimal Reductions
 
-Cases where circuit simplification does not achieve expected reductions can be diagnosed through lightcone analysis.
+Cases where circuit simplification does not achieve expected reductions can be diagnosed through lightcone analysis. The simplify parameter enables lightcone simplification, and optimization_level controls additional merging passes.
 
 ```mermaid
 flowchart TD
@@ -559,25 +429,30 @@ F --> G[Adjust Compilation Plan]
 ```
 
 **Section sources**
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
+- [gate_compiler/stages/simplify/lightcone.py:12-100](file://src/tyxonq/compiler/gate_compiler/stages/simplify/lightcone.py#L12-L100)
 
 ## Performance Tuning
 
 ### Large-Scale Circuit Optimization
 
-For large-scale circuits, specific optimization strategies can improve compilation efficiency and execution performance.
+For large-scale circuits, specific optimization strategies can improve compilation efficiency and execution performance. The modular stage-based architecture allows selective enablement of optimization passes.
 
 ```mermaid
 flowchart TD
 A[Large Circuit] --> B[Modular Compilation]
-B --> C[Parallel Pass Execution]
+B --> C[Selective Stage Execution]
 C --> D[Memory-Efficient Processing]
 D --> E[Incremental Optimization]
 E --> F[Batched Execution]
 F --> G[Optimized Performance]
 ```
 
+**Key Optimization Strategies:**
+- Use `optimize=1` for basic gate merging and pruning
+- Enable `simplify=True` for lightcone reduction
+- Configure `decompose` spec for targeted decomposition
+- Use appropriate `basis_gates` to minimize decomposition overhead
+
 **Section sources**
-- [native_compiler.py](file://src/tyxonq/compiler/compile_engine/native/native_compiler.py#L0-L101)
-- [lightcone.py](file://src/tyxonq/compiler/stages/simplify/lightcone.py#L0-L98)
-- [shot_scheduler.py](file://src/tyxonq/compiler/stages/scheduling/shot_scheduler.py#L0-L136)
+- [gate_compiler/steps.py:27-91](file://src/tyxonq/compiler/gate_compiler/steps.py#L27-L91)
+- [gate_compiler/compiler.py:57-59](file://src/tyxonq/compiler/gate_compiler/compiler.py#L57-L59)

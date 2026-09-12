@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: tests_mol_valid
+title: 分子化学应用验证测试套件
+scope:
+    - tests_mol_valid/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/quantum_chemistry_algorithms/vqe

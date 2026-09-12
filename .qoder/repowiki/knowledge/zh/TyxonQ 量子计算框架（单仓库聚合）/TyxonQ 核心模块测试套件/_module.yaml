@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: tests_core_module
+title: TyxonQ 核心模块测试套件
+scope:
+    - tests_core_module/
+source_files: []
+depends_on: []
+related_to:
+    - path: compiler/gate_compiler
+    - path: devices/hardware_drivers

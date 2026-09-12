@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/vqe
+title: VQE 变分量子本征求解算法包
+scope:
+    - src/tyxonq/applications/chem/algorithms/vqe/
+source_files: []
+depends_on: []
+related_to:
+    - path: compiler
+    - path: devices
+    - path: tests_mol_valid

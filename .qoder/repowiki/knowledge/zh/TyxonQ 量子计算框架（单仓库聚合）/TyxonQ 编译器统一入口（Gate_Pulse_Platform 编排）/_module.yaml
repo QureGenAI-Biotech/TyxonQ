@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: compiler
+title: TyxonQ 编译器统一入口（Gate/Pulse/Platform 编排）
+scope:
+    - src/tyxonq/compiler/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/quantum_chemistry_algorithms/vqe
+    - path: devices

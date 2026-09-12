@@ -6,37 +6,47 @@
 - [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py)
 - [vqe_extra.py](file://examples/vqe_extra.py)
 - [vqe_parallel_pmap.py](file://examples/vqe_parallel_pmap.py)
-- [hea_scan_jit_acc.py](file://examples-ng/hea_scan_jit_acc.py)
-- [hybrid_gpu_pipeline.py](file://examples-ng/hybrid_gpu_pipeline.py)
-- [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py)
+- [run_circuit_on_lqcloud.py](file://examples/run_circuit_on_lqcloud.py)
+- [run_circuit_on_guodun.py](file://examples/run_circuit_on_guodun.py)
+- [run_circuit_on_quafu.py](file://examples/run_circuit_on_quafu.py)
+- [h2o_sqd.py](file://examples/h2o_sqd.py)
+- [md_qmmm_device_hardware.py](file://examples/qmmm/md_qmmm_device_hardware.py)
+- [md_qmmm_sqd_device.py](file://examples/qmmm/md_qmmm_sqd_device.py)
+- [md_ase_optimize_and_md.py](file://examples/qmmm/md_ase_optimize_and_md.py)
+- [md_mdi_qmmm_embedded.py](file://examples/qmmm/md_mdi_qmmm_embedded.py)
+- [md_openmm_pure_qm.py](file://examples/qmmm/md_openmm_pure_qm.py)
 - [gradient_benchmark.py](file://examples/gradient_benchmark.py)
 - [profile_chem.py](file://scripts/profile_chem.py)
-- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py) - *Added in recent commit*
-- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py) - *Added in recent commit*
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py) - *Updated with HOMO-LUMO gap functionality*
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py) - *Base functionality for HOMO-LUMO gap*
+- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py)
+- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py)
+- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py)
+- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py)
 </cite>
 
 ## Update Summary
-**Changes Made**   
-- Added new section on HOMO-LUMO Gap Analysis with comprehensive examples
-- Updated Quantum Chemistry Applications section to include HEA HOMO-LUMO gap functionality
-- Added references to new demonstration files and updated source tracking
-- Enhanced documentation with detailed implementation details of the HOMO-LUMO gap calculation
+**Changes Made**
+- Added comprehensive hardware provider examples section covering LQCloud, Guodun, and Quafu platforms
+- Integrated quantum chemistry algorithms with H2O SQD example demonstrating LUCJ sampling and selected configuration interaction
+- Expanded molecular dynamics integration section with QM/MM examples including ASE, OpenMM, MDI, and device execution workflows
+- Enhanced practical implementation guidance for real quantum hardware deployment
+- Updated common modifications and pitfalls to include hardware-specific considerations
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Basic Circuit Construction](#basic-circuit-construction)
 3. [Quantum Chemistry Applications](#quantum-chemistry-applications)
-4. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
-5. [Variational Algorithms](#variational-algorithms)
-6. [Advanced Optimization Techniques](#advanced-optimization-techniques)
-7. [Next-Generation Examples](#next-generation-examples)
-8. [Utility Scripts](#utility-scripts)
-9. [Common Modifications and Pitfalls](#common-modifications-and-pitfalls)
+4. [Hardware Provider Integration](#hardware-provider-integration)
+5. [Quantum Chemistry Algorithms](#quantum-chemistry-algorithms)
+6. [Molecular Dynamics Integration](#molecular-dynamics-integration)
+7. [HOMO-LUMO Gap Analysis](#homo-lumo-gap-analysis)
+8. [Variational Algorithms](#variational-algorithms)
+9. [Advanced Optimization Techniques](#advanced-optimization-techniques)
+10. [Next-Generation Examples](#next-generation-examples)
+11. [Utility Scripts](#utility-scripts)
+12. [Common Modifications and Pitfalls](#common-modifications-and-pitfalls)
 
 ## Introduction
-This document provides comprehensive tutorials and examples for the TyxonQ quantum computing framework, organized by complexity and application domain. The examples demonstrate practical implementation patterns for quantum circuit construction, quantum chemistry simulations, variational algorithms, and advanced optimization techniques. Each example includes step-by-step walkthroughs of key concepts, with explanations of the underlying quantum computing principles and framework-specific implementation details.
+This document provides comprehensive tutorials and examples for the TyxonQ quantum computing framework, organized by complexity and application domain. The examples demonstrate practical implementation patterns for quantum circuit construction, quantum chemistry simulations, variational algorithms, advanced optimization techniques, and integration with multiple quantum hardware providers. Each example includes step-by-step walkthroughs of key concepts, with explanations of the underlying quantum computing principles and framework-specific implementation details.
 
 ## Basic Circuit Construction
 
@@ -49,7 +59,7 @@ Key features demonstrated include automatic completion of configuration options,
 Advanced quantum operations are illustrated, including measurement, reset, and barrier instructions, which are essential for complex quantum algorithms. Circuit composition and qubit remapping capabilities enable the construction of sophisticated circuits from simpler components, while JSON serialization provides a standardized format for circuit storage and exchange.
 
 **Section sources**
-- [circuit_chain_demo.py](file://examples/circuit_chain_demo.py#L1-L305)
+- [circuit_chain_demo.py:1-305](file://examples/circuit_chain_demo.py#L1-L305)
 
 ## Quantum Chemistry Applications
 
@@ -62,7 +72,130 @@ For UCCSD, the example shows how to initialize the algorithm with a molecular ob
 The HEA implementation demonstrates a more flexible approach that can be initialized directly from a molecule object. The ansatz consists of alternating layers of entangling operations (CNOT gates in a linear chain) and single-qubit rotations (RY gates), with the number of layers determining the circuit depth and expressibility. The example shows how to specify the qubit mapping (parity, Jordan-Wigner, or Bravyi-Kitaev) which affects the number of qubits required and the structure of the resulting Hamiltonian.
 
 **Section sources**
-- [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py#L1-L57)
+- [cloud_uccsd_hea_demo.py:1-57](file://examples/cloud_uccsd_hea_demo.py#L1-L57)
+
+## Hardware Provider Integration
+
+### LQCloud Platform Integration
+
+The `run_circuit_on_lqcloud.py` example demonstrates running quantum circuits on the LQCloud superconducting quantum platform. This example showcases the complete workflow from circuit construction to hardware submission, including offline compilation verification and online execution modes.
+
+The implementation begins with building a four-qubit circuit containing parameterized rotations and two-qubit entanglement operations. The example provides robust argument parsing for device selection, shot counts, and physical qubit mapping. A key feature is the dual-mode operation: offline mode for circuit validation without network access, and online mode for actual hardware execution.
+
+The compilation process converts logical circuits to LQCloud-native format using the `to_lqcloud` compiler, enabling inspection of the final instruction set before submission. The example includes detailed metadata extraction from results, showing how to access platform-specific information like job IDs and task status.
+
+Authentication is handled securely through environment variables (`TYXONQ_LQCLOUD_API_KEY` or `LQCLOUD_API_KEY`) with fallback to interactive input. The example demonstrates proper error handling for invalid configurations and provides clear feedback about the execution status.
+
+**Section sources**
+- [run_circuit_on_lqcloud.py:1-114](file://examples/run_circuit_on_lqcloud.py#L1-L114)
+
+### Guodun Platform Integration
+
+The `run_circuit_on_guodun.py` example provides minimal working examples for the Guodun quantum computing platform, supporting both Bell state generation and single-qubit X gate operations. This example emphasizes security best practices by avoiding hardcoded credentials and providing clear authentication requirements.
+
+The implementation supports two circuit types: Bell states for two-qubit entanglement demonstrations and simple X gates for initial platform connectivity testing. The example includes comprehensive argument parsing for device selection, shot counts, experiment naming, and physical qubit specification.
+
+A critical security feature is the requirement for the `TYXONQ_GUODUN_TOKEN` environment variable, preventing accidental credential exposure in source code. The example demonstrates safe token handling and provides helpful error messages when authentication fails.
+
+The compilation process generates QCIS (Guodun's quantum instruction set) format, with detailed instruction counting and output inspection capabilities. The example includes both offline compilation verification and online submission modes, with the latter designed for quick connectivity testing rather than full result retrieval.
+
+**Section sources**
+- [run_circuit_on_guodun.py:1-125](file://examples/run_circuit_on_guodun.py#L1-L125)
+
+### Quafu Platform Integration
+
+The `run_circuit_on_quafu.py` example demonstrates integration with the BAQIS Quafu superconducting quantum cloud platform. This example focuses on the specific requirements for Quafu compatibility, including explicit QASM2 compilation and device discovery mechanisms.
+
+The implementation begins with environment variable checking for `TYXONQ_QUAFU_TOKEN`, providing clear setup instructions for users. The example demonstrates device listing functionality, showing how to discover available quantum chips and select appropriate targets for circuit execution.
+
+A key architectural difference is the requirement for explicit QASM2 compilation using `compile(compile_engine="qiskit", output="qasm2")`. This differs from other providers and highlights the importance of understanding platform-specific compilation requirements. The example shows how the Chain API's no-argument compile becomes a no-op when QASM2 has already been generated.
+
+The workflow includes circuit construction, explicit compilation, device selection, and result processing with JSON formatting for easy inspection. The example serves as a template for integrating with other cloud platforms that require similar compilation steps.
+
+**Section sources**
+- [run_circuit_on_quafu.py:1-56](file://examples/run_circuit_on_quafu.py#L1-L56)
+
+## Quantum Chemistry Algorithms
+
+### H2O SQD Implementation
+
+The `h2o_sqd.py` example demonstrates the Selected Configuration Interaction with Determinantal Quantum Monte Carlo (SQD) algorithm applied to water molecule calculations. This example showcases advanced quantum chemistry techniques combining Local Unitary Coupled Cluster (LUCJ) sampling with selected configuration interaction methods.
+
+The implementation begins with active space preparation for a CAS(4,4) calculation on water molecules, including natural orbital selection using UMP2 density matrices. The example constructs Fermion operators from integrals and prepares reference wavefunctions using restricted Hartree-Fock calculations with natural orbitals.
+
+Key features include LUCJ circuit construction with CCSD-initialized parameters, noisy sampling simulation with depolarizing noise models, and bitstring reversal for proper spin-orbital ordering. The example demonstrates the complete workflow from molecular setup through energy convergence, comparing results against exact Full Configuration Interaction (FCI) references.
+
+The implementation includes sophisticated noise modeling at the probability level, simulating realistic quantum hardware conditions. The example shows how to handle different initialization strategies, from random parameters to CCSD-based starting points, and demonstrates the impact of noise on energy convergence.
+
+**Section sources**
+- [h2o_sqd.py:1-376](file://examples/h2o_sqd.py#L1-L376)
+
+## Molecular Dynamics Integration
+
+### QM/MM Device Execution
+
+The `md_qmmm_device_hardware.py` example demonstrates quantum mechanics/molecular mechanics (QM/MM) simulations with direct quantum hardware integration. This tutorial showcases how to run QM/MM calculations on actual quantum devices using the qc_scanner interface, supporting both UCCSD and HEA methods.
+
+The implementation provides three operational modes: numeric evaluation for exact reference calculations, device simulation for testing the complete hardware submission pipeline, and real hardware execution for production runs. The example includes comprehensive logging with cumulative timing to track progress during long-running optimizations.
+
+Key features include electrostatic embedding with MM point charges, gradient computation for molecular geometry optimization, and automated switching between different quantum hardware providers. The example demonstrates proper shot count selection for different algorithms, with recommendations for UCCSD (2048 shots) and HEA (8192 shots) to ensure reliable convergence.
+
+The implementation includes safety checks for sampling-based optimizations, limiting function evaluations to prevent excessive resource consumption. The example shows how to validate device execution by comparing results with numeric references and ensuring consistency across different operational modes.
+
+**Section sources**
+- [md_qmmm_device_hardware.py:1-255](file://examples/qmmm/md_qmmm_device_hardware.py#L1-L255)
+
+### SQD Molecular Dynamics
+
+The `md_qmmm_sqd_device.py` example extends molecular dynamics capabilities to the SQD algorithm, demonstrating sample-based quantum diagonalization for potential energy surface calculations. This tutorial covers frozen versus refresh subspace strategies, force noise analysis, and integration with various molecular dynamics engines.
+
+The implementation begins with establishing the frozen subspace strategy, where the first frame determines the determinant subspace that remains fixed throughout the simulation. This approach ensures smooth potential energy surfaces and well-defined analytical gradients suitable for molecular dynamics integration.
+
+Key features include comparison between frozen and refresh subspace strategies, demonstrating the significant force noise (~4.3e-3 Ha/Bohr) introduced by refresh strategies due to discontinuous potential energy surfaces. The example includes finite difference validation of analytical gradients and demonstrates proper NVE ensemble integration with energy conservation diagnostics.
+
+The implementation supports electrostatic embedding with MM point charges, providing accurate treatment of environmental effects on quantum regions. The example shows how to integrate with PySCF's native molecular dynamics engine and demonstrates proper handling of MM forces for bidirectional coupling.
+
+**Section sources**
+- [md_qmmm_sqd_device.py:1-318](file://examples/qmmm/md_qmmm_sqd_device.py#L1-L318)
+
+### ASE Integration
+
+The `md_ase_optimize_and_md.py` example demonstrates integration with the Atomic Simulation Environment (ASE) ecosystem, showcasing how TyxonQ can serve as a quantum calculator for molecular structure optimization, molecular dynamics, and vibrational frequency analysis.
+
+The implementation creates a TyxonQCalculator instance that wraps the qc_scanner interface, providing energy and force calculations for any molecular geometry. The example demonstrates BFGS structure optimization, Langevin molecular dynamics at 300K, and vibrational frequency analysis using finite difference methods.
+
+Key features include automatic unit conversion between ASE (Angstrom, eV) and quantum chemistry units (Bohr, Hartree), efficient SCF restarts for consecutive geometries, and seamless integration with ASE's optimization and dynamics engines. The example shows proper initialization of velocities using Maxwell-Boltzmann distribution and stationary condition enforcement.
+
+The implementation includes comprehensive validation checks, verifying energy reduction during optimization, reasonable bond lengths after relaxation, and physically meaningful vibrational frequencies. The example demonstrates how to collect and analyze trajectory data, including potential energy, kinetic energy, and instantaneous temperature monitoring.
+
+**Section sources**
+- [md_ase_optimize_and_md.py:1-186](file://examples/qmmm/md_ase_optimize_and_md.py#L1-L186)
+
+### MDI Engine Integration
+
+The `md_mdi_qmmm_embedded.py` example demonstrates the Message Passing Interface (MDI) protocol for distributed quantum-classical molecular dynamics simulations. This tutorial shows how to establish communication between a driver process and a TyxonQ engine process for electrostatically embedded QM/MM calculations.
+
+The implementation establishes a two-process architecture where the driver handles MDI communication and the engine performs quantum calculations. The example demonstrates the complete MDI protocol sequence: coordinate exchange, lattice charge updates, and energy/force computation with proper unit handling (atomic units throughout).
+
+Key features include dynamic MM charge updates during simulation, proper force decomposition between QM and MM regions, and robust error handling for process communication failures. The example shows how to implement the NLATTICE/CLATTICE/LATTICE command sequence for updating MM point charges and COORDS/ENERGY/FORCES for quantum calculations.
+
+The implementation includes validation checks for electrostatic embedding effects, verifying that MM charges properly influence quantum energies and that forces are correctly partitioned between quantum and classical regions. The example demonstrates step-wise charge updates and energy response verification.
+
+**Section sources**
+- [md_mdi_qmmm_embedded.py:1-137](file://examples/qmmm/md_mdi_qmmm_embedded.py#L1-L137)
+
+### OpenMM Integration
+
+The `md_openmm_pure_qm.py` example demonstrates direct integration with OpenMM for pure quantum mechanical molecular dynamics simulations. This tutorial shows how to create OpenMM systems with TyxonQ potentials and perform velocity-Verlet integration with proper energy conservation diagnostics.
+
+The implementation begins with topology construction using OpenMM's Topology class, defining atoms, bonds, and residue information. The example then creates a TyxonQ system using the create_tyxonq_system function, which internally constructs a TyxonQCalculator and integrates it with OpenMM's PythonForce mechanism.
+
+Key features include proper velocity initialization with center-of-mass motion removal, energy conservation monitoring during NVE ensemble simulations, and validation against independent qc_scanner calculations. The example demonstrates careful handling of unit conversions between OpenMM (kJ/mol, nm) and quantum chemistry units (Hartree, Bohr).
+
+The implementation includes comprehensive energy conservation analysis, identifying drift sources from integration truncation errors and quantum solver numerical noise. The example shows how to achieve sub-microhartree energy conservation with appropriate time steps and validates results against reference calculations.
+
+**Section sources**
+- [md_openmm_pure_qm.py:1-159](file://examples/qmmm/md_openmm_pure_qm.py#L1-L159)
 
 ## HOMO-LUMO Gap Analysis
 
@@ -85,10 +218,10 @@ Key features demonstrated include:
 The examples show how to compare HOMO-LUMO gaps between different algorithms (HEA vs UCC) and across multiple molecules, providing insights into the accuracy and consistency of different quantum chemistry approaches. Error handling is also demonstrated, showing appropriate behavior when attempting gap calculations on HEA instances constructed from integrals rather than molecular objects.
 
 **Section sources**
-- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py#L1-L174)
-- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L1-L200)
-- [hea.py](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L788)
-- [uccsd.py](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L1089-L1219)
+- [demo_hea_homo_lumo_gap.py:1-174](file://examples/demo_hea_homo_lumo_gap.py#L1-L174)
+- [demo_homo_lumo_gap.py:1-200](file://examples/demo_homo_lumo_gap.py#L1-L200)
+- [hea.py:729-788](file://src/tyxonq/applications/chem/algorithms/hea.py#L729-L788)
+- [uccsd.py:1089-1219](file://src/tyxonq/applications/chem/algorithms/uccsd.py#L1089-L1219)
 
 ## Variational Algorithms
 
@@ -103,7 +236,7 @@ The parameter-shift rule is implemented for gradient computation, which is essen
 The example also includes a direct numeric path using PyTorch autograd for comparison, demonstrating how the same variational algorithm can be implemented using exact statevector simulation with automatic differentiation. This dual approach allows users to validate their hardware-based results against exact numerical calculations and provides a smooth transition between simulation and real device execution.
 
 **Section sources**
-- [vqe_extra.py](file://examples/vqe_extra.py#L1-L196)
+- [vqe_extra.py:1-196](file://examples/vqe_extra.py#L1-L196)
 
 ## Advanced Optimization Techniques
 
@@ -118,7 +251,7 @@ Two evaluation methods are provided: an exact path using statevector simulation 
 The batch update function demonstrates how to compute both energy values and gradients for a batch of parameter sets simultaneously. This approach is particularly valuable for second-order optimization methods, population-based optimizers, or when evaluating the landscape of the cost function. The example shows how to handle cases where the functional API is not available by falling back to explicit loops with PyTorch's autograd, ensuring compatibility across different environments.
 
 **Section sources**
-- [vqe_parallel_pmap.py](file://examples/vqe_parallel_pmap.py#L1-L164)
+- [vqe_parallel_pmap.py:1-164](file://examples/vqe_parallel_pmap.py#L1-L164)
 
 ## Next-Generation Examples
 
@@ -152,11 +285,6 @@ The implementation includes a simulator function that applies readout errors to 
 
 This example serves as a cautionary demonstration of the scalability challenges in quantum error mitigation and emphasizes the need for improved quantum hardware with lower error rates or alternative error mitigation strategies for large-scale applications.
 
-**Section sources**
-- [hea_scan_jit_acc.py](file://examples-ng/hea_scan_jit_acc.py#L1-L79)
-- [hybrid_gpu_pipeline.py](file://examples-ng/hybrid_gpu_pipeline.py#L1-L124)
-- [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py#L1-L59)
-
 ## Utility Scripts
 
 ### Gradient Benchmarking
@@ -175,7 +303,7 @@ This profiling information is invaluable for optimizing quantum chemistry simula
 
 **Section sources**
 - [gradient_benchmark.py](file://examples/gradient_benchmark.py)
-- [profile_chem.py](file://scripts/profile_chem.py#L1-L120)
+- [profile_chem.py:1-120](file://scripts/profile_chem.py#L1-L120)
 
 ## Common Modifications and Pitfalls
 
@@ -191,23 +319,33 @@ When working with the examples in this repository, several common modifications 
 
 5. **Error Mitigation Trade-offs**: Error mitigation techniques like readout error correction improve result accuracy but require additional calibration circuits and computational overhead. As demonstrated in the large-scale simulation example, these methods have scalability limits and may become impractical for very large systems.
 
-6. **Hybrid Classical-Quantum Workflows**: When combining classical and quantum computations, careful consideration should be given to data transfer costs and synchronization. Offloading classical computations to the cloud can accelerate certain workflows but introduces network latency and potential data privacy concerns.
+6. **Hardware Provider Specifics**: Different quantum hardware providers have unique compilation requirements, authentication methods, and execution models. Always consult provider-specific documentation and examples when switching between platforms. Pay special attention to compilation flags, token management, and result format differences.
 
-7. **JIT Compilation Overheads**: While JIT compilation can accelerate repeated circuit executions, the initial compilation time can be substantial, especially for deep circuits. Techniques like scan operations can mitigate this issue but may introduce other trade-offs in runtime performance.
+7. **Quantum Chemistry Algorithm Selection**: Choose algorithms based on your specific requirements: UCCSD for chemical accuracy with deeper circuits, HEA for hardware efficiency with shallower circuits, and SQD for sampling-based approaches with frozen subspace strategies. Consider the trade-offs between accuracy, circuit depth, and computational cost.
 
-8. **HOMO-LUMO Gap Calculation Limitations**: The HOMO-LUMO gap functionality is only available for HEA instances constructed from molecular objects, not from integrals directly. Users should ensure they use the appropriate constructor method when they need electronic structure analysis.
+8. **Molecular Dynamics Integration**: When integrating with molecular dynamics engines, ensure proper unit conversions, force conservation, and energy conservation diagnostics. Different engines (ASE, OpenMM, MDI) have different integration schemes and require specific setup procedures.
+
+9. **JIT Compilation Overheads**: While JIT compilation can accelerate repeated circuit executions, the initial compilation time can be substantial, especially for deep circuits. Techniques like scan operations can mitigate this issue but may introduce other trade-offs in runtime performance.
+
+10. **HOMO-LUMO Gap Calculation Limitations**: The HOMO-LUMO gap functionality is only available for HEA instances constructed from molecular objects, not from integrals directly. Users should ensure they use the appropriate constructor method when they need electronic structure analysis.
 
 By understanding these common considerations, users can effectively adapt the provided examples to their specific research questions and computational environments, avoiding common pitfalls and maximizing the effectiveness of their quantum algorithms.
 
 **Section sources**
-- [circuit_chain_demo.py](file://examples/circuit_chain_demo.py#L1-L305)
-- [cloud_uccsd_hea_demo.py](file://examples/cloud_uccsd_hea_demo.py#L1-L57)
-- [vqe_extra.py](file://examples/vqe_extra.py#L1-L196)
-- [vqe_parallel_pmap.py](file://examples/vqe_parallel_pmap.py#L1-L164)
-- [hea_scan_jit_acc.py](file://examples-ng/hea_scan_jit_acc.py#L1-L79)
-- [hybrid_gpu_pipeline.py](file://examples-ng/hybrid_gpu_pipeline.py#L1-L124)
-- [rem_super_large_scale.py](file://examples-ng/rem_super_large_scale.py#L1-L59)
+- [circuit_chain_demo.py:1-305](file://examples/circuit_chain_demo.py#L1-L305)
+- [cloud_uccsd_hea_demo.py:1-57](file://examples/cloud_uccsd_hea_demo.py#L1-L57)
+- [vqe_extra.py:1-196](file://examples/vqe_extra.py#L1-L196)
+- [vqe_parallel_pmap.py:1-164](file://examples/vqe_parallel_pmap.py#L1-L164)
+- [run_circuit_on_lqcloud.py:1-114](file://examples/run_circuit_on_lqcloud.py#L1-L114)
+- [run_circuit_on_guodun.py:1-125](file://examples/run_circuit_on_guodun.py#L1-L125)
+- [run_circuit_on_quafu.py:1-56](file://examples/run_circuit_on_quafu.py#L1-L56)
+- [h2o_sqd.py:1-376](file://examples/h2o_sqd.py#L1-L376)
+- [md_qmmm_device_hardware.py:1-255](file://examples/qmmm/md_qmmm_device_hardware.py#L1-L255)
+- [md_qmmm_sqd_device.py:1-318](file://examples/qmmm/md_qmmm_sqd_device.py#L1-L318)
+- [md_ase_optimize_and_md.py:1-186](file://examples/qmmm/md_ase_optimize_and_md.py#L1-L186)
+- [md_mdi_qmmm_embedded.py:1-137](file://examples/qmmm/md_mdi_qmmm_embedded.py#L1-L137)
+- [md_openmm_pure_qm.py:1-159](file://examples/qmmm/md_openmm_pure_qm.py#L1-L159)
 - [gradient_benchmark.py](file://examples/gradient_benchmark.py)
-- [profile_chem.py](file://scripts/profile_chem.py#L1-L120)
-- [demo_hea_homo_lumo_gap.py](file://examples/demo_hea_homo_lumo_gap.py#L1-L174)
-- [demo_homo_lumo_gap.py](file://examples/demo_homo_lumo_gap.py#L1-L200)
+- [profile_chem.py:1-120](file://scripts/profile_chem.py#L1-L120)
+- [demo_hea_homo_lumo_gap.py:1-174](file://examples/demo_hea_homo_lumo_gap.py#L1-L174)
+- [demo_homo_lumo_gap.py:1-200](file://examples/demo_homo_lumo_gap.py#L1-L200)

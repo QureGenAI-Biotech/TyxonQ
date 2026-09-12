@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: examples
+title: TyxonQ 量子化学与分子动力学示例集
+scope:
+    - examples/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/classical_chem_cloud
+    - path: tests_examples

@@ -1,0 +1,356 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+nodes_managed: true
+exported_at: "2026-09-12T04:01:41Z"
+modules:
+    "":
+        dir_name: TyxonQ 量子计算框架（单仓库聚合）
+        title: TyxonQ 量子计算框架（单仓库聚合）
+        scope:
+            - README.md
+            - CONTRIBUTING.md
+            - .gitignore
+            - pyproject.toml
+            - TYXONQ_TECHNICAL_WHITEPAPER.md
+            - main.py
+            - scripts/
+            - .readthedocs.yaml
+            - CHANGELOG.md
+            - GUODUN_CHANGES.md
+            - LICENSE
+            - LUCJ_SQD.md
+            - MANIFEST.in
+            - MD_INTEGRATION_PLAN.md
+            - MD_INTEGRATION_RESEARCH.md
+            - QCOS_CHANGES.md
+            - README_cn.md
+            - README_jp.md
+            - RIVERONE.md
+            - TyxonQ_HANDOFF.md
+            - h-4-chain.npz
+            - log.lammps
+            - md_energy_conservation.png
+            - vqd_sbm_results.png
+            - water.md
+            - water.pos_0.xyz
+            - water.pos_1.xyz
+        source_files: []
+        children:
+            - applications_chem
+            - compiler
+            - core_framework
+            - devices
+            - docs
+            - examples
+            - libs
+            - postprocessing
+            - tests_applications_chem
+            - tests_core_module
+            - tests_examples
+            - tests_mol_valid
+        depends_on: []
+        related_to: []
+    applications_chem:
+        dir_name: TyxonQ 化学应用层
+        title: TyxonQ 化学应用层
+        scope:
+            - src/tyxonq/applications/
+        source_files: []
+        children:
+            - applications_chem/classical_chem_cloud
+            - applications_chem/dynamics
+            - applications_chem/interfaces
+            - applications_chem/quantum_chemistry_algorithms
+        depends_on: []
+        related_to: []
+    applications_chem/classical_chem_cloud:
+        dir_name: 经典量子化学云端计算服务
+        title: 经典量子化学云端计算服务
+        scope:
+            - src/tyxonq/applications/chem/classical_chem_cloud/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/interfaces
+            - path: examples
+    applications_chem/dynamics:
+        dir_name: 化学量子动力学时间演化模块
+        title: 化学量子动力学时间演化模块
+        scope:
+            - src/tyxonq/applications/chem/dynamics/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: devices
+    applications_chem/interfaces:
+        dir_name: 分子动力学生态接口层（ASE _ i-PI _ OpenMM _ MDI）
+        title: 分子动力学生态接口层（ASE / i-PI / OpenMM / MDI）
+        scope:
+            - src/tyxonq/applications/chem/interfaces/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/classical_chem_cloud
+            - path: tests_applications_chem
+    applications_chem/quantum_chemistry_algorithms:
+        dir_name: 量子化学算法集合包
+        title: 量子化学算法集合包
+        scope:
+            - src/tyxonq/applications/chem/algorithms/
+        source_files: []
+        children:
+            - applications_chem/quantum_chemistry_algorithms/lucj
+            - applications_chem/quantum_chemistry_algorithms/sqd
+            - applications_chem/quantum_chemistry_algorithms/vqe
+        depends_on: []
+        related_to: []
+    applications_chem/quantum_chemistry_algorithms/lucj:
+        dir_name: 矩阵 LUCJ 量子化学算法
+        title: 矩阵 LUCJ 量子化学算法
+        scope:
+            - src/tyxonq/applications/chem/algorithms/lucj/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    applications_chem/quantum_chemistry_algorithms/sqd:
+        dir_name: 费米子 SQD 算法与 PySCF 适配器
+        title: 费米子 SQD 算法与 PySCF 适配器
+        scope:
+            - src/tyxonq/applications/chem/algorithms/sqd/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    applications_chem/quantum_chemistry_algorithms/vqe:
+        dir_name: VQE 变分量子本征求解算法包
+        title: VQE 变分量子本征求解算法包
+        scope:
+            - src/tyxonq/applications/chem/algorithms/vqe/
+        source_files: []
+        children:
+            - applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations
+            - applications_chem/quantum_chemistry_algorithms/vqe/runtimes
+            - applications_chem/quantum_chemistry_algorithms/vqe/wavefunction_utils
+        depends_on: []
+        related_to:
+            - path: compiler
+            - path: devices
+            - path: tests_mol_valid
+    applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations:
+        dir_name: VQE 量子化学 Ansatz 实现集（UCC_HEA_PUCD_KUPCCGSD）
+        title: VQE 量子化学 Ansatz 实现集（UCC/HEA/PUCD/KUPCCGSD）
+        scope:
+            - src/tyxonq/applications/chem/algorithms/vqe/hea.py
+            - src/tyxonq/applications/chem/algorithms/vqe/kupccgsd.py
+            - src/tyxonq/applications/chem/algorithms/vqe/puccd.py
+            - src/tyxonq/applications/chem/algorithms/vqe/ucc_base.py
+            - src/tyxonq/applications/chem/algorithms/vqe/uccsd.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/quantum_chemistry_algorithms/vqe/runtimes
+            - path: applications_chem/quantum_chemistry_algorithms/vqe/wavefunction_utils
+    applications_chem/quantum_chemistry_algorithms/vqe/runtimes:
+        dir_name: VQE 算法运行时（UCC_HEA 数值与设备后端）
+        title: VQE 算法运行时（UCC/HEA 数值与设备后端）
+        scope:
+            - src/tyxonq/applications/chem/algorithms/vqe/runtimes/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations
+    applications_chem/quantum_chemistry_algorithms/vqe/wavefunction_utils:
+        dir_name: VQE 波函数与 CI 向量数值库
+        title: VQE 波函数与 CI 向量数值库
+        scope:
+            - src/tyxonq/applications/chem/algorithms/vqe/wavefunction/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations
+    compiler:
+        dir_name: TyxonQ 编译器统一入口（Gate_Pulse_Platform 编排）
+        title: TyxonQ 编译器统一入口（Gate/Pulse/Platform 编排）
+        scope:
+            - src/tyxonq/compiler/
+        source_files: []
+        children:
+            - compiler/gate_compiler
+            - compiler/platform_backends
+            - compiler/pulse_compiler
+        depends_on: []
+        related_to:
+            - path: applications_chem/quantum_chemistry_algorithms/vqe
+            - path: devices
+    compiler/gate_compiler:
+        dir_name: 门电路通用编译器（GateCompiler）
+        title: 门电路通用编译器（GateCompiler）
+        scope:
+            - src/tyxonq/compiler/gate_compiler/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: compiler/pulse_compiler
+            - path: tests_core_module
+    compiler/platform_backends:
+        dir_name: 硬件平台编译器适配器（Guodun_LQCloud_TyxonQ）
+        title: 硬件平台编译器适配器（Guodun/LQCloud/TyxonQ）
+        scope:
+            - src/tyxonq/compiler/platforms/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: devices/hardware_drivers
+    compiler/pulse_compiler:
+        dir_name: Pulse 级编译引擎（Gate→Pulse 流水线）
+        title: Pulse 级编译引擎（Gate→Pulse 流水线）
+        scope:
+            - src/tyxonq/compiler/pulse_compiler/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: compiler/gate_compiler
+    core_framework:
+        dir_name: 核心框架与数值后端（IR、Numerics、配置）
+        title: 核心框架与数值后端（IR、Numerics、配置）
+        scope:
+            - src/tyxonq/core/
+            - src/tyxonq/numerics/
+            - src/tyxonq/waveforms.py
+            - src/tyxonq/config.py
+            - src/tyxonq/utils.py
+            - src/tyxonq/about.py
+            - src/tyxonq/__init__.py
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: docs
+    devices:
+        dir_name: 量子设备统一执行层（模拟器与硬件驱动聚合）
+        title: 量子设备统一执行层（模拟器与硬件驱动聚合）
+        scope:
+            - src/tyxonq/devices/
+        source_files: []
+        children:
+            - devices/hardware_drivers
+            - devices/simulator_engines
+        depends_on: []
+        related_to:
+            - path: applications_chem/dynamics
+            - path: applications_chem/quantum_chemistry_algorithms/vqe
+            - path: compiler
+            - path: postprocessing
+    devices/hardware_drivers:
+        dir_name: 硬件后端驱动与拓扑缓存
+        title: 硬件后端驱动与拓扑缓存
+        scope:
+            - src/tyxonq/devices/hardware/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: compiler/platform_backends
+            - path: tests_core_module
+    devices/simulator_engines:
+        dir_name: 量子模拟器引擎集合（Statevector _ Density Matrix _ MPS）
+        title: 量子模拟器引擎集合（Statevector / Density Matrix / MPS）
+        scope:
+            - src/tyxonq/devices/simulators/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    docs:
+        dir_name: TyxonQ 文档站点（Sphinx + i18n）
+        title: TyxonQ 文档站点（Sphinx + i18n）
+        scope:
+            - docs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: core_framework
+    examples:
+        dir_name: TyxonQ 量子化学与分子动力学示例集
+        title: TyxonQ 量子化学与分子动力学示例集
+        scope:
+            - examples/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/classical_chem_cloud
+            - path: tests_examples
+    libs:
+        dir_name: 量子算法与算子库集合（libs）
+        title: 量子算法与算子库集合（libs）
+        scope:
+            - src/tyxonq/libs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    postprocessing:
+        dir_name: 量子结果后处理与误差缓解
+        title: 量子结果后处理与误差缓解
+        scope:
+            - src/tyxonq/postprocessing/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: devices
+    tests_applications_chem:
+        dir_name: 化学应用集成测试套件（QC Scanner _ OpenMM _ Device Runtime）
+        title: 化学应用集成测试套件（QC Scanner / OpenMM / Device Runtime）
+        scope:
+            - tests_applications_chem/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/interfaces
+    tests_core_module:
+        dir_name: TyxonQ 核心模块测试套件
+        title: TyxonQ 核心模块测试套件
+        scope:
+            - tests_core_module/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: compiler/gate_compiler
+            - path: devices/hardware_drivers
+    tests_examples:
+        dir_name: 示例程序测试套件
+        title: 示例程序测试套件
+        scope:
+            - tests_examples/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: examples
+    tests_mol_valid:
+        dir_name: 分子化学应用验证测试套件
+        title: 分子化学应用验证测试套件
+        scope:
+            - tests_mol_valid/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: applications_chem/quantum_chemistry_algorithms/vqe

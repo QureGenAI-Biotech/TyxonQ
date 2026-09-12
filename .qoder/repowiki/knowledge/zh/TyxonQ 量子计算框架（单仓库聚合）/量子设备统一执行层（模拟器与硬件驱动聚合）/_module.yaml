@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: devices
+title: 量子设备统一执行层（模拟器与硬件驱动聚合）
+scope:
+    - src/tyxonq/devices/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/dynamics
+    - path: applications_chem/quantum_chemistry_algorithms/vqe
+    - path: compiler
+    - path: postprocessing

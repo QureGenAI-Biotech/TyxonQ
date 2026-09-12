@@ -2,24 +2,34 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [devices.rst](file://docs-ng/source/next/user/devices.rst)
+- [devices/index.rst](file://docs/source/user_guide/devices/index.rst)
 - [config.py](file://src/tyxonq/devices/hardware/config.py)
-- [session.py](file://src/tyxonq/devices/session.py)
+- [base.py](file://src/tyxonq/devices/base.py)
+- [driver.py](file://src/tyxonq/devices/simulators/driver.py)
+- [driver.py](file://src/tyxonq/devices/hardware/tyxonq/driver.py)
 - [config.py](file://src/tyxonq/config.py)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated session management section to reflect removal of dedicated session classes
+- Revised device execution model to show integrated session handling in drivers
+- Updated configuration system documentation to reflect current implementation
+- Removed references to non-existent session.py files
+- Added new sections explaining the simplified driver-based execution model
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Device Configuration System](#device-configuration-system)
-3. [Session Lifecycle Management](#session-lifecycle-management)
-4. [Session Execution and Resource Management](#session-execution-and-resource-management)
+3. [Simplified Execution Model](#simplified-execution-model)
+4. [Driver-Based Session Management](#driver-based-session-management)
 5. [Configuration Options and Execution Parameters](#configuration-options-and-execution-parameters)
 6. [Common Issues and Troubleshooting](#common-issues-and-troubleshooting)
 7. [Performance Considerations](#performance-considerations)
 8. [Conclusion](#conclusion)
 
 ## Introduction
-This document provides a comprehensive overview of the device configuration and session management system in the TyxonQ quantum computing framework. It details the configuration mechanisms that define execution parameters, backend selection, and resource allocation policies. The document also explains the Session class responsible for managing execution context, device binding, and state persistence across multiple circuit executions. Key aspects such as session initialization, context propagation, cleanup procedures, and automatic resource deallocation are covered in detail.
+This document provides a comprehensive overview of the device configuration and execution model in the TyxonQ quantum computing framework. The system has been simplified with the removal of dedicated session management classes, integrating session handling directly into device drivers. It details the configuration mechanisms that define execution parameters, backend selection, and resource allocation policies. The unified execution interface now handles device binding, task management, and state persistence through streamlined driver implementations. Key aspects such as initialization, context propagation, cleanup procedures, and automatic resource deallocation are managed within individual device drivers.
 
 ## Device Configuration System
 
@@ -43,90 +53,86 @@ class DeviceConfig {
 ```
 
 **Diagram sources**
-- [config.py](file://src/tyxonq/devices/hardware/config.py#L0-L67)
+- [config.py:7-78](file://src/tyxonq/devices/hardware/config.py#L7-L78)
 
 **Section sources**
-- [config.py](file://src/tyxonq/devices/hardware/config.py#L0-L67)
+- [config.py:7-78](file://src/tyxonq/devices/hardware/config.py#L7-L78)
 
-## Session Lifecycle Management
+## Simplified Execution Model
 
-The session management system in TyxonQ is designed to handle the complete lifecycle of quantum circuit execution, from initialization to cleanup. The core functionality is implemented in the `device_job_plan` function in `src/tyxonq/devices/session.py`, which orchestrates the execution of segmented shot plans and aggregates results across multiple execution segments.
+The execution model in TyxonQ has been significantly simplified by removing dedicated session management classes and integrating session handling directly into device drivers. Instead of maintaining separate session objects, the framework now uses a unified task-based approach where each execution creates lightweight task objects that encapsulate execution context and results.
 
-Session initialization involves setting up the execution context with the specified device and configuration parameters. The system supports binding to specific hardware devices or simulation backends, with automatic resource allocation based on the configured policies. During the session, the execution context is maintained across multiple circuit runs, allowing for efficient reuse of resources and consistent state management.
+The core execution flow is managed through the `run()` function in `src/tyxonq/devices/base.py`, which serves as the central entry point for all circuit executions. This function handles device resolution, parameter normalization, and result aggregation while delegating actual execution to specific device drivers.
 
 ```mermaid
 sequenceDiagram
 participant User as "User Application"
-participant Session as "Session Manager"
-participant Device as "Quantum Device"
-participant Config as "Configuration System"
-User->>Session : Initialize Session
-Session->>Config : Retrieve Device Configuration
-Config-->>Session : Configuration Parameters
-Session->>Device : Bind to Device
-Device-->>Session : Device Connection
-Session-->>User : Session Ready
-User->>Session : Execute Circuit
-Session->>Device : Run Circuit with Shots
-Device-->>Session : Execution Results
-Session->>Session : Aggregate Results
-Session-->>User : Return Aggregated Results
-User->>Session : Close Session
-Session->>Device : Release Resources
-Session->>Config : Cleanup Context
-Session-->>User : Session Closed
+participant Base as "Base Layer"
+participant Driver as "Device Driver"
+participant Config as "Configuration"
+User->>Base : run(circuit, shots, **opts)
+Base->>Config : Get Provider/Device Defaults
+Config-->>Base : Provider & Device Info
+Base->>Driver : Execute with Task Creation
+Driver-->>Base : Task Object
+Base-->>User : DeviceTask Wrapper
+User->>Base : get_result(task)
+Base->>Driver : Poll Task Status
+Driver-->>Base : Execution Results
+Base-->>User : Normalized Results
 ```
 
 **Diagram sources**
-- [session.py](file://src/tyxonq/devices/session.py#L9-L47)
-- [config.py](file://src/tyxonq/devices/hardware/config.py#L0-L67)
+- [base.py:294-445](file://src/tyxonq/devices/base.py#L294-L445)
+- [driver.py:80-142](file://src/tyxonq/devices/hardware/tyxonq/driver.py#L80-L142)
 
 **Section sources**
-- [session.py](file://src/tyxonq/devices/session.py#L9-L47)
+- [base.py:294-445](file://src/tyxonq/devices/base.py#L294-L445)
 
-## Session Execution and Resource Management
+## Driver-Based Session Management
 
-The session execution system in TyxonQ implements a robust resource management framework that ensures proper allocation and deallocation of computational resources. The `device_job_plan` function serves as the core execution engine, processing segmented shot plans and aggregating results across multiple execution segments.
+Session management is now integrated directly into device drivers, eliminating the need for separate session classes. Each driver implements its own task lifecycle management, handling initialization, execution, and cleanup within the driver's scope.
 
-Resource allocation is handled automatically based on the configuration parameters and device capabilities. The system supports both synchronous and asynchronous execution modes, with automatic resource deallocation upon session termination. The execution plan is divided into segments, each with a specified number of shots, allowing for fine-grained control over resource usage and execution time.
+### Simulator Drivers
+Simulator drivers create lightweight `SimTask` objects that immediately contain execution results. These tasks are synchronous and don't require polling or waiting mechanisms.
 
-The system also implements comprehensive metadata tracking, recording per-segment execution details including shot counts, basis states, wire configurations, and basis mappings. This metadata is aggregated along with the expectation values, providing a complete record of the execution process for analysis and debugging purposes.
+### Hardware Drivers
+Hardware drivers create `TyxonQTask` objects that represent asynchronous cloud submissions. These tasks include built-in polling mechanisms for status checking and result retrieval.
 
 ```mermaid
 flowchart TD
-Start([Session Init]) --> Config["Load Configuration"]
-Config --> Device["Bind to Device"]
-Device --> Plan["Create Execution Plan"]
-Plan --> Segment["Segment Shot Plan"]
-Segment --> Execute["Execute Segment"]
-Execute --> Check["All Segments Complete?"]
-Check --> |No| Execute
-Check --> |Yes| Aggregate["Aggregate Results"]
-Aggregate --> Metadata["Collect Metadata"]
-Metadata --> Return["Return Results"]
-Return --> End([Session Complete])
-style Start fill:#f9f,stroke:#333
-style End fill:#f9f,stroke:#333
+Start([Execution Request]) --> Resolve["Resolve Driver"]
+Resolve --> CreateTask["Create Driver-Specific Task"]
+CreateTask --> SimCheck{"Simulator?"}
+SimCheck --> |Yes| SimExec["Execute Immediately"]
+SimCheck --> |No| CloudSubmit["Submit to Cloud"]
+CloudSubmit --> Poll["Poll for Completion"]
+SimExec --> ReturnTask["Return SimTask"]
+Poll --> ReturnTask
+ReturnTask --> Wrap["Wrap in DeviceTask"]
+Wrap --> End([Task Ready])
 ```
 
 **Diagram sources**
-- [session.py](file://src/tyxonq/devices/session.py#L9-L47)
+- [driver.py:6-18](file://src/tyxonq/devices/simulators/driver.py#L6-L18)
+- [driver.py:12-43](file://src/tyxonq/devices/hardware/tyxonq/driver.py#L12-L43)
 
 **Section sources**
-- [session.py](file://src/tyxonq/devices/session.py#L9-L47)
+- [driver.py:6-18](file://src/tyxonq/devices/simulators/driver.py#L6-L18)
+- [driver.py:12-43](file://src/tyxonq/devices/hardware/tyxonq/driver.py#L12-L43)
 
 ## Configuration Options and Execution Parameters
 
 The configuration system in TyxonQ provides a comprehensive set of options for controlling execution parameters, backend selection, and resource allocation policies. These options are accessible through both programmatic interfaces and environment variables, allowing for flexible configuration across different deployment scenarios.
 
 Key configuration options include:
-- **Execution mode**: Controls whether circuits are executed synchronously or asynchronously
+- **Execution mode**: Controls whether circuits are executed synchronously (simulators) or asynchronously (hardware)
 - **Shot count defaults**: Specifies the default number of shots for circuit execution
 - **Error mitigation settings**: Configures error mitigation strategies for noisy quantum devices
 - **Backend selection**: Determines the computational backend (CPU, GPU, or specialized hardware)
 - **Resource allocation policies**: Defines how computational resources are allocated and managed
 
-The global configuration in `src/tyxonq/config.py` defines canonical backend names and provides normalization functions for backend aliases, ensuring consistent backend selection across the framework. The system supports multiple backends including 'numpy', 'pytorch', and 'cupynumeric', with aliases for common deployment scenarios.
+The global configuration in `src/tyxonq/config.py` defines canonical backend names and provides normalization functions for backend aliases, ensuring consistent backend selection across the framework.
 
 ```mermaid
 classDiagram
@@ -150,45 +156,60 @@ GlobalConfig --> VectorizationPolicy
 ```
 
 **Diagram sources**
-- [config.py](file://src/tyxonq/config.py#L0-L96)
+- [config.py:17-97](file://src/tyxonq/config.py#L17-L97)
 
 **Section sources**
-- [config.py](file://src/tyxonq/config.py#L0-L96)
+- [config.py:17-97](file://src/tyxonq/config.py#L17-L97)
 
 ## Common Issues and Troubleshooting
 
-The device configuration and session management system may encounter several common issues that require troubleshooting. Understanding these issues and their resolution strategies is essential for maintaining reliable quantum circuit execution.
+The simplified device configuration and execution model may encounter several common issues that require troubleshooting. Understanding these issues and their resolution strategies is essential for maintaining reliable quantum circuit execution.
 
-**Session Timeouts**: Long-running sessions may encounter timeout issues, particularly when executing on remote hardware devices. The configuration system allows for adjusting timeout parameters through environment variables, and the session management system implements automatic retry mechanisms for transient failures.
+**Task Timeout Issues**: Long-running hardware tasks may encounter timeout issues during polling. The unified task handling system includes built-in timeout detection with configurable wait periods and polling intervals. Users can adjust timeout parameters when retrieving task results.
 
-**Device Busy States**: Quantum hardware devices may be unavailable due to maintenance or high demand. The system provides device status information through the `list_properties` function, allowing users to check device availability before initiating sessions. When a device is busy, the system can automatically queue execution requests or redirect to alternative devices based on configuration policies.
+**Device Availability**: Quantum hardware devices may be unavailable due to maintenance or high demand. The system provides device status information through driver-specific methods, allowing users to check device availability before initiating executions.
 
-**Configuration Conflicts**: Conflicting configuration settings between environment variables, configuration files, and programmatic settings can lead to unexpected behavior. The configuration system implements a clear precedence hierarchy, with programmatic settings taking precedence over environment variables, which in turn take precedence over default values.
+**Configuration Conflicts**: Conflicting configuration settings between environment variables, configuration files, and programmatic settings can lead to unexpected behavior. The configuration system implements a clear precedence hierarchy, with programmatic settings taking precedence over environment variables.
 
-**Resource Exhaustion**: Long-running sessions or complex circuit executions may exhaust available computational resources. The session management system implements resource monitoring and automatic cleanup procedures to prevent resource leaks. Users can also manually trigger resource cleanup by explicitly closing sessions.
+**Resource Management**: The simplified model automatically handles resource cleanup through task object destruction. However, long-running applications should still explicitly manage task references to prevent memory accumulation.
 
 **Section sources**
-- [config.py](file://src/tyxonq/devices/hardware/config.py#L0-L67)
-- [session.py](file://src/tyxonq/devices/session.py#L9-L47)
+- [base.py:497-558](file://src/tyxonq/devices/base.py#L497-L558)
+- [config.py:24-50](file://src/tyxonq/devices/hardware/config.py#L24-L50)
 
 ## Performance Considerations
 
-Effective performance management in the device configuration and session management system requires careful consideration of several factors, particularly for long-running sessions and multi-device workflows.
+Effective performance management in the simplified device configuration and execution model requires careful consideration of several factors, particularly for long-running applications and multi-device workflows.
 
-For long-running sessions, thread safety and concurrency patterns are critical. The configuration system uses thread-safe data structures for storing tokens and defaults, ensuring that concurrent access from multiple threads does not lead to race conditions. The session management system implements proper locking mechanisms to coordinate access to shared resources.
+### Task-Based Resource Management
+The task-based approach eliminates the overhead of maintaining persistent session objects. Each execution creates lightweight task objects that are garbage collected after use, reducing memory footprint and improving overall system responsiveness.
 
-In multi-device workflows, efficient resource allocation and context switching are essential for optimal performance. The system supports rapid device switching by maintaining separate configuration contexts for each device, minimizing the overhead of context changes. The segmented shot plan execution model allows for efficient batching of circuit executions, reducing the overhead of device communication.
+### Concurrent Execution Patterns
+The unified task interface supports concurrent execution patterns through Python's standard concurrency primitives. Multiple tasks can be submitted simultaneously, with the underlying drivers handling appropriate queuing and resource allocation.
 
-The vectorization policy configuration option allows users to control how operations are vectorized across computational resources, with options for automatic optimization, forced vectorization, or disabling vectorization entirely. This flexibility enables users to tune performance based on their specific hardware and workload characteristics.
+### Driver-Specific Optimizations
+Each device driver implements optimizations specific to its execution environment:
+- **Simulators**: Immediate execution with minimal overhead
+- **Hardware drivers**: Batched submissions and efficient polling mechanisms
+- **Cloud providers**: Connection pooling and request optimization
+
+### Memory Management
+The simplified model reduces memory pressure by avoiding persistent state management. Task objects contain only necessary execution context and results, enabling efficient garbage collection.
 
 **Section sources**
-- [config.py](file://src/tyxonq/config.py#L0-L96)
-- [session.py](file://src/tyxonq/devices/session.py#L9-L47)
+- [base.py:112-144](file://src/tyxonq/devices/base.py#L112-L144)
+- [driver.py:86-142](file://src/tyxonq/devices/simulators/driver.py#L86-L142)
 
 ## Conclusion
 
-The device configuration and session management system in TyxonQ provides a robust framework for managing quantum circuit execution across diverse hardware and simulation backends. The centralized configuration system enables consistent parameter management and resource allocation, while the session management system ensures reliable execution context and state persistence.
+The simplified device configuration and execution model in TyxonQ provides a robust and efficient framework for managing quantum circuit execution across diverse hardware and simulation backends. By removing dedicated session management classes and integrating session handling directly into device drivers, the system achieves better performance, reduced complexity, and improved maintainability.
 
-Key strengths of the system include its flexible configuration options, comprehensive resource management, and support for both local and remote execution environments. The system's design emphasizes reliability, performance, and ease of use, making it suitable for both research and production quantum computing applications.
+Key improvements include:
+- **Simplified Architecture**: Elimination of complex session management layers
+- **Unified Interface**: Consistent task-based execution model across all device types
+- **Improved Performance**: Reduced overhead through lightweight task objects
+- **Better Resource Management**: Automatic cleanup through Python's garbage collection
 
-By understanding the configuration options, session lifecycle, and performance characteristics described in this document, users can effectively leverage the Tyxonq framework for their quantum computing workflows, ensuring optimal execution and resource utilization.
+The system's design emphasizes reliability, performance, and ease of use, making it suitable for both research and production quantum computing applications. Users benefit from a more straightforward API while maintaining access to advanced features like concurrent execution and comprehensive error handling.
+
+By understanding the simplified execution model, configuration options, and performance characteristics described in this document, users can effectively leverage the TyxonQ framework for their quantum computing workflows, ensuring optimal execution and resource utilization.

@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: devices/simulator_engines
+title: 量子模拟器引擎集合（Statevector / Density Matrix / MPS）
+scope:
+    - src/tyxonq/devices/simulators/
+source_files: []
+depends_on: []
+related_to: []

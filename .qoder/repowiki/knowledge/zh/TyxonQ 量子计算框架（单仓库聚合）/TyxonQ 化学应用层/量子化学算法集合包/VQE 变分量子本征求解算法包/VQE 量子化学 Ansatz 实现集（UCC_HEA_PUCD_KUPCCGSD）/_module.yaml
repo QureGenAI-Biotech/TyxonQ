@@ -1,0 +1,14 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/vqe/ansatz_implementations
+title: VQE 量子化学 Ansatz 实现集（UCC/HEA/PUCD/KUPCCGSD）
+scope:
+    - src/tyxonq/applications/chem/algorithms/vqe/hea.py
+    - src/tyxonq/applications/chem/algorithms/vqe/kupccgsd.py
+    - src/tyxonq/applications/chem/algorithms/vqe/puccd.py
+    - src/tyxonq/applications/chem/algorithms/vqe/ucc_base.py
+    - src/tyxonq/applications/chem/algorithms/vqe/uccsd.py
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/quantum_chemistry_algorithms/vqe/runtimes
+    - path: applications_chem/quantum_chemistry_algorithms/vqe/wavefunction_utils

@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: applications_chem/interfaces
+title: 分子动力学生态接口层（ASE / i-PI / OpenMM / MDI）
+scope:
+    - src/tyxonq/applications/chem/interfaces/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/classical_chem_cloud
+    - path: tests_applications_chem
