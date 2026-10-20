@@ -4,5 +4,6 @@
 """
 
 from .scanner import qc_scanner
+from .ewf_scanner import EWFScanner
 
-__all__ = ["qc_scanner"]
+__all__ = ["qc_scanner", "EWFScanner"]

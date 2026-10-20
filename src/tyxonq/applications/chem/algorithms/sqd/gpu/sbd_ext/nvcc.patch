@@ -1,0 +1,268 @@
+--- a/include/sbd/chemistry/basic/davidson_thrust.h
++++ b/include/sbd/chemistry/basic/davidson_thrust.h
+@@ -311,7 +311,8 @@
+                 }
+             }
+ #endif
+-            if (norm_R < eps) {
++            // TyxonQ 将 max_iteration 解释为总算符作用次数上限。
++            if (norm_R < eps || it * nb + ib + 1 >= max_iteration) {
+                 do_continue = false;
+                 break;
+             }
+@@ -324,22 +325,46 @@
+                     thrust::for_each_n(policy, ci, W.size(), Determine_kernel(C[ib + 1], R, dii, eps_reg, E[0]));
+                 }
+
+-                // Gram-Schmidt orthogonalization
+-                for (int kb = 0; kb < ib + 1; kb++) {
+-                    ElemT olap;
+-                    InnerProduct(C[kb], C[ib+1], olap, mult.b_comm());
+-                    olap *= ElemT(-1.0);
+-                    {
+-                        SBD_NVTX_RANGE_COLOR("thrust::transform", __LINE__);
+-                        thrust::transform(policy, C[kb].begin(), C[kb].end(), C[ib + 1].begin(), C[ib + 1].begin(), AXPY_kernel<ElemT>(olap));
++                bool independent = false;
++                // 优先保留 Davidson 预条件方向；对角 Hamiltonian 下该方向
++                // 可能正比于当前 Ritz 向量，此时改用仍保存的未预条件残差。
++                for (int candidate = 0; candidate < 2; ++candidate) {
++                    if (candidate == 1) C[ib + 1] = R;
++                    ElemT squared_trial;
++                    InnerProduct(C[ib + 1], C[ib + 1], squared_trial, mult.b_comm());
++                    const RealT norm_trial = std::sqrt(std::real(squared_trial));
++                    // 两遍修正 Gram-Schmidt，避免近相关方向产生伪低能根。
++                    for (int pass = 0; pass < 2; ++pass) {
++                        for (int kb = 0; kb < ib + 1; kb++) {
++                            ElemT olap;
++                            InnerProduct(C[kb], C[ib+1], olap, mult.b_comm());
++                            olap *= ElemT(-1.0);
++                            {
++                                SBD_NVTX_RANGE_COLOR("thrust::transform", __LINE__);
++                                thrust::transform(policy, C[kb].begin(), C[kb].end(), C[ib + 1].begin(), C[ib + 1].begin(), AXPY_kernel<ElemT>(olap));
++                            }
++                        }
+                     }
+-                }
+ #ifdef SBD_USE_THRUST_NOSYNC
+-                cudaStreamSynchronize(stream);
+-#endif
+-
+-                RealT norm_C;
+-                Normalize(C[ib + 1], norm_C, mult.b_comm(), mpi_size_b);
++                    cudaStreamSynchronize(stream);
++#endif
++                    ElemT squared_C;
++                    InnerProduct(C[ib + 1], C[ib + 1], squared_C, mult.b_comm());
++                    const RealT norm_C = std::sqrt(std::real(squared_C));
++                    // 线性相关判断只控制扩张，不放宽本征残差标准。
++                    if (std::isfinite(norm_trial) && std::isfinite(norm_C) &&
++                        norm_C > eps_reg * norm_trial) {
++                        thrust::transform(policy, C[ib + 1].begin(), C[ib + 1].end(),
++                                          C[ib + 1].begin(), AX_kernel<ElemT>(ElemT(1.0 / norm_C)));
++                        independent = true;
++                        break;
++                    }
++                }
++                // 两个方向都无效才停止；保留当前 Ritz 向量供最终独立残差验收。
++                if (!independent) {
++                    do_continue = false;
++                    break;
++                }
+             }
+
+             auto step_end = std::chrono::high_resolution_clock::now();
+@@ -599,7 +624,8 @@
+                 }
+             }
+ #endif
+-            if (norm_R < eps) {
++            // TyxonQ 将 max_iteration 解释为总算符作用次数上限。
++            if (norm_R < eps || it * nb + ib + 1 >= max_iteration) {
+                 do_continue = false;
+                 break;
+             }
+--- a/include/sbd/chemistry/basic/determinants_thrust.h
++++ b/include/sbd/chemistry/basic/determinants_thrust.h
+@@ -8,6 +8,15 @@
+ 
+ namespace sbd
+ {
++// nvcc 的 host/device 函数分别使用对应平台的等价位计数指令。
++inline __host__ __device__ int tyxonq_popcount64(unsigned long long x) {
++#ifdef __CUDA_ARCH__
++    return __popcll(x);
++#else
++    return __builtin_popcountll(x);
++#endif
++}
++
+ 
+ template <typename ElemT>
+ class DeterminantKernels {
+@@ -78,26 +87,26 @@
+             // the case where start and end is same block
+             // size_t mask = ((size_t(1) << bitEnd) - 1) ^ ((size_t(1) << bitStart) - 1);
+             size_t mask = ((size_t(1) << (bitEnd - bitStart)) - 1) << bitStart;
+-            nonZeroBits += __popcll(dets[blockStart] & mask);
++            nonZeroBits += tyxonq_popcount64(dets[blockStart] & mask);
+         }
+         else {
+             int i = blockStart;
+             // 2. Handle the partial bits in the start block
+             if (bitStart != 0) {
+                 size_t mask = ~((size_t(1) << bitStart) - 1); // count after bitStart
+-                nonZeroBits += __popcll(dets[blockStart] & mask);
++                nonZeroBits += tyxonq_popcount64(dets[blockStart] & mask);
+                 i++;
+             }
+ 
+             // 3. Handle full blocks in between
+             for (; i < blockEnd; i++) {
+-                nonZeroBits += __popcll(dets[i]);
++                nonZeroBits += tyxonq_popcount64(dets[i]);
+             }
+ 
+             // 4. Handle the partial bits in the end block
+             if (bitEnd != 0) {
+                 size_t mask = (size_t(1) << bitEnd) - 1; // count before bitEnd
+-                nonZeroBits += __popcll(dets[blockEnd] & mask);
++                nonZeroBits += tyxonq_popcount64(dets[blockEnd] & mask);
+             }
+         }
+ 
+--- a/include/sbd/chemistry/basic/integrals_thrust.h
++++ b/include/sbd/chemistry/basic/integrals_thrust.h
+@@ -31,7 +31,7 @@
+         norbs = n;
+     }
+ 
+-    oneInt_Thrust(const oneInt_Thrust& other)
++    __host__ __device__ oneInt_Thrust(const oneInt_Thrust& other)
+     {
+         store = other.store;
+         norbs = other.norbs;
+@@ -64,7 +64,7 @@
+         ExchangeMat = (ElemT*)thrust::raw_pointer_cast(em.data());
+     }
+ 
+-    twoInt_Thrust(const twoInt_Thrust& other)
++    __host__ __device__ twoInt_Thrust(const twoInt_Thrust& other)
+     {
+         store = other.store;
+         norbs = other.norbs;
+--- a/include/sbd/chemistry/tpb/correlation_thrust.h
++++ b/include/sbd/chemistry/tpb/correlation_thrust.h
+@@ -502,7 +502,15 @@
+     Function to evaluate the two-particle correlation functions
+ */
+ template <typename ElemT>
+-void MultTPBThrust<ElemT>::correlation(const std::vector<ElemT> &W_in,
++void MultTPBThrust<ElemT>::correlation(const std::vector<ElemT>& W_in,
++                    std::vector<std::vector<ElemT>>& onebody_out,
++                    std::vector<std::vector<ElemT>>& twobody_out) {
++    thrust::device_vector<ElemT> W(W_in.begin(), W_in.end());
++    correlation_device(W, onebody_out, twobody_out);
++}
++
++template <typename ElemT>
++void MultTPBThrust<ElemT>::correlation_device(const thrust::device_vector<ElemT> &W,
+                     std::vector<std::vector<ElemT>> &onebody_out,
+                     std::vector<std::vector<ElemT>> &twobody_out)
+ {
+@@ -530,17 +538,16 @@
+     }
+ 
+     size_t adet_min = 0;
+-    size_t adet_max = adets.size();
++    size_t adet_max = adets.size() / this->D_half_size_;
+     size_t bdet_min = 0;
+-    size_t bdet_max = bdets.size();
++    size_t bdet_max = bdets.size() / this->D_half_size_;
+     get_mpi_range(adet_comm_size,0,adet_min,adet_max);
+     get_mpi_range(bdet_comm_size,0,bdet_min,bdet_max);
+     size_t max_det_size = (adet_max-adet_min)*(bdet_max-bdet_min);
+ 
+     thrust::device_vector<ElemT> T(max_det_size);
+     thrust::device_vector<ElemT> R;
+-    thrust::device_vector<ElemT> W(W_in.size());
+-    thrust::copy_n(W_in.begin(), W_in.size(), W.begin());
++    // 波函数已位于设备，直接复用；输出 RDM 仍显式复制到主机。
+ 
+     if (helper.size() != 0) {
+         Mpi2dSlide(W, T, adet_comm_size, bdet_comm_size,
+--- a/include/sbd/chemistry/tpb/helper_thrust.h
++++ b/include/sbd/chemistry/tpb/helper_thrust.h
+@@ -59,7 +59,7 @@
+ 
+     TaskHelpersThrust() {}
+ 
+-    TaskHelpersThrust(const TaskHelpersThrust<ElemT>& other)
++    __host__ __device__ TaskHelpersThrust(const TaskHelpersThrust<ElemT>& other)
+     {
+         braAlphaStart = other.braAlphaStart;
+         braAlphaEnd = other.braAlphaEnd;
+--- a/include/sbd/chemistry/tpb/mult_thrust.h
++++ b/include/sbd/chemistry/tpb/mult_thrust.h
+@@ -53,6 +53,7 @@
+     bool use_precalculated_dets = true;
+     bool collapse_loop = true;
+     int max_memory_gb_for_determinants;
++    thrust::device_vector<ElemT> transfer_workspace[2];
+     size_t adet_comm_size;
+     size_t bdet_comm_size;
+ 
+@@ -90,6 +91,10 @@
+                     thrust::device_vector<ElemT> &Wb) override;
+ 
+     void makeQChamDiagTerms(thrust::device_vector<ElemT> &hii);
++
++    void correlation_device(const thrust::device_vector<ElemT> & w,
++                     std::vector<std::vector<ElemT>> & onebody_out,
++                     std::vector<std::vector<ElemT>> & twobody_out);
+ 
+     void correlation(const std::vector<ElemT> & w,
+                      std::vector<std::vector<ElemT>> & onebody_out,
+@@ -1200,14 +1205,14 @@
+     size_t braBetaSize = 0;
+ 
+     size_t adet_min = 0;
+-    size_t adet_max = adets.size();
++    size_t adet_max = adets.size() / this->D_half_size_;
+     size_t bdet_min = 0;
+-    size_t bdet_max = bdets.size();
++    size_t bdet_max = bdets.size() / this->D_half_size_;
+     get_mpi_range(adet_comm_size,0,adet_min,adet_max);
+     get_mpi_range(bdet_comm_size,0,bdet_min,bdet_max);
+     size_t max_det_size = (adet_max-adet_min)*(bdet_max-bdet_min);
+ 
+-    thrust::device_vector<ElemT> T[2];
++    auto& T = transfer_workspace;
+     int active_T = 0;
+     int recv_T = 1;
+     size_t task_sent = 0;
+--- a/include/sbd/framework/det_vector.h
++++ b/include/sbd/framework/det_vector.h
+@@ -566,6 +566,8 @@
+     // Call once at startup with the known row width before any container is used.
+     // No-op on repeated calls with the same value; asserts if called with a different value.
+     static void init_elem_size(size_t n) { _set_elem_size(n); }
++    // TyxonQ 仅在受 GIL 保护的构造阶段重绑定；随后不保留 host det_vector。
++    static void tyxonq_set_elem_size(size_t n) { _elem_size = n; }
+ 
+ private:
+     std::vector<ElemT> _data;
+--- a/include/sbd/chemistry/basic/correlation_thrust.h
++++ b/include/sbd/chemistry/basic/correlation_thrust.h
+@@ -134,8 +134,10 @@
+         }
+ 
+         if (si == sb) {
+-            sbd::atomic_add(twobody + (si + 2 * sj) * twobody_size + (oa + this->norbs * ob + this->norbs * this->norbs * (oj + this->norbs * oi)), ElemT(-sgn) * Conjugate(WeightI) * WeightJ);
+-            sbd::atomic_add(twobody + (sj + 2 * si) * twobody_size + (ob + this->norbs * oa + this->norbs * this->norbs * (oi + this->norbs * oj)), ElemT(-sgn) * Conjugate(WeightI) * WeightJ);
++            // 交换排序的异自旋双激发：raw 轨道首轴为 a，故块标签按 sa=sj、sb=si。
++            // 原式在此分支把 ab/ba 写反；自旋求和会掩盖该错误。
++            sbd::atomic_add(twobody + (sj + 2 * si) * twobody_size + (oa + this->norbs * ob + this->norbs * this->norbs * (oj + this->norbs * oi)), ElemT(-sgn) * Conjugate(WeightI) * WeightJ);
++            sbd::atomic_add(twobody + (si + 2 * sj) * twobody_size + (ob + this->norbs * oa + this->norbs * this->norbs * (oi + this->norbs * oj)), ElemT(-sgn) * Conjugate(WeightI) * WeightJ);
+         }
+     }
+ };

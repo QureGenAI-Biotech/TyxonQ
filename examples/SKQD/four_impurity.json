@@ -1,0 +1,52 @@
+{
+  "name": "四杂质每个一个 bath 的缩小验证模型",
+  "model": {
+    "kind": "four_impurity",
+    "norb": 8,
+    "nelec": [
+      4,
+      4
+    ],
+    "onsite": 10.0,
+    "hybridization": 0.16,
+    "bandwidth": 4.0,
+    "hopping": -1.0,
+    "diagonal_hopping": -0.5,
+    "bath_energies": [
+      0.0
+    ]
+  },
+  "reference": "slater",
+  "evolution": {
+    "method": "trotter",
+    "time_step": 0.2,
+    "krylov_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "trotter_substeps": 1
+  },
+  "sampling": {
+    "shots": 500,
+    "seed": 24,
+    "max_qubits": 20
+  },
+  "sqd": {
+    "samples_per_batch": 100,
+    "num_batches": 3,
+    "max_iterations": 5,
+    "symmetrize_spin": true,
+    "carryover_threshold": 1e-08,
+    "seed": 24
+  },
+  "provenance": {
+    "parameters": "用于小体系验证的缩小模型；不宣称复现论文大体系数值",
+    "carryover_threshold": "Yu 主文 Sec. V F：四杂质 tau=1e-8；复用现有 SQD 幅度阈值语义"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "LIH 分子 SqDRIFT 本地验证",
+  "model": {
+    "kind": "molecule",
+    "norb": 5,
+    "nelec": [
+      1,
+      1
+    ],
+    "geometry": "Li 0 0 0; H 0 0 1.6",
+    "basis": "sto-3g",
+    "frozen_core": 1
+  },
+  "reference": "slater",
+  "evolution": {
+    "method": "sqdrift",
+    "time_step": 0.2,
+    "krylov_indices": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "num_sampled_groups": 20,
+    "num_randomizations": 10,
+    "seed": 24,
+    "filter_diagonal": false,
+    "filter_trivial": false,
+    "optimize_layout": false
+  },
+  "sampling": {
+    "shots": 500,
+    "seed": 24,
+    "max_qubits": 20
+  },
+  "sqd": {
+    "samples_per_batch": 100,
+    "num_batches": 3,
+    "max_iterations": 5,
+    "symmetrize_spin": true,
+    "carryover_threshold": 0.0001,
+    "seed": 24
+  },
+  "provenance": {
+    "parameters": "小分子工程验证参数；LiH 冻结一个 core MO，offset 包含冻结核和核排斥"
+  }
+}

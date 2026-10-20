@@ -27,7 +27,7 @@ del logger
 
 
 # New algorithms API (device runtime by default)
-from .algorithms import HEA, UCC  # noqa: F401
+from .algorithms import HEA, UCC, LUCJ, build_lucj_circuit, initialize_lucj_parameters_from_ccsd  # noqa: F401
 
 # Re-export numerics backend helpers for tests
 try:
@@ -92,6 +92,9 @@ except Exception:
 __all__ = [
     "set_backend",
     "clear_cache",
+    "LUCJ",
+    "build_lucj_circuit",
+    "initialize_lucj_parameters_from_ccsd",
     "HEA",
     "UCC",
     "UCCSD",

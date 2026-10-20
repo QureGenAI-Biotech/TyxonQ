@@ -218,3 +218,12 @@ build_log.txt
 
 
 docs/superpowers
+# 本地历史资料与内部交付仓库不进入公开版本。
+/archive/
+/codeup/
+/.codegraph/
+/.vscode/
+/AGENTS.md
+/agents.md
+/ewf-geom-opt-main/
+/sbd-eigensolver-python-main/

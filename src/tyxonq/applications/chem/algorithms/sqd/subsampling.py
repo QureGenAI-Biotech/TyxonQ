@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 
 
@@ -11,8 +13,10 @@ def postselect_by_hamming_right_and_left(
     *,
     hamming_right: int,
     hamming_left: int,
+    excluded_right: Sequence[int] | np.ndarray | None = None,
+    excluded_left: Sequence[int] | np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """按左右两半的 Hamming weight 筛选合法 bitstring。"""
+    """按 Hamming weight 筛选，并要求指定轨道保持未占据。"""
     bitstring_matrix = np.asarray(bitstring_matrix, dtype=bool)
     probabilities = np.asarray(probabilities, dtype=float)
     if hamming_left < 0 or hamming_right < 0:
@@ -34,12 +38,36 @@ def postselect_by_hamming_right_and_left(
     valid_left = np.sum(bitstring_matrix[:, :norb], axis=1) == hamming_left
     valid_indices = np.logical_and(valid_right, valid_left)
 
+    # 半区按 [orbital N-1, ..., orbital 0] 排列，因此轨道号要映射到反向列号。
+    right_columns = _excluded_columns(excluded_right, norb)
+    left_columns = _excluded_columns(excluded_left, norb)
+    if right_columns.size:
+        valid_indices &= ~np.any(bitstring_matrix[:, norb + right_columns], axis=1)
+    if left_columns.size:
+        valid_indices &= ~np.any(bitstring_matrix[:, left_columns], axis=1)
+
     bitstrings_post = bitstring_matrix[valid_indices]
     probabilities_post = probabilities[valid_indices]
     if not len(probabilities_post):
         return bitstrings_post, probabilities_post
     probabilities_post = probabilities_post / np.sum(probabilities_post)
     return bitstrings_post, probabilities_post
+
+
+def _excluded_columns(
+    excluded_orbitals: Sequence[int] | np.ndarray | None,
+    norb: int,
+) -> np.ndarray:
+    """把空间轨道编号转换成 bitstring 半区内的列编号。"""
+    if excluded_orbitals is None:
+        return np.array([], dtype=int)
+    orbitals = np.asarray(excluded_orbitals)
+    if orbitals.ndim != 1 or np.any(orbitals != orbitals.astype(int)):
+        raise ValueError("excluded orbitals must be a one-dimensional sequence of integers.")
+    orbitals = np.unique(orbitals.astype(int))
+    if np.any(orbitals < 0) or np.any(orbitals >= norb):
+        raise ValueError(f"excluded orbitals must be between 0 and {norb - 1}.")
+    return norb - 1 - orbitals
 
 
 def subsample(

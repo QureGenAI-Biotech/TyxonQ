@@ -1,0 +1,46 @@
+{
+  "name": "SIAM 4 轨道两轮自然轨道验证",
+  "model": {
+    "kind": "siam",
+    "norb": 4,
+    "nelec": [
+      2,
+      2
+    ],
+    "hopping": 1.0,
+    "onsite": 10.0,
+    "hybridization": 1.0
+  },
+  "reference": "slater",
+  "evolution": {
+    "method": "trotter",
+    "time_step": 0.2,
+    "krylov_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "trotter_substeps": 1
+  },
+  "sampling": {
+    "shots": 500,
+    "seed": 24,
+    "max_qubits": 20
+  },
+  "sqd": {
+    "samples_per_batch": 20,
+    "num_batches": 3,
+    "max_iterations": 5,
+    "symmetrize_spin": true,
+    "carryover_threshold": 0.0001,
+    "seed": 24
+  },
+  "provenance": {
+    "parameters": "用于小体系验证的缩小模型；不宣称复现论文大体系数值"
+  }
+}

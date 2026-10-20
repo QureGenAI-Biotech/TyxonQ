@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import numpy as np
 import scipy.linalg
 
-
-@dataclass(frozen=True)
-class TwoModeRotation:
-    """一条相邻二模 orbital rotation。"""
-
-    modes: tuple[int, int]
-    matrix: np.ndarray
+from ...chem_libs.fermionic_circuits import (
+    TwoModeRotation as TwoModeRotation,
+    decompose_unitary_to_adjacent_rotations as decompose_unitary_to_adjacent_rotations,
+    decompose_slater_determinant_to_adjacent_rotations as decompose_slater_determinant_to_adjacent_rotations,
+    two_mode_fock_matrix as two_mode_fock_matrix,
+    _zeroing_givens as _zeroing_givens,
+)
 
 
 def antihermitians_to_parameters(mats: np.ndarray, *, real: bool = False) -> np.ndarray:
@@ -87,7 +85,7 @@ def real_symmetrics_to_parameters(
     if indices is None:
         rows, cols = np.triu_indices(dim)
     else:
-        rows, cols = zip(*indices, strict=True)
+        rows, cols = [p for p, _ in indices], [q for _, q in indices]
     return matrices[:, rows, cols].reshape(-1)
 
 
@@ -103,7 +101,7 @@ def real_symmetrics_from_parameters(
         rows, cols = np.triu_indices(dim)
         n_params_per_mat = dim * (dim + 1) // 2
     else:
-        rows, cols = zip(*indices, strict=True)
+        rows, cols = [p for p, _ in indices], [q for _, q in indices]
         n_params_per_mat = len(indices)
     values = np.asarray(params, dtype=float).reshape(n_mats, n_params_per_mat)
     mats = np.zeros((n_mats, dim, dim), dtype=float)
@@ -150,64 +148,3 @@ def df_tensors_from_params(
         indices=diag_coulomb_indices,
     )
     return diag_coulomb_mats, orbital_rotations
-
-
-def decompose_unitary_to_adjacent_rotations(unitary: np.ndarray) -> tuple[np.ndarray, list[TwoModeRotation]]:
-    """把 full unitary 分解成 diagonal phase 和相邻二模 rotation。"""
-    matrix = np.asarray(unitary, dtype=complex)
-    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
-        raise ValueError("unitary must have shape (N, N)")
-    n = matrix.shape[0]
-    work = matrix.copy()
-    left_rotations: list[TwoModeRotation] = []
-
-    # 逐列用相邻 Givens 消元：G_m ... G_1 U = D。
-    for col in range(n - 1):
-        for row in range(n - 1, col, -1):
-            i = row - 1
-            j = row
-            g_matrix = _zeroing_givens(work[i, col], work[j, col])
-            work[[i, j], :] = g_matrix @ work[[i, j], :]
-            left_rotations.append(TwoModeRotation((i, j), g_matrix))
-
-    phases = np.diag(work).copy()
-    phase_norms = np.abs(phases)
-    phases = np.where(phase_norms > 0, phases / phase_norms, 1.0 + 0.0j)
-
-    # U = G_1† ... G_m† D；线路先放 D，再按反序放 G_m† ... G_1†。
-    rotations = [
-        TwoModeRotation(rotation.modes, rotation.matrix.conj().T)
-        for rotation in reversed(left_rotations)
-    ]
-    return phases, rotations
-
-
-def two_mode_fock_matrix(single_particle_matrix: np.ndarray) -> np.ndarray:
-    """把 2x2 orbital rotation 提升成两个 qubit 上的 4x4 Fock unitary。
-
-    qubit 顺序为 `(mode_i, mode_j)`，局部 basis 为 `|00>, |01>, |10>, |11>`。
-    """
-    v = np.asarray(single_particle_matrix, dtype=complex)
-    if v.shape != (2, 2):
-        raise ValueError("single_particle_matrix must have shape (2, 2)")
-    matrix = np.eye(4, dtype=complex)
-    matrix[1, 1] = v[1, 1]
-    matrix[1, 2] = v[1, 0]
-    matrix[2, 1] = v[0, 1]
-    matrix[2, 2] = v[0, 0]
-    matrix[3, 3] = v[0, 0] * v[1, 1] - v[0, 1] * v[1, 0]
-    return matrix
-
-
-def _zeroing_givens(a: complex, b: complex) -> np.ndarray:
-    """构造左乘后把 `[a, b]` 第二个分量消为 0 的 Givens 矩阵。"""
-    radius = float(np.hypot(abs(a), abs(b)))
-    if radius == 0:
-        return np.eye(2, dtype=complex)
-    if abs(a) == 0:
-        c = 0.0
-        s = 1.0 + 0.0j
-    else:
-        c = abs(a) / radius
-        s = c * np.conjugate(b / a)
-    return np.array([[c, s], [-np.conjugate(s), c]], dtype=complex)

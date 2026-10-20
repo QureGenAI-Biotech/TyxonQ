@@ -9,6 +9,7 @@ include CONTRIBUTING.md
 
 # Include examples (用户可能需要这些示例)
 recursive-include examples *.py *.ipynb *.md
+recursive-include examples/SKQD *.json
 prune examples/.gitignore
 
 # Include tests for people who want to run them
