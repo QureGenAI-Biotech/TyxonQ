@@ -185,7 +185,11 @@ class Circuit:
         """Return a new Circuit with merged metadata (shallow merge)."""
         new_meta = dict(self.metadata)
         new_meta.update(kwargs)
-        return replace(self, metadata=new_meta)
+        result = replace(self, metadata=new_meta)
+        # 自定义门矩阵不属于 dataclass 字段，复制线路时必须一并保留。
+        if hasattr(self, "_unitary_cache"):
+            result._unitary_cache = dict(self._unitary_cache)
+        return result
 
     # ---- Chainable configuration stages ----
     def device(self, **options: Any) -> "Circuit":
@@ -666,7 +670,11 @@ class Circuit:
     def extended(self, extra_ops: Sequence[Sequence[Any]]) -> "Circuit":
         """Return a new Circuit with ops extended by extra_ops (no mutation)."""
         new_ops = list(self.ops) + [tuple(op) for op in extra_ops]
-        return Circuit(num_qubits=self.num_qubits, ops=new_ops, metadata=dict(self.metadata), instructions=list(self.instructions))
+        result = Circuit(num_qubits=self.num_qubits, ops=new_ops, metadata=dict(self.metadata), instructions=list(self.instructions))
+        # 自动测量等步骤会扩展线路，后续分解仍需要自定义门矩阵。
+        if hasattr(self, "_unitary_cache"):
+            result._unitary_cache = dict(self._unitary_cache)
+        return result
 
     def compose(self, other: "Circuit", indices: Optional[Sequence[int]] = None) -> "Circuit":
         """Append another Circuit's ops. If `indices` given, remap other's qubits by indices[i]."""

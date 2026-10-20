@@ -1,0 +1,47 @@
+{
+  "name": "SIAM 8 轨道教程",
+  "model": {
+    "kind": "siam",
+    "norb": 8,
+    "nelec": [
+      4,
+      4
+    ],
+    "hopping": 1.0,
+    "onsite": 10.0,
+    "hybridization": 1.0
+  },
+  "reference": "near_fermi",
+  "evolution": {
+    "method": "trotter",
+    "time_step": 0.2,
+    "krylov_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "trotter_substeps": 1
+  },
+  "sampling": {
+    "shots": 500,
+    "seed": 24,
+    "max_qubits": 20
+  },
+  "sqd": {
+    "samples_per_batch": 100,
+    "num_batches": 3,
+    "max_iterations": 5,
+    "symmetrize_spin": true,
+    "carryover_threshold": 0.0001,
+    "seed": 24
+  },
+  "provenance": {
+    "parameters": "本地 sample-based-krylov-quantum-diagonalization.ipynb 的 8 轨道示例",
+    "carryover_threshold": "已有 SQD 默认值；Yu 论文配置另列"
+  }
+}
