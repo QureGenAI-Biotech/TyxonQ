@@ -30,6 +30,14 @@ TyxonQ 实现了一个完整的量子-经典混合工作流，将高层量子算
 
 ## 主要特性
 
+### 科研扩展入口
+
+- `applications.chem.algorithms.lucj`：闭壳层及 `(nalpha, nbeta)` 开壳层线路、排除轨道与相邻轨道旋转融合。默认拓扑为 `linear`；需要 `square` 时显式指定。构建线路时，未指定 `with_final_orbital_rotation` 会按参数字典自动启用末尾旋转，显式 `False` 可关闭。
+- `applications.chem.algorithms.sqd`：自旋分辨 RDM、选定 CI、组态恢复、PCM 密度外循环与断点恢复；保留 `SQDFCISolver` 的 PySCF 梯度适配接口。默认 GPU 路径为 Torch Hamiltonian、CPU RDM 和独立 CPU 复核；可选 SBD 原生/混合后端，原生后端不支持自旋惩罚。构建与运行方法见 [GPU 基准脚本](examples/sqd_gpu_benchmark.py)文件头。
+- `applications.chem.algorithms.ewf`：RHF/UHF/ROHF 分片、浴、嵌入簇与能量重构；闭壳层密度路径支持 frozen-bath 近似梯度，缺少完整浴和投影响应，优化停止不代表完整能量达到驻点。使用方法见 [几何计算示例](examples/ewf_geometry.py)文件头，优化需安装 `.[geomopt]` 可选依赖。
+- SKQD 与自旋/AQC 的最小运行入口分别见 [SKQD 脚本](examples/SKQD/workflow.py)和[自旋脚本](examples/run_spin_dynamics.py)文件头。张量网络功能需安装 `.[spin]` 可选依赖。
+- 迁移代码的来源、版权和许可统一见 [第三方声明](src/tyxonq/applications/THIRD_PARTY_NOTICES.md)。
+
 ### 🔥 实际量子硬件集成
 - **面向生产的量子执行**: 直接集成到 **QureGenAI的 Homebrew_S2** 量子处理器
 - **脉冲级控制**: 同时支持门级操作和 **pulse-level signals** 以实现高级量子控制

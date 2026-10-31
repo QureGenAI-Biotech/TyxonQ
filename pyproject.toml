@@ -42,6 +42,20 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+sbd = [
+    "pybind11>=2.12,<4",
+    "mpi4py>=4.0,<5",
+]
+geomopt = [
+    "ase>=3.23",
+    "sella>=2.3,<3",
+]
+spin = [
+    "quimb>=1.11,<2",
+    "cotengrust>=0.2,<0.3",
+    "scipy>=1.14",
+    "matplotlib>=3.8",
+]
 lqcloud = [
     "lqcloud==0.4.2",
 ]
@@ -80,9 +94,11 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 tyxonq = ["*.txt", "*.md", "*.rst"]
+"tyxonq.applications" = ["THIRD_PARTY_NOTICES.md"]
+"tyxonq.applications.chem.algorithms.sqd.gpu.sbd_ext" = ["*.cpp", "*.cuh", "*.patch", "SOURCES.json"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests_core_module","tests_examples","tests_applications_chem","tests_mol_valid"]
+testpaths = ["tests_core_module","tests_examples","tests_applications_chem","tests_mol_valid","tests_applications_spin"]
 python_files = ["test_*.py"]
 addopts = "-v -ra"
 markers = [

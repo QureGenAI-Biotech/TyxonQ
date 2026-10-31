@@ -3,9 +3,22 @@
 from __future__ import annotations
 
 from operator import index
+from collections.abc import Sequence
 
 
-SUPPORTED_TOPOLOGIES = ("square", "hex", "linear")
+InteractionPairs = tuple[Sequence[tuple[int, int]], Sequence[tuple[int, int]]]
+
+
+SUPPORTED_TOPOLOGIES = (
+    "square",
+    "hex",
+    "linear",
+    "paired7",
+    "paired8",
+    "paired9",
+    "paired10",
+    "paired12",
+)
 
 
 def validate_n_orbitals(n_orbitals: int) -> int:
@@ -65,9 +78,14 @@ def same_spin_orbital_pairs(n_orbitals: int) -> list[tuple[int, int]]:
 
 
 def opposite_spin_orbital_pairs(n_orbitals: int, topology: str) -> list[tuple[int, int]]:
-    """返回 opposite-spin `Jab/Jba` 允许的同轨道 pair。
+    """返回 opposite-spin `Jab/Jba` 允许的同索引 mode pair。
 
-    `square` 保留全部 `(p,p)`，`hex` 只保留偶数 p，`linear` 只保留 p=0。
+    `square` 保留全部 `(p,p)`，`hex` 只保留偶数 p，`linear` 只保留 p=0，
+    `paired7`/`paired8`/`paired9`/`paired10`/`paired12` 分别保留前
+    7/8/9/10/12 个同索引
+    alpha-beta pair。
+    开壳层中 alpha/beta 轨道可独立旋转，因此这里的同索引不等同于
+    同一空间轨道。
     """
     n = validate_n_orbitals(n_orbitals)
     name = normalize_topology(topology)
@@ -75,11 +93,21 @@ def opposite_spin_orbital_pairs(n_orbitals: int, topology: str) -> list[tuple[in
         return [(p, p) for p in range(n)]
     if name == "hex":
         return [(p, p) for p in range(0, n, 2)]
+    if name == "paired7":
+        return [(p, p) for p in range(min(7, n))]
+    if name == "paired8":
+        return [(p, p) for p in range(min(8, n))]
+    if name == "paired9":
+        return [(p, p) for p in range(min(9, n))]
+    if name == "paired10":
+        return [(p, p) for p in range(min(10, n))]
+    if name == "paired12":
+        return [(p, p) for p in range(min(12, n))]
     return [(0, 0)]
 
 
 def opposite_spin_orbital_indices(n_orbitals: int, topology: str) -> list[int]:
-    """返回 opposite-spin 同轨道连接中的空间轨道编号。"""
+    """返回 opposite-spin 同索引连接中的 mode 编号。"""
     return [p for p, _ in opposite_spin_orbital_pairs(n_orbitals, topology)]
 
 
@@ -92,10 +120,38 @@ def opposite_spin_qubit_pairs(n_orbitals: int, topology: str) -> list[tuple[int,
 def interaction_pairs_spin_balanced(
     n_orbitals: int,
     topology: str,
+    interaction_pairs: InteractionPairs | None = None,
+    *,
+    ordered_ab: bool = False,
 ) -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
-    """返回 spin-balanced UCJ 使用的 `(pairs_aa, pairs_ab)`。"""
+    """返回两组耦合；显式 pair 覆盖 topology，aa/bb 共用第一组。
+
+    同自旋使用严格上三角；闭壳层 ab 使用上三角并隐含转置耦合。
+    开壳层可通过 ``ordered_ab=True`` 使用有方向的 alpha-beta 耦合。
+    """
     n = validate_n_orbitals(n_orbitals)
     name = normalize_topology(topology)
+    if interaction_pairs is not None:
+        if len(interaction_pairs) != 2:
+            raise ValueError("interaction_pairs must contain (pairs_same, pairs_ab)")
+        groups = []
+        for channel, raw_pairs in enumerate(interaction_pairs):
+            pairs = []
+            for raw in raw_pairs:
+                if len(raw) != 2:
+                    raise ValueError("Each interaction pair must contain two orbital indices")
+                try:
+                    p, q = (index(value) for value in raw)
+                except TypeError as exc:
+                    raise ValueError("Interaction pairs must contain integer indices") from exc
+                if not (0 <= p < n and 0 <= q < n):
+                    raise ValueError(f"Interaction pair out of range: {(p, q)}")
+                if channel == 0 and p >= q:
+                    raise ValueError("Same-spin interaction pairs must satisfy p < q")
+                pairs.append((int(p), int(q)))
+            validate_interaction_pairs(pairs, ordered=channel == 1 and ordered_ab)
+            groups.append(pairs)
+        return groups[0], groups[1]
     return same_spin_orbital_pairs(n), opposite_spin_orbital_pairs(n, name)
 
 
@@ -115,9 +171,11 @@ def validate_interaction_pairs(
                 raise ValueError(f"Interaction pairs must be upper triangular; got {(i, j)}.")
 
 
-def allowed_diag_coulomb_indices(n_orbitals: int, topology: str) -> list[tuple[int, int]]:
+def allowed_diag_coulomb_indices(
+    n_orbitals: int, topology: str, interaction_pairs: InteractionPairs | None = None
+) -> list[tuple[int, int]]:
     """返回 compressed DF 优化中允许非零的单个 `Z_mu` 矩阵指标。"""
-    pairs_aa, pairs_ab = interaction_pairs_spin_balanced(n_orbitals, topology)
+    pairs_aa, pairs_ab = interaction_pairs_spin_balanced(n_orbitals, topology, interaction_pairs)
     return sorted(set(pairs_aa + pairs_ab))
 
 
