@@ -147,7 +147,7 @@ def _hea_energy(provider: str, device: str, shots: int) -> float:
         (0.5, [("X", 0), ("X", 1)]),
         (0.3, [("Y", 0), ("Y", 1)]),
     ]
-    hea = HEA(n_qubits=2, layers=1, hamiltonian=hamiltonian, runtime="device")
+    hea = HEA(n_qubits=2, layers=1, hamiltonian=hamiltonian)
     return float(hea.energy(shots=shots, provider=provider, device=device))
 
 
@@ -157,7 +157,7 @@ def _uccsd_energy(provider: str, device: str, shots: int) -> float:
     from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
 
     ucc = UCCSD(molecule.h2)
-    return float(ucc.energy(shots=shots, runtime="device", provider=provider, device=device))
+    return float(ucc.energy(shots=shots, provider=provider, device=device))
 
 
 def _sqd_energy(provider: str, device: str, shots: int) -> float:

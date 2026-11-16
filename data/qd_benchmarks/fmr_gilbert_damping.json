@@ -1,0 +1,50 @@
+{
+  "schema": "tyxonq.qd.benchmarks.fmr.v1",
+  "description": "磁材料 Gilbert 阻尼系数 alpha 的实验锚点语料（FMR/ST-FMR 线宽提取），用于量子动力学 S(q,omega) 计算与实验数据的对照与映射。单位：无量纲。",
+  "unit": "dimensionless",
+  "extraction_method": "FMR linewidth: alpha = (DeltaB - DeltaB_0) / (4*pi*f_MHz) * gamma_rel / ... 常规工业测量；语料值为文献表格原值",
+  "entries": [
+    {
+      "material": "Y3Fe5O12 (YIG, LPE, um-thick)",
+      "alpha": 5e-5,
+      "method": "FMR",
+      "source": "J. Phys. Soc. Jpn. 90, 081005 (2021) Table (Magnonic crystals for data processing), DOI:10.7566/JPSJ.90.081005",
+      "notes": "块体 LPE YIG，磁振子寿命最长的一档"
+    },
+    {
+      "material": "Y3Fe5O12 (YIG, nm-thick film)",
+      "alpha": 2e-4,
+      "method": "FMR",
+      "source": "J. Phys. Soc. Jpn. 90, 081005 (2021) Table (Magnonic crystals for data processing), DOI:10.7566/JPSJ.90.081005",
+      "notes": "薄膜 YIG，界面散射使 alpha 抬升约一个量级"
+    },
+    {
+      "material": "Ni81Fe19 (Permalloy)",
+      "alpha": 7e-3,
+      "method": "FMR",
+      "source": "J. Phys. Soc. Jpn. 90, 081005 (2021) Table (Magnonic crystals for data processing), DOI:10.7566/JPSJ.90.081005",
+      "notes": "金属铁磁体标准参照"
+    },
+    {
+      "material": "Co40Fe40B20 (CoFeB)",
+      "alpha": 4e-3,
+      "method": "FMR",
+      "source": "J. Phys. Soc. Jpn. 90, 081005 (2021) Table (Magnonic crystals for data processing), DOI:10.7566/JPSJ.90.081005",
+      "notes": "STT-MRAM 隧道叠层核心材料；厚度与退火敏感（文献范围 2e-3~8e-3）"
+    },
+    {
+      "material": "Co2Mn0.6Fe0.4Si (Heusler CMFS)",
+      "alpha": 3e-3,
+      "method": "FMR",
+      "source": "J. Phys. Soc. Jpn. 90, 081005 (2021) Table (Magnonic crystals for data processing), DOI:10.7566/JPSJ.90.081005",
+      "notes": "半金属 Heusler；高晶体质量外延可低至 ~1e-3 以下，本值为多晶/薄膜代表值"
+    }
+  ],
+  "related_local_data": [
+    {
+      "file": "publications/arxiv_2505.22773_ultralong_magnons.pdf",
+      "description": "Ultra-long-living magnons in the quantum limit (arXiv:2505.22773)：YIG 球 FMR 线宽 vs 频率数据表（3 个样品，quantum-limit magnon 寿命），已下载落盘"
+    }
+  ],
+  "disclaimer": "alpha 数值为文献表格代表值，用于误差条语料建设（M4 里程碑）；具体样品依赖厚度/退火/界面，工程对照时须以用户提供的实测 FMR 数据为准"
+}

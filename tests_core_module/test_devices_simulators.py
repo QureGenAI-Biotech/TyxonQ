@@ -3,7 +3,10 @@
 # （depolarizing/amplitude_damping/phase_damping/pauli）作用于密度矩阵的 Kraus 应用。
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
+import pytest
 
 from tyxonq.numerics import get_backend
 from tyxonq.libs.quantum_library.kernels.gates import (
@@ -157,3 +160,31 @@ def test_pauli_channel_probabilities_valid():
     K = pauli_channel(0.1, 0.2, 0.3)
     # sqrt weights should be non-negative and combine with identity weight
     assert len(K) == 4
+
+
+def test_zero_shots_hardware_coercion_warns(monkeypatch):
+    from tyxonq.devices import base as device_base
+
+    calls = []
+
+    class Driver:
+        def run(self, device, token, **kwargs):
+            calls.append(kwargs)
+            return object()
+
+    monkeypatch.setattr(device_base, "resolve_driver", lambda *args: Driver())
+    with pytest.warns(UserWarning, match="shots=1"):
+        device_base.run(
+            provider="lqcloud", device="mock", source="qasm", shots=0, token="x"
+        )
+    assert calls[-1]["shots"] == 1
+
+    for provider in ("simulator", "local"):
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            device_base.run(
+                provider=provider, device="statevector", source="qasm",
+                shots=0, token="x",
+            )
+        assert not caught
+        assert calls[-1]["shots"] == 0

@@ -63,7 +63,7 @@ def benchmark_numeric_engines(molecule, name: str, n_iterations: int = 5) -> Dic
     for engine in engines:
         try:
             # 预热
-            _ = uccsd.energy(params, runtime="numeric", numeric_engine=engine)
+            _ = uccsd.energy(params, shots=0, numeric_engine=engine)
             
             # 基准测试：梯度计算
             times = []
@@ -72,7 +72,7 @@ def benchmark_numeric_engines(molecule, name: str, n_iterations: int = 5) -> Dic
             
             for _ in range(n_iterations):
                 t0 = time.time()
-                e, g = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine=engine)
+                e, g = uccsd.energy_and_grad(params, shots=0, numeric_engine=engine)
                 t1 = time.time()
                 
                 times.append((t1 - t0) * 1000)  # 转为毫秒
@@ -169,13 +169,13 @@ def measure_gradient_time(molecule, engine: str, n_trials: int = 3) -> Tuple[int
     params = np.random.rand(n_params) * 0.3
     
     # 预热
-    _ = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine=engine)
+    _ = uccsd.energy_and_grad(params, shots=0, numeric_engine=engine)
     
     # 测量
     times = []
     for _ in range(n_trials):
         t0 = time.time()
-        _, _ = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine=engine)
+        _, _ = uccsd.energy_and_grad(params, shots=0, numeric_engine=engine)
         t1 = time.time()
         times.append((t1 - t0) * 1000)
     

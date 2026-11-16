@@ -131,16 +131,16 @@ def test_uccsd_local_vs_cloud_equal():
                 continue
 
         mol = _mol_data_for_uccsd_hea()
-        u_local = UCCSD(**mol, classical_provider="local", runtime="device",run_fci=True)
+        u_local = UCCSD(**mol, classical_provider="local",run_fci=True)
         e_local = u_local.kernel(shots=0, provider="simulator", device="statevector")
 
-        u_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="cpu", runtime="device",run_fci=True)
+        u_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="cpu",run_fci=True)
         e_cloud = u_cloud.kernel(shots=0, provider="simulator", device="statevector")
 
-        u_gpu_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="gpu", runtime="device",run_fci=True)
+        u_gpu_cloud = UCCSD(**mol, classical_provider="tyxonq", classical_device="gpu",run_fci=True)
         e_gpu_cloud = u_gpu_cloud.kernel(shots=0, provider="simulator", device="statevector")
 
-        u_hea_cloud = HEA(**mol, classical_provider="tyxonq", classical_device="auto", runtime="device",run_fci=True)
+        u_hea_cloud = HEA(**mol, classical_provider="tyxonq", classical_device="auto",run_fci=True)
         e_hea_cloud = u_hea_cloud.kernel(shots=0, provider="simulator", device="statevector")
 
         assert abs(e_local - u_local.e_fci) < 1e-6

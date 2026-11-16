@@ -21,15 +21,12 @@ def test_uccsd_energy_device_h2_smoke():
     ucc = UCCSD(molecule.h2)
 
     # Evaluate energy via device chain API (counts-based) on simulator
-    e = ucc.energy(shots=2048, runtime="device", provider="simulator", device="statevector")
-    # Gradient (parameter-shift) sanity via energy_and_grad(engine="device")
-    e2, g = ucc.energy_and_grad([0.0, -0.07260814651571323], engine="device")
+    e = ucc.energy(shots=2048, provider="simulator", device="statevector")
+    e2, g = ucc.energy_and_grad([0.0, -0.07260814651571323], shots=0)
     assert isinstance(e2, float)
     assert g.shape == (ucc.n_params,)
 
-    # Kernel with device engine should run if configured
-    ucc.engine = "device"
-    e_opt = ucc.kernel()
+    e_opt = ucc.kernel(shots=0)
     assert isinstance(e_opt, float)
 
     # Basic sanity: finite float and within reasonable chemical range

@@ -1,0 +1,51 @@
+{
+  "schema": "tyxonq.qd.benchmarks.oled.v1",
+  "description": "有机半导体/OLED 载流子输运与激子动力学实验锚点语料，用于 Frenkel-Holstein 激子量子动力学计算与实验数据的对照与映射。",
+  "entries": [
+    {
+      "material": "磷光 OLED（Pt(bis-triazolato) 掺杂于 CBP 传输基体）",
+      "quantity": "electron mobility",
+      "value": 3.2e-6,
+      "unit": "cm^2/(V s)",
+      "method": "瞬态电致发光（transient EL，激发脉冲-发光起始延迟）",
+      "source": "ScienceDirect S0038110110003771（Transient electroluminescence determination of carrier mobility and charge trapping effects in heavily doped phosphorescent OLEDs）",
+      "notes": "重掺杂磷光器件；迁移率测定的瞬态 EL 标准方法"
+    },
+    {
+      "material": "OLED 发光层单重态激子",
+      "quantity": "singlet exciton diffusion length",
+      "value": null,
+      "unit": "nm",
+      "method": "电激发限定生成区测定（electrical而非光学激发，激子生成于紧束缚区域）",
+      "source": "Hofmann, Rosenow, Gather, Lüssem, Leo, Phys. Rev. B 85, 245209 (2012), DOI:10.1103/PhysRevB.85.245209",
+      "notes": "方法学锚点：器件内运行的电学单重态扩散长度测定；具体材料 L_D 典型量级 5-15 nm，精确值以原文数据为准（语料后续按材料补充）"
+    }
+  ],
+  "related_local_data": [
+    {
+      "file": "publications/arxiv_2007.13986_dkmc_intermediate_regime.pdf",
+      "description": "dKMC: diffusion kinetic Monte Carlo for intermediate-regime organic semiconductor transport (arXiv:2007.13986)：证明多数有机半导体处于能带-hopping 中间区、传统 kMC 系统性低估迁移率的对照数据，已下载落盘"
+    }
+  ],
+  "pending_datasets": [
+    {
+      "name": "电荷传输材料的电子或空穴迁移率数据集",
+      "provider": "国家基础学科公共科学数据中心（nbsdc.cn）",
+      "cstr": "16666.11.nbsdc.pi0g62ug",
+      "url": "https://www.nbsdc.cn/general/dataLinks/16666.11.nbsdc.pi0g62ug",
+      "author": "朱旭辉（华南理工大学）",
+      "description": "SCLC 拟合测定的 5 种有机电荷传输材料（电子传输/空穴传输/空穴注入）迁移率，~78KB",
+      "status": "requires-login",
+      "note": "页面为动态加载且需注册登录+同意数据使用协议方可下载；获权后放入本目录并补充 entries（2026-11-11 匿名获取失败记录）"
+    },
+    {
+      "name": "电荷传输材料的光吸收系数/载流子寿命/迁移率/能带结构数据集",
+      "provider": "国家基础学科公共科学数据中心（nbsdc.cn）",
+      "author": "中山大学",
+      "description": "光谱仪/电化学工作站产生的传输材料观测值，~300KB",
+      "status": "requires-login",
+      "note": "同上，获权后补充"
+    }
+  ],
+  "disclaimer": "迁移率单位 cm^2/(V s) 为器件工程单位；量子动力学计算内部用原子单位，对照时经换算（1 cm^2/(V s) ≈ 1.666e-3 nm^2/(ps·V) 量级换算由 benchmarks/comparison.py 单一出处实现）"
+}

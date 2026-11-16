@@ -5,9 +5,9 @@
 ``HEA.kernel`` → ``devices.base.run``（真机提交入口）；真机实测留待有资源时。
 
 判据：
-- 能量与 ``runtime="numeric"`` 参考一致（``shots=0`` 回退解析路径）；
+- ``shots=0`` 直接数值计算，与数值参考一致；
 - 嵌入场景（``mm_charges``）能量/``mm_gradient`` 可用；
-- ``fcisolver.instance`` 上的 ``shots/provider/device`` 属性证明选项确实穿透。
+- solver 适配器的 ``device_opts`` 证明选项确实穿透。
 
 全程 ``method="hea"``（目标算法之一，与 uccsd 并列）。
 """
@@ -44,20 +44,18 @@ def test_hea_device_opts_passthrough():
 
     scan = qc_scanner(SPEC, basis="sto-3g", active_space=(4, 4), unit="Bohr",
                       method="hea",
-                      solver_kwargs={"runtime": "device", "provider": "simulator",
+                      solver_kwargs={"provider": "simulator",
                                      "device": "statevector", "shots": 0})
     e_dev, _ = scan(H2O_BOHR)
 
-    # 选项确实到达 HEA 实例（kernel 内持久化为实例属性）
-    inst = scan.fcisolver.instance
-    assert inst is not None
-    assert inst.shots == 0
-    assert inst.provider == "simulator"
-    assert inst.device == "statevector"
+    assert scan.fcisolver.instance is not None
+    assert scan.fcisolver.device_opts == {
+        "provider": "simulator", "device": "statevector", "shots": 0,
+    }
 
     # shots=0 回退解析路径：与 numeric 参考一致
     scan_ref = qc_scanner(SPEC, basis="sto-3g", active_space=(4, 4), unit="Bohr",
-                          method="hea", solver_kwargs={"runtime": "numeric"})
+                          method="hea", solver_kwargs={"shots": 0})
     e_ref, _ = scan_ref(H2O_BOHR)
     assert float(e_dev) == pytest.approx(float(e_ref), rel=1e-8)
 
@@ -70,13 +68,13 @@ def test_hea_embedding_with_device_opts():
     scan = qc_scanner(SPEC, basis="sto-3g", active_space=(4, 4), unit="Bohr",
                       method="hea",
                       mm_charges=(MM_POS_BOHR, MM_CHARGES),
-                      solver_kwargs={"runtime": "device", "provider": "simulator",
+                      solver_kwargs={"provider": "simulator",
                                      "device": "statevector", "shots": 0})
     e_emb, de = scan(H2O_BOHR)
     g_mm = np.asarray(scan.mm_gradient())
 
     scan_bare = qc_scanner(SPEC, basis="sto-3g", active_space=(4, 4), unit="Bohr",
-                           method="hea", solver_kwargs={"runtime": "numeric"})
+                           method="hea", solver_kwargs={"shots": 0})
     e_bare, _ = scan_bare(H2O_BOHR)
 
     assert abs(float(e_emb) - float(e_bare)) > 1e-4, "MM 电荷未进入哈密顿量"

@@ -59,19 +59,17 @@ def run_hea(provider: str, device: str, shots: int) -> float:
         (0.5, [("X", 0), ("X", 1)]),
         (0.3, [("Y", 0), ("Y", 1)]),
     ]
-    hea = HEA(n_qubits=2, layers=1, hamiltonian=hamiltonian, runtime="device")
+    hea = HEA(n_qubits=2, layers=1, hamiltonian=hamiltonian)
     return float(hea.energy(shots=shots, provider=provider, device=device))
 
 
 def run_uccsd(provider: str, device: str, shots: int) -> float:
-    """UCCSD 最小案例：预置 H2 分子（sto-3g），device 档经统一链式 .run() 取计数估能量。"""
+    """UCCSD 最小案例：正 shots 经统一链式 .run() 取计数估能量。"""
     from tyxonq.applications.chem import molecule
     from tyxonq.applications.chem.algorithms.vqe.uccsd import UCCSD
 
     ucc = UCCSD(molecule.h2)
-    return float(
-        ucc.energy(shots=shots, runtime="device", provider=provider, device=device)
-    )
+    return float(ucc.energy(shots=shots, provider=provider, device=device))
 
 
 def run_sqd(provider: str, device: str, shots: int) -> float:

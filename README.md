@@ -459,12 +459,12 @@ result = circuit.with_noise("phase_damping", l=0.05).run(shots=1024)
 
 ### Quantum AIDD Key features
 - **Algorithms**: HEA and UCC family (UCC/UCCSD/k‑UpCCGSD/pUCCD) with consistent energy/gradient/kernel APIs.
-- **Runtimes**: device runtime forwards grouped measurements to postprocessing; numeric runtime provides exact statevector/civector (supports PyTorch autograd).
+- **Execution**: concrete VQE algorithms use `shots=0` for direct statevector/civector numerics and positive `shots` with `provider/device` for grouped circuit measurements; no VQE runtime layer.
 - **Hamiltonians**: unified sparse/MPO/FCI‑function outputs; convenient molecule factories (`applications/chem/molecule.py`).
 - **Measurement and shots**: compiler‑driven grouping and shot scheduling enable deterministic, provider‑neutral execution.
 - **Properties**: RDM1/2 and basic property operators; dynamics numeric path caches MPO/term matrices to avoid rebuilds.
 - **Bridges**: OpenFermion I/O via `libs/hamiltonian_encoding`; tight interop with PySCF for references and integrals.
-- **Module layout** *(refined in v1.3.0)*: `applications/chem/` is organized by domain — `algorithms/vqe/` (UCC family + HEA, with `runtimes/` device/numeric backends and a `wavefunction/` CI/statevector library), `dynamics/` (time-evolution `evolution.py` + `models/{pyrazine,sbm}`), `hamiltonian_builders.py` (HF/integrals → Hamiltonians), and `interfaces/` (MD/QM-MM). Public API unchanged: `from tyxonq.applications.chem import UCCSD, HEA, ...`.
+- **Module layout** *(refined in v1.3.0)*: `applications/chem/` is organized by domain — `algorithms/vqe/` (UCC family + HEA, with shared `execution.py` helpers, module-level UCC orchestration in `ucc_base.py`, and `wavefunction/ucc_numeric.py`), `dynamics/` (time-evolution `evolution.py` + `models/{pyrazine,sbm}`), `hamiltonian_builders.py` (HF/integrals → Hamiltonians), and `interfaces/` (MD/QM-MM). Public API unchanged: `from tyxonq.applications.chem import UCCSD, HEA, ...`.
 - **MD / QM-MM ecosystem** (v1.2.0): `applications/chem/interfaces/` plugs TyxonQ into molecular-dynamics engines as the QM force provider — `qc_scanner` (energy/gradient facade with cluster **and periodic Ewald** electrostatic embedding, per-step environment update, MM back-reaction forces), `TyxonQCalculator` (ASE, region partitioning), `TyxonQDriver` (i-PI), OpenMM native QM/MM (`create_tyxonq_system` / `create_qmmm_ee_system`), and `TyxonQMdiEngine` (MDI dedicated line). All gradients are reused from PySCF; QM backends selectable via `method="uccsd" | "hea" | ...`, with HEA execution options (`shots`/`provider`/`device`) forwarded to simulators **or real quantum hardware**. 👉 **See [`examples/qmmm/`](examples/qmmm/) for 10 runnable tutorials (E1–E10; E10 targets simulators/real quantum hardware).**
 
 - **AIDD (AI Drug Design) field Feature**

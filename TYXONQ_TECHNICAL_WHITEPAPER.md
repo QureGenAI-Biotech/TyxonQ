@@ -363,7 +363,7 @@ src/tyxonq/
 │
 ├── applications/                   # Domain specialization
 │   └── chem/                       # **Quantum chemistry applications**
-│       ├── algorithms/vqe/         # HEA/UCC series + runtimes + wavefunction (CI) library
+│       ├── algorithms/vqe/         # HEA/UCC series + stateless execution + wavefunction
 │       ├── dynamics/               # Time-evolution runtime + model Hamiltonians
 │       └── hamiltonian_builders.py # HF/integrals → Hamiltonians
 │
@@ -479,32 +479,24 @@ def schedule_shots(circuit: Circuit, total_shots: int = 4096) -> Dict[str, Any]:
 - **Visibility**: Measurement plans can be inspected and optimized before execution
 - **Cross-device consistency**: Simulators and real hardware use the same measurement metadata
 
-### 3.3 Dual-Path Execution Model
+### 3.3 Explicit Numeric and Circuit Execution
 
-TyxonQ's dual-path execution model is one of its most important architectural innovations, providing semantic consistency while separately optimizing device and numeric paths.
+VQE algorithms select execution per call without a runtime layer:
 
 ```mermaid
 sequenceDiagram
     participant User as User
-    participant Algorithm as Algorithm Layer
-    participant DeviceRT as Device Runtime
-    participant NumericRT as Numeric Runtime
+    participant Algorithm as Concrete Algorithm
     participant Device as Device Layer
-    participant NumLib as Numeric Library
+    participant NumLib as Wavefunction/Libs
     participant Post as Postprocessing
-    
-    User->>Algorithm: Call energy(runtime="device")
-    Algorithm->>DeviceRT: Route to device runtime
-    DeviceRT->>Device: Build circuit + measurement grouping
-    Device->>Post: Return counts statistics
-    Post->>DeviceRT: Compute expectations
-    DeviceRT->>Algorithm: Return energy
-    
-    User->>Algorithm: Call energy(runtime="numeric")
-    Algorithm->>NumericRT: Route to numeric runtime
-    NumericRT->>NumLib: Direct statevector computation
-    NumLib->>NumericRT: Return exact value
-    NumericRT->>Algorithm: Return energy
+    User->>Algorithm: energy(shots=0)
+    Algorithm->>NumLib: Direct numerical evaluation
+    NumLib->>Algorithm: Energy or analytic gradient
+    User->>Algorithm: energy(shots>0, provider, device)
+    Algorithm->>Device: Grouped measurement circuits
+    Device->>Post: Counts
+    Post->>Algorithm: Expectation energy
 ```
 
 #### 3.3.1 Device Path
@@ -600,44 +592,17 @@ params_cupy = vqe_optimization(H, ansatz, "cupynumeric")  # GPU acceleration
 - **Gradient Integration**: Native support for modern ML frameworks
 - **Research Flexibility**: Researchers can focus on algorithms without worrying about backend details ## 4. Quantum AIDD Application Stack
 
-### 4.1 Dual-Path Drug Discovery Runtime Architecture
+### 4.1 Explicit Drug Discovery Execution Architecture
 
-TyxonQ's quantum chemistry stack exemplifies the dual-path execution model with domain-specific optimizations for AI-driven drug discovery:
+Concrete quantum chemistry algorithms share the same execution controls:
 
 ```mermaid
 flowchart TB
-    subgraph "Algorithm Layer"
-        A1[HEA]
-        A2[UCC/UCCSD]
-        A3[k-UpCCGSD]
-        A4[pUCCD]
-    end
-    
-    subgraph "Runtime Layer"
-        R1[Device Runtime]
-        R2[Numeric Runtime]
-    end
-    
-    subgraph "Execution Backends"
-        E1[Real Hardware<br/>+ Postprocessing]
-        E2[Simulators<br/>+ Noise Models]
-        E3[Exact Statevector<br/>+ Autograd]
-        E4[CI Vector Space<br/>+ PySCF Bridge]
-    end
-    
-    A1 --> R1
-    A1 --> R2
-    A2 --> R1
-    A2 --> R2
-    A3 --> R1
-    A3 --> R2
-    A4 --> R1
-    A4 --> R2
-    
-    R1 --> E1
-    R1 --> E2
-    R2 --> E3
-    R2 --> E4
+    A[HEA / UCCSD / k-UpCCGSD / pUCCD] --> S{shots}
+    S -->|0| N[Wavefunction/Libs<br/>Statevector or CI numerics]
+    S -->|positive| C[Grouped circuits<br/>Circuit.run]
+    C --> E1[Real Hardware + Postprocessing]
+    C --> E2[Simulators + Noise Models]
 ```
 
 ### 4.2 Unified Drug Discovery Algorithm API
@@ -649,9 +614,9 @@ All quantum chemistry algorithms for drug discovery expose the same interface wh
 from tyxonq.applications.chem import HEA, UCCSD, pUCCD
 
 # Same API for all algorithms - optimized for drug discovery workflows
-hea = HEA(n_qubits=4, layers=2, hamiltonian=H_molecule, runtime="device")
-uccsd = UCCSD(n_qubits=4, hamiltonian=H_molecule, runtime="numeric")
-puccd = pUCCD(n_qubits=4, hamiltonian=H_molecule, runtime="device")
+hea = HEA(n_qubits=4, layers=2, hamiltonian=H_molecule)
+uccsd = UCCSD(molecule=mol)
+puccd = pUCCD(molecule=mol)
 
 # Consistent energy/gradient interface for molecular property prediction
 energy_hea = hea.energy(shots=4096, provider="ibm", device="ibm_quebec")
@@ -727,8 +692,8 @@ def validate_against_pyscf(molecule, method="UCCSD"):
     E_fci, civec_fci = fci_solver.kernel()
     
     # 2. TyxonQ calculation (numeric path for exact comparison)
-    tyxonq_alg = get_algorithm(method, runtime="numeric")
-    E_tyxonq = tyxonq_alg.energy()
+    tyxonq_alg = get_algorithm(method)
+    E_tyxonq = tyxonq_alg.energy(shots=0)
     
     # 3. CI vector comparison
     civec_tyxonq = tyxonq_alg.get_civector()

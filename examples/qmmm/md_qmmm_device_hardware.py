@@ -1,16 +1,15 @@
 """E10：QM/MM 上真机——UCCSD 与 HEA 经 qc_scanner 直达量子硬件（含模拟器档）。
 
-E1 展示了 ``qc_scanner`` 的本地数值路径（``runtime="numeric"``）。本教程
+E1 展示了 ``qc_scanner`` 的本地数值路径（``shots=0``）。本教程
 展示同一条 QM/MM 链路如何**把哈密顿量的测量任务提交到量子设备**：
 先用 ``provider="simulator"`` 走与真机完全相同的提交链路验证机制，
 再给出切换真机（TyxonQ/QCOS/Quafu）的一行改动模板。
 
 三档运行模式::
 
-    runtime="numeric"                          本地精确求值（确定性，无噪声）
-    runtime="device", provider="simulator"     设备提交链路 + 本地模拟器
-                                               （与真机同款代码路径，本教程主线）
-    runtime="device", provider="tyxonq"        真机（需 ``tq.set_token``，第 4 节）
+    shots=0                                      本地数值解析（确定性，无噪声）
+    shots>0, provider="simulator"               分组测量 + 本地模拟器
+    shots>0, provider="tyxonq"                  真机（需 ``tq.set_token``，第 4 节）
 
 关键参数经 ``solver_kwargs`` 穿透：``shots``（0 = 解析回退档，
 >0 = 采样档）、``provider``、``device``，一路到达 ``devices.base.run``。
@@ -90,8 +89,7 @@ def _cap_sampling_opt(instance):
 # ===========================================================================
 # 第 1 节：UCCSD 上设备——解析档与采样档
 # ===========================================================================
-# shots=0 是解析回退档：不采样，从态矢量概率直接聚合期望值，
-# 应与 runtime="numeric" 在机器精度内一致（回归测试以 1e-8 把关）。
+# shots=0 直接调用 UCC 数值引擎，不经过 Circuit.run；正 shots 才进入采样链路。
 print("=" * 72)
 print("第 1 节：UCCSD 设备链路（method='uccsd'）")
 print("=" * 72)
@@ -238,8 +236,7 @@ print("""
 
     scan_real = qc_scanner(SPEC, basis=BASIS, active_space=ACTIVE_SPACE,
                            method="hea",          # 真机首选 HEA
-                           solver_kwargs={"runtime": "device",
-                                          "provider": "tyxonq",   # 或 qcos / quafu
+                           solver_kwargs={"provider": "tyxonq",   # 或 qcos / quafu
                                           "device": "homebrew_s2",
                                           "shots": 2048})
     e, de = scan_real(H2O_BOHR)

@@ -699,7 +699,7 @@ def run_uccsd_backend_comparison():
             t0 = time.time()
             e, g = uccsd.energy_and_grad(
                 params,
-                runtime='numeric',
+                shots=0,
                 numeric_engine='statevector'
             )
             t1 = time.time()
@@ -740,7 +740,7 @@ def run_uccsd_backend_comparison():
             t0 = time.time()
             e, g = uccsd.energy_and_grad(
                 params,
-                runtime='numeric',
+                shots=0,
                 numeric_engine='statevector'
             )
             t1 = time.time()

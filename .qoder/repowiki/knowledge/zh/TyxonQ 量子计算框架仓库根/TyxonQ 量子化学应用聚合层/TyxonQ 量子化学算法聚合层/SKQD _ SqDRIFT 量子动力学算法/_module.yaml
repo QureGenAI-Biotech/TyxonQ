@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/skqd
+title: SKQD / SqDRIFT 量子动力学算法
+scope:
+    - src/tyxonq/applications/chem/algorithms/skqd/
+source_files: []
+depends_on: []
+related_to: []

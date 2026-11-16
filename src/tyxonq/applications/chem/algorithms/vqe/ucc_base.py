@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Tuple, List, Sequence, Union
+from math import pi
 
 import numpy as np
 from openfermion import FermionOperator, QubitOperator
@@ -14,11 +15,20 @@ from pyscf.cc.addons import spatial2spin
 from pyscf import fci  # type: ignore
 from pyscf import lib as pyscf_lib
 import os, base64, tempfile
-from scipy.optimize import minimize
-import logging
-
-from .runtimes.ucc_device_runtime import UCCDeviceRuntime
-from .runtimes.ucc_numeric_runtime import UCCNumericRuntime, apply_excitation as _apply_excitation_numeric
+from .execution import (
+    evaluate_grouped_circuits,
+    parameter_shift_gradient,
+    prepare_call,
+    reject_runtime_option,
+    shifted_parameter_vectors,
+)
+from .wavefunction.ucc_numeric import (
+    apply_excitation as _apply_excitation_numeric,
+    numeric_energy,
+    numeric_energy_and_grad,
+    ucc_civector as _ucc_civector,
+    ucc_statevector as _ucc_statevector,
+)
 from tyxonq.libs.circuits_library.analysis import get_circuit_summary
 from tyxonq.libs.circuits_library.ucc import build_ucc_circuit
 from tyxonq.applications.chem.hamiltonian_builders import (
@@ -42,19 +52,15 @@ from tyxonq.libs.hamiltonian_encoding.pauli_io import get_fermion_phase,rdm_mo2a
 from itertools import product
 from tyxonq.numerics import NumericBackend as nb
 
-logger = logging.getLogger(__name__)
-
 
 
 
 
 
 class UCC:
-    """Minimal UCC 算法入口（device 默认）。
+    """UCC 派生算法的共享化学模型、ansatz、波函数与 RDM 基类。
 
-    - 支持将参数化 ansatz（ex_ops/param_ids/init_state）传递给设备 runtime
-    - 对外提供 energy/energy_and_grad（device 路径）
-    - 后续将扩展 numeric_statevector/numeric_mps
+    用户执行参数由 UCCSD、ROUCCSD、KUPCCGSD、PUCCD 等具体算法入口处理。
     """
 
     def __init__(
@@ -65,7 +71,6 @@ class UCC:
         active_orbital_indices=None,
         mo_coeff=None,
         mode="fermion",
-        runtime='device',
         numeric_engine=None,
         run_fci=False,
         atom = None,
@@ -114,9 +119,6 @@ class UCC:
                 f"Unknown input type {type(mol)}. If you're performing open shell calculations, "
                 "please use ROHF instead."
             )
-
-        if runtime is None:
-            runtime='device'
 
         if active_space is None:
             active_space = (self.mol.nelectron, int(self.mol.nao))
@@ -342,12 +344,6 @@ class UCC:
         self.opt_res = None
         # for manually set
         self._params = None
-        if runtime is None:
-            self.runtime = 'device'
-        else:
-            self.runtime = runtime
-
-        
 
         self.decompose_multicontrol = bool(decompose_multicontrol)
         self.trotter = bool(trotter)
@@ -411,209 +407,10 @@ class UCC:
     def apply_excitation(self, state: np.ndarray, ex_op: Tuple, *, numeric_engine: str | None = None) -> np.ndarray:
         self._sanity_check()
         eng = numeric_engine or getattr(self, "numeric_engine", None) or "statevector"
-        return _apply_excitation_numeric(state, self.n_qubits, self.n_elec_s, ex_op, self.mode, numeric_engine=eng)
-
-    def energy(self, params: np.ndarray | None = None, **opts) -> float:
-        runtime = str(opts.pop("runtime", self.runtime))
-        numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
-        
-        self._sanity_check()
-        params = self._check_params_argument(params)
-
-        if params is self.params and self.opt_res is not None:
-            return self.opt_res.e
-        # Always fetch the correct Hamiltonian for the requested numeric_engine
-        self.hamiltonian, self.e_core, self.numeric_engine = self._get_hamiltonian_and_core(numeric_engine)
-
-        if runtime == "numeric" or int(opts.get('shots',2048)) == 0 :
-            logger.info('go to analytic numeric engine path when shots == 0')
-            #shots = 0 go to analytic numeric path 
-            # Ensure engine-specific Hamiltonian type is used (sparse for statevector, callable for CI)
-            rt = UCCNumericRuntime(
-                self.n_qubits,
-                self.n_elec_s,
-                self.h_qubit_op,
-                ex_ops=self.ex_ops,
-                param_ids=self.param_ids,
-                init_state=self.init_state,
-                mode=self.mode,
-                numeric_engine=numeric_engine,
-                hamiltonian=self.hamiltonian
-                
-            )
-            base = np.asarray(params if params is not None else (self.init_guess if getattr(self, "init_guess", None) is not None else np.zeros(self.n_params)), dtype=np.float64)
-            return float(rt.energy(base)+self.e_core)
-
-        elif runtime == "device":
-            rt = UCCDeviceRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            mode=self.mode,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            decompose_multicontrol=self.decompose_multicontrol,
-            trotter=self.trotter
+        return _apply_excitation_numeric(
+            state, ex_op, self.n_qubits, self.n_elec_s,
+            mode=self.mode, numeric_engine=eng,
         )
-            e = rt.energy(params, **opts)
-            return float(e)
-        raise ValueError(f"unknown runtime: {runtime}")
-
-    def energy_and_grad(self, params: np.ndarray | None = None, **opts):
-        runtime = opts.get('runtime',self.runtime)
-        numeric_engine = opts.pop("numeric_engine", None) or getattr(self, "numeric_engine", None)
-        
-        self._sanity_check()
-        params = self._check_params_argument(params)
-
-        if params is self.params and self.opt_res is not None:
-            return self.opt_res.e
-        # Always fetch the correct Hamiltonian for the requested numeric_engine
-        self.hamiltonian, self.e_core, self.numeric_engine = self._get_hamiltonian_and_core(numeric_engine)
-
-
-        if runtime == "numeric" or int(opts.get('shots',2048)) == 0 :
-            logger.info('go to analytic numeric engine path when shots == 0')
-            # Always fetch the correct Hamiltonian for the requested numeric_engine
-            #shots = 0 go to analytic numeric path 
-            rt = UCCNumericRuntime(
-                self.n_qubits,
-                self.n_elec_s,
-                self.h_qubit_op,
-                ex_ops=self.ex_ops,
-                param_ids=self.param_ids,
-                init_state=self.init_state,
-                mode=self.mode,
-                numeric_engine=numeric_engine,
-                hamiltonian=self.hamiltonian
-                
-            )
-            e0, g = rt.energy_and_grad(params)
-            return float(e0+self.e_core), g
-        elif runtime == "device":
-            rt = UCCDeviceRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            mode=self.mode,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            decompose_multicontrol=self.decompose_multicontrol,
-            trotter=self.trotter
-        )
-            e, g = rt.energy_and_grad(params, **opts)
-            # return float(e+self.e_core), g
-            return float(e), g
-        
-        raise ValueError(f"unknown runtime: {runtime}")
-
-    @property
-    def e_ucc(self) -> float:
-        """Convenience: return current UCC energy (with core) using stored params.
-
-        Tests expect `e_ucc` to be available for both closed- and open-shell.
-        """
-        # Use analytic simulator path by default for reproducibility
-        return float(self.energy(getattr(self, "_params", None), shots=0, provider="simulator", device="statevector"))
-
-    def kernel(self, **opts) -> float:
-        """Optimize parameters via L-BFGS-B.
-
-        Any options in **opts will be forwarded to energy_and_grad (e.g.,
-        shots/provider/device for device runtime, numeric_engine for numeric runtime).
-        """
-        # if self.n_params == 0:
-        #     return float(self.e_core)
-
-        if self.init_guess is None:
-            self.init_guess = np.zeros(self.n_params)
-
-        # runtime options (shots/provider/device/numeric_engine/etc.) from caller
-        # 默认 shots 统一为 1024（避免 0 导致无法投递到真机）；调用方可覆盖
-        runtime_opts = dict(opts)
-        if "shots" not in runtime_opts:
-            if str(runtime_opts.get("runtime", self.runtime)) == "device":
-                if  str(runtime_opts.get("provider", 'simulator')) in ["simulator",'local']:
-                    # 默认使用解析路径，避免采样噪声影响优化与 RDM
-                    shots = 0
-                else:
-                    # 真机默认使用2048shots
-                    shots = 2048
-            else:
-                shots = 0
-            runtime_opts["shots"] = shots
-        else:
-            shots = runtime_opts['shots']
-        self._opt_runtime_opts = dict(runtime_opts)
-
-        func = self.get_opt_function()
-
-        # def _obj(x: np.ndarray):
-        #     e, g = self.energy_and_grad(x, **runtime_opts)
-        #     return e, np.asarray(g, dtype=np.float64)
-
-        # Merge caller options with a sensible default and allow tests to pass n_tries (ignored here but tolerated)
-        # Increase maxiter for analytic/numeric paths to hit tighter tolerances
-        if self.scipy_minimize_options is None:
-            default_maxiter = 200 if (shots == 0 or str(opts.get("runtime", self.runtime)) == "numeric") else 100
-            default_opts = {"ftol": 1e-9, "gtol": 1e-6, "maxiter": default_maxiter}
-            minimize_options = dict(default_opts)
-        else:
-            minimize_options = self.scipy_minimize_options
-            
-        # res = minimize(lambda v: _obj(v), x0=x0, jac=True, method="L-BFGS-B", options=minimize_options)
-        if self.grad == "free":
-            res = minimize(lambda x: func(x), x0=self.init_guess, jac=False, method="COBYLA", options=minimize_options)
-        else:
-            res = minimize(lambda x: func(x)[0], x0=self.init_guess, jac=lambda x: func(x)[1], method="L-BFGS-B", options=minimize_options)
-        
-        if not res.success:
-            logger.warning("Optimization failed. See `.opt_res` for details.")
-        # Store optimizer result for downstream algorithms (KUPCCGSD expects .opt_res)
-        res['init_guess'] = self.init_guess
-        res["e"] = float(res.fun)
-        
-
-        self.opt_res = res
-        self._params = np.asarray(getattr(res, "x", self.init_guess), dtype=np.float64)
-        return res.e
-
-    # ---------- Optimization helper (parity with HEA) ----------
-    def get_opt_function(self, *, with_time: bool = False):
-        import time as _time
-
-        runtime_opts = getattr(self, "_opt_runtime_opts", {})
-
-        def f_only(x: np.ndarray) -> float:
-            return float(self.energy(x, **runtime_opts))
-
-        # 同点缓存：L-BFGS-B 以分离 callable 消费 f 与 jac，同一 x 会被求值两次。
-        # 缓存后：① 采样档成本减半（每次 energy_and_grad 要提交
-        # (1+4·n_params)×n_groups 个电路，与 shots 无关）；② 修复一致性——
-        # 此前 f(x) 与 jac(x) 来自两批独立采样，线搜索的 Wolfe 条件拿到
-        # 不自洽的函数值/梯度。
-        _cache = {"x": None, "eg": None}
-
-        def f_with_grad(x: np.ndarray) -> Tuple[float, np.ndarray]:
-            xa = np.asarray(x, dtype=np.float64)
-            if _cache["x"] is not None and np.array_equal(xa, _cache["x"]):
-                return _cache["eg"]
-            e, g = self.energy_and_grad(x, **runtime_opts)
-            eg = (float(e), np.asarray(g, dtype=np.float64))
-            _cache["x"] = xa.copy()
-            _cache["eg"] = eg
-            return eg
-
-        t1 = _time.time()
-        func = f_only if self.grad == "free" else f_with_grad
-        # 轻量“预热”，便于可能的 lazy 初始化
-        # _ = func(self.init_guess.copy())
-        t2 = _time.time()
-        if with_time:
-            return func, (t2 - t1)
-        return func
 
     # ---- Convenience builders from integrals / molecule (fermion/qubit modes) ----
     @classmethod
@@ -937,30 +734,18 @@ class UCC:
     # ---- CI helpers ----
     def civector(self, params: Sequence[float] | None = None, *, numeric_engine: str | None = None) -> np.ndarray:
         p = self._check_params_argument(params, strict=False)
-        rt = UCCNumericRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            mode=self.mode,
-            numeric_engine=numeric_engine,
+        return _ucc_civector(
+            p, self.n_qubits, self.n_elec_s, self.ex_ops, self.param_ids,
+            mode=self.mode, init_state=self.init_state,
+            numeric_engine=numeric_engine or self.numeric_engine,
         )
-        return rt._civector(p)
 
     def statevector(self, params: Sequence[float] | None = None) -> np.ndarray:
         p = self._check_params_argument(params, strict=False)
-        rt = UCCNumericRuntime(
-            self.n_qubits,
-            self.n_elec_s,
-            self.h_qubit_op,
-            ex_ops=self.ex_ops,
-            param_ids=self.param_ids,
-            init_state=self.init_state,
-            mode=self.mode,
+        return _ucc_statevector(
+            p, self.n_qubits, self.n_elec_s, self.ex_ops, self.param_ids,
+            mode=self.mode, init_state=self.init_state,
         )
-        return rt._state(p)
 
     def get_ci_strings(self, strs2addr: bool = False):
         return get_ci_strings(self.n_qubits, self.n_elec_s, self.mode, strs2addr=strs2addr)
@@ -968,76 +753,6 @@ class UCC:
     def get_addr(self, bitstring: str) -> int:
         ci_strings, strs2addr = get_ci_strings(self.n_qubits, self.n_elec_s, self.mode, strs2addr=True)
         return int(_get_addr_ci(int(bitstring, 2), self.n_qubits, self.n_elec_s, strs2addr, self.mode))
-
-    # ---- PySCF solver adapter (minimal, aligned with HEA style) ----
-    @classmethod
-    def as_pyscf_solver(cls, config_function = None, runtime: str = "numeric",
-                        device_opts: dict | None = None, **kwargs):  # pragma: no cover
-        """Create a PySCF-compatible FCI solver using UCC/ROUCCSD ansatz.
-        
-        Args:
-            config_function: Optional function to configure UCC instance before kernel
-            runtime: Runtime to use ("numeric" for analytic, "device" for simulation)
-                    Default is "numeric" for maximum accuracy in PySCF workflows
-            device_opts: Optional run-time options merged into every ``instance.kernel``
-                    call (e.g. ``{"shots": ..., "provider": ..., "device": ...}``,
-                    same shape as ``examples/cloud_uccsd_hea_demo.py``). Points the
-                    device path at a simulator or real hardware (``devices.base.run``
-                    entry); ``runtime="device"`` is required for non-numeric backends.
-            **kwargs: Other arguments passed to UCC constructor
-        """
-        class _FCISolver:
-            def __init__(self):
-                self.instance: UCC | None = None  # type: ignore[name-defined]
-                self.config_function = config_function
-                self.instance_kwargs = dict(kwargs)
-                for arg in ["run_ccsd", "run_fci"]:
-                    # keep MP2 for initial guess
-                    self.instance_kwargs[arg] = False
-
-            def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0, **kwargs):
-                """Compute the ground state energy for given integrals.
-                
-                This is called by PySCF's CASCI/CASSCF. We optimize the UCC ansatz
-                and return the final energy.
-                
-                Args:
-                    h1, h2: One- and two-body integrals
-                    norb: Number of orbitals
-                    nelec: Number of electrons (int or tuple)
-                    ci0: Initial CI guess (not used)
-                    ecore: Core energy
-                    **kwargs: Additional options (shots, runtime, etc.)
-                
-                Returns:
-                    (energy, params): Final energy and optimized parameters
-                """
-                self.instance = cls.from_integral(h1, h2, nelec, **self.instance_kwargs)
-                if self.config_function is not None:
-                    self.config_function(self.instance)
-                # PySCF 不传运行选项，故取自构造时的 device_opts（shots/provider/
-                # device 等，指向模拟器或真机）；PySCF 若真传了 shots 则优先。
-                opts = dict(device_opts or {})
-                if "shots" in kwargs:
-                    opts["shots"] = kwargs["shots"]
-                opts.setdefault("runtime", runtime)
-                e_opt = self.instance.kernel(**opts)
-                return e_opt + ecore, self.instance.params
-
-            def make_rdm1(self,params, norb, nelec):
-                civector = self.instance.civector(params)
-                return self.instance.make_rdm1(statevector=civector)
-
-            def make_rdm12(self,params,norb, nelec):
-                civector = self.instance.civector(params)
-                rdm1 = self.instance.make_rdm1(statevector=civector)
-                rdm2 = self.instance.make_rdm2(statevector=civector)
-                return rdm1, rdm2
-
-            def spin_square(self, ci, norb, nelec):
-                return 0.0, 1.0
-
-        return _FCISolver()
 
     # ---- Printing helpers ----
     def print_ansatz(self):
@@ -1398,3 +1113,130 @@ def _compute_k_outer(diagk, inert_a, inert_b, outer_a, outer_b):
       + diagk[inert_b][:, outer_b].sum() + diagk[outer_b][:, inert_b].sum() + diagk[outer_b][:, outer_b].sum()
     # fmt: on
     return v
+
+
+def _ucc_circuit(model, params):
+    from .wavefunction.statevector_ops import get_init_circuit
+
+    if model.ex_ops is None or int(model.n_params) == 0:
+        return get_init_circuit(model.n_qubits, model.n_elec_s, model.mode)
+    return build_ucc_circuit(
+        params, model.n_qubits, model.n_elec_s, tuple(model.ex_ops),
+        tuple(model.param_ids) if model.param_ids is not None else None,
+        mode=model.mode, init_state=None,
+        decompose_multicontrol=model.decompose_multicontrol, trotter=model.trotter,
+    )
+
+
+def _ucc_device_data(model, params):
+    from tyxonq.libs.hamiltonian_encoding.hamiltonian_grouping import group_qubit_operator_terms
+
+    if model.init_state is not None:
+        raise ValueError("UCC circuit measurement currently supports the default HF initial state only")
+    base = np.asarray(params if params is not None else np.zeros(model.n_params), dtype=np.float64)
+    identity, groups = group_qubit_operator_terms(model.h_qubit_op, model.n_qubits)
+    return base, identity, groups
+
+
+def ucc_energy(model, params=None, *, shots=0, provider="simulator", device="statevector",
+               postprocessing=None, noise=None, numeric_engine=None, **options):
+    """Evaluate a concrete UCC model through numeric or circuit execution."""
+    shots, provider, device, pp, noise, explicit_engine, run_opts = prepare_call(
+        shots, provider, device, postprocessing, noise, numeric_engine, options
+    )
+    model._sanity_check()
+    params = model._check_params_argument(params)
+    if shots == 0:
+        engine = explicit_engine or model.numeric_engine
+        hamiltonian, e_core, engine = model._get_hamiltonian_and_core(engine)
+        model.hamiltonian, model.e_core, model.numeric_engine = hamiltonian, e_core, engine
+        return numeric_energy(
+            params, hamiltonian, model.n_qubits, model.n_elec_s, model.ex_ops,
+            model.param_ids, mode=model.mode, init_state=model.init_state,
+            numeric_engine=engine, e_core=e_core,
+        )
+    base, identity, groups = _ucc_device_data(model, params)
+    return evaluate_grouped_circuits(
+        [lambda: _ucc_circuit(model, base)], groups, identity_const=identity,
+        n_qubits=model.n_qubits, shots=shots, provider=provider, device=device,
+        postprocessing=pp, noise=noise, device_options=run_opts,
+    )[0]
+
+
+def ucc_energy_and_grad(model, params=None, *, shots=0, provider="simulator",
+                        device="statevector", postprocessing=None, noise=None,
+                        numeric_engine=None, gradient_method="fd", **options):
+    """Evaluate UCC energy and its numeric or parameter-shift gradient."""
+    shots, provider, device, pp, noise, explicit_engine, run_opts = prepare_call(
+        shots, provider, device, postprocessing, noise, numeric_engine, options
+    )
+    model._sanity_check()
+    params = model._check_params_argument(params)
+    if shots == 0:
+        engine = explicit_engine or model.numeric_engine
+        hamiltonian, e_core, engine = model._get_hamiltonian_and_core(engine)
+        model.hamiltonian, model.e_core, model.numeric_engine = hamiltonian, e_core, engine
+        return numeric_energy_and_grad(
+            params, hamiltonian, model.n_qubits, model.n_elec_s, model.ex_ops,
+            model.param_ids, mode=model.mode, init_state=model.init_state,
+            numeric_engine=engine, e_core=e_core,
+        )
+    base, identity, groups = _ucc_device_data(model, params)
+    if str(gradient_method).lower() == "fd":
+        shifts = [pi / 8, pi / 4]
+        weights = [2.0, 1.0 - float(np.sqrt(2.0))]
+    else:
+        step = pi / 90.0
+        shifts = [step]
+        weights = [1.0 / (2.0 * step)]
+    vectors = shifted_parameter_vectors(base, shifts)
+    builders = [(lambda p=p: _ucc_circuit(model, p)) for p in vectors]
+    energies = evaluate_grouped_circuits(
+        builders, groups, identity_const=identity, n_qubits=model.n_qubits,
+        shots=shots, provider=provider, device=device, postprocessing=pp,
+        noise=noise, device_options=run_opts,
+    )
+    return parameter_shift_gradient(
+        energies, len(base), shifts=shifts, weights=weights
+    )
+
+
+def make_ucc_pyscf_solver(algorithm_cls, *, config_function=None, device_opts=None, **kwargs):
+    """Construct a PySCF adapter without storing execution options on ``UCC``."""
+    execution_opts = dict(device_opts or {})
+    reject_runtime_option(execution_opts)
+    reject_runtime_option(kwargs)
+    instance_kwargs = dict(kwargs)
+    for arg in ("run_ccsd", "run_fci"):
+        instance_kwargs[arg] = False
+
+    class _FCISolver:
+        def __init__(self):
+            self.instance = None
+            self.config_function = config_function
+            self.device_opts = dict(execution_opts)
+
+        def kernel(self, h1, h2, norb, nelec, ci0=None, ecore=0, **call_kwargs):
+            self.instance = algorithm_cls.from_integral(h1, h2, nelec, **instance_kwargs)
+            if self.config_function is not None:
+                self.config_function(self.instance)
+            opts = dict(execution_opts)
+            if "shots" in call_kwargs:
+                opts["shots"] = call_kwargs["shots"]
+            energy = self.instance.kernel(**opts)
+            return energy + ecore, self.instance.params
+
+        def make_rdm1(self, params, norb, nelec):
+            civector = self.instance.civector(params)
+            return self.instance.make_rdm1(statevector=civector)
+
+        def make_rdm12(self, params, norb, nelec):
+            civector = self.instance.civector(params)
+            rdm1 = self.instance.make_rdm1(statevector=civector)
+            rdm2 = self.instance.make_rdm2(statevector=civector)
+            return rdm1, rdm2
+
+        def spin_square(self, ci, norb, nelec):
+            return 0.0, 1.0
+
+    return _FCISolver()

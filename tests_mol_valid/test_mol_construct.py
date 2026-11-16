@@ -184,8 +184,8 @@ def test_hea_active_space_numeric():
     hf.verbose = 0
     hf.kernel()
 
-    hea = HEA.from_molecule(m, active_space=(2, 2), n_layers=1, mapping="parity", runtime="device")
-    e = hea.kernel(runtime="device")
+    hea = HEA.from_molecule(m, active_space=(2, 2), n_layers=1, mapping="parity")
+    e = hea.kernel(shots=0)
     assert np.isfinite(e)
     # Loose bound: optimized ansatz should not be above HF by more than 1e-2 Ha for H2
     assert e <= hf.e_tot + 1e-2
@@ -209,8 +209,8 @@ def test_hea_active_orbital_indices():
     int1e, e_core = casci.get_h1eff(mo)
     int2e = ao2mo.restore("s1", casci.get_h2eff(mo), ncas)
 
-    hea = HEA.from_integral(int1e, int2e, nelecas, e_core, n_layers=1, mapping="jordan-wigner", runtime="device")
-    e = hea.kernel(runtime="device")
+    hea = HEA.from_integral(int1e, int2e, nelecas, e_core, n_layers=1, mapping="jordan-wigner")
+    e = hea.kernel(shots=0)
     assert np.isfinite(e)
     # Loose bound vs HF
     assert e <= hf.e_tot + 1e-2
@@ -229,11 +229,11 @@ def test_pyscf_solver(method):
         hf = m.ROHF()
 
     hf.kernel()
-    e_ref = ROUCCSD(hf, active_space=(nelecas, ncas),runtime='numeric').kernel()
+    e_ref = ROUCCSD(hf, active_space=(nelecas, ncas)).kernel(shots=0)
     # e_ref =ROUCCSD(hf, active_space=(nelecas, ncas),run_fci=True)
     # e_ref.kernel(shots=0)
     mc = CASCI(hf, ncas, nelecas)
-    mc.fcisolver = method.as_pyscf_solver(runtime='numeric')
+    mc.fcisolver = method.as_pyscf_solver()
     mc.kernel()
     np.testing.assert_allclose(mc.e_tot, e_ref, atol=1e-4)
 
@@ -247,9 +247,9 @@ def test_pyscf_solver_small_h2(method):
 
     # Reference energy from the native algorithm with numeric runtime (deterministic)
     if method is HEA:
-        ref = HEA.from_molecule(m, active_space=(2, 2), n_layers=1, runtime="device").kernel(runtime="device")
+        ref = HEA.from_molecule(m, active_space=(2, 2), n_layers=1).kernel(shots=0)
     elif method is UCCSD:
-        ref = UCCSD(m, runtime="device").kernel(runtime="device")
+        ref = UCCSD(m).kernel(shots=0)
     else:  # ROUCCSD
         ref = ROUCCSD(hf, active_space=(2, 2)).kernel()
 
@@ -257,11 +257,11 @@ def test_pyscf_solver_small_h2(method):
     mc = CASCI(hf, 2, 2)
     # Prefer numeric runtime inside the adapter to avoid sampling noise and speed up
     if method is HEA:
-        mc.fcisolver = HEA.as_pyscf_solver(runtime="device")
+        mc.fcisolver = HEA.as_pyscf_solver()
     elif method is UCCSD:
-        mc.fcisolver = UCCSD.as_pyscf_solver(runtime="device")
+        mc.fcisolver = UCCSD.as_pyscf_solver()
     else:
-        mc.fcisolver = ROUCCSD.as_pyscf_solver(runtime="device")
+        mc.fcisolver = ROUCCSD.as_pyscf_solver()
     mc.kernel()
 
     np.testing.assert_allclose(mc.e_tot, ref, atol=1e-4)

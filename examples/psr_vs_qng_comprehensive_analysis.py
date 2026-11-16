@@ -43,24 +43,19 @@ class PSROptimizer:
     
     def optimize(
         self,
-        runtime: str = "numeric",
+        numeric: bool = True,
         shots: int = 1024,
         max_iterations: int = 100,
     ) -> Dict[str, Any]:
-        """
-        PSR 梯度优化。
-        """
-        
+        """PSR 梯度优化；numeric=True 使用 shots=0，否则使用正 shots。"""
         params_init = self.algorithm.init_guess.copy()
         self.n_evaluations = 0
         self.history = []
-        
+
         def objective_and_grad(x):
-            """计算能量和 PSR 梯度"""
-            if runtime == "numeric":
-                energy, grad = self.algorithm.energy_and_grad(x, runtime="numeric")
-            else:
-                energy, grad = self.algorithm.energy_and_grad(x, runtime="device", shots=shots)
+            energy, grad = self.algorithm.energy_and_grad(
+                x, shots=0 if numeric else shots
+            )
             
             energy = float(energy)
             grad = np.asarray(grad, dtype=np.float64)
@@ -75,11 +70,11 @@ class PSROptimizer:
                 "energy": energy,
                 "grad_norm": grad_norm,
                 "circuit_evals": total_evals,
-                "shots": total_evals * shots if runtime == "device" else 0,
+                "shots": total_evals * shots if not numeric else 0,
             })
             
             if self.verbose:
-                shots_str = f"{total_evals * shots}" if runtime == "device" else "N/A"
+                shots_str = f"{total_evals * shots}" if not numeric else "N/A"
                 print(f"{self.n_evaluations:5d} {energy:16.10f} {grad_norm:14.8f} {total_evals:8d} {shots_str:>12}")
             
             return energy, grad
@@ -107,7 +102,7 @@ class PSROptimizer:
         final_energy = result.fun
         n_iters = result.nit
         total_circuit_evals = self.n_evaluations * (1 + 2 * len(params_init))
-        total_shots = total_circuit_evals * shots if runtime == "device" else 0
+        total_shots = total_circuit_evals * shots if not numeric else 0
         
         self.algorithm.opt_res = {
             "x": np.asarray(result.x, dtype=np.float64),
@@ -169,7 +164,6 @@ class DeviceQFIEstimator:
         
         _, grad_current = self.algorithm.energy_and_grad(
             params,
-            runtime="device",
             shots=shots
         )
         grad_current = np.asarray(grad_current, dtype=np.float64)
@@ -191,7 +185,6 @@ class DeviceQFIEstimator:
                 try:
                     e_shifted, _ = self.algorithm.energy_and_grad(
                         params_shifted,
-                        runtime="device",
                         shots=shots
                     )
                     energies.append(float(e_shifted))
@@ -294,7 +287,6 @@ class QNGOptimizer:
             """计算能量和 QNG 梯度"""
             energy, grad_psr = self.algorithm.energy_and_grad(
                 x,
-                runtime="device",
                 shots=shots
             )
             
@@ -417,7 +409,6 @@ def main():
         uccsd_ref.n_elec,
         uccsd_ref.e_core,
         n_layers=2,
-        runtime="numeric"
     )
     hea_numeric.numeric_engine = "statevector"
     hea_numeric.grad = "param-shift"
@@ -426,7 +417,7 @@ def main():
     
     print(f"\n{'Iter':>5} {'Energy':>16} {'|∇E|':>14} {'Evals':>8} {'Shots':>12}")
     print(f"{'-'*100}")
-    result1 = optimizer1.optimize(runtime="numeric", shots=0, max_iterations=100)
+    result1 = optimizer1.optimize(numeric=True, shots=0, max_iterations=100)
     results["HEA_PSR_Numeric"] = result1
     
     error1 = abs(result1["final_energy"] - fci_energy)
@@ -446,7 +437,6 @@ def main():
         uccsd_ref.n_elec,
         uccsd_ref.e_core,
         n_layers=2,
-        runtime="device"
     )
     hea_device.grad = "param-shift"
     
@@ -454,7 +444,7 @@ def main():
     
     print(f"\n{'Iter':>5} {'Energy':>16} {'|∇E|':>14} {'Evals':>8} {'Shots':>12}")
     print(f"{'-'*100}")
-    result2 = optimizer2.optimize(runtime="device", shots=0, max_iterations=100)
+    result2 = optimizer2.optimize(numeric=False, shots=1024, max_iterations=100)
     results["HEA_PSR_Device"] = result2
     
     error2 = abs(result2["final_energy"] - fci_energy)
@@ -474,7 +464,6 @@ def main():
         uccsd_ref.n_elec,
         uccsd_ref.e_core,
         n_layers=2,
-        runtime="device"
     )
     hea_qng.grad = "param-shift"
     
@@ -494,13 +483,13 @@ def main():
     print("4. UCCSD + PSR (Numeric Runtime)")
     print("█"*100)
     
-    uccsd_numeric = UCCSD(h2, runtime="numeric")
+    uccsd_numeric = UCCSD(h2)
     
     optimizer4 = PSROptimizer(uccsd_numeric, verbose=True)
     
     print(f"\n{'Iter':>5} {'Energy':>16} {'|∇E|':>14} {'Evals':>8} {'Shots':>12}")
     print(f"{'-'*100}")
-    result4 = optimizer4.optimize(runtime="numeric", shots=0, max_iterations=100)
+    result4 = optimizer4.optimize(numeric=True, shots=0, max_iterations=100)
     results["UCCSD_PSR_Numeric"] = result4
     
     error4 = abs(result4["final_energy"] - fci_energy)
@@ -514,14 +503,14 @@ def main():
     print("5. UCCSD + PSR (Device Runtime, Shots=0)")
     print("█"*100)
     
-    uccsd_device = UCCSD(h2, runtime="device")
+    uccsd_device = UCCSD(h2)
     uccsd_device.grad = "param-shift"
     
     optimizer5 = PSROptimizer(uccsd_device, verbose=True)
     
     print(f"\n{'Iter':>5} {'Energy':>16} {'|∇E|':>14} {'Evals':>8} {'Shots':>12}")
     print(f"{'-'*100}")
-    result5 = optimizer5.optimize(runtime="device", shots=0, max_iterations=100)
+    result5 = optimizer5.optimize(numeric=False, shots=1024, max_iterations=100)
     results["UCCSD_PSR_Device"] = result5
     
     error5 = abs(result5["final_energy"] - fci_energy)
@@ -535,7 +524,7 @@ def main():
     print("6. UCCSD + QNG (Device Runtime with QFI)")
     print("█"*100)
     
-    uccsd_qng = UCCSD(h2, runtime="device")
+    uccsd_qng = UCCSD(h2)
     
     print(f"\n[QFI Precomputation]")
     optimizer6 = QNGOptimizer(uccsd_qng, verbose=True)

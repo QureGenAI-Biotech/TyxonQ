@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from tyxonq.applications.chem import PUCCD, UCC
+from tyxonq.applications.chem import PUCCD, UCCSD
 from tyxonq.applications.chem.molecule import h4, h5p
 from pyscf import fci
 from tyxonq.applications.chem.hamiltonian_builders import random_integral
@@ -38,14 +38,14 @@ from test_mol_construct import get_random_integral_and_fci
 def test_puccd(hamiltonian, numeric_engine):
 
     if hamiltonian == "H4":
-        puccd = PUCCD(h4, numeric_engine=numeric_engine,runtime='numeric')
-        ucc = UCC(h4, numeric_engine=numeric_engine,runtime='numeric')
+        puccd = PUCCD(h4, numeric_engine=numeric_engine)
+        ucc = UCCSD(h4, numeric_engine=numeric_engine)
     else:
         nao = 4
         n_elec = 4
         int1e, int2e, _ = get_random_integral_and_fci(nao)
-        puccd = PUCCD.from_integral(int1e, int2e, n_elec, numeric_engine=numeric_engine,runime='numeric')
-        ucc = UCC.from_integral(int1e, int2e, n_elec,numeric_engine=numeric_engine,runime='numeric')
+        puccd = PUCCD.from_integral(int1e, int2e, n_elec, numeric_engine=numeric_engine)
+        ucc = UCCSD.from_integral(int1e, int2e, n_elec, numeric_engine=numeric_engine)
 
     # note the order
     # b^\dagger_i = a^\dagger_(nao + i) a^\dagger_(i)
@@ -56,6 +56,7 @@ def test_puccd(hamiltonian, numeric_engine):
         (7, 3, 1, 5),
         (6, 2, 1, 5),
     )
+    ucc.param_ids = list(range(len(ucc.ex_ops)))
 
     e1 = puccd.kernel()
     ucc.params = puccd.params

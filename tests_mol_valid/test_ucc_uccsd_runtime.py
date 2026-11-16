@@ -9,7 +9,7 @@ import pytest
 from pyscf import M
 
 from tyxonq.applications.chem import UCCSD
-from tyxonq.applications.chem.algorithms.vqe.runtimes.ucc_numeric_runtime import apply_excitation
+from tyxonq.applications.chem.algorithms.vqe.wavefunction.ucc_numeric import apply_excitation
 from tyxonq.applications.chem.algorithms.vqe.wavefunction.ci_state_mapping import get_init_civector
 #wrong version
 # from tyxonq.libs.circuits_library.qubit_state_preparation import get_init_circuit
@@ -34,7 +34,7 @@ def ref_eg():
     uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
-    e, g = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine='pyscf')
+    e, g = uccsd.energy_and_grad(params, numeric_engine='pyscf')
     return float(e), np.asarray(g, dtype=np.float64)
 
 @pytest.mark.parametrize("numeric_engine", ['statevector',"civector", "civector-large", "pyscf"])
@@ -48,7 +48,7 @@ def test_gradient(ref_eg, numeric_engine):
     uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
-    e_num, g_num = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine=numeric_engine)
+    e_num, g_num = uccsd.energy_and_grad(params, numeric_engine=numeric_engine)
     np.testing.assert_allclose(e_num, e_ref, atol=1e-5)
     np.testing.assert_allclose(g_num, g_ref, atol=1e-5)
 
@@ -62,11 +62,11 @@ def ref_state():
     
     # numeric_engine = "statevector"
     # state = uccsd.civector(params, numeric_engine=numeric_engine)
-    # state = apply_excitation(state, n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7), mode="fermion", numeric_engine=numeric_engine)
+    # state = apply_excitation(state, n_qubits=8, n_elec_s=4, f_idx=(4, 0, 3, 7), mode="fermion", numeric_engine=numeric_engine)
     # 使用 pyscf 基准 H2
     numeric_engine_ref = "pyscf"
     state = uccsd.civector(params, numeric_engine=numeric_engine_ref)
-    state = apply_excitation(state,  n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7), mode="fermion", numeric_engine=numeric_engine_ref)
+    state = apply_excitation(state,  n_qubits=8, n_elec_s=4, f_idx=(4, 0, 3, 7), mode="fermion", numeric_engine=numeric_engine_ref)
 
     # state = np.asarray([ 0.2208986 ,  0.09394656, -0.        , -0.        ,  0.        ,
     #     0.        ,  0.09394656,  0.27237773, -0.        , -0.        ,
@@ -88,7 +88,7 @@ def test_excitation(ref_state, numeric_engine):
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
         
     state = uccsd.civector(params, numeric_engine=numeric_engine)
-    state = apply_excitation(state, n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7),mode="fermion", numeric_engine=numeric_engine)
+    state = apply_excitation(state, n_qubits=8, n_elec_s=4, f_idx=(4, 0, 3, 7),mode="fermion", numeric_engine=numeric_engine)
     np.testing.assert_allclose(state, ref_state, atol=1e-6)
 
 def excitation_no_ref(numeric_engine):
@@ -98,7 +98,7 @@ def excitation_no_ref(numeric_engine):
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
         
     state = uccsd.civector(params, numeric_engine=numeric_engine)
-    state = apply_excitation(state,n_qubits=8, n_elec_s=4, ex_op=(4, 0, 3, 7),mode="fermion", numeric_engine=numeric_engine)
+    state = apply_excitation(state,n_qubits=8, n_elec_s=4, f_idx=(4, 0, 3, 7),mode="fermion", numeric_engine=numeric_engine)
 
 
 
@@ -107,8 +107,8 @@ def test_device_matches_numeric_energy_single():
     uccsd = UCCSD(h2)
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
-    e_num = uccsd.energy(params, runtime="numeric", numeric_engine="statevector")
-    e_dev = uccsd.energy(params, runtime="device", provider="simulator", device="statevector", shots=8096)
+    e_num = uccsd.energy(params, numeric_engine="statevector")
+    e_dev = uccsd.energy(params, provider="simulator", device="statevector", shots=8096)
     np.testing.assert_allclose(e_dev, e_num, atol=1e-2)
 
 def test_device_matches_numeric_gradient_single():
@@ -117,8 +117,8 @@ def test_device_matches_numeric_gradient_single():
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     # numeric 基准选 statevector（与 device/statevector 完全一致）
-    e_num, g_num = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine="statevector")
-    e_dev, g_dev = uccsd.energy_and_grad(params, runtime="device", provider="simulator", device="statevector", shots=8096)
+    e_num, g_num = uccsd.energy_and_grad(params, numeric_engine="statevector")
+    e_dev, g_dev = uccsd.energy_and_grad(params, provider="simulator", device="statevector", shots=8096)
     np.testing.assert_allclose(e_dev, e_num, atol=1e-2)
     #取消梯度断言，解析方式的梯度与 counts设备路径的梯度是不一样的，这个本身就是可接受的。
 
@@ -167,7 +167,7 @@ def test_gradient_opt(backend_str, numeric_engine, init_state, mode):
             tq.set_backend(backend_str)
         except Exception:
             pytest.xfail(f"Backend {backend_str} not available")
-        uccsd = UCCSD(h4, runtime = 'numeric',mode=mode, numeric_engine=numeric_engine,run_fci=True)
+        uccsd = UCCSD(h4, mode=mode, numeric_engine=numeric_engine,run_fci=True)
         # test initial condition. Has no effect
         if init_state == "civector" and hasattr(uccsd, "civector_size"):
             uccsd.init_state = get_init_civector(uccsd.civector_size)
@@ -210,7 +210,7 @@ def test_open_shell(numeric_engine):
 def test_device_kernel_matches_fci():
     u = UCCSD(h2,run_fci=True)
     # 正统调用：直接 kernel（设备路径，statevector 精确模拟，shots=0）
-    e = u.kernel(runtime="device", provider="simulator", shots=21342)
+    e = u.kernel(provider="simulator", shots=21342)
     np.testing.assert_allclose(e, u.e_fci, atol=1e-2)
 
 
@@ -218,8 +218,8 @@ def test_device_energy_matches_numeric_statevector():
     u = UCCSD(h2)
     # 使用零初值参数，比较设备路径与数值路径在相同参数下的一致性
     params = np.asarray(u.init_guess if hasattr(u, "init_guess") else np.zeros(0), dtype=np.float64)
-    e_num = u.energy(params, runtime="numeric", numeric_engine="statevector")
-    e_dev = u.energy(params, runtime="device", shots= 23204)
+    e_num = u.energy(params, numeric_engine="statevector")
+    e_dev = u.energy(params, shots= 23204)
     
     print('='*30)
     print('e_dev = ',e_dev)
@@ -238,10 +238,10 @@ def test_device_counts_converges_to_pyscf():
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     # pyscf 作为金标准（电子能）
-    e_ref = uccsd.energy(params, runtime="numeric", numeric_engine="pyscf")
+    e_ref = uccsd.energy(params, numeric_engine="pyscf")
     shots_list = [128, 512, 2048, 8192]
     for s in shots_list:
-        e_dev = uccsd.energy(params, runtime="device", provider="simulator", device="statevector", shots=s)
+        e_dev = uccsd.energy(params, provider="simulator", device="statevector", shots=s)
         print(e_dev)
         # 理论抽样误差 ~ O(1/sqrt(shots))，给出宽松但递减的阈值
         tol = 2.0 / np.sqrt(s) + 0.02
@@ -259,11 +259,11 @@ def test_device_counts_gradient_converges_to_pyscf():
     np.random.seed(2077)
     params = np.random.rand(len(uccsd.init_guess)) - 0.5
     # pyscf 作为金标准（电子能与梯度）
-    e_ref, g_ref = uccsd.energy_and_grad(params, runtime="numeric", numeric_engine="pyscf")
+    e_ref, g_ref = uccsd.energy_and_grad(params, numeric_engine="pyscf")
     shots_list = [512, 2048, 8192,10640]
     errs = []
     for s in shots_list:
-        e_dev, g_dev = uccsd.energy_and_grad(params, runtime="device", provider="simulator", device="statevector", shots=s)
+        e_dev, g_dev = uccsd.energy_and_grad(params, provider="simulator", device="statevector", shots=s)
         print('e_dev = ',e_dev)
         print('g_dev = ',g_dev)
         print('='*15)
@@ -281,7 +281,7 @@ def test_ucc_rdm_gold_standard_h2():
     # 对齐 TCC 金标准：H2 的 UCCSD 在 MO 基的 1RDM/2RDM
     # 使用解析优化通道（shots=0）确保无采样偏差
     uccsd = UCCSD(h2)
-    e = uccsd.kernel(runtime="device", provider="simulator", device="statevector", shots=0)
+    e = uccsd.kernel(provider="simulator", device="statevector", shots=0)
     # 生成 RDM（使用优化后参数）
     rdm1 = uccsd.make_rdm1(basis="MO")
     rdm2 = uccsd.make_rdm2(basis="MO")
@@ -309,7 +309,7 @@ def test_ucc_rdm_gold_standard_h2():
     np.testing.assert_allclose(rdm1, rdm1_gold, atol=1e-6)
     np.testing.assert_allclose(rdm2, rdm2_gold, atol=1e-6)
 
-    e2 = uccsd.kernel(runtime="numeric")
+    e2 = uccsd.kernel(shots=0)
     # 生成 RDM（使用优化后参数）
     rdm1 = uccsd.make_rdm1(basis="MO")
     rdm2 = uccsd.make_rdm2(basis="MO")

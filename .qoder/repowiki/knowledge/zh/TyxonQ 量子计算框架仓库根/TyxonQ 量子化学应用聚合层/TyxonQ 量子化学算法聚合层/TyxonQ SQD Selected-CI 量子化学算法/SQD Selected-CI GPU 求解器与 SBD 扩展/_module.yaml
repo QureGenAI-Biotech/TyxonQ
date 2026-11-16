@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/sqd/gpu
+title: SQD Selected-CI GPU 求解器与 SBD 扩展
+scope:
+    - src/tyxonq/applications/chem/algorithms/sqd/gpu/
+source_files: []
+depends_on: []
+related_to: []

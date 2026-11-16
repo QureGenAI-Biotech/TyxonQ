@@ -6,7 +6,13 @@ import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf.scf import RHF
 
-from .ucc_base import UCC as _UCCBase
+from .execution import optimize_vqe
+from .ucc_base import (
+    UCC as _UCCBase,
+    make_ucc_pyscf_solver,
+    ucc_energy,
+    ucc_energy_and_grad,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +32,6 @@ class KUPCCGSD(_UCCBase):
         mo_coeff: np.ndarray = None,
         k: int = 3,
         n_tries: int = 1,
-        runtime: str = 'device',
         run_fci: bool = False,
         numeric_engine: str | None = None,
         classical_provider: str = 'local',
@@ -68,8 +73,7 @@ class KUPCCGSD(_UCCBase):
             The number of different initial points used for VQE calculation.
             For large circuits usually a lot of runs are required for good accuracy.
             Defaults to 1.
-        runtime: str, optional
-            The runtime to run the calculation (e.g., 'device').
+        Execution is selected per call by shots=0 (numeric) or shots>0 (circuit).
         run_hf: bool, optional
             Whether run HF for molecule orbitals. Defaults to ``True``.
         run_mp2: bool, optional
@@ -87,28 +91,17 @@ class KUPCCGSD(_UCCBase):
         """
 
 
-
+        # KUPCCGSD 的初值策略固定为 CCSD；吞掉通用入口中的 init_method 避免重复传递。
+        kwargs.pop("init_method", None)
         super().__init__(
-            mol=mol,
-            active_space=active_space,
-            active_orbital_indices=active_orbital_indices,
-            init_method=None,
-            mo_coeff=mo_coeff,
-            runtime=runtime,
-            numeric_engine=numeric_engine,
-            run_fci=run_fci,
-            atom=atom,
-            basis=basis,
-            unit=unit,
-            charge=charge,
-            spin=spin,
-            classical_provider=classical_provider,
-            classical_device=classical_device,
+            mol=mol, active_space=active_space,
+            active_orbital_indices=active_orbital_indices, init_method=None,
+            mo_coeff=mo_coeff, numeric_engine=numeric_engine, run_fci=run_fci,
+            atom=atom, basis=basis, unit=unit, charge=charge, spin=spin,
+            classical_provider=classical_provider, classical_device=classical_device,
             **kwargs
         )
-                # the number of layers
         self.k = k
-        # the number of different initialization
         self.n_tries = n_tries
         self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
         self.init_guess_list = [self.init_guess]
@@ -118,8 +111,35 @@ class KUPCCGSD(_UCCBase):
         self.opt_res_list = []
         self.staging_time = self.opt_time = None
 
+    def energy(self, params=None, *, shots=0, provider="simulator", device="statevector",
+               postprocessing=None, noise=None, numeric_engine=None, **device_opts):
+        return ucc_energy(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise,
+            numeric_engine=numeric_engine, **device_opts
+        )
+
+    def energy_and_grad(self, params=None, *, shots=0, provider="simulator",
+                        device="statevector", postprocessing=None, noise=None,
+                        numeric_engine=None, gradient_method="fd", **device_opts):
+        return ucc_energy_and_grad(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise, numeric_engine=numeric_engine,
+            gradient_method=gradient_method, **device_opts
+        )
+
+    @property
+    def e_ucc(self) -> float:
+        return float(self.energy(self._params, shots=0))
+
+    @classmethod
+    def as_pyscf_solver(cls, config_function=None, device_opts=None, **kwargs):
+        return make_ucc_pyscf_solver(
+            cls, config_function=config_function, device_opts=device_opts, **kwargs
+        )
+
     def kernel(self, **opts):
-        _, stating_time = self.get_opt_function(with_time=True)
+        stating_time = 0.0
 
         time1 = time()
         for i in range(self.n_tries):
@@ -129,9 +149,7 @@ class KUPCCGSD(_UCCBase):
                     logger.info("Inconsistent `self.init_guess` and `self.init_guess_list`.  Use `self.init_guess`.")
             else:
                 self.init_guess = self.init_guess_list[i]
-            # Forward runtime options; rely on UCCSD.kernel implementation
-            e_try = super().kernel(**opts)
-            # Prefer optimizer result stored by base class; fallback to simple namespace
+            e_try = optimize_vqe(self, opts, ucc=True)
             r = self.opt_res
             self.opt_res_list.append(r)
             logger.info(f"k-UpCCGSD try {i} energy {float(r.fun)}")
