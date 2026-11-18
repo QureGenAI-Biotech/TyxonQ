@@ -9,7 +9,7 @@
 For Chinese Introduction, see: [中文README](README_cn.md).
 For Japanese Introduction, see: [日本語README](README_jp.md).
 
-TyxonQ (太玄量子) is a production-ready, next-generation quantum programming framework featuring stable IR, pluggable compiler, unified device abstraction (simulators and hardware), single numerics backend interface (NumPy/PyTorch/CuPyNumeric), and device-runtime friendly postprocessing. Version 1.0.0 introduces revolutionary pulse-level control, China Mobile QCOS (Quantum Computing OS) integration, and enhanced quantum chemistry performance.
+TyxonQ (太玄量子) is a production-ready, next-generation quantum programming framework featuring stable IR, pluggable compiler, unified device abstraction (simulators and hardware), single numerics backend interface (NumPy/PyTorch/CuPy), and device-runtime friendly postprocessing. Version 1.0.0 introduces revolutionary pulse-level control, China Mobile QCOS (Quantum Computing OS) integration, and enhanced quantum chemistry performance.
 
 ### Core goals
 - **System‑architect‑friendly, hardware‑realistic programming model**: stable IR + chain pipeline mirroring real device execution; clear contracts for compiler, devices, and postprocessing; closest‑to‑hardware code path.
@@ -201,7 +201,7 @@ This document provides:
   - **Clean layering**: `exporters/` = pure zero-dependency QASM2/QASM3 text; `interop/` = IR ↔ Qiskit `QuantumCircuit` and tensor-network MPO; `platforms/` = hardware dialects. Qiskit is now an interop target, not a pseudo hardware platform.
   - **Fix**: `output="qasm2"` now emits a real OpenQASM 2.0 string instead of silently falling back to IR (benefits `homebrew_s2`/`quafu` submission).
 - **Devices**: statevector/density‑matrix/MPS simulators and hardware drivers (e.g., `tyxonq:homebrew_s2`).
-- **Numerics**: one ArrayBackend for NumPy/PyTorch/CuPyNumeric powering simulators and research kernels.
+- **Numerics**: one ArrayBackend for NumPy/PyTorch/CuPy powering simulators and research kernels.
 - **Libraries**: `libs/circuits_library` (templates: VQE/QAOA/trotter/state‑prep), `libs/quantum_library` (numeric kernels), `libs/hamiltonian_encoding` (OpenFermion I/O, encodings), `libs/optimizer` (interop).
 - **Real Quantum Hardware Ready**: TyxonQ supports **real quantum machine execution** through our quantum cloud services powered by **QureGenAI**. Currently featuring the **Homebrew_S2** quantum processor, enabling you to run your quantum algorithms on actual quantum hardware, not just simulators.
 
@@ -531,6 +531,22 @@ Explore the full collection in [`examples/`](examples/) directory.
 - **QureGenAI**: Quantum hardware infrastructure and services
 - **TyxonQ Core Team**: Framework development and optimization
 - **Community Contributors**: Open source development and testing
+
+## SQD GPU acceleration
+
+GPU-accelerated SQD is available through a single entry point:
+
+```python
+from tyxonq.applications.chem.algorithms.sqd.gpu import solve_sci_gpu
+result, report = solve_sci_gpu(ci_strings, h1e, eri, norb, nelec, backend="auto")
+```
+
+Backend selection follows strict hardware priority: CUDA uses native SBD,
+otherwise Metal uses the native MLX/Metal SBD solver, otherwise PyTorch runs on
+CPU. Native dependency or numerical failures are reported explicitly and never
+silently fall back. CuPy and MLX provide the corresponding automatic general
+array backends. See `docs/SQD_GPU_BACKENDS.md` and
+`docs/NUMERICS_ACCELERATION_AUDIT.md`.
 
 ## License
 TyxonQ is open source, released under the Apache License, Version 2.0.

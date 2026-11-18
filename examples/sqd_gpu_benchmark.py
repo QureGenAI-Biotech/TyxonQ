@@ -1,43 +1,20 @@
-"""固定组态空间的 Torch、原生 SBD 和混合 GPU 求解基准。
+"""固定组态空间的 CUDA SBD、MLX/Metal SBD 与 PyTorch CPU 基准。
 
-父进程准备相同积分、组态与初猜，每组测量一次冷启动和默认五次稳态；
-不执行量子采样或 PCM 外循环。--help 和 --summarize 不要求 CUDA/MPI。
+自动后端按 CUDA SBD、Metal SBD、PyTorch CPU 探测；显式不可用硬件警告后回退 CPU，
+原生内核或数值错误不回退。每组测量一次冷启动和默认五次稳态；报告记录实际后端、精度、原生调用、
+setup/求解/RDM/验证耗时及输入与源码哈希。CUDA 运行前检查空闲 GPU；Metal
+和 CPU 不调用 nvidia-smi。Metal 使用分级混合精度容差，RDM 当前在 CPU。
 
-SBD 使用前需显式构建；查看构建参数：
-    python -m tyxonq.applications.chem.algorithms.sqd.gpu.sbd_ext.build --help
-从仓库根目录运行（实际求解前选择空闲 GPU）：
-    export PYTHONPATH=src
-    python examples/sqd_gpu_benchmark.py --case lih --backend torch native hybrid --devices 0 --validation full_cpu --output /tmp/sqd_single.json
-    python examples/sqd_gpu_benchmark.py --case n2 --backend hybrid --devices 0 1 --batches 4 --validation full_cpu --output /tmp/sqd_batches.json
-    python examples/sqd_gpu_benchmark.py --case n2 --backend native --devices 0 1 --mpi-grid 2 1 --mpiexec /path/to/matching/mpiexec --output /tmp/sqd_mpi.json
+示例：
+    python examples/sqd_gpu_benchmark.py --case lih --backend auto pytorch --output /tmp/sqd.json
+    python examples/sqd_gpu_benchmark.py --case n2 --backend metal --repeats 5 --output /tmp/sqd_metal.json
+    python examples/sqd_gpu_benchmark.py --case n2 --backend native --devices 0 1 --mpi-grid 2 1 --output /tmp/sqd_mpi.json
     python examples/sqd_gpu_benchmark.py --case all --prepare-only --output /tmp/sqd_inputs.json
-    python examples/sqd_gpu_benchmark.py --summarize /tmp/sqd_single.json /tmp/sqd_batches.json --output /tmp/sqd_summary.json
 
-支持实数 restricted 积分及固定 α/β 电子数；返回物理电子能，不含核排斥、
-冻结核等外部常数或自旋惩罚贡献。Torch/Hybrid 使用本方 Davidson 并支持
---spin-sq；Native 使用 SBD Davidson，不支持自旋惩罚。--spin-backend cuda_fused
-可显式选择融合 S² 内核。Torch 默认 CPU RDM，另两条路径使用 SBD RDM。
-
-full_cpu 每次独立复核算符、残差、RDM 和能量；gpu 只做所选 GPU 残差及
-密度/自旋一致性检查，不表示执行了当次独立 CPU 复核。性能比较必须使用
-相同输入、初猜、精度及校验模式。--reference 控制额外的固定空间最低根对照，
-不替代求解器自身验收。默认初猜是排序后的第一个行列式。
-
---devices 指定物理卡，入口检查占用并等待，超时拒绝启动，不终止已有进程。
-独立批次为一进程一卡；MPI 仅用于 Native 单任务，双/四卡网格为 2×1/2×2，
-本入口自行启动 mpiexec，不要外套 launcher。启动器、mpi4py 与扩展必须使用
-同一套 MPI 库；当前 MPI 经 CPU 中转，单任务加速比与批吞吐分别比较。
-
---npz 接受 h1e、eri、nelec、ci_strs_a、ci_strs_b，norb 可由 h1e 推得；
---strings 可替换标签，--initial-state 提供按标签投影的显式初猜。
-NPZ 默认不额外计算 CPU 最低根。--prepare-only 会执行输入准备和所选参考，
-不建立 CUDA 上下文。--profile 只剖析 Torch Hc/S²/Davidson，跳过 RDM 与
-CPU 验收，其墙钟不能作为正式性能数字。
-
-JSON 记录配置、源码/输入哈希、软件版本、冷启动、稳态统计和资源采样。
-正式汇总要求至少五次稳态且数值全部通过；setup 合并建表和传输，通信未单独计时。
-PyTorch allocator 峰值不含 SBD C++ 分配，离散采样峰值是实际峰值的下界。
-结果仅代表固定空间求解，不能直接外推至完整 SQD、PCM 或大体系科学结果。"""
+full_cpu 每次独立复核算符、残差、RDM 和能量。性能比较必须使用相同输入、
+初猜和校验模式，但 CUDA FP64 与 Metal 混合精度分别记录，不预设加速倍数。
+--profile 仅剖析旧 Torch 内核，不能作为正式端到端性能数字。结果只代表
+固定空间求解，不能外推到完整 SQD、PCM 或大体系科学结论。"""
 
 from __future__ import annotations
 
@@ -63,6 +40,11 @@ CASES = {
     "n2": ("N 0 0 0; N 0 0 1.1", "sto-3g", 0, 0, None),
     "n2_plus": ("N 0 0 0; N 0 0 1.1", "sto-3g", 1, 1, (70, 61)),
     "water": ("O 0 0 0; H 0 -0.757 0.587; H 0 0.757 0.587", "6-31g", 0, 0, (80, 71)),
+    "water_pol": ("O 0 0 0; H 0 -0.757 0.587; H 0 0.757 0.587", "6-31g(d,p)", 0, 0, None),
+    "ammonia_pol": ("N 0 0 0; H 0.94 0 0.33; H -0.47 0.814 0.33; H -0.47 -0.814 0.33",
+                    "6-31g(d,p)", 0, 0, None),
+    "methane_pol": ("C 0 0 0; H 0.63 0.63 0.63; H -0.63 -0.63 0.63; "
+                    "H -0.63 0.63 -0.63; H 0.63 -0.63 -0.63", "6-31g(d,p)", 0, 0, None),
 }
 
 
@@ -208,17 +190,19 @@ def _metadata():
     except (OSError, subprocess.CalledProcessError):
         commit = None
     versions = {}
-    for name in ("numpy", "torch", "pyscf", "mpi4py"):
+    for name in ("numpy", "torch", "pyscf", "mpi4py", "mlx"):
         try:
             versions[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
             versions[name] = None
-    sources = root / "src/tyxonq/applications/chem/algorithms/sqd/gpu"
+    sources = [root / "src/tyxonq/applications/chem/algorithms/sqd/gpu",
+               root / "src/tyxonq/numerics/sbd"]
     return {
         "python": sys.version, "packages": versions, "git_commit": commit,
         "benchmark_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "source_sha256": {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
-                          for p in sources.rglob("*") if p.suffix in (".py", ".cpp", ".cuh", ".patch")},
+                          for source in sources for p in source.rglob("*")
+                          if p.suffix in (".py", ".cpp", ".cuh", ".patch", ".metal")},
     }
 
 
@@ -249,17 +233,36 @@ def prepare_problem(name, args):
         mf = (scf.RHF(mol) if spin == 0 else scf.ROHF(mol)).run(conv_tol=1e-12)
         if not mf.converged:
             raise RuntimeError(f"SCF did not converge: {name}")
-        norb, nelec = mf.mo_coeff.shape[1], mol.nelec
-        h1e = mf.mo_coeff.T @ mf.get_hcore() @ mf.mo_coeff
-        eri = ao2mo.restore(1, ao2mo.kernel(mol, mf.mo_coeff), norb)
-        labels = tuple(fci.cistring.make_strings(range(norb), n) for n in nelec)
-        if counts:
-            rng = np.random.default_rng(args.seed)
-            labels = tuple(np.sort(np.r_[s[0], rng.choice(s[1:], size=n - 1, replace=False)])
-                           for s, n in zip(labels, counts))
         meta = {"source": "molecule", "atom_angstrom": atom, "basis": basis,
                 "charge": charge, "spin": spin, "scf_converged": True,
+                "atom_count": mol.natm, "ao_count": mol.nao, "total_electrons": mol.nelectron,
                 "nuclear_repulsion_hartree_excluded": float(mol.energy_nuc())}
+        if args.active_space:
+            from pyscf import mcscf
+
+            active_electrons, norb = args.active_space
+            if active_electrons % 2 or (mol.nelectron - active_electrons) % 2:
+                raise ValueError("This CAS benchmark currently requires even active/core electron counts")
+            inactive = (mol.nelectron - active_electrons) // 2
+            if inactive < 0 or inactive + norb > mol.nao:
+                raise ValueError(f"CAS({active_electrons}e,{norb}o) does not fit {mol.nao} orbitals")
+            nelec = (active_electrons // 2, active_electrons // 2)
+            casci = mcscf.CASCI(mf, norb, nelec)
+            h1e, core_energy = casci.get_h1eff(mf.mo_coeff)  # pyright: ignore[reportAttributeAccessIssue]
+            eri = ao2mo.restore("s1", casci.get_h2eff(mf.mo_coeff), norb)  # pyright: ignore[reportAttributeAccessIssue]
+            labels = tuple(fci.cistring.make_strings(range(norb), n) for n in nelec)
+            meta.update(active_space={"nelectron": active_electrons, "norb": norb,
+                                      "active_start": inactive, "core_energy_excluded": float(core_energy)},
+                        orbital_construction="canonical HF continuous CAS window")
+        else:
+            norb, nelec = mf.mo_coeff.shape[1], mol.nelec
+            h1e = mf.mo_coeff.T @ mf.get_hcore() @ mf.mo_coeff
+            eri = ao2mo.restore(1, ao2mo.kernel(mol, mf.mo_coeff), norb)
+            labels = tuple(fci.cistring.make_strings(range(norb), n) for n in nelec)
+            if counts:
+                rng = np.random.default_rng(args.seed)
+                labels = tuple(np.sort(np.r_[s[0], rng.choice(s[1:], size=n - 1, replace=False)])
+                               for s, n in zip(labels, counts))
     from tyxonq.applications.chem.algorithms.sqd.gpu.validation import normalize_problem
 
     labels, h1e, eri, norb, nelec = normalize_problem(labels, h1e, eri, norb, nelec)
@@ -320,7 +323,9 @@ def _worker(problem, options, backend, messages):
     solver = None
     try:
         import numpy as np
-        from tyxonq.applications.chem.algorithms.sqd.gpu import make_cuda_sci_solver, make_sbd_sci_solver
+        from tyxonq.applications.chem.algorithms.sqd.gpu import (
+            make_cuda_sci_solver, make_gpu_sci_solver, make_sbd_sci_solver,
+        )
 
         if options["profile"]:
             messages.put(("started", 0))
@@ -331,14 +336,28 @@ def _worker(problem, options, backend, messages):
         config = {key: options[key] for key in
                   ("threads", "chunk_size", "tolerance", "max_cycles", "max_space",
                    "operator_residual_tolerance", "rdm_energy_tolerance", "spin_sq", "spin_shift", "validation")}
-        config.update(initial_state=problem["initial"], device_text="cuda:0")
-        if backend != "native":
+        modern = backend in ("auto", "gpu", "cpu", "sbd", "metal", "pytorch")
+        config.update(initial_state=problem["initial"])
+        if not modern:
+            config["device_text"] = "cuda:0"
+        effective_backend = backend
+        if backend in ("auto", "gpu"):
+            from tyxonq.numerics.accelerator import resolve_sqd_backend
+            effective_backend = resolve_sqd_backend(backend).resolved
+        if effective_backend == "metal":
+            config.update(spin_backend="metal", tolerance=max(config["tolerance"], 2e-5),
+                          operator_residual_tolerance=max(config["operator_residual_tolerance"], 1e-4),
+                          rdm_energy_tolerance=max(config["rdm_energy_tolerance"], 1e-4))
+        elif backend != "native":
             config["spin_backend"] = options["spin_backend"]
-        factory = make_cuda_sci_solver if backend == "torch" else make_sbd_sci_solver
-        if backend != "torch":
-            config["mode"] = backend
-        elif options["rdm_backend"]:
-            config["rdm_backend"] = options["rdm_backend"]
+        if modern:
+            factory = lambda **kwargs: make_gpu_sci_solver(backend=backend, **kwargs)
+        else:
+            factory = make_cuda_sci_solver if backend == "torch" else make_sbd_sci_solver
+            if backend != "torch":
+                config["mode"] = backend
+            elif options["rdm_backend"]:
+                config["rdm_backend"] = options["rdm_backend"]
         solver = factory(report_callback=reports.append,
                          device_ids=options["devices"] if len(options["devices"]) > 1 else None,
                          worker_timeout=options["timeout"], **config)
@@ -356,7 +375,8 @@ def _worker(problem, options, backend, messages):
                     check = {"energy_abs_error": abs(result.energy - reference["energy"]),
                              "rdm1_max_abs_error": float(np.max(np.abs(result.rdm1 - reference["rdm1"]))),
                              "rdm2_max_abs_error": float(np.max(np.abs(result.rdm2 - reference["rdm2"])))}
-                    check["pass"] = (check["energy_abs_error"] <= 1e-8 and
+                    is_metal = any(item["report"].get("resolved_backend") == "metal" for item in reports)
+                    check["pass"] = (check["energy_abs_error"] <= (1e-4 if is_metal else 1e-8) and
                                      max(check["rdm1_max_abs_error"], check["rdm2_max_abs_error"]) <= 1e-6)
                     checks.append(check)
             record = {"repeat": repeat, "cold": repeat == 0, "wall_seconds": elapsed,
@@ -476,11 +496,11 @@ def _profile_kernels(problem, options):
     import numpy as np
     import torch
     from pyscf.fci import selected_ci
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_davidson import davidson_lowest
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_selected_ci import (
+    from tyxonq.applications.chem.algorithms.sqd.gpu.davidson import davidson_lowest
+    from tyxonq.applications.chem.algorithms.sqd.gpu.selected_ci import (
         TorchSelectedCIContractor, absorb_h1e_torch, make_hdiag_torch,
     )
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_spin_square import (
+    from tyxonq.applications.chem.algorithms.sqd.gpu.spin_square import (
         TorchSelectedS2Contractor, make_spin_square_diagonal_torch,
     )
     from tyxonq.applications.chem.algorithms.sqd.gpu.validation import project_initial_state
@@ -862,13 +882,17 @@ def summarize_results(paths):
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", nargs="+", choices=[*CASES, "all"], default=["lih"])
-    parser.add_argument("--backend", nargs="+", choices=["torch", "native", "hybrid"], default=["torch", "native", "hybrid"])
+    parser.add_argument("--backend", nargs="+",
+                        choices=["auto", "gpu", "cpu", "sbd", "metal", "pytorch", "torch", "native", "hybrid"],
+                        default=["gpu", "cpu"])
     parser.add_argument("--devices", nargs="+", default=["0"], help="物理 GPU 编号；每次运行前确认空闲")
     parser.add_argument("--mpi-grid", nargs=2, type=int, metavar=("ALPHA", "BETA"), help="单任务原生 SBD MPI 网格；由本入口启动 mpiexec")
     parser.add_argument("--mpiexec", default="mpiexec")
     parser.add_argument("--validation", choices=["full_cpu", "gpu"], default="full_cpu")
     parser.add_argument("--rdm-backend", choices=["cpu", "sbd"], help="仅覆盖 torch 路径的 RDM 后端")
     parser.add_argument("--npz", help="固定积分和组态输入，不执行 SCF")
+    parser.add_argument("--active-space", nargs=2, type=int, metavar=("NELEC", "NORB"),
+                        help="从 canonical HF 轨道构造真实 CAS 积分和完整 CAS 组态空间")
     parser.add_argument("--strings", help="从另一 SCIState/组态 npz 读取 ci_strs_a/b")
     parser.add_argument("--initial-state", help="显式 SCIState npz；按标签投影")
     parser.add_argument("--initial", choices=["first", "diagonal"], default="first")
@@ -905,6 +929,8 @@ def parse_args():
         parser.error("native SBD does not support spin_backend; select torch/hybrid")
     if args.strings and not args.npz:
         parser.error("--strings requires --npz")
+    if args.active_space and (args.npz or min(args.active_space) < 1):
+        parser.error("--active-space requires molecule input and positive NELEC/NORB")
     if len(set(args.devices)) != len(args.devices):
         parser.error("--devices must be unique")
     if args.mpi_grid and (args.backend != ["native"] or args.batches != 1 or
@@ -929,7 +955,7 @@ def main():
         os.environ[key] = str(args.threads)
     report = {"status": "running", "configuration": {**vars(args), "output": str(args.output)},
               "metadata": _metadata(), "energy_convention": "physical_electronic_energy_no_external_constant",
-              "scope": "fixed_determinant_spaces_not_SQD_sampling_or_PCM", "cases": []}
+              "scope": "fixed_CAS_or_MO_determinant_spaces_not_iterative_SQD_sampling_or_PCM", "cases": []}
     _save(args.output, report)
     names = [Path(args.npz).stem] if args.npz else (list(CASES) if "all" in args.case else args.case)
     for name in names:
@@ -941,7 +967,11 @@ def main():
             if not args.prepare_only:
                 for backend in args.backend:
                     try:
-                        _wait_for_idle_devices(args.devices, args.timeout)
+                        from tyxonq.numerics.accelerator import sbd_available
+                        needs_cuda = (backend in ("torch", "native", "hybrid") or
+                                      (backend in ("auto", "gpu", "sbd") and sbd_available()))
+                        if needs_cuda:
+                            _wait_for_idle_devices(args.devices, args.timeout)
                         result = _run_mpi(problem, args) if args.mpi_grid else _run_isolated(problem, args, backend)
                     except (OSError, subprocess.SubprocessError, RuntimeError, TimeoutError) as error:
                         result = {"backend": backend, "status": "failed", "pass": False,

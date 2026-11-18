@@ -177,7 +177,7 @@ class TorchSelectedS2Contractor:
             create_a, destroy_b, norb, device, dtype
         )
         if backend == "cuda_fused":
-            from .sbd_solver import _load_extension
+            from tyxonq.numerics.sbd import load_extension as _load_extension
 
             try:
                 extension = _load_extension()

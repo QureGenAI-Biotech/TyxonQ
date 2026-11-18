@@ -10,7 +10,7 @@ import pytest
 
 @pytest.fixture
 def builder():
-    path = Path(__file__).parents[1] / "src/tyxonq/applications/chem/algorithms/sqd/gpu/sbd_ext/build.py"
+    path = Path(__file__).parents[1] / "src/tyxonq/numerics/sbd/cuda/build.py"
     spec = importlib.util.spec_from_file_location("sbd_build_test", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

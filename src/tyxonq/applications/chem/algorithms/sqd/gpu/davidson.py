@@ -175,9 +175,22 @@ def davidson_lowest(
             projected = _project_small_matrix(basis_matrix, image_matrix)
             # 数值舍入可能产生极小非对称部分，显式对称化后再求本征对。
             projected = 0.5 * (projected + projected.transpose(0, 1))
-            eigenvalues, eigenvectors = torch.linalg.eigh(projected)
-            energy_tensor = eigenvalues[0]
-            subspace_coefficients = eigenvectors[:, 0]
+            if projected.device.type == "mps":
+                # MPS has no native eigh. Only the small projected matrix visits
+                # the host; long vectors and H@c remain on the MPS device.
+                import numpy as np
+
+                eigenvalues, eigenvectors = np.linalg.eigh(
+                    projected.detach().cpu().numpy().astype(np.float64))
+                energy_tensor = torch.as_tensor(
+                    eigenvalues[0], dtype=projected.dtype, device=projected.device)
+                eigenvectors = torch.as_tensor(
+                    eigenvectors, dtype=projected.dtype, device=projected.device)
+                subspace_coefficients = eigenvectors[:, 0]
+            else:
+                eigenvalues, eigenvectors = torch.linalg.eigh(projected)
+                energy_tensor = eigenvalues[0]
+                subspace_coefficients = eigenvectors[:, 0]
             coefficients = basis_matrix @ subspace_coefficients
             image = image_matrix @ subspace_coefficients
             residual = image - energy_tensor * coefficients

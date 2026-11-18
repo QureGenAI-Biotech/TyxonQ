@@ -174,7 +174,7 @@ See http://www.apache.org/licenses/LICENSE-2.0.
 - 核心源码：https://github.com/r-ccs-cms/sbd.git，固定提交 `93ebabec6c841d0ade706018b053795d8c1db9bd`。
 - Python wrapper 参考源码：https://github.com/Qiskit/sbd-eigensolver-python，固定提交 `b49c22b54813be1e0344ba52f8ffd03e3825433e`。
 - TyxonQ 提供 TPB 内存接口、位序/相位和 RDM 约定适配，以及原生和混合求解入口。
-- CUDA 编译兼容与数值稳定性修改记录在 `chem/algorithms/sqd/gpu/sbd_ext/nvcc.patch`；
+- CUDA 编译兼容与数值稳定性修改记录在 `src/tyxonq/numerics/sbd/cuda/nvcc.patch`；
   具体版本、源码哈希与补丁说明保存在同目录 `SOURCES.json`。
 - 外部源码由显式构建步骤放入构建缓存，不整体内置到 TyxonQ 源码中。
 

@@ -220,6 +220,8 @@ def run_sqd_fermion(
     ext_sqd_threshold: float | None = None,
     ext_sqd_threshold_mode: str = "amplitude",
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
 ) -> SCIResult:
     """从 counts 或 bitstring 矩阵运行费米子 SQD。
 
@@ -275,6 +277,8 @@ def run_sqd_fermion(
         ext_sqd_threshold=ext_sqd_threshold,
         ext_sqd_threshold_mode=ext_sqd_threshold_mode,
         excluded_orbitals=excluded_orbitals,
+        backend=backend,
+        device=device,
     )
 
 
@@ -319,6 +323,8 @@ def diagonalize_fermionic_hamiltonian(
     ext_sqd_threshold: float | None = None,
     ext_sqd_threshold_mode: str = "amplitude",
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
 ) -> SCIResult:
     """在内部 ``[beta | alpha]`` 样本顺序上运行 SQD 主循环。"""
     one_body_tensor, two_body_tensor, is_unrestricted = _normalize_hamiltonian(
@@ -409,6 +415,8 @@ def diagonalize_fermionic_hamiltonian(
                 electron_counts,
                 spin_sq=spin_sq,
                 excluded_orbitals=(excluded_a, excluded_b),
+                backend=backend,
+                device=device,
             )
 
         sci_solver = default_sci_solver
@@ -559,6 +567,8 @@ def solve_sci_batch(
     spin_sq: float | None = None,
     spin_shift: float = 0.1,
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
     **kwargs,
 ) -> list[SCIResult]:
     """批量对角化多个 selected-CI 子空间。"""
@@ -572,6 +582,8 @@ def solve_sci_batch(
             spin_sq=spin_sq,
             spin_shift=spin_shift,
             excluded_orbitals=excluded_orbitals,
+            backend=backend,
+            device=device,
             **kwargs,
         )
         for strings in ci_strings
@@ -588,9 +600,26 @@ def solve_sci(
     spin_sq: float | None = None,
     spin_shift: float = 0.1,
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
     **kwargs,
 ) -> SCIResult:
-    """在一个 selected-CI 子空间里投影并对角化 restricted/UHF Hamiltonian。"""
+    """在一个 selected-CI 子空间里投影并对角化 restricted/UHF Hamiltonian。
+
+    ``backend=None`` keeps the PySCF solver. Use ``backend='gpu'``/``'auto'``
+    for environment-aware CUDA/Metal selection or ``backend='cpu'`` for PyTorch
+    CPU. Explicitly requested unavailable accelerators fall back to CPU with a
+    warning; numerical failures after dispatch still raise.
+    """
+    if backend is not None:
+        from .gpu import solve_sci_gpu
+
+        result, _ = solve_sci_gpu(
+            ci_strings, one_body_tensor, two_body_tensor, norb, nelec,
+            backend=backend, device=device, spin_sq=spin_sq, spin_shift=spin_shift,
+            **kwargs,
+        )
+        return result
     one_body_tensor, two_body_tensor, is_unrestricted = _normalize_hamiltonian(
         one_body_tensor, two_body_tensor, norb
     )

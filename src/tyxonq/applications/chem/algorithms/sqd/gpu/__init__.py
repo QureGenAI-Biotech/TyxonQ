@@ -1,13 +1,38 @@
-"""CUDA selected-CI 求解器；实际求解时才加载 PyTorch。"""
+"""GPU-accelerated selected CI for SQD.
 
-from .batch import make_cuda_sci_solver, make_sbd_sci_solver
+The unified entry points are :func:`solve_sci_gpu` and
+:func:`make_gpu_sci_solver`. Legacy callable aliases remain available; the old
+``torch_*`` module paths were removed.
+"""
 
-__all__ = ["solve_sci_cuda", "make_cuda_sci_solver", "make_sbd_sci_solver"]
+from __future__ import annotations
+
+from .api import make_gpu_sci_solver, solve_sci_gpu
+
+__all__ = [
+    "make_cuda_sci_solver",
+    "make_gpu_sci_solver",
+    "make_sbd_sci_solver",
+    "solve_sci_cuda",
+    "solve_sci_gpu",
+    "solve_sci_sbd",
+]
 
 
-def __getattr__(name):
-    if name == "solve_sci_cuda":
-        from .torch_sci_solver import solve_sci_cuda
+def __getattr__(name: str):
+    from .compat import (
+        make_cuda_sci_solver,
+        make_sbd_sci_solver,
+        solve_sci_cuda,
+        solve_sci_sbd,
+    )
 
-        return solve_sci_cuda
+    aliases = {
+        "make_cuda_sci_solver": make_cuda_sci_solver,
+        "make_sbd_sci_solver": make_sbd_sci_solver,
+        "solve_sci_cuda": solve_sci_cuda,
+        "solve_sci_sbd": solve_sci_sbd,
+    }
+    if name in aliases:
+        return aliases[name]
     raise AttributeError(name)

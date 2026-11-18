@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Literal, Protocol, Tuple
+from typing import Any, Protocol, Tuple
+import numpy as np
 from .backends.numpy_backend import NumpyBackend
 from .context import get_configured_backend_instance, get_configured_backend_name
 try:  # optional imports
@@ -8,12 +9,13 @@ try:  # optional imports
 except Exception:  # pragma: no cover
     PyTorchBackend = None  # type: ignore
 try:
-    from .backends.cupynumeric_backend import CuPyNumericBackend  # type: ignore
+    from .backends.cupy_backend import CuPyBackend  # type: ignore
 except Exception:  # pragma: no cover
-    CuPyNumericBackend = None  # type: ignore
-
-
-VectorizationPolicy = Literal["auto", "force", "off"]
+    CuPyBackend = None  # type: ignore
+try:
+    from .backends.metal_backend import MetalBackend  # type: ignore
+except Exception:  # pragma: no cover
+    MetalBackend = None  # type: ignore
 
 
 class ArrayBackend(Protocol):
@@ -121,62 +123,7 @@ class ArrayBackend(Protocol):
     def detach(self, x: Any) -> Any: ...
 
 
-def vectorize_or_fallback(
-    fn: Callable[..., Any],
-    backend: ArrayBackend,
-    policy: VectorizationPolicy = "auto",
-    *,
-    enable_checks: bool = True,
-) -> Callable[..., Any]:
-    """Wrap a function with vectorization behavior and safe fallback.
-
-    Behavior:
-    - policy == "off": return the original function.
-    - If backend provides `vmap` and policy != "off": try vectorized execution.
-      On any exception, log (if available) and fallback to eager execution.
-    - If no `vmap` is provided: emulate vectorization by applying the function
-      element-wise along the leading axis when the first positional argument is
-      a sequence; otherwise run eagerly.
-
-    Parameters:
-        fn: Function to wrap.
-        backend: Array backend instance implementing the protocol.
-        policy: Vectorization policy ("auto" | "force" | "off").
-        enable_checks: Placeholder for future safety checks before vectorizing.
-
-    Returns:
-        A callable that applies `fn` with the chosen vectorization strategy.
-    """
-
-    if policy == "off":
-        return fn
-
-    # Prefer backend-provided vmap if available
-    vmap_fn = getattr(backend, "vmap", None)
-    if callable(vmap_fn):
-        def wrapped(*args: Any, **kwargs: Any) -> Any:
-            try:
-                return vmap_fn(fn)(*args, **kwargs)  # type: ignore[misc]
-            except Exception:
-                # Fallback to eager execution on any vectorization error
-                return fn(*args, **kwargs)
-        return wrapped
-
-    # Generic lightweight vectorization fallback along leading axis
-    def _generic_vectorized_call(*args: Any, **kwargs: Any) -> Any:
-        if not args:
-            return fn(*args, **kwargs)
-        first = args[0]
-        try:
-            return [fn(a, *args[1:], **kwargs) for a in first]  # type: ignore[call-arg]
-        except TypeError:
-            # Not iterable; run eagerly
-            return fn(*args, **kwargs)
-
-    return _generic_vectorized_call
-
-
-def get_backend(name: str | None = None) -> ArrayBackend:
+def get_backend(name: str | None = None, device: str | None = None) -> ArrayBackend:
     """Factory function that returns an ArrayBackend instance by canonical name.
 
     This function provides the primary interface for accessing TyxonQ's numerical
@@ -187,8 +134,8 @@ def get_backend(name: str | None = None) -> ArrayBackend:
         name (str | None): Canonical name of the backend to retrieve.
             Supported values:
             - "numpy": CPU-based NumPy backend (always available)
-            - "pytorch": PyTorch backend with GPU support (requires torch)
-            - "cupynumeric": CUDA-accelerated backend (requires cunumeric)
+            - "pytorch": PyTorch backend with CUDA/MPS support (requires torch)
+            - "cupy": NVIDIA GPU array backend (requires cupy)
             - None: Use configured default or fallback to NumPy
 
     Returns:
@@ -218,7 +165,8 @@ def get_backend(name: str | None = None) -> ArrayBackend:
     Notes:
         - The function first checks for a globally configured backend instance
         - If no explicit name is provided, it falls back to the configured name
-        - NumPy backend is used as the final fallback for all requests
+        - NumPy backend is used when no backend was configured
+        - Unknown backend names raise ValueError instead of silently falling back
         - Backend availability is checked before instantiation
         
     See Also:
@@ -233,22 +181,36 @@ def get_backend(name: str | None = None) -> ArrayBackend:
             return inst  # type: ignore[return-value]
         name = get_configured_backend_name()
 
+    if name == "auto":
+        from .accelerator import cuda_available, metal_available
+
+        if cuda_available():
+            name, device = "cupy", device or "cuda"
+        elif metal_available():
+            name, device = "metal", device or "metal:0"
+        else:
+            name, device = "pytorch", "cpu"
+
     if name is None or name == "numpy":
         return NumpyBackend()  # type: ignore[return-value]
     if name == "pytorch":
         if PyTorchBackend is None:
             raise RuntimeError("pytorch backend requested but torch module not importable")
-        # Ensure availability signaled by backend implementation
         if not getattr(PyTorchBackend, "available", False):
             raise RuntimeError("pytorch backend requested but torch is not installed")
-        return PyTorchBackend()  # type: ignore[return-value]
-    if name == "cupynumeric":
-        if CuPyNumericBackend is None:
-            raise RuntimeError("cupynumeric backend requested but module not importable")
-        if not getattr(CuPyNumericBackend, "available", False):
-            raise RuntimeError("cupynumeric backend requested but cupynumeric is not installed")
-        return CuPyNumericBackend()  # type: ignore[return-value]
-    # default fallback
-    return NumpyBackend()  # type: ignore[return-value]
+        return PyTorchBackend(device=device)  # type: ignore[return-value]
+    if name == "cupy":
+        if device not in (None, "auto", "cuda") and not str(device).startswith("cuda:"):
+            raise RuntimeError("cupy backend supports only CUDA devices")
+        if CuPyBackend is None:
+            raise RuntimeError("cupy backend requested but module not importable")
+        if not getattr(CuPyBackend, "available", False):
+            raise RuntimeError("cupy backend requested but cupy is not installed")
+        return CuPyBackend()  # type: ignore[return-value]
+    if name == "metal":
+        if MetalBackend is None or not getattr(MetalBackend, "available", False):
+            raise RuntimeError("metal backend requested but MLX is not installed")
+        return MetalBackend(device=device)  # type: ignore[return-value]
+    raise ValueError(f"Unknown numerics backend: {name!r}")
 
 

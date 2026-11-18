@@ -168,7 +168,7 @@ def test_cpu_rdm_only_mode_does_not_claim_operator_validation():
 
 def test_cuda_backend_name_rejected_before_device_check():
     pytest.importorskip("torch")
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_sci_solver import solve_sci_cuda
+    from tyxonq.applications.chem.algorithms.sqd.gpu.solver import solve_sci_cuda
 
     with pytest.raises(ValueError, match="Unsupported"):
         solve_sci_cuda(None, None, None, 2, (1, 1), threads=2, chunk_size=16, tolerance=1e-8,
@@ -257,7 +257,7 @@ def test_empty_spin_sector_cpu_reference_preserves_space_and_spin(nelec, spin_ta
         np.testing.assert_allclose(actual, reference, atol=1e-12)
     torch = pytest.importorskip("torch")
     from tyxonq.applications.chem.algorithms.sqd.gpu.cpu_validate_sci import add_zero_coupling_spectator
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_selected_ci import (
+    from tyxonq.applications.chem.algorithms.sqd.gpu.selected_ci import (
         TorchSelectedCIContractor, absorb_h1e_torch,
     )
 
@@ -277,7 +277,7 @@ def test_native_validation_failure_snapshot(monkeypatch, tmp_path, failure_stage
     """不需要 CUDA：模拟三个验收失败点，验证输入和当前算符像可恢复。"""
     import json
     from types import SimpleNamespace
-    from tyxonq.applications.chem.algorithms.sqd.gpu import sbd_solver, torch_sci_solver
+    from tyxonq.applications.chem.algorithms.sqd.gpu import sbd_solver, solver as torch_sci_solver
 
     torch = pytest.importorskip("torch")
     coefficients = np.array([[1.], [0.]])

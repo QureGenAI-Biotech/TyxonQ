@@ -51,7 +51,7 @@ def _cpu_image(labels, h, eri, c, norb, nelec):
 def test_random_hc_spin_rdms_and_updated_integrals(norb, nelec, labels):
     from pyscf.fci import selected_ci
     from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import SBDContractor
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_spin_square import TorchSelectedS2Contractor
+    from tyxonq.applications.chem.algorithms.sqd.gpu.spin_square import TorchSelectedS2Contractor
 
     labels, h, eri, c = _problem(norb, nelec, labels)
     contractor = SBDContractor(h, eri, labels, norb, nelec, device="cuda:0")
@@ -83,7 +83,7 @@ def test_random_hc_spin_rdms_and_updated_integrals(norb, nelec, labels):
 def test_solver_dense_reference_and_failure(backend, spin_sq):
     from pyscf.fci import addons, direct_spin1, selected_ci
     from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import solve_sci_sbd
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_sci_solver import solve_sci_cuda
+    from tyxonq.applications.chem.algorithms.sqd.gpu.solver import solve_sci_cuda
 
     norb, nelec = 4, (2, 1)
     labels, h, eri, c = _problem(norb, nelec)
@@ -205,7 +205,7 @@ def test_same_seed_sqd_recovery_and_batch_results():
 def test_empty_spin_sector_full_solver(backend, nelec):
     """单电子极限的能量直接等于一体矩阵最低本征值，二体作用严格为零。"""
     from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import solve_sci_sbd
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_sci_solver import solve_sci_cuda
+    from tyxonq.applications.chem.algorithms.sqd.gpu.solver import solve_sci_cuda
 
     labels, h, eri, unused = _problem(4, nelec)
     options = (dict(hamiltonian_backend="sbd", rdm_backend="sbd", spin_backend="cuda_fused")

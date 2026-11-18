@@ -1,7 +1,4 @@
-"""使用本方 Davidson 的 A100 双精度 selected-CI 求解入口。
-
-支持实数 restricted 积分、可选 S² 自旋惩罚，以及 Torch/SBD Hamiltonian 后端；
-RDM 可由 CPU 或 SBD 计算，结果按所选模式执行独立 CPU 复核或密度与残差检查。"""
+"""PyTorch selected-CI solver for explicit CUDA and hardware-fallback CPU runs."""
 
 from __future__ import annotations
 
@@ -24,21 +21,22 @@ from .validation import (
     validation_failure_snapshot,
 )
 
-from .torch_davidson import davidson_lowest
-from .torch_selected_ci import (
+from .davidson import davidson_lowest
+from .selected_ci import (
     TorchSelectedCIContractor,
     absorb_h1e_torch,
     make_hdiag_torch,
 )
-from .torch_spin_square import (
+from .spin_square import (
     TorchSelectedS2Contractor,
     make_spin_square_diagonal_torch,
 )
 
 
-def davidson_space_for_memory(requested, vector_bytes, available_bytes, *, max_memory_fraction=0.8):
+def davidson_space_for_memory(requested, vector_bytes, available_bytes, *, max_memory_fraction=0.8,
+                              element_size=8):
     """预算常驻 V/AV、厚重启副本和长向量临时量，保留收缩工作区。"""
-    dimension = max(1, int(vector_bytes) // 8)
+    dimension = max(1, int(vector_bytes) // int(element_size))
     # 单行列式会在 Davidson 内收缩为一维，但参数 max_space 仍至少为 2。
     requested = min(requested, max(2, dimension))
     budget = max_memory_fraction * available_bytes - 8 * 1024**3
@@ -59,14 +57,19 @@ def davidson_space_for_memory(requested, vector_bytes, available_bytes, *, max_m
 
 def wait_for_davidson_memory(device, requested, vector_bytes, progress_callback,
                              *, timeout_seconds=600.0, poll_seconds=5.0, max_memory_fraction=0.8):
-    """显存短时不足时清理未使用的缓存并重测；超时保留完整诊断。"""
+    """GPU 显存不足时等待；CPU 直接返回，不构造 CUDA 设备适配器。"""
+    if str(device) == "cpu":
+        return requested, 0
+    from tyxonq.numerics.accelerator import empty_cache, memory_info, resolve_device, synchronize
+
+    spec = resolve_device(str(device), "sbd")
     started = perf_counter()
     while True:
-        torch.cuda.synchronize(device)
-        free, total = torch.cuda.mem_get_info(device)
-        allocated = torch.cuda.memory_allocated(device)
-        reserved = torch.cuda.memory_reserved(device)
-        available = int(free + max(0, reserved - allocated))
+        synchronize(spec)
+        info = memory_info(spec)
+        free, total = info.free_bytes, info.total_bytes
+        allocated, reserved = info.allocated_bytes, info.reserved_bytes
+        available = info.available_bytes
         snapshot = {
             "free_bytes": int(free), "total_bytes": int(total),
             "allocated_bytes": int(allocated), "reserved_bytes": int(reserved),
@@ -86,7 +89,7 @@ def wait_for_davidson_memory(device, requested, vector_bytes, progress_callback,
                 ) from exc
             # 只回收本进程不再使用的对象和缓存；不释放有效 CI 向量。
             gc.collect()
-            torch.cuda.empty_cache()
+            empty_cache(spec)
             sleep(min(poll_seconds, max(0.0, timeout_seconds - snapshot["waited_seconds"])))
             continue
         if progress_callback is not None:
@@ -128,6 +131,8 @@ def solve_sci_cuda(
         raise ValueError("Unsupported hamiltonian_backend or rdm_backend.")
     if spin_backend not in ("torch", "cuda_fused"):
         raise ValueError("spin_backend must be 'torch' or 'cuda_fused'.")
+    if spin_backend == "cuda_fused" and not torch.cuda.is_available():
+        raise ValueError("spin_backend='cuda_fused' requires an available CUDA device")
     if validation not in ("full_cpu", "gpu"):
         raise ValueError("validation must be 'full_cpu' or 'gpu'.")
     if sbd_context is not None and hamiltonian_backend != "sbd" and rdm_backend != "sbd":
@@ -137,21 +142,30 @@ def solve_sci_cuda(
     ci_strings, h1e, eri, norb, nelec = normalize_problem(ci_strings, h1e, eri, norb, nelec)
     projected_initial = project_initial_state(initial_state, ci_strings, norb, nelec)
     if min(threads, chunk_size, max_cycles, max_space) < 1:
-        raise ValueError("A100 solver 的线程、chunk、空间或迭代参数必须为正数。")
+        raise ValueError("PyTorch solver 的线程、chunk、空间或迭代参数必须为正数。")
     if min(tolerance, operator_residual_tolerance, rdm_energy_tolerance) <= 0:
-        raise ValueError("A100 solver 的误差阈值必须为正数。")
+        raise ValueError("PyTorch solver 的误差阈值必须为正数。")
     if spin_sq is not None:
         if not np.isfinite(spin_sq) or spin_sq < 0.0:
             raise ValueError("spin_sq 必须为有限非负数或 None。")
         if not np.isfinite(spin_shift) or spin_shift <= 0.0:
             raise ValueError("spin_shift 必须为有限正数。")
 
+    from tyxonq.numerics.accelerator import (
+        cuda_available, empty_cache, memory_info, resolve_device, synchronize,
+    )
+
     device = torch.device(device_text)
-    if device.type != "cuda" or not torch.cuda.is_available():
-        raise RuntimeError("请求了 A100 solver，但 CUDA 当前不可用。")
-    device_name = torch.cuda.get_device_name(device)
-    if "A100" not in device_name:
-        raise RuntimeError(f"当前 CUDA 设备不是 A100：{device_name}")
+    device_name = str(device)
+    if device.type == "cuda":
+        if not cuda_available():
+            raise RuntimeError("请求了 CUDA solver，但 CUDA 当前不可用。")
+        device_name = torch.cuda.get_device_name(device)
+    elif device.type == "mps":
+        raise RuntimeError("MPS 不是 SQD PyTorch 路径；Metal 硬件必须使用原生 Metal SBD。")
+    elif device.type != "cpu":
+        raise ValueError(f"Unsupported SQD PyTorch device: {device}")
+    device_spec = resolve_device(device_text, "sbd" if device.type == "cuda" else "pytorch")
 
     lib.num_threads(threads)
     torch.set_num_threads(threads)
@@ -167,12 +181,13 @@ def solve_sci_cuda(
                   if hamiltonian_backend == "torch" else None)
     link_seconds = perf_counter() - link_started
 
-    torch.cuda.reset_peak_memory_stats(device)
-    initial_free, total_memory = torch.cuda.mem_get_info(device)
+    if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(device)
+    initial_free, total_memory = memory_info(device_spec).free_bytes, memory_info(device_spec).total_bytes
     setup_started = perf_counter()
     sbd_contractor = None
     if hamiltonian_backend == "sbd" or rdm_backend == "sbd":
-        from .sbd_solver import SBDContractor
+        from tyxonq.numerics.sbd import SBDContractor
 
         if sbd_context is None:
             sbd_contractor = SBDContractor(h1e, eri, ci_strings, norb, nelec, device=device,
@@ -225,7 +240,7 @@ def solve_sci_cuda(
             davidson_diagonal = hdiag_device + spin_shift * (
                 spin_diagonal - float(spin_sq)
             )
-    torch.cuda.synchronize(device)
+    synchronize(device_spec)
     setup_seconds = perf_counter() - setup_started
     # 辅助迭代空间可随可用显存缩小；最终残差标准、完整 CI 池保持原值。
     # 已保留但未分配的缓存可由分配器复用，不能只看驱动层 free。
@@ -272,9 +287,9 @@ def solve_sci_cuda(
             projected_initial.reshape(-1), dtype=torch.float64, device=device)),
         callback=report_cycle,
     )
-    torch.cuda.synchronize(device)
+    synchronize(device_spec)
     solver_seconds = perf_counter() - solver_started
-    peak_device_memory = int(torch.cuda.max_memory_allocated(device))
+    peak_device_memory = memory_info(device_spec).allocated_bytes
     with validation_failure_snapshot(
             failure_debug_path, ci_strings, h1e, eri, norb, nelec,
             spin_sq=spin_sq, spin_shift=spin_shift, validation=validation,
@@ -284,7 +299,7 @@ def solve_sci_cuda(
         debug["coefficients"] = gpu_result.coefficients
         if not gpu_result.converged:
             raise RuntimeError(
-                "A100 Davidson 未收敛："
+                "PyTorch Davidson 未收敛："
                 f"cycles={gpu_result.iterations}, residual={gpu_result.residual_norm:.3e}。"
             )
 
@@ -314,7 +329,7 @@ def solve_sci_cuda(
 
         if not np.isfinite(fresh_gpu_residual) or fresh_gpu_residual > operator_residual_tolerance:
             raise RuntimeError(
-                "A100 Davidson 缓存残差出现假收敛："
+                "PyTorch Davidson 缓存残差出现假收敛："
                 f"cached={gpu_result.residual_norm:.3e}, fresh={fresh_gpu_residual:.3e}。"
             )
 
@@ -363,9 +378,9 @@ def solve_sci_cuda(
             progress_callback({"stage": "solution_validation", "status": "complete",
                                "validation": validation, "seconds": validation_seconds})
     report.update({
-        "solver_backend": ("a100_fp64_final_davidson_cpu_validation" if
-                           hamiltonian_backend == "torch" and validation == "full_cpu" else
-                           "sbd_hybrid" if hamiltonian_backend == "sbd" else "torch_cuda"),
+        "solver_backend": ("pytorch_cpu_fp64_davidson_cpu_validation" if
+                           device.type == "cpu" and validation == "full_cpu" else
+                           "sbd_hybrid" if hamiltonian_backend == "sbd" else "pytorch_cuda"),
         "hamiltonian_backend": hamiltonian_backend,
         "hamiltonian_uses_zero_coupling_spectator": torch_hamiltonian_uses_spectator,
         "rdm_backend": rdm_backend,
@@ -383,6 +398,8 @@ def solve_sci_cuda(
         "spin_shift": spin_shift if spin_sq is not None else None,
         "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
         "host_gpu_id": os.environ.get("TYXONQ_A100_HOST_GPU_ID"),
+        "backend": "sbd" if device.type == "cuda" else "pytorch",
+        "device_kind": device.type,
         "device": str(device), "device_name": device_name,
         "dtype": "float64", "threads": int(threads),
         "n_alpha_strings": len(ci_strings[0]), "n_beta_strings": len(ci_strings[1]),
@@ -406,10 +423,10 @@ def solve_sci_cuda(
         "cpu_validation_timing_scope": "CPU subprocess plus host validation; excludes GPU RDM and device S2",
         "cpu_validation_isolated_external_process": cpu is not None,
         "rdm_seconds": rdm_seconds,
-        "peak_device_memory_bytes": max(peak_device_memory, int(torch.cuda.max_memory_allocated(device))),
+        "peak_device_memory_bytes": max(peak_device_memory, memory_info(device_spec).allocated_bytes),
         "peak_device_memory_scope": "PyTorch allocator only; excludes SBD C++ allocations",
         "sbd_context_memory_bytes": (0 if sbd_contractor is None else int(sbd_contractor.context.memory_bytes())),
-        "device_used_increase_bytes_at_return": max(0, initial_free - torch.cuda.mem_get_info(device)[0]),
+        "device_used_increase_bytes_at_return": max(0, initial_free - memory_info(device_spec).free_bytes),
         "device_memory_total_bytes": int(total_memory),
         "max_memory_fraction": max_memory_fraction,
         "initial_state_projected": projected_initial is not None,

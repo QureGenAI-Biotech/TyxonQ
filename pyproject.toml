@@ -1,6 +1,6 @@
 [project]
 name = "tyxonq"
-version = "1.5.0"
+version = "1.6.0"
 description = "Quantum computing framework with multi-backend support"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -46,6 +46,17 @@ sbd = [
     "pybind11>=2.12,<4",
     "mpi4py>=4.0,<5",
 ]
+cuda = [
+    "pybind11>=2.12,<4",
+    "mpi4py>=4.0,<5",
+]
+cupy = [
+    "cupy-cuda12x>=13.0",
+]
+metal = [
+    "mlx>=0.30; platform_system=='Darwin' and platform_machine=='arm64'",
+]
+mps = []
 geomopt = [
     "ase>=3.23",
     "sella>=2.3,<3",
@@ -95,7 +106,8 @@ where = ["src"]
 [tool.setuptools.package-data]
 tyxonq = ["*.txt", "*.md", "*.rst"]
 "tyxonq.applications" = ["THIRD_PARTY_NOTICES.md"]
-"tyxonq.applications.chem.algorithms.sqd.gpu.sbd_ext" = ["*.cpp", "*.cuh", "*.patch", "SOURCES.json"]
+"tyxonq.numerics.sbd.cuda" = ["*.cpp", "*.cuh", "*.patch", "SOURCES.json"]
+"tyxonq.numerics.sbd.metal" = ["*.metal"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests_core_module","tests_examples","tests_applications_chem","tests_mol_valid","tests_applications_spin"]

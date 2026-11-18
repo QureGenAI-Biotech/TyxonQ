@@ -8,6 +8,7 @@ from time import perf_counter
 
 import numpy as np
 
+from tyxonq.numerics.sbd.metal import metal_gpu_execution
 from .validation import (
     assemble_result, compare_cpu, independent_cpu_validation, normalize_problem,
     project_initial_state, rdms_from_cpu, validate_rdms, validate_spin_square,
@@ -18,7 +19,7 @@ from .validation import (
 def _load_extension():
     """仅在实际计算时加载已经显式构建的扩展。"""
     try:
-        name = "tyxonq.applications.chem.algorithms.sqd.gpu._sbd_tpb_cuda"
+        name = "tyxonq.numerics.sbd.cuda._sbd_tpb_cuda"
         try:
             return importlib.import_module(name)
         except ModuleNotFoundError as error:
@@ -29,7 +30,7 @@ def _load_extension():
     except ImportError as error:
         raise ImportError(
             "SBD CUDA extension is unavailable. Build it explicitly with "
-            "python -m tyxonq.applications.chem.algorithms.sqd.gpu.sbd_ext.build; "
+            "python -m tyxonq.numerics.sbd.cuda.build; "
             "ordinary CPU/Torch usage does not require this extension."
         ) from error
 
@@ -187,7 +188,7 @@ def solve_sci_sbd(ci_strings, h1e, eri, norb, nelec, *, threads=2, chunk_size=25
         sbd_context.update_integrals(h1e, eri)
         contractor = sbd_context
     setup_seconds = perf_counter() - started
-    from .torch_sci_solver import wait_for_davidson_memory
+    from .solver import wait_for_davidson_memory
 
     effective_space, available_bytes = wait_for_davidson_memory(
         device, max_space, int(np.prod(contractor.shape)) * 8, progress_callback,
@@ -296,4 +297,195 @@ def solve_sci_sbd(ci_strings, h1e, eri, norb, nelec, *, threads=2, chunk_size=25
     })
     if progress_callback:
         progress_callback({"stage": "sbd_native", "status": "complete", "residual_norm": residual})
+    return physical, report
+
+
+@metal_gpu_execution
+def solve_sci_metal(
+    ci_strings, h1e, eri, norb, nelec, *, threads=2, chunk_size=64,
+    tolerance=1e-5, max_cycles=100, max_space=20,
+    operator_residual_tolerance=5e-5, rdm_energy_tolerance=5e-5,
+    spin_sq=None, spin_shift=0.1, device_text="metal:0",
+    validation="full_cpu", rdm_backend="cpu", initial_state=None,
+    progress_callback=None, failure_debug_path=None, max_memory_fraction=0.8,
+    sbd_context=None, spin_backend="metal",
+):
+    """Solve restricted selected-CI entirely through the native Metal algorithm.
+
+    RDMs and independent golden validation are explicit CPU stages. Any native
+    failure is raised; this function never dispatches to the PyTorch solver.
+    """
+    if device_text not in ("metal", "metal:0", "gpu"):
+        raise ValueError("Metal SBD requires device_text='metal:0'.")
+    if validation not in ("full_cpu", "gpu") or rdm_backend != "cpu":
+        raise ValueError("Metal SBD currently requires rdm_backend='cpu'.")
+    if spin_backend != "metal":
+        raise ValueError("Metal SBD uses spin_backend='metal'.")
+    if sbd_context is not None:
+        raise ValueError("A CUDA SBD context cannot be used by Metal SBD.")
+    if min(threads, chunk_size, max_cycles, max_space) < 1:
+        raise ValueError("Metal solver limits must be positive.")
+    if min(tolerance, operator_residual_tolerance, rdm_energy_tolerance) <= 0:
+        raise ValueError("Metal solver tolerances must be positive.")
+    ci_strings, h1e, eri, norb, nelec = normalize_problem(ci_strings, h1e, eri, norb, nelec)
+    nelec = (int(nelec[0]), int(nelec[1]))
+    initial = project_initial_state(initial_state, ci_strings, norb, nelec)
+    if spin_sq is not None and (not np.isfinite(spin_sq) or spin_sq < 0):
+        raise ValueError("spin_sq must be finite and nonnegative.")
+    if spin_sq is not None and (not np.isfinite(spin_shift) or spin_shift <= 0):
+        raise ValueError("spin_shift must be finite and positive.")
+
+    import mlx.core as mx
+    from pyscf.fci import selected_ci
+    from tyxonq.numerics.sbd.metal import (
+        MetalSelectedCIContractor, MetalSelectedS2Contractor, absorb_h1e,
+        davidson_lowest, make_hdiag, make_spin_square_diagonal,
+    )
+
+    started = perf_counter()
+    h_strings, h_one, h_two, h_norb, h_nelec = ci_strings, h1e, eri, norb, nelec
+    uses_spectator = min(nelec) == 0
+    if uses_spectator:
+        from .cpu_validate_sci import add_zero_coupling_spectator
+        h_strings, h_one, h_two, h_norb, h_nelec = add_zero_coupling_spectator(
+            ci_strings, h1e, eri, norb, nelec)
+    h_nelec = (int(h_nelec[0]), int(h_nelec[1]))
+    link_started = perf_counter()
+    links = selected_ci._all_linkstr_index(h_strings, h_norb, h_nelec)
+    link_seconds = perf_counter() - link_started
+    h1_mx = mx.array(np.asarray(h1e, dtype=np.float32))
+    eri_mx = mx.array(np.asarray(eri, dtype=np.float32))
+    hdiag = make_hdiag(h1_mx, eri_mx, ci_strings)
+    contractor = MetalSelectedCIContractor(
+        absorb_h1e(h_one, h_two, h_nelec), links, h_nelec, chunk_size=chunk_size)
+    spin_contractor = MetalSelectedS2Contractor(ci_strings, norb, nelec)
+    diagonal = hdiag
+    if spin_sq is not None:
+        minimum_spin = 0.5 * abs(nelec[0] - nelec[1])
+        minimum_spin_square = minimum_spin * (minimum_spin + 1.0)
+        if float(spin_sq) < minimum_spin_square + 0.1:
+            diagonal = diagonal + spin_shift * (
+                make_spin_square_diagonal(ci_strings, norb, nelec) - float(spin_sq))
+    mx.eval(diagonal)
+    setup_seconds = perf_counter() - started
+
+    def scalar(value):
+        mx.eval(value)
+        return float(value.item())
+
+    def matvec(vector):
+        matrix = vector.reshape(hdiag.shape)
+        image = contractor.contract(matrix)
+        if spin_sq is not None:
+            spin_residual = spin_contractor.contract(matrix) - float(spin_sq) * matrix
+            minimum_spin = 0.5 * abs(nelec[0] - nelec[1])
+            minimum_spin_square = minimum_spin * (minimum_spin + 1.0)
+            if float(spin_sq) < minimum_spin_square + 0.1:
+                image = image + spin_shift * spin_residual
+            else:
+                image = image + spin_shift * (
+                    spin_contractor.contract(spin_residual) - float(spin_sq) * spin_residual)
+        return image.reshape(-1)
+
+    def report_cycle(record):
+        if progress_callback is not None:
+            progress_callback({"stage": "metal_davidson", "status": "running", **record})
+
+    solver_started = perf_counter()
+    initial_mx = None if initial is None else mx.array(initial.reshape(-1).astype(np.float32))
+    solved = davidson_lowest(
+        matvec, diagonal.reshape(-1), initial_vector=initial_mx, tolerance=tolerance,
+        max_cycles=max_cycles, max_space=max_space, callback=report_cycle)
+    if not solved.converged:
+        raise RuntimeError(
+            f"Metal Davidson did not converge: cycles={solved.iterations}, "
+            f"residual={solved.residual_norm:.3e}")
+    coefficients_mx = solved.coefficients / mx.linalg.norm(solved.coefficients)
+    fresh_image = matvec(coefficients_mx)
+    rayleigh = scalar(mx.sum(coefficients_mx * fresh_image))
+    residual = scalar(mx.linalg.norm(fresh_image - rayleigh * coefficients_mx))
+    if not np.isfinite(residual) or residual > operator_residual_tolerance:
+        raise RuntimeError(f"Metal final residual is too large: {residual:.3e}")
+    solver_seconds = perf_counter() - solver_started
+    bare_image = (fresh_image if spin_sq is None else
+                  contractor.contract(coefficients_mx.reshape(hdiag.shape)).reshape(-1))
+    bare_rayleigh = scalar(mx.sum(coefficients_mx * bare_image))
+    coefficients = np.asarray(coefficients_mx, dtype=np.float64)
+    coefficients /= np.linalg.norm(coefficients)
+    fresh_image_cpu = np.asarray(fresh_image, dtype=np.float64)
+
+    with validation_failure_snapshot(
+            failure_debug_path, ci_strings, h1e, eri, norb, nelec,
+            spin_sq=spin_sq, spin_shift=spin_shift, validation=validation,
+            hamiltonian_backend="metal", rdm_backend="cpu",
+            operator_residual_tolerance=operator_residual_tolerance,
+            rdm_energy_tolerance=rdm_energy_tolerance) as debug:
+        debug["coefficients"] = coefficients
+        debug["gpu_image"] = fresh_image_cpu
+        validation_started = perf_counter()
+        cpu = independent_cpu_validation(
+            coefficients, ci_strings, h1e, eri, norb, nelec,
+            spin_sq=spin_sq, spin_shift=spin_shift, threads=threads,
+            include_operator=validation == "full_cpu")
+        if "cpu_image" in cpu:
+            debug["cpu_image"] = cpu["cpu_image"]
+        rdms = rdms_from_cpu(cpu)
+        rdm_seconds = float(cpu["rdm_seconds"])
+        host_started = perf_counter()
+        physical = assemble_result(coefficients, ci_strings, h1e, eri, norb, nelec, *rdms)
+        report = validate_rdms(physical, bare_rayleigh, energy_tolerance=rdm_energy_tolerance)
+        if validation == "full_cpu":
+            report.update(compare_cpu(
+                physical, cpu, fresh_image_cpu,
+                residual_tolerance=operator_residual_tolerance,
+                energy_tolerance=rdm_energy_tolerance,
+                operator_tolerance=operator_residual_tolerance))
+        spin_image = spin_contractor.contract(coefficients_mx.reshape(hdiag.shape))
+        spin_expectation = scalar(mx.sum(coefficients_mx.reshape(hdiag.shape) * spin_image))
+        spin_error = abs(spin_expectation - physical.spin_square())
+        if not np.isfinite(spin_error) or spin_error > 2e-5:
+            raise RuntimeError(f"Metal S² and CPU RDM disagree: error={spin_error:.3e}")
+        report.update(operator_spin_square_expectation=spin_expectation,
+                      spin_square_rdm_abs_error=spin_error,
+                      spin_validation="RDM_vs_Metal_S2")
+        host_seconds = perf_counter() - host_started
+        validation_seconds = perf_counter() - validation_started
+
+    report.update({
+        "solver_backend": "metal_native_sbd", "hamiltonian_backend": "metal",
+        "hamiltonian_uses_zero_coupling_spectator": uses_spectator,
+        "rdm_backend": "cpu", "validation": validation,
+        "independent_cpu_validation": validation == "full_cpu",
+        "gpu_acceleration_scope": "hdiag,H@c,Davidson,S2",
+        "cpu_scope": "link_tables,RDM,small_eigh,independent_validation",
+        "spin_constraint_applied": spin_sq is not None,
+        "spin_backend": "metal", "spin_backend_active": True,
+        "target_spin_square": spin_sq, "spin_shift": spin_shift if spin_sq is not None else None,
+        "backend": "metal", "device_kind": "metal", "device": "metal:0",
+        "device_name": "Apple Metal GPU", "dtype": "float32", "precision_mode": "mixed",
+        "threads": int(threads), "selected_ci_dimension": int(coefficients.size),
+        "n_alpha_strings": len(ci_strings[0]), "n_beta_strings": len(ci_strings[1]),
+        "link_setup_seconds_cpu": link_seconds, "gpu_setup_seconds": setup_seconds,
+        "gpu_solver_seconds": solver_seconds, "gpu_iterations": int(solved.iterations),
+        "requested_max_space": max_space, "effective_max_space": min(max_space, coefficients.size),
+        "gpu_h_matvecs": int(solved.h_matvecs),
+        "gpu_residual_norm_device": float(solved.residual_norm),
+        "gpu_fresh_residual_norm_device": residual,
+        "gpu_penalized_eigenvalue_hartree": rayleigh,
+        "physical_rayleigh_energy_hartree": bare_rayleigh,
+        "spin_penalty_expectation_hartree": rayleigh - bare_rayleigh,
+        "cpu_validation_seconds": float(cpu["seconds"]) + host_seconds,
+        "cpu_subprocess_seconds": float(cpu["seconds"]),
+        "validation_host_check_seconds": host_seconds, "rdm_seconds": rdm_seconds,
+        "validation_seconds": validation_seconds,
+        "native_metal_calls": {**contractor.native_calls, **{
+            f"spin_{key}": value for key, value in spin_contractor.native_calls.items()}},
+        "native_metal_execution": {
+            "hamiltonian": dict(contractor.execution), "spin": dict(spin_contractor.execution)},
+        "max_memory_fraction": max_memory_fraction,
+        "initial_state_projected": initial is not None, "sbd_context_reused": False,
+        "gpu_history": list(solved.history),
+    })
+    if progress_callback is not None:
+        progress_callback({"stage": "metal_native", "status": "complete", "residual_norm": residual})
     return physical, report

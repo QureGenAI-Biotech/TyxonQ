@@ -2,6 +2,7 @@
 
 import os
 import time
+import numpy as np
 
 import pytest
 
@@ -81,6 +82,41 @@ def test_worker_failure_closes_only_owned_processes(monkeypatch, value, error, m
     with pytest.raises(error, match=match):
         pool.solve([value], None, None, 2, (1, 1), {}, None)
     assert not pool.processes
+
+
+def test_metal_worker_does_not_duplicate_device_argument(monkeypatch):
+    from tyxonq.applications.chem.algorithms.sqd.gpu import api
+
+    captured = {}
+
+    def fake_solve(*args, **kwargs):
+        captured.update(kwargs)
+        return "result", {"backend": "metal"}
+
+    monkeypatch.setattr(api, "solve_sci_gpu", fake_solve)
+    batch._solve_one("metal", None, None, None, 1, (1, 0),
+                     {"device_text": "metal:0", "tolerance": 1e-5})
+    assert "device_text" not in captured
+    assert captured["backend"] == "metal"
+    assert captured["tolerance"] == 1e-5
+
+
+def test_batch_reports_include_hardware_resolution(monkeypatch):
+    from tyxonq.applications.chem.algorithms.sqd.gpu import api
+    from tyxonq.numerics.accelerator import BackendResolution
+
+    monkeypatch.setattr(api, "resolve_sqd_backend", lambda request="auto": BackendResolution(
+        request, "metal", "metal:0", "test hardware", "mixed", "cpu"))
+    monkeypatch.setattr(batch, "_solve_one", lambda *args: (args[1], {"device": "metal:0"}))
+    reports = []
+    solve = api.make_gpu_sci_solver(report_callback=reports.append)
+    solve([np.array([3])], None, None, 1, (1, 0))
+    report = reports[0]["report"]
+    assert report["requested_backend"] == "auto"
+    assert report["resolved_backend"] == "metal"
+    assert report["selection_reason"] == "test hardware"
+    assert report["precision_mode"] == "mixed"
+    assert report["rdm_backend"] == "cpu"
 
 
 def test_pool_rejects_invalid_resource_requests():

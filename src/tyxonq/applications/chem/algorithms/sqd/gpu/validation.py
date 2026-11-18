@@ -214,7 +214,7 @@ def validate_rdms(result, bare_rayleigh, *, energy_tolerance, rdm_tolerance=1e-6
 
 
 def compare_cpu(result, cpu, operator_image, *, residual_tolerance, energy_tolerance,
-                rdm_tolerance=1e-6):
+                rdm_tolerance=1e-6, operator_tolerance=1e-10):
     """逐元素比较独立算符像和每个自旋 RDM，不只比较总能量。"""
     coefficients = result.sci_state.amplitudes.reshape(-1)
     image = cpu["cpu_image"].reshape(-1)
@@ -236,7 +236,8 @@ def compare_cpu(result, cpu, operator_image, *, residual_tolerance, energy_toler
         "cpu_energy_abs_error": abs(result.energy - float(cpu["physical_energy"])),
     }
     if (errors["pyscf_operator_residual_norm"] > residual_tolerance or
-        (errors["operator_image_relative_l2_error"] > 1e-10 and errors["operator_image_max_abs_error"] > 1e-10) or
+        (errors["operator_image_relative_l2_error"] > operator_tolerance and
+         errors["operator_image_max_abs_error"] > operator_tolerance) or
         errors["rdm_cpu_max_abs_error"] > rdm_tolerance or errors["cpu_energy_abs_error"] > energy_tolerance):
         raise RuntimeError(f"Independent PySCF validation failed: {errors}")
     return errors
@@ -246,7 +247,7 @@ def validate_spin_square(coefficients, result, *, contractor=None, tolerance=1e-
                          backend="torch", max_memory_fraction=.8):
     """将 RDM 自旋期望与设备上的独立 S²c 收缩比较，不要求目标自旋纯化。"""
     import torch
-    from .torch_spin_square import TorchSelectedS2Contractor
+    from .spin_square import TorchSelectedS2Contractor
 
     state = result.sci_state
     if contractor is None:
