@@ -15,6 +15,7 @@ TyxonQ is a revolutionary modular quantum computing platform that addresses crit
 - **Performance leadership** validated on molecular benchmarks: 1.38x faster than PennyLane, 5.61x faster than Qiskit
 - **Quantum Natural Gradient (QNG)** implementation using Fubini-Study metric for accelerated convergence on barren plateau landscapes
 - **Production-ready Trotter-Suzuki decomposition** for Hamiltonian time evolution with configurable accuracy-depth tradeoffs
+- **Reproducible quantum-dynamics benchmarking** with device-independent Floquet models, common counts semantics, layered numerical validation, manifest-bound raw records and explicit scientific limits
 - **Industry-leading pulse-level quantum control**: Dual-mode architecture, physics-validated gate decompositions, 10+ waveform types, 3-level system support, complete TQASM+OpenPulse export
 - Production-ready noise simulation with 4 standard noise models (depolarizing, amplitude/phase damping, Pauli channel) and user-friendly API
 - Cloud-local hybrid classical acceleration for PySCF HF/post-HF with GPU-first routing and artifact-based SCF state transfer to local VQE
@@ -1406,6 +1407,44 @@ def pvqd_step(params, H, dt):
 - Quantum Approximate Optimization Algorithm (QAOA)
 - Quantum Annealing
 - Adiabatic state preparation
+
+#### 4.4.4 Device-Independent Floquet Dynamics and Shared Observables
+
+`applications/chem/dynamics/floquet.py` adds a nearest-neighbor disordered Floquet Ising model with reproducible PCG64 disorder, Néel-state preparation and circuit construction:
+
+\[
+U_F=e^{-\frac{i}{2}\sum_i h_iZ_i}
+     e^{-\frac{i}{4}\sum_i\phi_iZ_iZ_{i+1}}
+     e^{-\frac{i}{2}\pi g\sum_iX_i}.
+\]
+
+The model helpers contain no provider, device or submission state. Physical layout, compilation and execution are supplied by the experiment layer, so the same logical model can target different simulators or QPUs subject to their gate and topology constraints. The site-averaged autocorrelator \(L^{-1}\sum_i z_i(0)\langle Z_i(t)\rangle\) is expressed as a standard Pauli sum and reduced through the common Hamiltonian grouping and counts-first postprocessing path. This avoids a second, hardware-specific interpretation of bit order.
+
+#### 4.4.5 Layered Validation and Experiment Provenance
+
+The `examples/qd/` benchmarks treat scientific validation as a sequence of separate gates rather than inferring correctness from a successful device call:
+
+| Layer | Evidence and acceptance role |
+|-------|------------------------------|
+| Analytic / exact numerics | Check state preparation, evolution and observables against known references |
+| Parameter convergence | Measure Trotter-step, kick-strength and spectral time-window errors independently |
+| Finite-shot statistics | Report standard errors and confidence intervals without requiring random pointwise errors to decrease monotonically |
+| Compile-only preflight | Check gate decomposition, depth, physical connectivity and routing before submission |
+| Pilot and reviewed batch | Require explicit hardware confirmation and a complete valid pilot before a separately confirmed batch |
+| Raw report reconstruction | Recompute observables and comparisons from saved counts without error mitigation or post-hoc selection |
+
+The raw-data contract stores source provenance and hashes, a versioned submission manifest, seeds, time/cycle grids, physical layout, per-circuit hashes, task IDs, shots and append-only JSONL records with record hashes. Batch guards bind records to the current manifest, device and shots; the Rabi workflow additionally binds the fitted-reference snapshot. Safe resume skips only complete valid records. Consequently, a nonempty but failed pilot, an old manifest, incomplete counts or records from another configuration cannot silently authorize or contaminate a report.
+
+#### 4.4.6 Recorded Hardware-Pairing Case Studies and Scientific Limits
+
+Two available QPUs were used to exercise this provider-neutral workflow. They are validation instances, not architectural dependencies of the dynamics layer.
+
+| Case | Raw observation | Interpretation boundary |
+|------|-----------------|-------------------------|
+| Single-qubit Rabi pairing (`examples/qd/q9_lqcloud_rabi_benchmark.py`) | 101 circuits and 10,100 shots; hardware–independent-experiment RMSE `0.113036`, calibrated-classical–experiment RMSE `0.097581`; preregistered `0.075` validation gate failed | The classical reference was fitted on a separate experimental repetition, and single-qubit Rabi dynamics is classically trivial. This is not a general quantum-versus-classical capability ranking |
+| 20-qubit Floquet Ising pairing (`examples/qd/q10_qz03_floquet_dtc.py`) | 8 pilot circuits plus 264 batch circuits/26,400 shots over 24 independent disorder seeds and cycles 0–10; raw hardware–experiment RMSE `0.6543865137` | Odd/even sign structure remains, but amplitude decays strongly: cycle 10 is `0.080208` on hardware versus `0.609263` in the public curve. Experimental agreement is not claimed |
+
+The public Rabi and Floquet records have documented licenses and source hashes. In particular, the Floquet archive provides a processed Fig. 3a curve rather than original experimental counts, disorder seeds or per-instance circuits; Q10 is therefore a same-model, same-observable independent pairing, not a circuit-by-circuit replay. Neither case used error mitigation, readout correction, post-hoc tuning or window selection. The 20-qubit one-dimensional Floquet run is not a quantum-advantage demonstration and cannot establish or refute a discrete-time-crystal phase; the 20-qubit same-disorder classical reference and the prospective 35-qubit two-dimensional extension have not been run. Full raw evidence is preserved in the [Rabi report](data/qd_benchmarks/electron_rabi_figshare_14871087/MQ02_RABI_RAW_REPORT.md) and [many-body dynamics report](data/qd_benchmarks/floquet_dtc_zenodo_5570676/QZ03_MANY_BODY_DYNAMICS_REPORT.md).
 
 ### 4.5 Performance Optimization Strategies
 

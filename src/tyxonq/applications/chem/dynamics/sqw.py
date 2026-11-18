@@ -242,7 +242,12 @@ def compute_sqw_kicked(
                 e_p = pauli_expectation(states_plus[it], K_items, n)
                 e_m = pauli_expectation(states_minus[it], K_items, n)
                 response[it, k] = (float(np.real(e_p)) - float(np.real(e_m))) / 2.0
-    elif str(provider) == "simulator":
+    else:
+        provider_name = str(provider)
+        run_options = dict(device_kwargs)
+        device = run_options.pop("device", "statevector" if provider_name in {"simulator", "local"} else None)
+        if provider_name not in {"simulator", "local"} and not device:
+            raise ValueError("硬件 provider 必须显式指定 device；不会自动提交缺省设备")
         if init_bitstring is None:
             init_bitstring = model.initial_bitstring("dw")
         block = trotter_ops(ham_items, dt)
@@ -254,7 +259,7 @@ def compute_sqw_kicked(
                 vals = []
                 for sign in (+1.0, -1.0):
                     circ = Circuit(n)
-                    for qubit, ch in enumerate(str(init_bitstring)):
+                    for qubit, ch in enumerate(reversed(str(init_bitstring))):
                         if ch == "1":
                             circ.ops.append(("x", qubit))
                     for j in range(n):
@@ -266,14 +271,10 @@ def compute_sqw_kicked(
                     for _ in range(steps):
                         circ.ops.extend(block)
                     vals.append(measure_pauli_expectation(
-                        circ, K_items, n, provider="simulator",
-                        shots=shots, **device_kwargs
+                        circ, K_items, n, provider=provider_name, device=device,
+                        shots=shots, **run_options
                     ))
                 response[it, k] = (vals[0] - vals[1]) / 2.0
-    else:
-        raise ValueError(
-            f"provider 须为 None（数值）或 'simulator'（线路档），收到 {provider!r}。"
-        )
 
     freqs = np.linspace(0.0, np.pi / dt, int(n_frequency), endpoint=False)
     Cqw = apply_window(response, t_arr, window=window)

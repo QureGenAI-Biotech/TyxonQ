@@ -138,6 +138,24 @@ def test_trotter_vs_exact_two_qubit_coupled():
     assert np.allclose(traj, num, atol=2e-2)
 
 
+def test_first_order_trotter_error_scales_with_dt():
+    """一阶 Trotter 细化应降低误差；shots=0 排除采样涨落干扰。"""
+    ham = [(0.5, [("Z", 0), ("Z", 1)]), (0.3, [("X", 0)]), (0.2, [("X", 1)])]
+    obs = [(1.0, [("Z", 0), ("Z", 1)])]
+    psi0 = bitstring_to_state("01", 2)
+    times = np.array([0.0, 0.4, 0.8, 1.2])
+    reference = expectation_trajectory(ham, obs, psi0, times, 2)
+    errors = []
+    for dt in (0.2, 0.1, 0.05):
+        actual = trotter_expectation_trajectory(
+            ham, obs, times, 2, dt=dt, init_bitstring="01", shots=0
+        )
+        errors.append(float(np.max(np.abs(actual - reference))))
+    assert errors[0] > errors[1] > errors[2]
+    assert errors[0] / errors[1] == pytest.approx(4.0, rel=0.05)
+    assert errors[1] / errors[2] == pytest.approx(4.0, rel=0.05)
+
+
 def test_bitorder_gate_z0_flips_on_x_at_q0():
     """QD-RB3 门：x@q0 → ⟨Z0⟩=-1、⟨Z1⟩=+1（counts 聚合与数值约定一致）。"""
     from tyxonq.core.ir.circuit import Circuit

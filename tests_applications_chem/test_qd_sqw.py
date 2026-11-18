@@ -112,12 +112,8 @@ def test_sqw_peaks_on_ed_excitations_m1():
 # ------------------------------------------------------------------ #
 # M2 预演：数值 vs 线路（simulator）一致性
 # ------------------------------------------------------------------ #
-@pytest.mark.skip(reason="M2 线路档定标留待真机统一做（用户 2026-11-12 拍板，不阻塞）")
 def test_sqw_numeric_vs_circuits_m2():
-    """M2 预演：踢动线性响应两档（数值 vs simulator 线路）S(q,ω) 一致性。
-
-    保留实现供真机统一验收时启用；当前 skip 不阻塞离线主线。
-    """
+    """M2 离线门：踢动线性响应数值档与 simulator 线路谱一致。"""
     from tyxonq.applications.chem.dynamics.sqw import compute_sqw_kicked
 
     model = heisenberg_chain(4, j_xy=0.5, j_z=0.0)
@@ -125,11 +121,43 @@ def test_sqw_numeric_vs_circuits_m2():
     num = compute_sqw_kicked(model, times, h_kick=0.1, n_frequency=100)
     circ = compute_sqw_kicked(
         model, times, h_kick=0.1, provider="simulator",
-        shots=32768, n_frequency=100,
+        shots=8192, n_frequency=100,
     )
     n1 = num["Sqw"] / (abs(num["Sqw"]).max() or 1.0)
     c1 = circ["Sqw"] / (abs(circ["Sqw"]).max() or 1.0)
     assert float(np.corrcoef(n1.ravel(), c1.ravel())[0, 1]) > 0.85
+
+
+def test_kicked_hardware_options_are_explicit_offline(monkeypatch):
+    """硬件参数透传用 mock 验证；此测试不提交任何真实任务。"""
+    from tyxonq.applications.chem.dynamics import circuits
+    from tyxonq.applications.chem.dynamics.sqw import compute_sqw_kicked
+    from tyxonq.core.ir.circuit import Circuit
+
+    calls = []
+
+    def fake_measure(circuit, obs, n_qubits, **kwargs):
+        calls.append((circuit, kwargs))
+        return 0.0
+
+    monkeypatch.setattr(circuits, "measure_pauli_expectation", fake_measure)
+    model = heisenberg_chain(2, j_xy=0.5, j_z=0.0)
+    out = compute_sqw_kicked(
+        model, [0.0, 0.1], q_points=[0.0, np.pi], provider="lqcloud",
+        device="mock-device", shots=64, n_frequency=8,
+    )
+    assert out["Sqw"].shape == (8, 2)
+    assert len(calls) == 8
+    for circuit, kwargs in calls:
+        assert isinstance(circuit, Circuit)
+        assert kwargs["provider"] == "lqcloud"
+        assert kwargs["device"] == "mock-device"
+        assert kwargs["shots"] == 64
+
+    with pytest.raises(ValueError, match="显式指定 device"):
+        compute_sqw_kicked(
+            model, [0.0, 0.1], provider="lqcloud", shots=64, n_frequency=8
+        )
 
 
 def test_correlations_exact_at_t_zero():

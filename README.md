@@ -217,6 +217,20 @@ This document provides:
 
 - **☁️ Quantum Cloud Services**: Scalable quantum computing as a service
 
+### Quantum dynamics and reproducible benchmarking
+
+The `applications/chem/dynamics` layer defines evolution models, circuits and observables independently of any hardware provider. Device selection remains an execution concern, while analytic/numerical references, Pauli grouping and counts postprocessing provide common validation semantics across simulators and QPUs.
+
+The `examples/qd/` workflow now covers the full validation ladder: analytic or exact-diagonalization references, Trotter/kick/time-window convergence, finite-shot uncertainty, compile-only preflight, reviewed pilots and explicitly confirmed hardware batches. Hardware records use versioned manifests, circuit and record hashes, append-only JSONL and safe resume; reports are rebuilt from raw counts.
+
+| Example | Purpose | Current evidence |
+|---------|---------|------------------|
+| [`q8_solid_mvp_benchmarks.py`](examples/qd/q8_solid_mvp_benchmarks.py) | Offline dynamics trustworthiness checks | Analytic references, convergence and finite-shot intervals |
+| [`q9_lqcloud_rabi_benchmark.py`](examples/qd/q9_lqcloud_rabi_benchmark.py) | Single-qubit Rabi hardware–experiment pairing | 101 circuits, 10,100 shots; independent validation did **not** pass ([raw report](data/qd_benchmarks/electron_rabi_figshare_14871087/MQ02_RABI_RAW_REPORT.md)) |
+| [`q10_qz03_floquet_dtc.py`](examples/qd/q10_qz03_floquet_dtc.py) | 20-qubit disordered Floquet Ising dynamics and public-experiment pairing | 8 pilot + 264 batch circuits, 26,400 batch shots; raw RMSE `0.654387` and substantial decay rather than experimental agreement ([raw report](data/qd_benchmarks/floquet_dtc_zenodo_5570676/QZ03_MANY_BODY_DYNAMICS_REPORT.md)) |
+
+The Q9/Q10 records are validation case studies on available QPUs, not provider dependencies of the dynamics APIs. Their published raw reports use no error mitigation, readout correction, post-hoc tuning or time-window selection. Public figure data without original counts/seeds supports same-model independent pairing, not circuit-by-circuit replay; the 20-qubit run is not a quantum-advantage demonstration.
+
 ### 🚀 Performance Leadership
 
 TyxonQ delivers **industry-leading performance** in gradient computation and quantum chemistry workflows:

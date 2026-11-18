@@ -5,6 +5,19 @@ The format is based on Keep a Changelog (https://keepachangelog.com/en/1.1.0/),
 and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.html).
 
 
+### [Unreleased]
+### Added
+- **Device-agnostic quantum-dynamics validation**: exact evolution, Trotter circuits, kicked response, spectroscopy and finite-shot statistics are exercised by the offline `examples/qd/` workflow. Q8 adds analytic/ED references, discretization and time-window convergence checks, and shot standard errors/confidence intervals.
+- **Floquet Ising dynamics** (`applications/chem/dynamics/floquet.py`): reproducible disorder sampling, Néel-state preparation, nearest-neighbor Floquet circuit construction and Z-basis autocorrelators. Observable reduction reuses the common Pauli grouping and counts-first postprocessing rather than introducing provider-specific bit-order logic.
+- **Reproducible experiment-pairing examples**: Q9 (single-qubit Rabi) and Q10 (20-qubit Floquet Ising) default to offline analysis and use versioned manifests, circuit/record hashes, source hashes, explicit hardware confirmation, reviewed-pilot gates and append-only JSONL records. Reports can be rebuilt from raw counts; existing valid records support safe resume. The dynamics core remains independent of the hardware provider used for a recorded run.
+- **Raw benchmark reports and public-data provenance**: added licensed public experimental datasets, raw paired-point CSVs and formal Markdown reports. The Rabi run contains 101 hardware circuits/10,100 shots and retains its failed independent-validation status. The many-body run contains 8 pilot circuits plus 264 batch circuits/26,400 shots; its unmitigated 20-qubit hardware curve did not agree with the public experimental curve and is reported without claiming quantum advantage.
+
+### Changed
+- **Flattened VQE execution**: removed the VQE `runtimes/` package and the legacy `runtime="numeric"/"device"` option. HEA and concrete UCC algorithms now select direct numerics with `shots=0` and circuit measurement with `shots>0`, with `provider`/`device` supplied at the public call site. The shared UCC base retains chemistry and wavefunction responsibilities only.
+
+### Fixed
+- **Hardware-batch provenance and resume guards**: Q9/Q10 now require a complete, valid pilot for the current manifest and reject stale or mixed records based on manifest, circuit, device, shots and (for Rabi) fitted-reference hashes. Retries skip only complete valid records, so failed pilots, incomplete counts or changed configurations cannot silently authorize or contaminate a batch report.
+
 ### [1.4.0] - 2026-09-11
 ### Added
 - **Two-layer compiler architecture**: a device-agnostic `gate_compiler` core plus per-hardware `platforms/*` dialects (`tyxonq`/`lqcloud`/`guodun`). Each platform adapter delegates to the core for device-independent compilation, then translates the result into its own dialect — compilation logic is no longer duplicated per vendor
