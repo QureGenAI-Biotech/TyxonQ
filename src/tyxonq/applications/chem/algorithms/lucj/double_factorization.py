@@ -40,6 +40,28 @@ def _callback_accepts_intermediate_result(callback) -> bool:
         return False
 
 
+def _objective_reusing_initial(objective, x0: np.ndarray):
+    """记录初值 loss，并把同一 loss/gradient 交给 SciPy 的首次调用。"""
+
+    initial_loss, initial_gradient = objective(x0)
+    cached = (
+        np.asarray(x0, dtype=float).copy(),
+        float(initial_loss),
+        np.asarray(initial_gradient, dtype=float).copy(),
+    )
+
+    def wrapped(values: np.ndarray):
+        nonlocal cached
+        if cached is not None:
+            initial_x, value, gradient = cached
+            cached = None
+            if np.array_equal(values, initial_x):
+                return value, gradient.copy()
+        return objective(values)
+
+    return float(initial_loss), wrapped
+
+
 @dataclass(frozen=True)
 class PreparedT2:
     """整理后的 restricted closed-shell CCSD `t2` 数据。"""
@@ -649,7 +671,7 @@ def _double_factorized_t2_alpha_beta_compressed(
 
         # 保存初值和每个被接受迭代点的目标函数，供大线路优化审计与作图。
         # 优化器回调仍收到原始 xk，避免改变既有公共接口。
-        initial_loss, _ = objective(x0)
+        initial_loss, optimizer_objective = _objective_reusing_initial(objective, x0)
         loss_history = [initial_loss]
 
         def traced_callback(intermediate_result):
@@ -667,7 +689,7 @@ def _double_factorized_t2_alpha_beta_compressed(
             return None
 
         result = minimize(
-            objective,
+            optimizer_objective,
             x0,
             method=method,
             jac=True,
@@ -1047,6 +1069,7 @@ def _double_factorized_t2_compressed(
 
     diag_coulomb_mats = full_diag
     orbital_rotations = full_rotations
+    target = torch.as_tensor(t2, dtype=torch.complex128)
     result = None
     for n_tensors in list_reps:
         diag_coulomb_mats = diag_coulomb_mats[:n_tensors]
@@ -1056,8 +1079,6 @@ def _double_factorized_t2_compressed(
             orbital_rotations,
             diag_coulomb_indices,
         )
-        target = torch.as_tensor(t2, dtype=torch.complex128)
-
         last_evaluation: dict[str, Any] = {}
 
         def objective(values: np.ndarray) -> tuple[float, np.ndarray]:
@@ -1082,7 +1103,7 @@ def _double_factorized_t2_compressed(
             return value, variable.grad.detach().cpu().numpy()
 
         # 记录初值与每个被接受的 L-BFGS-B 迭代点，同时保持用户 callback 语义。
-        initial_loss, _ = objective(x0)
+        initial_loss, optimizer_objective = _objective_reusing_initial(objective, x0)
         loss_history = [initial_loss]
 
         def traced_callback(intermediate_result):
@@ -1100,7 +1121,7 @@ def _double_factorized_t2_compressed(
             return None
 
         result = minimize(
-            objective,
+            optimizer_objective,
             x0,
             method=method,
             jac=True,

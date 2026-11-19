@@ -187,6 +187,45 @@ def test_optimized_factorization_does_not_increase_loss():
     assert optimized.loss <= unoptimized.loss + 1e-12
 
 
+def test_compressed_optimization_reuses_initial_objective(monkeypatch):
+    pytest.importorskip("torch")
+    original_restricted = df_module._torch_reconstruct_from_params
+    original_unrestricted = df_module._torch_reconstruct_alpha_beta_from_params
+    calls = {"restricted": 0, "unrestricted": 0}
+
+    def counted_restricted(*args, **kwargs):
+        calls["restricted"] += 1
+        return original_restricted(*args, **kwargs)
+
+    def counted_unrestricted(*args, **kwargs):
+        calls["unrestricted"] += 1
+        return original_unrestricted(*args, **kwargs)
+
+    monkeypatch.setattr(df_module, "_torch_reconstruct_from_params", counted_restricted)
+    monkeypatch.setattr(
+        df_module, "_torch_reconstruct_alpha_beta_from_params", counted_unrestricted
+    )
+    _, _, restricted = df_module.double_factorized_t2(
+        _small_t2(nocc=1, nvir=2),
+        max_terms=1,
+        optimize=True,
+        options={"maxiter": 2},
+        return_optimize_result=True,
+    )
+    _, _, unrestricted = df_module.double_factorized_t2_alpha_beta(
+        _small_unrestricted_t2()[1],
+        max_terms=1,
+        optimize=True,
+        options={"maxiter": 2},
+        return_optimize_result=True,
+    )
+
+    assert calls["restricted"] == restricted.nfev
+    assert calls["unrestricted"] == unrestricted.nfev
+    assert len(restricted.loss_history) == restricted.nit + 1
+    assert len(unrestricted.loss_history) == unrestricted.nit + 1
+
+
 def test_optimized_alpha_beta_factorization_returns_trace_and_lowers_loss():
     pytest.importorskip("torch")
     t2ab = _small_unrestricted_t2()[1]

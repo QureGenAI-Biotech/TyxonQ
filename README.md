@@ -9,7 +9,7 @@
 For Chinese Introduction, see: [中文README](README_cn.md).
 For Japanese Introduction, see: [日本語README](README_jp.md).
 
-TyxonQ (太玄量子) is a production-ready, next-generation quantum programming framework featuring stable IR, pluggable compiler, unified device abstraction (simulators and hardware), single numerics backend interface (NumPy/PyTorch/CuPy), and device-runtime friendly postprocessing. Version 1.0.0 introduces revolutionary pulse-level control, China Mobile QCOS (Quantum Computing OS) integration, and enhanced quantum chemistry performance.
+TyxonQ (太玄量子) is a production-ready, next-generation quantum programming framework featuring stable IR, pluggable compiler, unified device abstraction (simulators and hardware), single numerics backend interface (NumPy/PyTorch/CuPy/MLX), and device-runtime friendly postprocessing. Version 1.0.0 introduces revolutionary pulse-level control, China Mobile QCOS (Quantum Computing OS) integration, and enhanced quantum chemistry performance.
 
 ### Core goals
 - **System‑architect‑friendly, hardware‑realistic programming model**: stable IR + chain pipeline mirroring real device execution; clear contracts for compiler, devices, and postprocessing; closest‑to‑hardware code path.
@@ -201,7 +201,7 @@ This document provides:
   - **Clean layering**: `exporters/` = pure zero-dependency QASM2/QASM3 text; `interop/` = IR ↔ Qiskit `QuantumCircuit` and tensor-network MPO; `platforms/` = hardware dialects. Qiskit is now an interop target, not a pseudo hardware platform.
   - **Fix**: `output="qasm2"` now emits a real OpenQASM 2.0 string instead of silently falling back to IR (benefits `homebrew_s2`/`quafu` submission).
 - **Devices**: statevector/density‑matrix/MPS simulators and hardware drivers (e.g., `tyxonq:homebrew_s2`).
-- **Numerics**: one ArrayBackend for NumPy/PyTorch/CuPy powering simulators and research kernels.
+- **Numerics**: one ArrayBackend for NumPy/PyTorch/CuPy/MLX powering simulators and research kernels.
 - **Libraries**: `libs/circuits_library` (templates: VQE/QAOA/trotter/state‑prep), `libs/quantum_library` (numeric kernels), `libs/hamiltonian_encoding` (OpenFermion I/O, encodings), `libs/optimizer` (interop).
 - **Real Quantum Hardware Ready**: TyxonQ supports **real quantum machine execution** through our quantum cloud services powered by **QureGenAI**. Currently featuring the **Homebrew_S2** quantum processor, enabling you to run your quantum algorithms on actual quantum hardware, not just simulators.
 
@@ -245,7 +245,7 @@ TyxonQ delivers **industry-leading performance** in gradient computation and qua
 
 **Key Performance Advantages**:
 - ✨ **PyTorch Autograd**: Complete automatic differentiation support with gradient chain preservation
-- 🎯 **Multi-Backend Architecture**: Seamless switching between NumPy/PyTorch/CuPy without code changes
+- 🎯 **Multi-Backend Architecture**: Seamless switching between NumPy/PyTorch/CuPy/MLX without code changes
 - 🔬 **Optimized Implementation**: Efficient gradient computation through proper autograd integration
 - 📊 **Production-Ready**: Validated on VQE benchmarks with H₂, LiH, BeH₂ molecules
 
@@ -532,21 +532,75 @@ Explore the full collection in [`examples/`](examples/) directory.
 - **TyxonQ Core Team**: Framework development and optimization
 - **Community Contributors**: Open source development and testing
 
-## SQD GPU acceleration
+## SQD selected-CI GPU acceleration
 
-GPU-accelerated SQD is available through a single entry point:
+TyxonQ provides native selected-CI SBD solvers for CUDA and Apple Metal behind
+one SQD entry point. The SBD algorithm is separate from the general-purpose
+`ArrayBackend`: CUDA SBD retains its native FP64 implementation, while Metal
+uses MLX/MSL kernels for H@C, S² and the Davidson main iteration.
 
 ```python
 from tyxonq.applications.chem.algorithms.sqd.gpu import solve_sci_gpu
-result, report = solve_sci_gpu(ci_strings, h1e, eri, norb, nelec, backend="auto")
+
+result, report = solve_sci_gpu(
+    ci_strings, h1e, eri, norb, nelec,
+    backend="gpu",  # "auto" is equivalent; use "cpu" for PyTorch FP64
+)
+print(report["resolved_backend"], report["used_cpu_fallback"])
 ```
 
-Backend selection follows strict hardware priority: CUDA uses native SBD,
-otherwise Metal uses the native MLX/Metal SBD solver, otherwise PyTorch runs on
-CPU. Native dependency or numerical failures are reported explicitly and never
-silently fall back. CuPy and MLX provide the corresponding automatic general
-array backends. See `docs/SQD_GPU_BACKENDS.md` and
-`docs/NUMERICS_ACCELERATION_AUDIT.md`.
+`backend="gpu"`/`"auto"` selects **native CUDA SBD → native MLX/Metal SBD →
+PyTorch CPU**. Explicit `"cuda"`/`"sbd"`, `"metal"`, and `"cpu"` requests are
+also supported. If requested hardware, its device, or a required runtime is
+unavailable, TyxonQ emits a `RuntimeWarning`, falls back to PyTorch CPU, and
+records `used_cpu_fallback=True` with a `selection_reason`. Kernel failures,
+non-convergence, and residual/RDM validation errors still raise; numerical
+failures never silently change backend.
+
+Install the optional runtime through the main package—no separate GPU package
+or secondary `pyproject.toml` is required:
+
+```bash
+pip install 'tyxonq[cuda]'   # NVIDIA; native SBD build prerequisites also apply
+pip install 'tyxonq[metal]'  # Apple Silicon; installs MLX
+```
+
+### Native Metal scope and measured performance
+
+The Metal path executes same-spin and mixed-spin H@C, S², and Davidson long-vector
+operations on the Apple GPU, with deterministic FP32 reductions and explicit
+completion before timing. Connection-table setup and small Hermitian FP64
+`eigh` remain on CPU; the current RDM validation path is also explicitly CPU
+(`rdm_backend="cpu"`). This is a single-device, mixed-precision implementation,
+not an MPI/multi-GPU or end-to-end FP64 port.
+
+On the measured Apple Silicon host, real-molecule, single-CAS SQD runs reached
+whole-workflow break-even near 14,400 determinants. For H2O CAS(4e,18o),
+23,409 determinants, two independent runs reduced median wall time by
+**6.7% and 10.6%** (CPU/Metal ratios `1.071/1.119`). At CAS(4e,16o), H2O, NH3,
+and CH4 measured CPU/Metal ratios of `1.019`, `1.022`, and `1.045`. These are
+converged, residual/RDM-validated single-CAS results; they are not claims about
+full iterative SQD, arbitrary molecule sizes, or unmeasured CUDA performance.
+
+### Profile-guided numerical acceleration
+
+A separate framework-wide optimization pass adopted only changes that improved
+complete workloads by at least 5% in two independent processes:
+
+| Workload | Adopted optimization | Measured median improvement |
+| --- | --- | --- |
+| MPS | Consistent backend propagation and native SVD without implicit host fallback | 8.20–9.55% (medium), 13.04–16.93% (large) |
+| EWF DMET | Reuse fragment contributions instead of repeating cumulant/ERI contractions | 5.12–8.30% (medium), 13.08–13.31% (large) |
+| LUCJ compressed DF | Reuse the initial autograd objective for SciPy's first call | 10.89–20.50% across tested sizes |
+
+The numerical study also rejected or deferred migrations whose whole-workload
+share or precision support was insufficient, including `quantum_info` RDM,
+SKQD rotation, readout, and Metal SQD RDM. Raw samples,
+memory measurements, reproduction commands, and scientific limits are in
+[`docs/NUMERICS_OPTIMIZATION_REPORT.md`](docs/NUMERICS_OPTIMIZATION_REPORT.md).
+For SBD architecture and benchmarks, see
+[`docs/SQD_GPU_BACKENDS.md`](docs/SQD_GPU_BACKENDS.md) and
+[`docs/SBD_METAL_OPTIMIZATION.md`](docs/SBD_METAL_OPTIMIZATION.md).
 
 ## License
 TyxonQ is open source, released under the Apache License, Version 2.0.

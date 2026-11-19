@@ -15,6 +15,8 @@ from tyxonq.applications.chem.algorithms.ewf import (
     ccsd_to_cisd,
     fci_to_cisd,
 )
+from tyxonq.applications.chem.algorithms.ewf import driver as driver_module
+from tyxonq.applications.chem.algorithms.ewf import energy as energy_module
 
 
 def _rhf(atom: str, basis: str = "sto-3g"):
@@ -33,6 +35,25 @@ def _ao_projector(coeff: np.ndarray, overlap: np.ndarray) -> np.ndarray:
     """返回 AO 协变表示的 metric projector，避免比较任意轨道列。"""
 
     return overlap @ coeff @ coeff.T @ overlap
+
+
+def test_dmet_kernel_reuses_fragment_energy_contributions(monkeypatch):
+    mf = _rhf("H 0 0 0; H 0 0 0.74")
+    original = energy_module.fragment_dmet_energy
+    calls = 0
+
+    def counted(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(energy_module, "fragment_dmet_energy", counted)
+    monkeypatch.setattr(driver_module, "fragment_dmet_energy", counted)
+    emb = EWF(mf, solver="FCI", energy_functional="dmet")
+    energy = emb.kernel()
+
+    assert calls == len(emb.result.fragments)
+    np.testing.assert_allclose(energy, emb.get_dmet_energy(), atol=1e-12, rtol=0)
 
 
 def test_iao_basis_and_atomic_owner_partition_are_complete():

@@ -47,16 +47,14 @@ class MatrixProductStateEngine:
         self.max_bond: int | None = max_bond
 
     def _init_state(self, num_qubits: int):
-        return init_product_state(num_qubits)
+        return init_product_state(num_qubits, backend=self.backend)
 
     def _apply_1q(self, state: Any, gate2: Any, qubit: int, num_qubits: int):
-        # MPS in-place update
-        mps_apply_1q(state, gate2, qubit)
+        mps_apply_1q(state, gate2, qubit, backend=self.backend)
         return state
 
     def _apply_2q(self, state: Any, gate4: Any, q1: int, q2: int, num_qubits: int):
-        # General 2-qubit with SWAP routing
-        mps_apply_2q(state, gate4, q1, q2, max_bond=self.max_bond)
+        mps_apply_2q(state, gate4, q1, q2, max_bond=self.max_bond, backend=self.backend)
         return state
 
     def _gate_h(self):
@@ -149,7 +147,7 @@ class MatrixProductStateEngine:
         # If shots requested and there are measurements, return sampled counts via reconstructed probabilities
         if shots > 0 and len(measures) > 0:
             nb = self.backend
-            psi = mps_to_statevector(state)
+            psi = mps_to_statevector(state, backend=self.backend)
             p = nb.square(nb.abs(psi)) if hasattr(nb, 'square') else (np.abs(psi) ** 2)
             p_np = np.asarray(nb.to_numpy(p), dtype=float)
             dim = int(p_np.size)
@@ -192,7 +190,7 @@ class MatrixProductStateEngine:
 
         expectations: Dict[str, float] = {}
         # Compute expectations by reconstructing statevector for now (small n tests)
-        psi = mps_to_statevector(state)
+        psi = mps_to_statevector(state, backend=self.backend)
         nb = self.backend
         psi_b = nb.asarray(psi)
         for q in measures:
@@ -225,9 +223,8 @@ class MatrixProductStateEngine:
         except Exception:
             raise ImportError("expval requires openfermion installed")
         n = int(getattr(circuit, "num_qubits", 0))
-        psi = np.asarray(
-            mps_to_statevector(self.state(circuit, **kwargs)), dtype=np.complex128
-        ).reshape(-1)
+        statevector = mps_to_statevector(self.state(circuit, **kwargs), backend=self.backend)
+        psi = np.asarray(self.backend.to_numpy(statevector), dtype=np.complex128).reshape(-1)
         H = get_sparse_operator(obs, n_qubits=n)
         e = np.vdot(psi, H.dot(psi))
         return float(np.real(e))
@@ -278,14 +275,13 @@ class MatrixProductStateEngine:
         n = len(mps_state.tensors)
         
         if use_native or n > 15:  # Use native for n>15 to save memory
-            return expectation_pauli_native(mps_state, pauli_ops)
+            return expectation_pauli_native(mps_state, pauli_ops, backend=self.backend)
         else:
             # Fallback to statevector for small systems (easier debugging)
-            psi = mps_to_statevector(mps_state)
+            psi = mps_to_statevector(mps_state, backend=self.backend)
             # Apply Pauli operators and compute ⟨ψ|O|ψ⟩
             # (This is the old statevector path, kept for compatibility)
-            from ....numerics.api import get_backend
-            nb = get_backend(None)
+            nb = self.backend
             psi_transformed = nb.copy(psi) if hasattr(nb, 'copy') else nb.asarray(psi)
             
             for gate, qubits in pauli_ops:

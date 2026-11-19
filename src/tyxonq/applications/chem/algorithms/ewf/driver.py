@@ -382,6 +382,7 @@ class EWF:
                 inputs,
                 part_cumulant=True,
                 approx_cumulant=True,
+                fragment_energies=per_fragment,
             )
             fragment_results = [
                 dataclasses.replace(result, e_dmet=float(energy))
