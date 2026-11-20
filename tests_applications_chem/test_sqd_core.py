@@ -573,6 +573,19 @@ def test_solve_sci_unrestricted_matches_direct_uhf_energy_rdms_and_spin_square()
     )
 
 
+@pytest.mark.parametrize("backend", [None, "cpu", "metal"])
+@pytest.mark.parametrize("batch", [False, True])
+def test_excluded_orbitals_checked_before_dispatch(backend, batch):
+    """所有后端都应在建立求解器前拒绝占据排除轨道的字符串。"""
+    from tyxonq.applications.chem.algorithms.sqd.fermion import solve_sci, solve_sci_batch
+
+    strings = (np.array([2]), np.array([1, 2]))
+    solve = solve_sci_batch if batch else solve_sci
+    with pytest.raises(ValueError, match="Selected beta CI strings"):
+        solve([strings] if batch else strings, np.eye(2), np.zeros((2,) * 4),
+              2, (1, 1), backend=backend, excluded_orbitals=([], [0]))
+
+
 def test_unrestricted_input_validation_and_excluded_orbitals():
     norb = 3
     nelec = (1, 1)
@@ -696,3 +709,46 @@ def test_ext_sqd_uses_global_best_and_keeps_original_space():
 def test_ext_sqd_rejects_invalid_threshold_settings(extra):
     with pytest.raises(ValueError, match="ext_sqd_threshold"):
         run_sqd_fermion(np.eye(2), np.zeros((2,) * 4), {"0101": 1}, 1, 2, (1, 1), **extra)
+
+
+def test_fixed_space_preserves_strided_labels_and_rejects_mismatched_guess():
+    labels = np.array([1, 2, 4, 8], dtype=np.int64)[::2]
+    h = np.diag([0., 5., -2., 1.])
+    g = np.zeros((4,)*4)
+    out = solve_sci((labels,labels), h, g, 4, (1,1))
+    np.testing.assert_allclose(out.energy, -4., atol=1e-12)
+    bad = selected_ci._as_SCIvector(np.ones((2,2)), (np.array([1,2]),labels))
+    with pytest.raises(ValueError,match="labels must match"):
+        solve_sci((labels,labels), h, g, 4, (1,1), ci0=bad)
+
+
+def test_fixed_space_unsorted_labels_preserve_hopping_energy():
+    """同一物理空间中两个自旋各有一个电子，最低的一体能量之和应为 −2。"""
+    result = solve_sci(([2, 1], [1, 2]), np.array([[0., -1.], [-1., 0.]]),
+                       np.zeros((2,) * 4), 2, (1, 1), tol=1e-12)
+    assert result.energy == pytest.approx(-2.0, abs=1e-12)
+    np.testing.assert_array_equal(result.sci_state.ci_strs_a, [1, 2])
+
+
+@pytest.mark.parametrize("tagged", [False, True])
+def test_fixed_space_ci0_follows_its_own_labels(tagged):
+    """零 Hamiltonian 保留初猜，直接检验请求和 SCIvector 两组标签的置换。"""
+    requested = ([4, 1, 2], [2, 1])
+    labels = ([2, 4, 1], [1, 2]) if tagged else requested
+    expected = np.arange(1., 7.).reshape(3, 2)
+    expected /= np.linalg.norm(expected)
+    initial = expected[np.ix_(np.searchsorted([1, 2, 4], labels[0]),
+                              np.searchsorted([1, 2], labels[1]))]
+    if tagged:
+        initial = selected_ci._as_SCIvector(initial, labels)
+    out = solve_sci(requested, np.zeros((3, 3)), np.zeros((3,) * 4), 3, (1, 1), ci0=initial)
+    np.testing.assert_allclose(abs(out.sci_state.amplitudes), expected, atol=1e-12)
+    np.testing.assert_array_equal(out.sci_state.ci_strs_b, [1, 2])
+
+
+@pytest.mark.parametrize("labels,error", [([1, 1], "unique"), ([3], "norb/nelec"),
+                                           ([4], "norb/nelec"), ([-1], "norb/nelec"),
+                                           ([], "nonempty"), ([1.], "integer")])
+def test_fixed_space_rejects_invalid_labels(labels, error):
+    with pytest.raises(ValueError, match=error):
+        solve_sci((labels, [1]), np.eye(2), np.zeros((2,) * 4), 2, (1, 1))

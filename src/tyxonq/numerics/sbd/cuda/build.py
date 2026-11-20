@@ -138,6 +138,7 @@ def build(source: Path, output_dir: Path, *, nvcc: str, mpicxx: str, arch: str =
         "mpi_version": _run([mpicxx, "--showme:version"]),
         "source": str(source), "binding_sha256": _hash(RESOURCES / "tpb.cpp"),
         "spin_kernel_sha256": _hash(RESOURCES / "spin_kernels.cuh"),
+        "connected_kernel_sha256": _hash(RESOURCES / "connected_rows.cuh"),
         "provenance": json.loads((source / "TYXONQ_BUILD_SOURCE.json").read_text()),
     }
     (output_dir / "sbd_build.json").write_text(json.dumps(record, indent=2) + "\n")

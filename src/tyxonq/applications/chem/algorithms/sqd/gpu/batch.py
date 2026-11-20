@@ -16,11 +16,10 @@ def _solve_one(kind, strings, h1e, eri, norb, nelec, options):
 
         return solve_sci_sbd(strings, h1e, eri, norb, nelec, **options)
     if kind == "metal":
-        from .api import solve_sci_gpu
+        from .sbd_solver import solve_sci_metal
 
-        options = dict(options)
-        options.pop("device_text", None)
-        return solve_sci_gpu(strings, h1e, eri, norb, nelec, backend="metal", **options)
+        # batch 工厂已选定设备，运行期间的设备错误必须向上传递。
+        return solve_sci_metal(strings, h1e, eri, norb, nelec, **options)
     from .solver import solve_sci_cuda
 
     return solve_sci_cuda(strings, h1e, eri, norb, nelec, **options)
@@ -165,7 +164,14 @@ def _make_batch_solver(kind, report_callback, device_ids, worker_timeout, option
                 report_callback({"batch": index, "report": report})
         return results
 
-    solve_batch.close = pool.close if pool is not None else lambda: None
+    def close():
+        if pool is not None:
+            pool.close()
+        else:
+            from .validation import close_cpu_validation_worker
+            close_cpu_validation_worker()
+
+    solve_batch.close = close
     return solve_batch
 
 

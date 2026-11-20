@@ -3,6 +3,7 @@
 #include <limits>
 #include <cmath>
 #include <memory>
+#include <mutex>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -22,6 +23,7 @@ static void checked(cudaError_t code) {
     if (code != cudaSuccess) throw std::runtime_error(cudaGetErrorString(code));
 }
 #include "spin_kernels.cuh"
+#include "connected_rows.cuh"
 static py::array_t<double> array_copy(const std::vector<double>& data) {
     py::array_t<double> out(data.size());
     std::copy(data.begin(), data.end(), out.mutable_data());
@@ -39,8 +41,13 @@ static py::array_t<double> blocks_copy(const std::vector<std::vector<double>>& d
 class CountedMult : public sbd::MultTPBThrust<double> {
 public:
     size_t calls = 0;
+    std::unique_ptr<ConnectedRows> connected;
     void run(const Device& h, const Device& c, Device& hc) override {
         ++calls;
+        if (connected) {
+            connected->apply(h, c, hc);
+            return;
+        }
         sbd::MultTPBThrust<double>::run(h, c, hc);
     }
 };
@@ -55,6 +62,19 @@ class TPBContext {
     MPI_Comm t_ = MPI_COMM_NULL, a_ = MPI_COMM_NULL;
     std::unique_ptr<CountedMult> mult_;
     Device diagonal_, input_, output_;
+    int hc_lanes_;
+    bool integrals_ready_ = true;
+    std::vector<uint64_t> alpha_labels_, beta_labels_;
+    mutable std::mutex usage_;
+
+    // GPU 调用会释放 GIL，不能让另一线程同时替换积分或共用工作缓冲区。
+    std::unique_lock<std::mutex> acquire(bool require_integrals = true) const {
+        std::unique_lock<std::mutex> lock(usage_, std::try_to_lock);
+        if (!lock.owns_lock()) throw std::runtime_error("SBD CUDA context is already in use");
+        if (require_integrals && !integrals_ready_)
+            throw std::runtime_error("SBD integral update failed; update integrals before reusing the context");
+        return lock;
+    }
 
     void free_communicators() noexcept {
         int finalized = 0; MPI_Finalized(&finalized);
@@ -84,10 +104,21 @@ class TPBContext {
     }
 
     void activate() const { checked(cudaSetDevice(device_)); }
-    void memory_guard(size_t additional, const char* stage) const {
+    size_t available_bytes() const {
         size_t free = 0, total = 0;
         checked(cudaMemGetInfo(&free, &total));
-        int failed = additional > free || total - free + additional > memory_fraction_ * total;
+        const size_t limit = static_cast<size_t>(memory_fraction_ * total);
+        const size_t used = total - free;
+        return limit > used ? limit - used : 0;
+    }
+    std::unique_ptr<ConnectedRows> connected_rows(const sbd::oneInt<double>& h1,
+                                                  const sbd::twoInt<double>& eri) const {
+        if (hc_lanes_ == 0) return nullptr;
+        return std::make_unique<ConnectedRows>(h1, eri, alpha_labels_, beta_labels_,
+                                               norb_, hc_lanes_, available_bytes());
+    }
+    void memory_guard(size_t additional, const char* stage) const {
+        int failed = additional > available_bytes();
         // 任一 rank 预算不足时，所有 rank 一致退出，避免其他进程卡在集体操作。
         int any_failed = 0;
         MPI_Allreduce(&failed, &any_failed, 1, MPI_INT, MPI_MAX, comm_);
@@ -152,9 +183,10 @@ class TPBContext {
 public:
     TPBContext(const Array& h1, const Array& eri, const Labels& sa, const Labels& sb,
                int n, std::pair<int,int> electrons, int device, py::object comm,
-               std::pair<int,int> grid, double memory_fraction)
+               std::pair<int,int> grid, double memory_fraction, int hc_lanes)
         : norb_(n), device_(device), nelec_(electrons), grid_(grid),
-          memory_fraction_(memory_fraction), na_(sa.size()), nb_(sb.size()) {
+          memory_fraction_(memory_fraction), na_(sa.size()), nb_(sb.size()),
+          hc_lanes_(hc_lanes) {
         if (n < 1 || n > 63) throw std::invalid_argument("TPB int64 labels require 1 <= norb <= 63");
         if (!(memory_fraction > 0 && memory_fraction <= 1))
             throw std::invalid_argument("memory_fraction must lie in (0, 1]");
@@ -168,6 +200,13 @@ public:
             parent = *ptr;
         }
         MPI_Comm_size(parent, &size_); MPI_Comm_rank(parent, &rank_);
+        if (size_ > 1) {
+            int requested = hc_lanes != 0, any_requested = 0;
+            MPI_Allreduce(&requested, &any_requested, 1, MPI_INT, MPI_MAX, parent);
+            if (any_requested) throw std::invalid_argument("connected Hc requires a single MPI rank");
+        }
+        if (hc_lanes != 0 && hc_lanes != 1 && hc_lanes != 4 && hc_lanes != 8 && hc_lanes != 32)
+            throw std::invalid_argument("hc_lanes must be 0, 1, 4, 8 or 32");
         if (grid.first < 1 || grid.second < 1 || grid.first*grid.second != size_ ||
             size_t(grid.first) > na_ || size_t(grid.second) > nb_)
             throw std::invalid_argument("grid must match communicator size and nonempty determinant blocks");
@@ -224,6 +263,12 @@ public:
         for (auto& buffer : mult_->transfer_workspace) buffer.reserve(largest_block);
         mult_->makeQChamDiagTerms(diagonal_);
         input_.resize(local_size_); output_.resize(local_size_);
+        if (hc_lanes_) {
+            // 保存组态快照，以免调用方修改输入标签后积分更新使用另一套基底。
+            alpha_labels_.assign(sa.data(), sa.data() + sa.size());
+            beta_labels_.assign(sb.data(), sb.data() + sb.size());
+            mult_->connected = connected_rows(i1, i2);
+        }
         checked(cudaDeviceSynchronize());
         } catch (...) {
             // 构造失败时析构函数不会执行，因此显式释放已建立的通信器。
@@ -237,25 +282,38 @@ public:
         free_communicators();
     }
     void update_integrals(const Array& h1, const Array& eri) {
+        auto lock = acquire(false);
         activate();
         sbd::oneInt<double> i1; sbd::twoInt<double> i2;
         integrals(h1, eri, i1, i2);
-        // 积分更新不重建与组态集合有关的连接表。
+        // 先准备新权重。若预算不足，旧积分与旧算符仍可成套使用。
+        auto next = connected_rows(i1, i2);
+        integrals_ready_ = false;
         thrust::copy(i1.store.begin(), i1.store.end(), mult_->I1_store.begin());
         thrust::copy(i2.store.begin(), i2.store.end(), mult_->I2_store.begin());
         thrust::copy(i2.DirectMat.begin(), i2.DirectMat.end(), mult_->I2_dm.begin());
         thrust::copy(i2.ExchangeMat.begin(), i2.ExchangeMat.end(), mult_->I2_em.begin());
         mult_->makeQChamDiagTerms(diagonal_);
         checked(cudaDeviceSynchronize());
+        mult_->connected = std::move(next);
+        integrals_ready_ = true;
     }
     py::array_t<double> hdiag() {
+        auto lock = acquire();
         activate();
         std::vector<double> local(local_size_);
         thrust::copy(diagonal_.begin(), diagonal_.end(), local.begin());
         return array_copy(gather(local));
     }
+    int hc_lanes() const { return hc_lanes_; }
     size_t memory_bytes() const {
+        auto lock = acquire(false);
+        return allocation_bytes();
+    }
+private:
+    size_t allocation_bytes() const {
         size_t count = (diagonal_.capacity()+input_.capacity()+output_.capacity())*sizeof(double);
+        if (mult_->connected) count += mult_->connected->memory_bytes();
         count += (mult_->adets.capacity()+mult_->bdets.capacity()+mult_->dets.capacity())*sizeof(size_t);
         count += (mult_->I1_store.capacity()+mult_->I2_store.capacity()+mult_->I2_dm.capacity()+mult_->I2_em.capacity())*sizeof(double);
         for (const auto& values : mult_->helper_storage) count += values.capacity()*sizeof(size_t);
@@ -263,19 +321,22 @@ public:
         for (const auto& values : mult_->transfer_workspace) count += values.capacity()*sizeof(double);
         return count;
     }
+public:
     void matvec_device(uintptr_t in, uintptr_t out, size_t count) {
+        auto lock = acquire();
         copy_input(in, count);
         cudaPointerAttributes attrs; checked(cudaPointerGetAttributes(&attrs, reinterpret_cast<void*>(out)));
         if (attrs.type != cudaMemoryTypeDevice || attrs.device != device_)
             throw std::invalid_argument("output pointer must refer to the context CUDA device");
         { py::gil_scoped_release release;
-          thrust::fill(output_.begin(), output_.end(), 0.0);
+          if (!mult_->connected) thrust::fill(output_.begin(), output_.end(), 0.0);
           mult_->run(diagonal_, input_, output_);
           checked(cudaMemcpy(reinterpret_cast<void*>(out), thrust::raw_pointer_cast(output_.data()),
                              count*sizeof(double), cudaMemcpyDeviceToDevice));
           checked(cudaDeviceSynchronize()); }
     }
     py::dict rdms_device(uintptr_t in, size_t count) {
+        auto lock = acquire();
         copy_input(in, count);
         const size_t n = norb_;
         memory_guard((2*n*n+4*n*n*n*n+2*local_size_)*sizeof(double), "RDM allocation");
@@ -286,6 +347,7 @@ public:
         return out;
     }
     py::dict solve(double tolerance, int max_cycles, int max_space, py::object initial, bool compute_rdms) {
+        auto lock = acquire();
         if (!(tolerance > 0) || max_cycles < 1 || max_space < 2)
             throw std::invalid_argument("invalid Davidson convergence settings");
         activate();
@@ -322,7 +384,7 @@ public:
           davidson_seconds = std::chrono::duration<double>(residual_start-davidson_start).count();
           iterations = mult_->calls;
           thrust::copy(w.begin(), w.end(), input_.begin());
-          thrust::fill(output_.begin(), output_.end(), 0.0);
+          if (!mult_->connected) thrust::fill(output_.begin(), output_.end(), 0.0);
           mult_->run(diagonal_, input_, output_);
           std::vector<double> hw(local_size_);
           thrust::copy(output_.begin(), output_.end(), hw.begin());
@@ -351,7 +413,7 @@ public:
         timing["residual_seconds"] = residual_seconds;
         timing["rdm_seconds"] = rdm_seconds;
         out["timings"] = timing;
-        out["context_memory_bytes"] = memory_bytes();
+        out["context_memory_bytes"] = allocation_bytes();
         if (rank_ == 0) {
             out["coefficients"] = array_copy(coefficients);
             out["hamiltonian_image"] = array_copy(global_hamiltonian_image);
@@ -374,10 +436,12 @@ PYBIND11_MODULE(_sbd_tpb_cuda, module) {
     module.attr("non_cuda_aware_mpi") = true;
     bind_spin_kernels(module);
     py::class_<TPBContext>(module, "TPBContext")
-        .def(py::init<const Array&,const Array&,const Labels&,const Labels&,int,std::pair<int,int>,int,py::object,std::pair<int,int>,double>(),
+        .def(py::init<const Array&,const Array&,const Labels&,const Labels&,int,std::pair<int,int>,int,py::object,std::pair<int,int>,double,int>(),
              py::arg("h1e"),py::arg("eri"),py::arg("strings_a"),py::arg("strings_b"),
              py::arg("norb"),py::arg("nelec"),py::arg("device_id")=0,
-             py::arg("comm")=py::none(),py::arg("grid")=std::make_pair(1,1),py::arg("memory_fraction")=0.8)
+             py::arg("comm")=py::none(),py::arg("grid")=std::make_pair(1,1),py::arg("memory_fraction")=0.8,
+             py::arg("hc_lanes")=0)
+        .def_property_readonly("hc_lanes", &TPBContext::hc_lanes)
         .def("update_integrals", &TPBContext::update_integrals)
         .def("hdiag", &TPBContext::hdiag)
         .def("memory_bytes", &TPBContext::memory_bytes)
