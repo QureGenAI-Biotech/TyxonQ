@@ -85,7 +85,7 @@ def test_worker_failure_closes_only_owned_processes(monkeypatch, value, error, m
 
 
 def test_metal_worker_does_not_duplicate_device_argument(monkeypatch):
-    from tyxonq.applications.chem.algorithms.sqd.gpu import api
+    from tyxonq.applications.chem.algorithms.sqd.gpu import sbd_solver
 
     captured = {}
 
@@ -93,11 +93,10 @@ def test_metal_worker_does_not_duplicate_device_argument(monkeypatch):
         captured.update(kwargs)
         return "result", {"backend": "metal"}
 
-    monkeypatch.setattr(api, "solve_sci_gpu", fake_solve)
+    monkeypatch.setattr(sbd_solver, "solve_sci_metal", fake_solve)
     batch._solve_one("metal", None, None, None, 1, (1, 0),
                      {"device_text": "metal:0", "tolerance": 1e-5})
-    assert "device_text" not in captured
-    assert captured["backend"] == "metal"
+    assert captured["device_text"] == "metal:0"
     assert captured["tolerance"] == 1e-5
 
 

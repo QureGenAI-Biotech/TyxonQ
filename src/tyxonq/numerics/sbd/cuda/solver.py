@@ -8,6 +8,7 @@ signs and the native solve call; SQD supplies the sampled basis and validation.
 from __future__ import annotations
 
 import importlib
+import os
 from time import perf_counter
 from typing import Any
 
@@ -94,7 +95,11 @@ def convert_raw_rdms(raw: dict[str, Any], norb: int) -> tuple[tuple[Any, ...], t
 
 
 class SBDContractor:
-    """Owns a determinant connection table and native CUDA integrals."""
+    """持有固定组态的 CUDA 算符和可更新的积分。
+
+    新建上下文时可用 TYXONQ_SBD_CUDA_HC_LANES 选择每行线程数（1、4、8 或 32），
+    启用单卡 FP64 连接表计算 Hc。默认值 0 使用上游 TPB，同样适用于旧版扩展。
+    """
 
     def __init__(
         self,
@@ -116,13 +121,18 @@ class SBDContractor:
         self.shape = tuple(map(len, strings))
         self.norb, self.nelec = norb, nelec
         self.memory_fraction = memory_fraction
-        self.ci_strings = strings
+        self.ci_strings = tuple(labels.copy() for labels in strings)
         self.phase = interleaved_phase(strings, norb, device=self.device)
         self.device = self.phase.device
         device_id = torch.cuda.current_device() if self.device.index is None else self.device.index
+        lanes = os.environ.get("TYXONQ_SBD_CUDA_HC_LANES", "0")
+        if lanes not in ("0", "1", "4", "8", "32"):
+            raise ValueError("TYXONQ_SBD_CUDA_HC_LANES must be 0, 1, 4, 8 or 32")
+        # 默认路径也可使用不接受 hc_lanes 参数的旧版扩展。
+        options = {"hc_lanes": int(lanes)} if lanes != "0" else {}
         self.context = load_extension().TPBContext(
             h1e, eri, *strings, norb, nelec, device_id=device_id,
-            memory_fraction=memory_fraction,
+            memory_fraction=memory_fraction, **options,
         )
 
     def update_integrals(self, h1e: np.ndarray, eri: np.ndarray) -> None:
@@ -140,9 +150,6 @@ class SBDContractor:
     ) -> None:
         import torch
 
-        strings, _, _, norb, nelec = normalize_problem(
-            ci_strings, np.zeros((norb, norb)), np.zeros((norb,) * 4), norb, nelec
-        )
         requested = torch.device(device)
         index = torch.cuda.current_device() if requested.index is None else requested.index
         if (
@@ -150,11 +157,12 @@ class SBDContractor:
             or tuple(nelec) != tuple(self.nelec)
             or requested.type != self.phase.device.type
             or index != self.phase.device.index
-            or any(not np.array_equal(x, y) for x, y in zip(strings, self.ci_strings))
+            or len(ci_strings) != 2
+            or any(not np.array_equal(x, y) for x, y in zip(ci_strings, self.ci_strings))
         ):
             raise ValueError("SBD context does not match determinants, norb, nelec or device")
         if memory_fraction is not None and memory_fraction != self.memory_fraction:
-            raise ValueError("SBD context has a different memory_fraction")
+            raise ValueError("SBD context has a different memory_fraction budget")
 
     def diagonal(self) -> Any:
         import torch
