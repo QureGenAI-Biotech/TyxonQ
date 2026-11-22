@@ -460,6 +460,7 @@ def solve_sci_metal(
         "solver_backend": "metal_native_sbd", "hamiltonian_backend": "metal",
         "hamiltonian_uses_zero_coupling_spectator": uses_spectator,
         "rdm_backend": rdm_backend, "rdm_algorithm": rdm_algorithm, "validation": validation,
+        "reference_rdm_algorithm": str(cpu["rdm_algorithm"]) if cpu is not None else None,
         "independent_cpu_validation": validation == "full_cpu",
         "gpu_acceleration_scope": "hdiag,H@c,Davidson,S2" + (",RDM2ab" if rdm_backend == "metal" and min(nelec) else ""),
         "cpu_scope": ("link_tables,small_eigh," + ("RDM" if rdm_backend == "cpu" else "RDM1a/b,RDM2aa/bb")

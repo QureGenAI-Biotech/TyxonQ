@@ -16,6 +16,8 @@ def _one_spin(coeff, labels, n, electrons, cd):
     if electrons >= 2:
         # 每个 N-2 电子的中间串共享一组可添回的轨道对，只需枚举一种轨道顺序。
         dd = selected_ci.des_des_linkstr_tril(labels, n, electrons)
+        if dd is None:
+            raise RuntimeError("PySCF did not return a same-spin double-link table")
         rows, slots = np.nonzero(dd[:, :, 3])
         pairs, _, det, phase = dd[rows, slots].T
         degrees = np.bincount(rows, minlength=len(dd))
@@ -67,12 +69,23 @@ def _mixed(coeff, n, occ_a, alpha, occ_b, beta):
     return mixed.reshape((n,)*4)
 
 
-def spin_rdms(vector, n, electrons, *, report=None):
-    """选择直接连接收缩或标准 PySCF RDM；两条路径都保留所有系数。"""
+def spin_rdms(vector, n, electrons, *, report=None, algorithm="auto"):
+    """选择直接连接收缩或标准 PySCF RDM；两条路径都保留所有系数。
+
+    ``auto`` 是生产默认；``pyscf`` 强制使用原始 PySCF RDM，供独立 golden
+    验收使用，避免生产优化和参考实现共享同一代码路径。
+    """
+    if algorithm not in ("auto", "pyscf"):
+        raise ValueError("RDM algorithm must be 'auto' or 'pyscf'.")
+    if algorithm == "pyscf":
+        if report is not None:
+            report["algorithm"] = "pyscf_spin_blocks"
+        return selected_ci.make_rdm1s(vector, n, electrons), selected_ci.make_rdm2s(vector, n, electrons)
     labels = tuple(np.ascontiguousarray(s, dtype=np.int64) for s in vector._strs)
     c = np.asarray(vector)
     # 对很大而稠密的字符串图使用 PySCF 分块路径，限制 Gram 矩阵和边积大小。
     use_links = c.dtype == np.float64 and 0 < min(electrons) and n <= 32 and max(c.shape) <= 2048
+    links = []
     if use_links:
         links = [selected_ci.cre_des_linkstr(strings, n, count) for strings, count in zip(labels, electrons)]
         edges = [int(np.count_nonzero(table[:, :, 3])) - len(strings)*count

@@ -126,7 +126,10 @@ def _compute(metadata, arrays):
 
     rdm_started = perf_counter()
     rdm_report = {}
-    rdm1s, rdm2s = spin_rdms(sci_vector, norb, nelec, report=rdm_report)
+    # full_cpu 的 RDM 参考必须独立于生产 factorized 实现。
+    rdm1s, rdm2s = spin_rdms(
+        sci_vector, norb, nelec, report=rdm_report, algorithm="pyscf"
+    )
     rdm1, rdm2 = spin_sum(rdm1s, rdm2s)
     physical_energy = np.einsum("pr,pr->", rdm1, h1e) + 0.5 * np.einsum(
         "prqs,prqs->", rdm2, eri

@@ -210,8 +210,10 @@ def test_public_metal_q60_rdm_preserves_all_spin_blocks(nelec, validation, monke
     assert report["rdm_ab_cpu_reference"] == (validation == "full_cpu")
     if validation == "full_cpu":
         assert report["rdm2_ab_cpu_max_abs_error"] < 1e-11
+        assert report["reference_rdm_algorithm"] == "pyscf_spin_blocks"
     else:
         assert report["cpu_subprocess_seconds"] == 0
+        assert report["reference_rdm_algorithm"] is None
 
 
 def test_q60_limits_and_independent_rejection(monkeypatch):

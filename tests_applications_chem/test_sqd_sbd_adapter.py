@@ -375,7 +375,9 @@ def test_reused_cpu_validator_recomputes_each_request_and_recovers():
         second = validate(3., include_operator=False)
         assert validation._worker.process is worker
         np.testing.assert_allclose(first["cpu_image"], [2.])
+        assert str(first["rdm_algorithm"]) == "pyscf_spin_blocks"
         assert second["cpu_image"].size == 0
+        assert str(second["rdm_algorithm"]) == "pyscf_spin_blocks"
         assert float(second["physical_energy"]) == pytest.approx(6.)
         with pytest.raises(RuntimeError, match="reshape"):
             validate(3., coefficients=(1., 0.))
