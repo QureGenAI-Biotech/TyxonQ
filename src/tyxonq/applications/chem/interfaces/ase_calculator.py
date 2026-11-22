@@ -59,7 +59,7 @@ class TyxonQCalculator(_AseCalculator if _AseCalculator is not None else object)
     - ``basis`` / ``charge`` / ``spin`` / ``unit``：平均场设置；
     - ``active_space=(n_elec, n_orb)``：活性空间；
     - ``method``：``"uccsd"`` / ``"rouccsd"`` / ``"hea"``（``"sqd"`` 暂缓）;
-    - ``solver_kwargs``：透传给求解器（如 HEA 的 ``runtime="numeric"``）;
+    - ``solver_kwargs``：透传给求解器（如 ``shots=0`` 数值解析或正 shots 采样）;
     - ``mm_charges=(coords, charges)``：静电嵌入（坐标单位由 ``unit`` 声明）。
     - ``qm_indices``：QM 区原子下标（区域划分模式；``None`` = 全体系皆 QM）；
     - ``atom_charges``：全体系固定电荷表（长度 = 原子数，QM 条目被忽略），

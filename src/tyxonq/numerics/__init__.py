@@ -1,16 +1,34 @@
-"""Numerics backends and vectorization utilities."""
+"""Numerics backends, device adapters and shared algorithms."""
 
 from __future__ import annotations
 from typing import Any, Tuple
 
-from .api import ArrayBackend, VectorizationPolicy, vectorize_or_fallback, get_backend
+from .api import ArrayBackend, get_backend
+from .backends.base import MemoryInfo
 from .context import set_backend as _set_backend_internal, use_backend
+from .accelerator import (
+    BackendResolution,
+    DeviceAdapter,
+    DeviceSpec,
+    get_adapter,
+    is_apple_silicon,
+    resolve_device,
+    resolve_sqd_backend,
+    select_backend,
+)
 
 __all__ = [
     "ArrayBackend",
-    "VectorizationPolicy",
-    "vectorize_or_fallback",
+    "BackendResolution",
+    "DeviceAdapter",
+    "DeviceSpec",
+    "MemoryInfo",
+    "get_adapter",
     "get_backend",
+    "is_apple_silicon",
+    "resolve_device",
+    "resolve_sqd_backend",
+    "select_backend",
     "set_backend",
     "set_dtype",
     "use_backend",
@@ -21,7 +39,7 @@ def set_backend(name_or_instance: Any) -> Any:
     """Set global numerics backend and return the backend instance.
     
     Args:
-        name_or_instance: Backend name ('numpy', 'pytorch', 'cupynumeric') or backend instance
+        name_or_instance: Backend name ('numpy', 'pytorch', 'cupy') or backend instance
         
     Returns:
         The backend instance
@@ -86,7 +104,7 @@ class NumericBackend:
     Supported Backends:
         - **numpy**: CPU-based computations with full NumPy compatibility
         - **pytorch**: GPU acceleration and automatic differentiation via PyTorch
-        - **cupynumeric**: Distributed GPU computing via CuPy/Legate
+        - **cupy**: NVIDIA GPU array computing via CuPy (explicit selection only)
 
     Examples:
         >>> # Create arrays using the current backend
@@ -447,10 +465,6 @@ class NumericBackend:
         return get_backend(None).detach(x)
 
     # Optional helpers
-    @classmethod  # pragma: no cover
-    def vmap(cls, fn):
-        return get_backend(None).vmap(fn)
-
     @classmethod  # pragma: no cover
     def jit(cls, fn):
         b = get_backend(None)

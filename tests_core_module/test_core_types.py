@@ -1,5 +1,5 @@
-# 核心 types / config 测试合并：config 默认值与后端名归一化、向量化策略校验，
-# core.types.Problem 结构，以及 core.errors 的异常继承层级。
+# 核心 types / config 测试合并：config 默认值与后端名归一化、core.types.Problem
+# 结构，以及 core.errors 的异常继承层级。
 from __future__ import annotations
 
 from tyxonq.config import (
@@ -9,7 +9,6 @@ from tyxonq.config import (
     SUPPORTED_BACKENDS,
     default_dtypes,
     normalize_backend_name,
-    is_valid_vectorization_policy,
 )
 from tyxonq.core.types import Problem
 from tyxonq.core.errors import TyxonQError, CompilationError, DeviceExecutionError
@@ -24,11 +23,9 @@ def test_defaults_and_supported_backends():
     assert c == DEFAULT_COMPLEX_DTYPE_STR and r == DEFAULT_REAL_DTYPE_STR
 
 
-def test_normalize_backend_and_vectorization_policy():
+def test_normalize_backend_names():
     assert normalize_backend_name("cpu") == "numpy"
     assert normalize_backend_name("torch") == "pytorch"
-    assert is_valid_vectorization_policy("auto")
-    assert not is_valid_vectorization_policy("invalid")
 
 
 def test_core_types_problem_and_aliases():
@@ -36,11 +33,10 @@ def test_core_types_problem_and_aliases():
     assert pb.kind == "hamiltonian"
     assert normalize_backend_name("pytorch") == "pytorch"
     assert normalize_backend_name("cpu") == "numpy"  # alias for numpy
-    assert normalize_backend_name("gpu") == "cupynumeric"  # alias for cupynumeric
+    assert normalize_backend_name("gpu") == "cupy"  # alias for cupy
     assert normalize_backend_name("numpy(cpu)") == "numpy"
-    assert normalize_backend_name("cupynumeric(gpu)") == "cupynumeric"
+    assert normalize_backend_name("cupy(gpu)") == "cupy"
     assert normalize_backend_name("torch") == "pytorch"
-    assert is_valid_vectorization_policy("auto") is True
 
 
 def test_core_errors_hierarchy():

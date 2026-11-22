@@ -2,7 +2,7 @@
 Sampling benchmark (chain-style API) with backend comparison.
 
 - Use numeric backend RNG uniformly (nb.rng / nb.choice)
-- Compare numpy, pytorch, cupynumeric (if available)
+- Compare numpy, pytorch, cupy (if available)
 """
 
 from __future__ import annotations
@@ -82,7 +82,7 @@ def main():
     # args.repeats = 3
     # args.seed = 0
 
-    for b in ["numpy", "pytorch", "cupynumeric"]:
+    for b in ["numpy", "pytorch", "cupy"]:
         benchmark_backend(b, args.n, args.layers, args.shots, args.repeats, args.seed)
 
 

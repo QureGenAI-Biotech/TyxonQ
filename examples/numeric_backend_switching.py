@@ -2,7 +2,7 @@
 Numeric Backend Switching Demonstration
 
 This example showcases TyxonQ's flexible numeric backend system, allowing
-seamless switching between NumPy, PyTorch, and CuPyNumeric for quantum
+seamless switching between NumPy, PyTorch, and CuPy for quantum
 circuit simulations. The unified backend interface ensures code portability
 across different computational frameworks.
 
@@ -16,7 +16,7 @@ Key Features:
 Backends Compared:
 1. NumPy: CPU-only, reference implementation
 2. PyTorch: CPU/GPU, automatic differentiation, JIT via torch.compile
-3. CuPyNumeric (optional): GPU acceleration for NumPy-like API
+3. CuPy (optional): GPU acceleration for NumPy-like API
 
 Performance Characteristics:
 - NumPy: Best for small circuits (<12 qubits), simple scripts
@@ -152,14 +152,14 @@ def demo_pytorch_backend():
         return None
 
 
-def demo_cupynumeric_backend():
-    """Demonstrate CuPyNumeric backend (optional)"""
+def demo_cupy_backend():
+    """Demonstrate CuPy backend (optional)"""
     print("\n" + "=" * 70)
-    print("CuPyNumeric Backend Demo (GPU)")
+    print("CuPy Backend Demo (GPU)")
     print("=" * 70)
     
     try:
-        tq.set_backend("cupynumeric")
+        tq.set_backend("cupy")
         K = tq.get_backend()
         
         print(f"Backend type: {type(K)}")
@@ -179,7 +179,7 @@ def demo_cupynumeric_backend():
         return energy
         
     except Exception as e:
-        print(f"CuPyNumeric not available: {e}")
+        print(f"CuPy not available: {e}")
         print("Falling back to NumPy (this is expected if CuPy not installed)")
         return None
 
@@ -293,7 +293,7 @@ def main():
     # Individual backend demos
     demo_numpy_backend()
     demo_pytorch_backend()
-    demo_cupynumeric_backend()
+    demo_cupy_backend()
     
     # Performance comparison
     compare_backends_performance()
@@ -305,16 +305,16 @@ def main():
     print("Key Takeaways")
     print("=" * 70)
     print("1. TyxonQ provides unified backend interface (ArrayBackend protocol)")
-    print("2. Switch backends via tq.set_backend('numpy'|'pytorch'|'cupynumeric')")
+    print("2. Switch backends via tq.set_backend('numpy'|'pytorch'|'cupy')")
     print("3. Code remains unchanged when switching backends")
     print("4. PyTorch enables automatic differentiation + GPU acceleration")
     print("5. NumPy is lightweight and suitable for prototyping")
-    print("6. CuPyNumeric provides GPU acceleration for NumPy-like code")
+    print("6. CuPy provides GPU acceleration for NumPy-like code")
     
     print("\nBackend Selection Guide:")
     print("- Prototyping / small circuits → NumPy")
     print("- VQAs with gradients / GPU available → PyTorch")
-    print("- Large statevector ops / GPU → CuPyNumeric (if installed)")
+    print("- Large statevector ops / GPU → CuPy (if installed)")
     print("- Production deployment → PyTorch (most flexible)")
 
 

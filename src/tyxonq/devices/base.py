@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional, Protocol, Sequence, TypedDict, TYPE_CHECKING, Union
 from dataclasses import dataclass
 import time
+import warnings
 
 if TYPE_CHECKING:  # pragma: no cover - type-only imports to avoid cycles
     from tyxonq.core.ir import Circuit
@@ -362,6 +363,12 @@ def run(
         except Exception:
             _s = 1024
         if _s == 0 and prov not in ("simulator", "local"):
+            warnings.warn(
+                f"Hardware provider {prov!r} does not support analytic shots=0; "
+                "submitting with shots=1 instead.",
+                UserWarning,
+                stacklevel=2,
+            )
             _s = 1
         shots = _s
 

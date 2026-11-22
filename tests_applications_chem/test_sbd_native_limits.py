@@ -122,7 +122,7 @@ def test_fused_spin_retains_two_step_projection(extension, nelec):
     """用不完整的行列式集合检查融合没有改动升降算符投影。"""
     import torch
     from pyscf.fci import cistring, selected_ci
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_spin_square import TorchSelectedS2Contractor
+    from tyxonq.applications.chem.algorithms.sqd.gpu.spin_square import TorchSelectedS2Contractor
 
     strings = tuple(cistring.make_strings(range(4), number)[::2] for number in nelec)
     shape = tuple(len(side) for side in strings)

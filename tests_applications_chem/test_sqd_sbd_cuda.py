@@ -40,6 +40,39 @@ def _cpu_image(labels, h, eri, c, norb, nelec):
         direct_spin1.absorb_h1e(h, eri, norb, nelec, 0.5), ci, norb, nelec))
 
 
+@pytest.mark.parametrize("lanes", [1, 4, 8, 32])
+@pytest.mark.parametrize("nelec", [(2, 1), (2, 0)])
+def test_connected_hc_projected_fci_and_integral_update(monkeypatch, lanes, nelec):
+    """在有缺口的组态空间中，把 GPU 的 Hc 与完整 FCI 的投影逐元素比较。"""
+    from pyscf.fci import cistring, direct_spin1
+    from tyxonq.numerics.sbd.cuda import SBDContractor
+
+    norb = 5
+    full = tuple(cistring.make_strings(range(norb), n) for n in nelec)
+    indices = np.ix_([0, 2, 4, 5, 7, 9], [0, 2, 4] if nelec[1] else [0])
+    labels = (full[0][indices[0].ravel()], full[1][indices[1].ravel()])
+    labels, h, eri, c = _problem(norb, nelec, labels)
+    monkeypatch.setenv("TYXONQ_SBD_CUDA_HC_LANES", str(lanes))
+    contractor = SBDContractor(h, eri, labels, norb, nelec, device="cuda:0")
+    assert contractor.context.hc_lanes == lanes
+    vector = torch.as_tensor(c, device=contractor.device)
+    embedded = np.zeros(tuple(map(len, full)))
+    embedded[indices] = c
+
+    def check(h1, g):
+        effective = direct_spin1.absorb_h1e(h1, g, norb, nelec, 0.5)
+        expected = direct_spin1.contract_2e(effective, embedded, norb, nelec)[indices]
+        np.testing.assert_allclose(contractor.contract(vector).cpu(), expected, rtol=2e-13, atol=2e-13)
+
+    check(h, eri)
+    # 调用方改写原数组后，更新积分仍须在建表时的基底上进行。
+    labels[0][0] = 0
+    changed_h = h + 0.2 * (np.ones_like(h) - np.eye(norb))
+    changed_eri = -1.1 * eri
+    contractor.update_integrals(changed_h, changed_eri)
+    check(changed_h, changed_eri)
+
+
 @pytest.mark.parametrize("norb,nelec,labels", [
     (4, (2, 2), None),
     (4, (2, 1), None),
@@ -51,7 +84,7 @@ def _cpu_image(labels, h, eri, c, norb, nelec):
 def test_random_hc_spin_rdms_and_updated_integrals(norb, nelec, labels):
     from pyscf.fci import selected_ci
     from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import SBDContractor
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_spin_square import TorchSelectedS2Contractor
+    from tyxonq.applications.chem.algorithms.sqd.gpu.spin_square import TorchSelectedS2Contractor
 
     labels, h, eri, c = _problem(norb, nelec, labels)
     contractor = SBDContractor(h, eri, labels, norb, nelec, device="cuda:0")
@@ -83,7 +116,7 @@ def test_random_hc_spin_rdms_and_updated_integrals(norb, nelec, labels):
 def test_solver_dense_reference_and_failure(backend, spin_sq):
     from pyscf.fci import addons, direct_spin1, selected_ci
     from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import solve_sci_sbd
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_sci_solver import solve_sci_cuda
+    from tyxonq.applications.chem.algorithms.sqd.gpu.solver import solve_sci_cuda
 
     norb, nelec = 4, (2, 1)
     labels, h, eri, c = _problem(norb, nelec)
@@ -205,7 +238,7 @@ def test_same_seed_sqd_recovery_and_batch_results():
 def test_empty_spin_sector_full_solver(backend, nelec):
     """单电子极限的能量直接等于一体矩阵最低本征值，二体作用严格为零。"""
     from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import solve_sci_sbd
-    from tyxonq.applications.chem.algorithms.sqd.gpu.torch_sci_solver import solve_sci_cuda
+    from tyxonq.applications.chem.algorithms.sqd.gpu.solver import solve_sci_cuda
 
     labels, h, eri, unused = _problem(4, nelec)
     options = (dict(hamiltonian_backend="sbd", rdm_backend="sbd", spin_backend="cuda_fused")

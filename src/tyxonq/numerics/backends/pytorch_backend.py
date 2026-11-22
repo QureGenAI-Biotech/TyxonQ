@@ -16,6 +16,20 @@ class PyTorchBackend:
     name = "pytorch"
     available = _TORCH_AVAILABLE
 
+    def __init__(self, device: Any | None = None) -> None:
+        """Optionally pin arrays to a device; ``auto`` prefers CUDA, MPS, then CPU."""
+        if device == "auto" and torch is not None:
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
+        self.device = torch.device(device) if device is not None and torch is not None else None
+
+    def _move(self, tensor: Any) -> Any:
+        return tensor.to(self.device) if self.device is not None else tensor
+
     # dtype constants (only defined if torch is importable)
     if _TORCH_AVAILABLE:  # pragma: no cover - simple attribute wiring
         complex64 = torch.complex64
@@ -89,10 +103,10 @@ class PyTorchBackend:
             if hasattr(data, 'requires_grad') and data.requires_grad:
                 if not result.requires_grad:
                     result = result.requires_grad_(True)
-            return result
+            return self._move(result)
         # For non-tensor data, convert to tensor
         # IMPORTANT: Use torch.as_tensor which shares data when possible
-        return torch.as_tensor(data, dtype=td)
+        return self._move(torch.as_tensor(data, dtype=td))
 
     def asarray(self, data: Any, dtype: Any | None = None) -> Any:
         """Convert to tensor with optional dtype, preserving autograd chain.
@@ -118,14 +132,14 @@ class PyTorchBackend:
                 if hasattr(data, 'requires_grad') and data.requires_grad:
                     if not result.requires_grad:
                         result = result.requires_grad_(True)
-                return result
-            return data
+                return self._move(result)
+            return self._move(data)
         
         # For non-tensor data, convert to tensor
         if dtype is not None:
             td = self._to_torch_dtype(dtype)
-            return torch.as_tensor(data, dtype=td)
-        return torch.as_tensor(data)
+            return self._move(torch.as_tensor(data, dtype=td))
+        return self._move(torch.as_tensor(data))
 
     def to_numpy(self, data: Any):  # type: ignore[override]
         return data.detach().cpu().numpy() if hasattr(data, "detach") else data
@@ -187,21 +201,21 @@ class PyTorchBackend:
 
     def zeros(self, shape: tuple[int, ...], dtype: Any | None = None) -> Any:
         td = self._to_torch_dtype(dtype)
-        return torch.zeros(shape, dtype=td)
+        return self._move(torch.zeros(shape, dtype=td))
 
     def ones(self, shape: tuple[int, ...], dtype: Any | None = None) -> Any:
         td = self._to_torch_dtype(dtype)
-        return torch.ones(shape, dtype=td)
+        return self._move(torch.ones(shape, dtype=td))
 
     def zeros_like(self, a: Any) -> Any:
-        return torch.zeros_like(a)
+        return torch.zeros_like(a, device=self.device) if self.device is not None else torch.zeros_like(a)
 
     def ones_like(self, a: Any) -> Any:
-        return torch.ones_like(a)
+        return torch.ones_like(a, device=self.device) if self.device is not None else torch.ones_like(a)
 
     def eye(self, n: int, dtype: Any | None = None) -> Any:
         td = self._to_torch_dtype(dtype)
-        return torch.eye(n, dtype=td)
+        return self._move(torch.eye(n, dtype=td))
 
     def kron(self, a: Any, b: Any) -> Any:
         return torch.kron(a, b)

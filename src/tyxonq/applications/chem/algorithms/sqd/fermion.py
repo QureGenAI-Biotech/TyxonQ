@@ -220,6 +220,8 @@ def run_sqd_fermion(
     ext_sqd_threshold: float | None = None,
     ext_sqd_threshold_mode: str = "amplitude",
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
 ) -> SCIResult:
     """从 counts 或 bitstring 矩阵运行费米子 SQD。
 
@@ -275,6 +277,8 @@ def run_sqd_fermion(
         ext_sqd_threshold=ext_sqd_threshold,
         ext_sqd_threshold_mode=ext_sqd_threshold_mode,
         excluded_orbitals=excluded_orbitals,
+        backend=backend,
+        device=device,
     )
 
 
@@ -319,6 +323,8 @@ def diagonalize_fermionic_hamiltonian(
     ext_sqd_threshold: float | None = None,
     ext_sqd_threshold_mode: str = "amplitude",
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
 ) -> SCIResult:
     """在内部 ``[beta | alpha]`` 样本顺序上运行 SQD 主循环。"""
     one_body_tensor, two_body_tensor, is_unrestricted = _normalize_hamiltonian(
@@ -409,6 +415,8 @@ def diagonalize_fermionic_hamiltonian(
                 electron_counts,
                 spin_sq=spin_sq,
                 excluded_orbitals=(excluded_a, excluded_b),
+                backend=backend,
+                device=device,
             )
 
         sci_solver = default_sci_solver
@@ -559,6 +567,8 @@ def solve_sci_batch(
     spin_sq: float | None = None,
     spin_shift: float = 0.1,
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
     **kwargs,
 ) -> list[SCIResult]:
     """批量对角化多个 selected-CI 子空间。"""
@@ -572,6 +582,8 @@ def solve_sci_batch(
             spin_sq=spin_sq,
             spin_shift=spin_shift,
             excluded_orbitals=excluded_orbitals,
+            backend=backend,
+            device=device,
             **kwargs,
         )
         for strings in ci_strings
@@ -588,16 +600,78 @@ def solve_sci(
     spin_sq: float | None = None,
     spin_shift: float = 0.1,
     excluded_orbitals: ExcludedOrbitals | None = None,
+    backend: str | None = None,
+    device: str | None = None,
     **kwargs,
 ) -> SCIResult:
-    """在一个 selected-CI 子空间里投影并对角化 restricted/UHF Hamiltonian。"""
+    """在一个 selected-CI 子空间里投影并对角化 restricted/UHF Hamiltonian。
+
+    ``backend=None`` keeps the PySCF solver. Use ``backend='gpu'``/``'auto'``
+    for environment-aware CUDA/Metal selection or ``backend='cpu'`` for PyTorch
+    CPU. Explicitly requested unavailable accelerators fall back to CPU with a
+    warning; numerical failures after dispatch still raise.
+    """
+    excluded_a, excluded_b = _normalize_excluded_orbitals(excluded_orbitals, norb)
+    if backend is not None:
+        from .gpu import solve_sci_gpu
+
+        _validate_selected_strings(ci_strings[0], excluded_a, "alpha")
+        _validate_selected_strings(ci_strings[1], excluded_b, "beta")
+        result, _ = solve_sci_gpu(
+            ci_strings, one_body_tensor, two_body_tensor, norb, nelec,
+            backend=backend, device=device, spin_sq=spin_sq, spin_shift=spin_shift,
+            **kwargs,
+        )
+        return result
+    if not isinstance(norb, (int, np.integer)) or not 1 <= norb <= 63:
+        raise ValueError("norb must be an integer in [1, 63] for int64 determinants.")
+    if len(nelec) != 2 or any(not isinstance(e, (int, np.integer)) or not 0 <= e <= norb for e in nelec):
+        raise ValueError("nelec must contain two valid electron counts.")
+
+    def canonical_labels(strings):
+        # PySCF 的 C 内核对连续 int64 串做二分查找。保存排列以同步调整 CI 系数的两条轴。
+        if len(strings) != 2:
+            raise ValueError("Determinant space must contain alpha and beta labels.")
+        sorted_labels, permutations = [], []
+        for channel, count in zip(strings, nelec):
+            labels = np.asarray(channel)
+            if labels.ndim != 1 or labels.size == 0 or labels.dtype.kind not in "iu":
+                raise ValueError("Determinant labels must be nonempty integer vectors.")
+            if any(int(x) < 0 or int(x) >= 1 << int(norb) or int(x).bit_count() != count for x in labels):
+                raise ValueError("Determinant labels disagree with norb/nelec.")
+            order = None
+            if np.any(labels[1:] <= labels[:-1]):
+                order = np.argsort(labels)
+                labels = labels[order]
+                if np.any(labels[1:] == labels[:-1]):
+                    raise ValueError("Determinant labels must be unique.")
+            sorted_labels.append(np.ascontiguousarray(labels, dtype=np.int64))
+            permutations.append(order)
+        return tuple(sorted_labels), permutations
+
+    ci_strings, order = canonical_labels(ci_strings)
+    _validate_selected_strings(ci_strings[0], excluded_a, "alpha")
+    _validate_selected_strings(ci_strings[1], excluded_b, "beta")
+    guess = kwargs.get("ci0")
+    if guess is not None:
+        old_labels = getattr(guess, "_strs", None)
+        if old_labels is not None:
+            old_sorted, order = canonical_labels(old_labels)
+            if any(not np.array_equal(a, b) for a, b in zip(old_sorted, ci_strings)):
+                raise ValueError("Initial state labels must match the requested fixed space.")
+        shape = tuple(map(len, ci_strings))
+        guess = np.asarray(guess)
+        if guess.size != shape[0] * shape[1]:
+            raise ValueError("Initial state size must match the requested fixed space.")
+        guess = guess.reshape(shape)
+        if order[0] is not None:
+            guess = guess[order[0], :]
+        if order[1] is not None:
+            guess = guess[:, order[1]]
+        kwargs["ci0"] = _as_SCIvector(np.ascontiguousarray(guess), ci_strings)
     one_body_tensor, two_body_tensor, is_unrestricted = _normalize_hamiltonian(
         one_body_tensor, two_body_tensor, norb
     )
-    excluded_a, excluded_b = _normalize_excluded_orbitals(excluded_orbitals, norb)
-    _validate_selected_strings(ci_strings[0], excluded_a, "alpha")
-    _validate_selected_strings(ci_strings[1], excluded_b, "beta")
-
     myci = fci.selected_ci.SelectedCI()
     if is_unrestricted and spin_sq is not None:
         raise ValueError(
@@ -628,11 +702,10 @@ def solve_sci(
             ci_strs=ci_strings,
             **kwargs,
         )
-    dm1s = myci.make_rdm1s(sci_vec, norb, nelec)
+    from .gpu.rdm_factorized import spin_rdms, spin_sum
+    dm1s, dm2s = spin_rdms(sci_vec, norb, nelec)
+    dm1, dm2 = spin_sum(dm1s, dm2s)
     occupancies = (np.diagonal(dm1s[0]), np.diagonal(dm1s[1]))
-    dm2s = myci.make_rdm2s(sci_vec, norb, nelec)
-    dm1 = myci.make_rdm1(sci_vec, norb, nelec)
-    dm2 = myci.make_rdm2(sci_vec, norb, nelec)
     if is_unrestricted:
         h1a, h1b = cast(tuple[np.ndarray, np.ndarray], one_body_tensor)
         gaa, gab, gbb = cast(tuple[np.ndarray, np.ndarray, np.ndarray], two_body_tensor)

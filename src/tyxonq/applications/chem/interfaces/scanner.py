@@ -68,7 +68,6 @@ def _make_fcisolver(method: str, subspace: str, sampler, solver_kwargs: dict):
             from ..algorithms.vqe.uccsd import ROUCCSD as _cls
         # 真机/采样运行选项（shots/provider/device）不是 UCCSD 构造参数，
         # 打包成 device_opts 透传给 kernel（device 路径，含真机提交）。
-        solver_kwargs.setdefault("runtime", "numeric")
         device_opts = {k: solver_kwargs.pop(k) for k in ("shots", "provider", "device")
                        if k in solver_kwargs}
         if device_opts:

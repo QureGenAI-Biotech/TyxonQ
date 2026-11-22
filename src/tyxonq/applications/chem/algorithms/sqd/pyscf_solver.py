@@ -72,6 +72,8 @@ class SQDFCISolver:
         sampler_kwargs: dict | None = None,
         spin_sq: float | None = None,
         refresh_every: int = 1,
+        backend: str | None = None,
+        device: str | None = None,
     ):
         if subspace not in _SUBSPACE_MODES:
             raise ValueError(f"subspace must be one of {_SUBSPACE_MODES}, got {subspace!r}.")
@@ -85,6 +87,8 @@ class SQDFCISolver:
         self._sampler_kwargs = defaults
         self._spin_sq = spin_sq
         self._refresh_every = int(refresh_every)
+        self._backend = backend
+        self._device = device
         self._frozen_strings: tuple[np.ndarray, np.ndarray] | None = (
             _strings_from_user(ci_strs) if ci_strs is not None else None
         )
@@ -154,6 +158,8 @@ class SQDFCISolver:
             norb=int(norb),
             nelec=nelec_pair,
             spin_sq=self._spin_sq,
+            backend=self._backend,
+            device=self._device,
         )
         self._last_state = result.sci_state
         self._kernel_calls += 1
@@ -332,8 +338,14 @@ def as_pyscf_solver(
     sampler_kwargs: dict | None = None,
     spin_sq: float | None = None,
     refresh_every: int = 1,
+    backend: str | None = None,
+    device: str | None = None,
 ) -> SQDFCISolver:
-    """创建 PySCF 兼容的 SQD 求解器。别名：``SQD.as_pyscf_solver(...)``。"""
+    """创建 PySCF 兼容的 SQD 求解器。别名：``SQD.as_pyscf_solver(...)``。
+
+    ``backend`` / ``device`` are passed straight to the unified GPU entry
+    point by ``kernel``; this adapter contains no backend branches.
+    """
     return SQDFCISolver(
         subspace=subspace,
         ci_strs=ci_strs,
@@ -341,4 +353,6 @@ def as_pyscf_solver(
         sampler_kwargs=sampler_kwargs,
         spin_sq=spin_sq,
         refresh_every=refresh_every,
+        backend=backend,
+        device=device,
     )

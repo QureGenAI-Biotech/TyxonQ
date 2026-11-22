@@ -11,18 +11,24 @@ import traceback
 
 
 def _solve_one(kind, strings, h1e, eri, norb, nelec, options):
-    if kind == "native":
+    if kind in ("native", "sbd"):
         from .sbd_solver import solve_sci_sbd
 
         return solve_sci_sbd(strings, h1e, eri, norb, nelec, **options)
-    from .torch_sci_solver import solve_sci_cuda
+    if kind == "metal":
+        from .sbd_solver import solve_sci_metal
+
+        # batch 工厂已选定设备，运行期间的设备错误必须向上传递。
+        return solve_sci_metal(strings, h1e, eri, norb, nelec, **options)
+    from .solver import solve_sci_cuda
 
     return solve_sci_cuda(strings, h1e, eri, norb, nelec, **options)
 
 
 def _device_worker(device_id, tasks, messages, kind, threads):
-    """必须先设置可见设备，再导入会初始化 CUDA/MPI 的求解模块。"""
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
+    """每个设备一个进程；只有 CUDA 路径需要设置可见设备。"""
+    if kind in ("native", "sbd"):
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(device_id)
     for variable in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
         os.environ[variable] = str(threads)
     while True:
@@ -32,7 +38,8 @@ def _device_worker(device_id, tasks, messages, kind, threads):
         index, strings, h1e, eri, norb, nelec, options = task
         messages.put(("started", index, device_id, None))
         try:
-            options = dict(options, device_text="cuda:0")
+            worker_device = "cuda:0" if kind in ("native", "sbd") else ("metal:0" if kind == "metal" else "cpu")
+            options = dict(options, device_text=worker_device)
             options["progress_callback"] = lambda record: messages.put(
                 ("progress", index, device_id, record)
             )
@@ -105,11 +112,11 @@ class _DeviceBatchPool:
             while completed < len(batches):
                 now = time.monotonic()
                 if any(process.exitcode is not None for process in self.processes):
-                    raise RuntimeError("CUDA worker exited before returning all batches")
+                    raise RuntimeError("GPU worker exited before returning all batches")
                 if any(now - started > self.timeout for started in active.values()):
                     raise TimeoutError("CUDA batch exceeded worker_timeout")
                 if not active and now - last_message > self.timeout:
-                    raise TimeoutError("CUDA worker failed to start within worker_timeout")
+                    raise TimeoutError("GPU worker failed to start within worker_timeout")
                 try:
                     event, index, device, payload = self.messages.get(timeout=0.2)
                 except queue.Empty:
@@ -157,7 +164,16 @@ def _make_batch_solver(kind, report_callback, device_ids, worker_timeout, option
                 report_callback({"batch": index, "report": report})
         return results
 
-    solve_batch.close = pool.close if pool is not None else lambda: None
+    def close():
+        try:
+            if pool is not None:
+                pool.close()
+        finally:
+            # 进程池只管理设备 worker；当前进程可能另有持久 CPU 验收器。
+            from .validation import close_cpu_validation_worker
+            close_cpu_validation_worker()
+
+    solve_batch.close = close
     return solve_batch
 
 

@@ -20,7 +20,7 @@ def test_hea(shots):
     """
     m = h2
     uccsd = UCCSD(m,run_fci=True)
-    hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, runtime="device")
+    hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3)
 
     if shots == 0:
         e = hea.kernel(shots=0, provider="simulator", device="statevector")
@@ -43,7 +43,7 @@ def test_hea(shots):
 def test_build_from_integral_and_mapping():
     m = h2
     uccsd = UCCSD(m,run_fci=True)
-    hea = HEA.from_integral(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, n_layers=2, mapping="parity", runtime="device")
+    hea = HEA.from_integral(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, n_layers=2, mapping="parity")
     e = hea.kernel(shots=0)
     np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
 
@@ -52,109 +52,69 @@ def test_qiskit_circuit():
     m = h2
     uccsd = UCCSD(m,run_fci=True)
     qc = real_amplitudes(2)
-    hea = HEA.from_qiskit_circuit(parity(uccsd.h_fermion_op, 4, 2), qc, np.random.rand(qc.num_parameters), runtime="device")
+    hea = HEA.from_qiskit_circuit(parity(uccsd.h_fermion_op, 4, 2), qc, np.random.rand(qc.num_parameters))
     e = hea.kernel(shots=0, provider="simulator", device="statevector")
     
     np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
     hea.print_summary()
 
 
-@pytest.mark.parametrize("runtime", ["device", "numeric"])
-@pytest.mark.parametrize("grad_method", ["free", "autodiff"])  # autodiff 通过 value_and_grad 等价路径
-@pytest.mark.parametrize("numeric_engine", ["statevector"])  # 后续可扩展 mps 等
-@pytest.mark.parametrize("shots", [0, 2048])  # shots 仅对 device 有效
-def test_hea_convergence(runtime, grad_method, numeric_engine, shots):
-    m = h2
-    uccsd = UCCSD(m,run_fci=True)
-    hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, runtime=runtime)
+@pytest.mark.parametrize("grad_method", ["free", "autodiff"])
+@pytest.mark.parametrize("numeric_engine", ["statevector"])
+@pytest.mark.parametrize("shots", [0, 2048])
+def test_hea_convergence(grad_method, numeric_engine, shots):
+    uccsd = UCCSD(h2, run_fci=True)
+    hea = HEA.ry(
+        uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3,
+        numeric_engine=numeric_engine,
+    )
+    hea.grad = "free" if grad_method == "free" else "param-shift"
+    e = hea.kernel(shots=shots, provider="simulator", device="statevector")
+    tol = 1e-5 if shots == 0 else 2.0 / np.sqrt(shots) + 0.02
+    np.testing.assert_allclose(e, uccsd.e_fci, atol=tol)
 
-    if runtime == "numeric":
-        hea.numeric_engine = numeric_engine
-        hea.grad = "free" if grad_method == "free" else "param-shift"
-        e = hea.kernel()
-        np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
-    else:
-        # device runtime
-        hea.grad = "free" if shots == 0 else "param-shift"
-        e = hea.kernel(shots=shots, provider="simulator", device="statevector")
-        if shots == 0:
-            np.testing.assert_allclose(e, uccsd.e_fci, atol=1e-5)
-        else:
-            tol = 2.0 / np.sqrt(shots) + 0.02
-            np.testing.assert_allclose(e, uccsd.e_fci, atol=tol)
-            # 简单后处理：固定参数多次评估取平均
-            ps = np.asarray(hea.params if hea.params is not None else hea.init_guess)
-            evals = [hea.energy(ps, shots=shots, provider="simulator", device="statevector") for _ in range(5)]
-            e_avg = float(np.mean(evals))
-            assert abs(e_avg - uccsd.e_fci) <= abs(e - uccsd.e_fci) + 1e-3
+    if shots > 0:
+        params = np.asarray(hea.params)
+        evals = [hea.energy(params, shots=shots) for _ in range(5)]
+        e_avg = float(np.mean(evals))
+        assert abs(e_avg - uccsd.e_fci) <= abs(e - uccsd.e_fci) + 1e-3
 
-            # 加入端到端含噪与后处理（readout校正）的结果打印：
-            # 1) 注入测量读出噪声（提供已知的单比特校准矩阵）
-            A0 = np.array([[0.97, 0.03], [0.05, 0.95]], dtype=np.float64)
-            A1 = np.array([[0.98, 0.02], [0.04, 0.96]], dtype=np.float64)
-            # 无校正下的能量（有读出噪声）
-            e_noisy = hea.energy(
-                ps,
-                shots=shots,
-                provider="simulator",
-                device="statevector",
-                use_noise=True,
-                noise={"type": "readout", "cals": {0: A0, 1: A1}},
-            )
-            # 2) 在聚合器中开启 readout 校正（postprocessing 透传校准矩阵），打印校正后能量
-            e_mitig = hea.energy(
-                ps,
-                shots=shots,
-                provider="simulator",
-                device="statevector",
-                use_noise=True,
-                noise={"type": "readout", "cals": {0: A0, 1: A1}},
-                postprocessing={"readout_cals": {0: A0, 1: A1}, "mitigation": "inverse"},
-            )
-            print(f"[HEA noisy] shots={shots}, E_noisy={e_noisy:.10f}")
-            print(f"[HEA mitigated] shots={shots}, E_mitigated={e_mitig:.10f}")
+        a0 = np.array([[0.97, 0.03], [0.05, 0.95]])
+        a1 = np.array([[0.98, 0.02], [0.04, 0.96]])
+        noise = {"type": "readout", "cals": {0: a0, 1: a1}}
+        e_noisy = hea.energy(params, shots=shots, use_noise=True, noise=noise)
+        e_mitig = hea.energy(
+            params, shots=shots, use_noise=True, noise=noise,
+            postprocessing={"readout_cals": {0: a0, 1: a1}, "mitigation": "inverse"},
+        )
+        assert np.isfinite(e_noisy) and np.isfinite(e_mitig)
 
 
 
 
-@pytest.mark.parametrize("runtime", ["device", "numeric"]) 
-@pytest.mark.parametrize("mapping", ["jordan-wigner", "bravyi-kitaev"]) 
-def test_mapping(mapping, runtime):
-    # TCC gold standards for H2 (absolute targets)
-    # gold = {
-    #     "jordan-wigner": -1.1372744049357164,
-    #     "bravyi-kitaev": -1.1372744025043178,
-    # }
-    uccsd = UCCSD(h2,run_fci=True)
-    if runtime == "numeric":
-        hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping, runtime="numeric")
-        hea.numeric_engine = "statevector"
-        e = hea.kernel()
-        # np.testing.assert_allclose(e, gold[mapping], atol=1e-6)
-        np.testing.assert_allclose(e, uccsd.e_fci)
-    else:
-        hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping, runtime="device")
-        # optimize with analytic shots=0
-        e = hea.kernel(shots=0, provider="simulator", device="statevector")
-        # np.testing.assert_allclose(e, gold[mapping], atol=1e-5)
-        np.testing.assert_allclose(e, uccsd.e_fci)
+@pytest.mark.parametrize("mapping", ["jordan-wigner", "bravyi-kitaev"])
+def test_mapping(mapping):
+    uccsd = UCCSD(h2, run_fci=True)
+    hea = HEA.ry(
+        uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping
+    )
+    e = hea.kernel(shots=0)
+    np.testing.assert_allclose(e, uccsd.e_fci)
 
 
-@pytest.mark.parametrize("mapping", ["jordan-wigner", "parity", "bravyi-kitaev"]) 
+@pytest.mark.parametrize("mapping", ["jordan-wigner", "parity", "bravyi-kitaev"])
 def test_rdm(mapping):
-    # 使用 TCC 金标准对齐 HEA 的 1RDM/2RDM（H2, MO 基），独立于 UCC 参考
     uccsd = UCCSD(h2)
-    # uccsd.kernel(shots=0)
-    hea = HEA.ry(uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping, runtime="device")
-    hea.kernel(shots=0, provider="simulator", device="statevector",runtime='numeric')
-
+    hea = HEA.ry(
+        uccsd.int1e, uccsd.int2e, uccsd.n_elec, uccsd.e_core, 3, mapping=mapping
+    )
+    hea.kernel(shots=0)
     r1_h = hea.make_rdm1()
     r2_h = hea.make_rdm2()
 
-    uccsd.kernel(runtime='numeric')
-    r1_uccsd =  uccsd.make_rdm1(basis="MO")
-    uccsd.kernel(runtime='numeric')
-    r2_uccsd =uccsd.make_rdm2(basis="MO")
+    uccsd.kernel(shots=0)
+    r1_uccsd = uccsd.make_rdm1(basis="MO")
+    r2_uccsd = uccsd.make_rdm2(basis="MO")
 
     # TCC 金标准（H2, MO 基）
     rdm1_gold = np.array([[1.97457654e+00, -2.00371787e-16],
@@ -187,7 +147,7 @@ def test_open_shell():
 
     m = h_chain(3, charge=0, spin=1)
 
-    hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="numeric")
+    hea = HEA.from_molecule(m, n_layers=6, mapping="parity")
     # try multiple times to avoid local minimum
     es = []
     for i in range(3):

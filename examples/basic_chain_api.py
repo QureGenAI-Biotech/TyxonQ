@@ -146,4 +146,4 @@ if __name__ == "__main__":
     print("2. Global defaults simplify repeated configurations")
     print("3. Auto-completion fills missing options intelligently")
     print("4. Seamless switching between simulator and cloud hardware")
-    print("5. Flexible numeric backend support (NumPy/PyTorch/CuPyNumeric)")
+    print("5. Flexible numeric backend support (NumPy/PyTorch/CuPy)")

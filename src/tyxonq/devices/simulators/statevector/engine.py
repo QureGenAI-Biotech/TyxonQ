@@ -40,7 +40,7 @@ class StatevectorEngine:
     capabilities = {"supports_shots": True}
 
     def __init__(self, backend_name: str | None = None) -> None:
-        # Pluggable numerics backend (numpy/pytorch/cupynumeric)
+        # Pluggable numerics backend (numpy/pytorch/cupy)
         self.backend = get_backend(backend_name)
 
     def run(self, circuit: "Circuit", shots: int | None = None, **kwargs: Any) -> Dict[str, Any]:

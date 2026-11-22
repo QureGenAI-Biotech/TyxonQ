@@ -5,11 +5,11 @@ import pytest
 import torch
 from pyscf.fci import cistring, direct_spin1, selected_ci
 
-from tyxonq.applications.chem.algorithms.sqd.gpu.torch_davidson import davidson_lowest
-from tyxonq.applications.chem.algorithms.sqd.gpu.torch_selected_ci import (
+from tyxonq.applications.chem.algorithms.sqd.gpu.davidson import davidson_lowest
+from tyxonq.applications.chem.algorithms.sqd.gpu.selected_ci import (
     TorchSelectedCIContractor, absorb_h1e_torch,
 )
-from tyxonq.applications.chem.algorithms.sqd.gpu.torch_spin_square import TorchSelectedS2Contractor
+from tyxonq.applications.chem.algorithms.sqd.gpu.spin_square import TorchSelectedS2Contractor
 
 
 @pytest.mark.parametrize("nelec", [(2, 2), (3, 1)])
@@ -155,7 +155,7 @@ def test_cuda_batch_adapter_preserves_options_and_reports(monkeypatch):
         calls.append((strings, h1, eri, norb, nelec, options))
         return strings, {"verified": True}
 
-    module = "tyxonq.applications.chem.algorithms.sqd.gpu.torch_sci_solver"
+    module = "tyxonq.applications.chem.algorithms.sqd.gpu.solver"
     monkeypatch.setitem(sys.modules, module, SimpleNamespace(solve_sci_cuda=solve))
     solver = make_cuda_sci_solver(threads=2, tolerance=1e-10, report_callback=reports.append)
     batches = [(np.array([1]), np.array([1])), (np.array([2]), np.array([1]))]

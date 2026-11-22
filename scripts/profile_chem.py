@@ -24,16 +24,15 @@ def run_uccsd_device():
     # H2, default basis
     from tyxonq.applications.chem.molecule import h4
     from tyxonq.applications.chem import UCCSD
-    ucc = UCCSD(h4, runtime="device")
-    # device 路径，provider 默认 simulator，kernel 内 shots=0
-    _ = ucc.kernel(runtime="device")
+    ucc = UCCSD(h4)
+    _ = ucc.kernel(shots=2048, provider="simulator", device="statevector")
 
 
 def run_hea_device():
     from tyxonq.applications.chem.molecule import h4
     from tyxonq.applications.chem import HEA
-    hea = HEA.from_molecule(h4, active_space=(2, 2), n_layers=1, mapping="parity", runtime="device")
-    _ = hea.kernel(runtime="device")
+    hea = HEA.from_molecule(h4, active_space=(2, 2), n_layers=1, mapping="parity")
+    _ = hea.kernel(shots=2048, provider="simulator", device="statevector")
 
 
 def run_uccsd_device_shots():
@@ -41,17 +40,17 @@ def run_uccsd_device_shots():
     from tyxonq.applications.chem.molecule import h4
     from tyxonq.applications.chem import UCCSD
     import numpy as np
-    ucc = UCCSD(h4, runtime="device")
+    ucc = UCCSD(h4)
     params = np.zeros(ucc.n_params, dtype=float)
-    _ = ucc.energy(params, runtime="device", shots=int(os.environ.get("CHEM_PROFILE_SHOTS", 2048)), provider="simulator", device="statevector")
+    _ = ucc.energy(params, shots=int(os.environ.get("CHEM_PROFILE_SHOTS", 2048)), provider="simulator", device="statevector")
 
 
 def run_hea_device_shots():
     # H2 with shots>0 to profile counts path
     from tyxonq.applications.chem.molecule import h4
     from tyxonq.applications.chem import HEA
-    hea = HEA.from_molecule(h4, active_space=(2, 2), n_layers=1, mapping="parity", runtime="device")
-    _ = hea.energy(hea.init_guess, runtime="device", shots=int(os.environ.get("CHEM_PROFILE_SHOTS", 2048)), provider="simulator", device="statevector")
+    hea = HEA.from_molecule(h4, active_space=(2, 2), n_layers=1, mapping="parity")
+    _ = hea.energy(hea.init_guess, shots=int(os.environ.get("CHEM_PROFILE_SHOTS", 2048)), provider="simulator", device="statevector")
 
 
 def run_hea_open_shell_shots0():
@@ -59,7 +58,7 @@ def run_hea_open_shell_shots0():
     from tyxonq.applications.chem.molecule import h_chain
     from tyxonq.applications.chem.algorithms.vqe.hea import HEA
     m = h_chain(3, charge=0, spin=1)
-    hea = HEA.from_molecule(m, n_layers=6, mapping="parity", runtime="device")
+    hea = HEA.from_molecule(m, n_layers=6, mapping="parity")
     _ = hea.kernel(shots=0, provider="simulator", device="statevector")
 
 
@@ -79,7 +78,7 @@ def run_mf_input():
         if stable:
             break
     ucc = UCCSD(hf, active_space=(4, 4))
-    _ = ucc.kernel(runtime='device', shots=2048)
+    _ = ucc.kernel(shots=2048, provider="simulator", device="statevector")
 
 
 if __name__ == "__main__":

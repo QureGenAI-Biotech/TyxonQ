@@ -605,23 +605,34 @@ def dmet_total_energy(
     *,
     part_cumulant: bool = True,
     approx_cumulant: bool = True,
+    fragment_energies: Iterable[float] | None = None,
 ) -> float:
-    """求和分片贡献并补齐 Vayesta DMET 的全局非 cumulant 项。"""
+    """求和分片贡献并补齐 Vayesta DMET 的全局非 cumulant 项。
+
+    ``fragment_energies`` 允许 driver 复用同一调用中已计算的贡献；省略时
+    保持原有行为。全局密度与有效势修正仍在这里计算，不缓存陈旧结果。
+    """
 
     fragment_list = list(fragments)
     if not fragment_list:
         raise ValueError("At least one fragment is required for DMET energy reconstruction.")
-    electronic = sum(
-        fragment_dmet_energy(
-            mf,
-            cluster,
-            result,
-            c_projector,
-            part_cumulant=part_cumulant,
-            approx_cumulant=approx_cumulant,
+    if fragment_energies is None:
+        contributions = tuple(
+            fragment_dmet_energy(
+                mf,
+                cluster,
+                result,
+                c_projector,
+                part_cumulant=part_cumulant,
+                approx_cumulant=approx_cumulant,
+            )
+            for cluster, result, c_projector in fragment_list
         )
-        for cluster, result, c_projector in fragment_list
-    )
+    else:
+        contributions = tuple(float(value) for value in fragment_energies)
+        if len(contributions) != len(fragment_list):
+            raise ValueError("fragment_energies must contain one value per fragment.")
+    electronic = sum(contributions)
 
     unrestricted = fragment_list[0][0].is_unrestricted
     if part_cumulant:
@@ -674,26 +685,29 @@ def compute_dmet_energy(
             ) from exc
         entries.append((result.cluster, result.solver, c_projector))
 
+    per_fragment = None
+    if return_fragment_energies:
+        per_fragment = tuple(
+            fragment_dmet_energy(
+                mf,
+                cluster,
+                result,
+                c_projector,
+                part_cumulant=part_cumulant,
+                approx_cumulant=approx_cumulant,
+            )
+            for cluster, result, c_projector in entries
+        )
     total = dmet_total_energy(
         mf,
         entries,
         part_cumulant=part_cumulant,
         approx_cumulant=approx_cumulant,
+        fragment_energies=per_fragment,
     )
-    if not return_fragment_energies:
-        return total
-    per_fragment = tuple(
-        fragment_dmet_energy(
-            mf,
-            cluster,
-            result,
-            c_projector,
-            part_cumulant=part_cumulant,
-            approx_cumulant=approx_cumulant,
-        )
-        for cluster, result, c_projector in entries
-    )
-    return total, per_fragment
+    if per_fragment is not None:
+        return total, per_fragment
+    return total
 
 
 __all__ = [

@@ -4,17 +4,20 @@
 
 ## Abstract
 
-TyxonQ is a revolutionary modular quantum computing platform that addresses critical challenges in quantum software engineering by introducing novel architectural patterns for hardware-realistic quantum program execution. The framework centers on nine key innovations: (1) **Stable Intermediate Representation (IR)** as a system-wide contract, (2) **Compiler-driven measurement optimization** with explicit grouping and shot scheduling, (3) **Dual-path execution model** with semantic consistency between device and numeric paths, (4) **Counts-first semantics** with unified postprocessing, (5) **Single numeric backend abstraction** enabling seamless ML framework integration, (6) **Production-ready noise simulation** with Kraus operator support for NISQ-era algorithm development, (7) **Industry-leading automatic differentiation** with complete PyTorch autograd support, (8) **Advanced gradient optimization** including Quantum Natural Gradient (QNG) and Trotter-Suzuki time evolution, and (9) **Comprehensive pulse-level quantum control** — the most complete pathway from gate-level algorithms to real quantum hardware execution. In addition, TyxonQ integrates a **cloud-local hybrid classical acceleration path** for quantum chemistry workflows, offloading heavy PySCF kernels (HF/post-HF) to cloud resources while keeping VQE iteration locally controlled via artifact-based HF state transfer. These innovations collectively solve the fragmentation problem in quantum software ecosystems while delivering **performance leadership**: TyxonQ is **1.38x faster than PennyLane** and **5.61x faster than Qiskit** in gradient computation, maintaining high engineering usability and research productivity.
+TyxonQ is a revolutionary modular quantum computing platform that addresses critical challenges in quantum software engineering by introducing novel architectural patterns for hardware-realistic quantum program execution. The framework centers on nine key innovations: (1) **Stable Intermediate Representation (IR)** as a system-wide contract, (2) **Compiler-driven measurement optimization** with explicit grouping and shot scheduling, (3) **Dual-path execution model** with semantic consistency between device and numeric paths, (4) **Counts-first semantics** with unified postprocessing, (5) **Single numeric backend abstraction** enabling seamless ML framework integration, (6) **Production-ready noise simulation** with Kraus operator support for NISQ-era algorithm development, (7) **Industry-leading automatic differentiation** with complete PyTorch autograd support, (8) **Advanced gradient optimization** including Quantum Natural Gradient (QNG) and Trotter-Suzuki time evolution, and (9) **Comprehensive pulse-level quantum control** — the most complete pathway from gate-level algorithms to real quantum hardware execution. In addition, TyxonQ integrates a **cloud-local hybrid classical acceleration path** for quantum chemistry workflows, offloading heavy PySCF kernels (HF/post-HF) to cloud resources while keeping VQE iteration locally controlled via artifact-based HF state transfer. A native selected-CI SBD layer now adds CUDA FP64 and Apple MLX/Metal mixed-precision execution behind a single SQD backend selector, while a profile-guided optimization pass improves complete MPS, EWF DMET and LUCJ workloads without weakening numerical contracts. These innovations collectively solve the fragmentation problem in quantum software ecosystems while delivering **performance leadership**: TyxonQ is **1.38x faster than PennyLane** and **5.61x faster than Qiskit** in gradient computation, maintaining high engineering usability and research productivity.
 
 **Key Contributions:**
 - Novel dual-path execution model that unifies hardware-realistic device execution with exact numeric simulation under consistent semantics
 - Compiler-driven measurement grouping and shot scheduling that elevates quantum measurement optimization from device layer to compiler layer
 - Counts-first result semantics with provider-neutral postprocessing for cross-vendor portability
-- Single ArrayBackend protocol supporting NumPy/PyTorch/CuPyNumeric with transparent gradient integration
+- Single ArrayBackend protocol supporting NumPy/PyTorch/CuPy/MLX with transparent gradient integration
+- **Native SBD selected-CI acceleration**: CUDA FP64 and single-device Apple MLX/Metal implementations, unified `backend=` dispatch, explicit environment fallback, and independent CPU FP64 validation
+- **Profile-guided numerical acceleration**: whole-workload MPS, EWF DMET and LUCJ improvements with raw timing samples, memory checks, optimization-history preservation and explicit negative results
 - **Complete PyTorch autograd support** with gradient chain preservation in backend operations and quantum gate functions
 - **Performance leadership** validated on molecular benchmarks: 1.38x faster than PennyLane, 5.61x faster than Qiskit
 - **Quantum Natural Gradient (QNG)** implementation using Fubini-Study metric for accelerated convergence on barren plateau landscapes
 - **Production-ready Trotter-Suzuki decomposition** for Hamiltonian time evolution with configurable accuracy-depth tradeoffs
+- **Reproducible quantum-dynamics benchmarking** with device-independent Floquet models, common counts semantics, layered numerical validation, manifest-bound raw records and explicit scientific limits
 - **Industry-leading pulse-level quantum control**: Dual-mode architecture, physics-validated gate decompositions, 10+ waveform types, 3-level system support, complete TQASM+OpenPulse export
 - Production-ready noise simulation with 4 standard noise models (depolarizing, amplitude/phase damping, Pauli channel) and user-friendly API
 - Cloud-local hybrid classical acceleration for PySCF HF/post-HF with GPU-first routing and artifact-based SCF state transfer to local VQE
@@ -36,7 +39,7 @@ The current quantum computing software ecosystem faces several critical challeng
 
 ### 1.2 Technical Contributions
 
-TyxonQ addresses these challenges through five architectural innovations:
+TyxonQ addresses these challenges through six architectural innovations:
 
 **Innovation 1: Stable IR as System Contract**
 - Minimal design principle with only `num_qubits` and `ops` core fields
@@ -60,9 +63,15 @@ TyxonQ addresses these challenges through five architectural innovations:
 - Metadata-driven processing: compiler-generated measurement metadata guides postprocessing basis transformations and expectation aggregation
 
 **Innovation 5: Single Numeric Backend Abstraction**
-- ArrayBackend protocol: unified array operations interface supporting NumPy, PyTorch, CuPyNumeric
-- Vectorization strategies: automatic vectorization checks with backend fallback mechanisms
+- ArrayBackend protocol: unified array operations interface supporting NumPy, PyTorch, CuPy and MLX
+- Capability-aware execution with explicit unsupported-operation and precision behavior
 - Gradient integration: PyTorch backend natively supports autograd without additional wrappers
+
+**Innovation 6: Native Selected-CI SBD Acceleration**
+- Native CUDA and MLX/Metal solvers remain algorithm implementations, not misleading general-purpose array backends
+- One `backend=` selector provides deterministic CUDA SBD → Metal SBD → PyTorch CPU priority
+- Unavailable environments produce visible, reported CPU fallback; numerical failures never silently change backend
+- Optimization is accepted from complete-workload evidence, with CPU golden, residual, RDM and autograd checks
 
 ### 1.3 Comparison with Existing Frameworks
 
@@ -277,9 +286,10 @@ class ArrayBackend(Protocol):
 ```
 
 **Backend Abstraction Advantages:**
-- **Seamless switching**: Same code runs unmodified across NumPy/PyTorch/CuPyNumeric
-- **Performance transparency**: Vectorization checks and backend fallback mechanisms ensure optimal performance
+- **Seamless switching where capabilities match**: NumPy, PyTorch, CuPy and MLX share array operations without hiding dtype or device requirements
+- **Performance and precision transparency**: synchronization/materialization rules are explicit; unsupported FP64/complex128 operations are not replaced by silent host conversion
 - **Gradient integration**: PyTorch backend natively supports `autograd` without additional wrappers
+- **Algorithm-specific acceleration remains separate**: native SBD selected-CI uses `numerics/sbd/{cuda,metal}` and SQD `backend=` dispatch rather than pretending to be a general array backend
 
 #### 2.2.5 Counts-First Postprocessing Layer
 
@@ -348,12 +358,13 @@ src/tyxonq/
 │       ├── ibm/driver.py           # IBM Quantum Network
 │       └── tyxonq/driver.py        # TyxonQ self-developed hardware
 │
-├── numerics/                       # **Numeric backend abstraction**
-│   ├── api.py                      # ArrayBackend protocol
-│   └── backends/
-│       ├── numpy_backend.py        # NumPy backend
-│       ├── pytorch_backend.py      # PyTorch backend
-│       └── cupynumeric_backend.py  # CuPy backend
+├── numerics/                       # **Numeric backends and local acceleration**
+│   ├── api.py                      # ArrayBackend protocol and selection
+│   ├── accelerator.py              # CUDA/Metal/CPU discovery and SQD resolution
+│   ├── backends/                   # NumPy, PyTorch, CuPy and MLX arrays
+│   └── sbd/                        # Public selected-CI algorithm entry
+│       ├── cuda/                   # Native CUDA FP64 SBD and pinned sources
+│       └── metal/                  # MLX/MSL H@C, S² and Davidson
 │
 ├── postprocessing/                 # **Unified postprocessing layer**
 │   ├── __init__.py                 # Unified entry point
@@ -363,7 +374,10 @@ src/tyxonq/
 │
 ├── applications/                   # Domain specialization
 │   └── chem/                       # **Quantum chemistry applications**
-│       ├── algorithms/vqe/         # HEA/UCC series + runtimes + wavefunction (CI) library
+│       ├── algorithms/vqe/         # HEA/UCC series + stateless execution + wavefunction
+│       ├── algorithms/sqd/         # SQD and unified GPU selected-CI dispatch
+│       ├── algorithms/lucj/        # LUCJ circuits and compressed DF autograd
+│       ├── algorithms/ewf/         # EWF/DMET embedding and fragment solvers
 │       ├── dynamics/               # Time-evolution runtime + model Hamiltonians
 │       └── hamiltonian_builders.py # HF/integrals → Hamiltonians
 │
@@ -395,7 +409,7 @@ TyxonQ's chain-style API is a signature feature of the framework that explicitly
 import tyxonq as tq
 
 # Set numeric backend
-tq.set_backend("numpy")  # or "pytorch" / "cupynumeric"
+tq.set_backend("numpy")  # or "pytorch" / "cupy"
 
 # Build quantum circuit
 c = tq.Circuit(2).h(0).cx(0, 1).measure_z(0).measure_z(1)
@@ -479,32 +493,24 @@ def schedule_shots(circuit: Circuit, total_shots: int = 4096) -> Dict[str, Any]:
 - **Visibility**: Measurement plans can be inspected and optimized before execution
 - **Cross-device consistency**: Simulators and real hardware use the same measurement metadata
 
-### 3.3 Dual-Path Execution Model
+### 3.3 Explicit Numeric and Circuit Execution
 
-TyxonQ's dual-path execution model is one of its most important architectural innovations, providing semantic consistency while separately optimizing device and numeric paths.
+VQE algorithms select execution per call without a runtime layer:
 
 ```mermaid
 sequenceDiagram
     participant User as User
-    participant Algorithm as Algorithm Layer
-    participant DeviceRT as Device Runtime
-    participant NumericRT as Numeric Runtime
+    participant Algorithm as Concrete Algorithm
     participant Device as Device Layer
-    participant NumLib as Numeric Library
+    participant NumLib as Wavefunction/Libs
     participant Post as Postprocessing
-    
-    User->>Algorithm: Call energy(runtime="device")
-    Algorithm->>DeviceRT: Route to device runtime
-    DeviceRT->>Device: Build circuit + measurement grouping
-    Device->>Post: Return counts statistics
-    Post->>DeviceRT: Compute expectations
-    DeviceRT->>Algorithm: Return energy
-    
-    User->>Algorithm: Call energy(runtime="numeric")
-    Algorithm->>NumericRT: Route to numeric runtime
-    NumericRT->>NumLib: Direct statevector computation
-    NumLib->>NumericRT: Return exact value
-    NumericRT->>Algorithm: Return energy
+    User->>Algorithm: energy(shots=0)
+    Algorithm->>NumLib: Direct numerical evaluation
+    NumLib->>Algorithm: Energy or analytic gradient
+    User->>Algorithm: energy(shots>0, provider, device)
+    Algorithm->>Device: Grouped measurement circuits
+    Device->>Post: Counts
+    Post->>Algorithm: Expectation energy
 ```
 
 #### 3.3.1 Device Path
@@ -591,7 +597,7 @@ def vqe_optimization(hamiltonian, ansatz, backend_name="numpy"):
 # Run on different backends without code changes
 params_numpy = vqe_optimization(H, ansatz, "numpy")
 params_torch = vqe_optimization(H, ansatz, "pytorch")  # With autograd
-params_cupy = vqe_optimization(H, ansatz, "cupynumeric")  # GPU acceleration
+params_cupy = vqe_optimization(H, ansatz, "cupy")  # GPU acceleration
 ```
 
 **Backend Abstraction Benefits:**
@@ -600,44 +606,17 @@ params_cupy = vqe_optimization(H, ansatz, "cupynumeric")  # GPU acceleration
 - **Gradient Integration**: Native support for modern ML frameworks
 - **Research Flexibility**: Researchers can focus on algorithms without worrying about backend details ## 4. Quantum AIDD Application Stack
 
-### 4.1 Dual-Path Drug Discovery Runtime Architecture
+### 4.1 Explicit Drug Discovery Execution Architecture
 
-TyxonQ's quantum chemistry stack exemplifies the dual-path execution model with domain-specific optimizations for AI-driven drug discovery:
+Concrete quantum chemistry algorithms share the same execution controls:
 
 ```mermaid
 flowchart TB
-    subgraph "Algorithm Layer"
-        A1[HEA]
-        A2[UCC/UCCSD]
-        A3[k-UpCCGSD]
-        A4[pUCCD]
-    end
-    
-    subgraph "Runtime Layer"
-        R1[Device Runtime]
-        R2[Numeric Runtime]
-    end
-    
-    subgraph "Execution Backends"
-        E1[Real Hardware<br/>+ Postprocessing]
-        E2[Simulators<br/>+ Noise Models]
-        E3[Exact Statevector<br/>+ Autograd]
-        E4[CI Vector Space<br/>+ PySCF Bridge]
-    end
-    
-    A1 --> R1
-    A1 --> R2
-    A2 --> R1
-    A2 --> R2
-    A3 --> R1
-    A3 --> R2
-    A4 --> R1
-    A4 --> R2
-    
-    R1 --> E1
-    R1 --> E2
-    R2 --> E3
-    R2 --> E4
+    A[HEA / UCCSD / k-UpCCGSD / pUCCD] --> S{shots}
+    S -->|0| N[Wavefunction/Libs<br/>Statevector or CI numerics]
+    S -->|positive| C[Grouped circuits<br/>Circuit.run]
+    C --> E1[Real Hardware + Postprocessing]
+    C --> E2[Simulators + Noise Models]
 ```
 
 ### 4.2 Unified Drug Discovery Algorithm API
@@ -649,9 +628,9 @@ All quantum chemistry algorithms for drug discovery expose the same interface wh
 from tyxonq.applications.chem import HEA, UCCSD, pUCCD
 
 # Same API for all algorithms - optimized for drug discovery workflows
-hea = HEA(n_qubits=4, layers=2, hamiltonian=H_molecule, runtime="device")
-uccsd = UCCSD(n_qubits=4, hamiltonian=H_molecule, runtime="numeric")
-puccd = pUCCD(n_qubits=4, hamiltonian=H_molecule, runtime="device")
+hea = HEA(n_qubits=4, layers=2, hamiltonian=H_molecule)
+uccsd = UCCSD(molecule=mol)
+puccd = pUCCD(molecule=mol)
 
 # Consistent energy/gradient interface for molecular property prediction
 energy_hea = hea.energy(shots=4096, provider="ibm", device="ibm_quebec")
@@ -727,8 +706,8 @@ def validate_against_pyscf(molecule, method="UCCSD"):
     E_fci, civec_fci = fci_solver.kernel()
     
     # 2. TyxonQ calculation (numeric path for exact comparison)
-    tyxonq_alg = get_algorithm(method, runtime="numeric")
-    E_tyxonq = tyxonq_alg.energy()
+    tyxonq_alg = get_algorithm(method)
+    E_tyxonq = tyxonq_alg.energy(shots=0)
     
     # 3. CI vector comparison
     civec_tyxonq = tyxonq_alg.get_civector()
@@ -781,6 +760,118 @@ scan.set_mm_charges(new_mm_coords)   # per-step environment update (MD loop)
 **Algorithm and hardware flexibility.** The QM backend is selected by `method=` (`uccsd`/`rouccsd`/`hea`/`sqd`). HEA additionally forwards execution options (`shots`/`provider`/`device`) through `as_pyscf_solver(device_opts=...)` down to `devices.base.run`, so the same QM/MM workflow targets simulators or real quantum hardware (TyxonQ/QCOS/Quafu providers) without code changes.
 
 **Validation.** Twelve use cases (`tests_applications_chem/`, 39 tests) plus nine runnable tutorials (`examples/qmmm/`, E1–E9) were executed end-to-end with UCCSD as the target algorithm; three-process LAMMPS topologies reproduce the reference decomposition to ~1e-5 Ha at step 0.
+
+### 4.6 Native SBD Selected-CI GPU Acceleration
+
+SQD's selected-configuration interaction step is a sparse, determinant-structured eigenproblem rather than a generic dense array workload. TyxonQ therefore implements it as a dedicated **Selected Basis Diagonalization (SBD)** algorithm family under `tyxonq.numerics.sbd`, while retaining `ArrayBackend` for ordinary NumPy/PyTorch/CuPy/MLX tensors. This distinction prevents a hardware-specific solver from becoming an implicit global numerics policy.
+
+#### 4.6.1 Unified Dispatch and Failure Semantics
+
+Users select the execution path with one variable:
+
+```python
+from tyxonq.applications.chem.algorithms.sqd.gpu import solve_sci_gpu
+
+result, report = solve_sci_gpu(
+    ci_strings, h1e, eri, norb, nelec,
+    backend="gpu",  # "auto", "cpu", "metal", or "cuda"/"sbd"
+)
+```
+
+| Request | Resolution and numerical mode |
+|---|---|
+| `gpu` / `auto` | Native CUDA SBD → native MLX/Metal SBD → PyTorch CPU |
+| `cuda` / `sbd` | Native CUDA SBD, FP64, including its native RDM path |
+| `metal` | Single-device MLX/MSL SBD, deterministic FP32 long-vector kernels; CPU RDM by default, optional opposite-spin Metal 2-RDM |
+| `cpu` | PyTorch CPU FP64 reference path |
+
+Dispatch checks both hardware and required native runtimes. An explicitly requested but unavailable accelerator, incompatible device, or missing runtime emits `RuntimeWarning` and falls back to PyTorch CPU with `used_cpu_fallback=True` and a structured `selection_reason`. This fallback applies **only before numerical dispatch**. Native kernel errors, non-convergence, and residual/RDM failures propagate to the caller; they never trigger a silent backend change. Reports also expose `requested_backend`, `resolved_backend`, `precision_mode`, `rdm_backend`, native Metal call counts, and stage timings.
+
+#### 4.6.2 CUDA and Metal Implementation Boundaries
+
+The CUDA path preserves the native SBD FP64 implementation, source patches and hashes in `numerics/sbd/cuda/`; its build requires the documented nvcc/OpenMPI/pybind11/mpi4py/OpenBLAS toolchain. CUDA and Metal are sibling implementations beneath a common algorithm entry, not vendor code mixed into device-independent compiler or array layers.
+
+The Metal path implements:
+
+- alpha same-spin, beta same-spin and mixed-spin H@C contributions;
+- MLX-resident connection metadata, coefficients, operator images and Davidson long vectors;
+- native S² transitions, fermionic signs and scattering;
+- two-pass Gram–Schmidt, thick restart and an independent final H@C residual;
+- explicit local `mx.stream(mx.gpu)` scopes and `mx.eval` completion before results or timings are read.
+
+The merged PR #21 implementation adds connected-row kernels, pair-table projection caching, energy-offset handling and new reduction tiling. These were retained only after Metal golden/residual tests; the CUDA connected-row path remains opt-in through `TYXONQ_SBD_CUDA_HC_LANES != 0`, while the default value `0` preserves the legacy CUDA layout and requires single-rank reconstruction for the new path. No CUDA performance claim is made without NVIDIA hardware.
+
+Metal connection-table setup and small projected Hermitian FP64 `eigh` remain on CPU, matching the algorithm's host boundary. RDM defaults to CPU (`rdm_backend="cpu"`). Optional `rdm_backend="metal"` accelerates only the opposite-spin 2-RDM with Q60 compensation and independent normalization/error checks; 1-RDM and same-spin blocks remain CPU FP64. The implementation is therefore **not** an end-to-end FP64, multi-GPU, MPI/NCCL or fully native RDM claim. Production Metal uses custom deterministic FP32 reductions; it neither reads nor changes `MLX_ENABLE_TF32`. The research-only full-FP32 `mx.matmul` path requires `MLX_ENABLE_TF32=0` before process startup and showed no reproducible cross-process performance advantage.
+
+For target-spin runs, `spin_tolerance` is keyword-only and defaults to `1e-4`. The solver filters roots by measured S², selects the requested target root, rejects spaces with no admissible root, and retries an unconstrained lowest-root solve after a variational-bound failure. Reports distinguish the final root from all attempted H@C/iteration histories, whose energies are physical rather than soft-penalty eigenvalues. POSIX CPU validation reuses an isolated interpreter without reusing prior numerical inputs; thread changes, worker failure and fork are handled explicitly, and batch `close()` releases both device workers and the validator. `full_cpu` forces original PySCF spin-block RDMs as an independent golden, separate from production factorized RDMs.
+
+#### 4.6.3 Measured Performance and Break-Even
+
+Correctness, actual device execution and speed were evaluated independently. H@C, S², energies and residuals were checked against CPU FP64 references; GPU stream and native-call records established real execution; steady-state timing used explicit synchronization and at least five repeats. Fixed-workload FP32 profiles remain separate from normally converged molecular solves.
+
+A post-PR21 fixed 40-cycle profile (one process, five samples per point) produced the following Metal/CPU FP32 median ratios; values below one favor Metal:
+
+| Determinants | H@C ratio | Solver ratio | Metal H@C relative FP64 golden error |
+|---:|---:|---:|---:|
+| 4,356 | 0.7456 | 1.6767 | 1.11e-7 |
+| 8,281 | 0.5122 | 0.7637 | 1.24e-7 |
+| 14,400 | 0.4861 | 0.4256 | 1.39e-7 |
+| 23,409 | 0.3382 | 0.2652 | 1.49e-7 |
+
+The fixed runs intentionally exhaust 40 cycles and are not ground-state results. This single-process profile is not used to redefine the two-round molecular crossover.
+
+The application-level criterion is whole SQD wall time, including setup, normal-convergence Davidson, CPU RDM, validation and persistent-worker overhead. The post-PR21 sweep repeated H2O, NH3 and CH4 at six CAS sizes in two independent processes, with one cold and five steady runs per backend. Entries below are CPU/Metal median ratios for rounds 1/2; values above one favor Metal:
+
+| CAS / determinants | H2O | NH3 | CH4 |
+|---|---:|---:|---:|
+| (4e,12o) / 4,356 | 0.9728/1.0778 | 0.9383/1.0599 | 0.9519/1.1793 |
+| (4e,14o) / 8,281 | 1.6912/1.5854 | 1.6414/1.5674 | 1.5749/1.5407 |
+| (4e,15o) / 11,025 | 1.7043/1.5639 | 1.8751/1.9206 | 1.8191/1.8605 |
+| (4e,16o) / 14,400 | 1.9948/1.9162 | 2.1624/2.1570 | 2.0757/2.1295 |
+| (4e,17o) / 18,496 | 2.1777/2.1447 | 2.2045/2.2367 | 2.0191/2.0251 |
+| (4e,18o) / 23,409 | 2.5713/2.6740 | 1.9818/2.1899 | 2.1790/2.2414 |
+
+All three molecules have a reproduced crossover at 8,281 determinants under this protocol. At 4,356, round one still favors CPU, so the smaller size is explicitly retained as a reversal point. At 23,409, whole-wall reductions are H2O 61.11%/62.60%, NH3 49.54%/54.34%, and CH4 54.11%/55.39%.
+
+All 36 paired molecule/size/round workloads converged and passed residual/RDM acceptance; actual Metal FP32/CPU-RDM and PyTorch CPU FP64 execution plus identical pre/post-PR input fingerprints were verified. The raw archive is `data/sbd_benchmarks/multi_molecule_break_even_pr21_2026-11-22.json` (SHA256 `ff7351fb7de8055fc6deea18c6a8d95626705de65160cebfcdbc43a700fd6302`). These remain single fixed-CAS SQD measurements, not full iterative SQD sampling/recovery benchmarks; CUDA application-level performance awaits NVIDIA measurements. Pre-PR21 numbers and negative experiments remain in `docs/SBD_METAL_OPTIMIZATION.md` and `docs/SBD_REPRODUCIBILITY.md`.
+
+#### 4.6.4 Cross-Vendor Kernels and Multi-Machine Apple GPU Research
+
+Two portability questions require different architectures. For single-source custom kernels across NVIDIA, AMD and Apple, **Mojo/MAX** is currently the closest nvcc-like candidate: its official compatibility matrix covers Apple M1–M5 and NVIDIA/AMD GPUs, and its `DeviceContext` supports Metal/CUDA/HIP with explicit kernel compilation and synchronization. AdaptiveCpp provides an experimental SYCL→LLVM IR→MSL route, while `triton-msl` provides an alpha Triton IR→MSL route. Neither experimental route supports the required production FP64 semantics on Apple, and neither justifies rewriting validated SBD kernels without new golden and performance evidence.
+
+For multiple physical Apple machines, MLX 0.32.4 already documents `mlx.launch`, MPI, Ring and Thunderbolt RDMA/JACCL communication. This makes MLX the natural first candidate for future multi-Mac SBD orchestration, but the current TyxonQ Metal solver remains single-device: determinant partitioning, H@C communication and Davidson global reductions have not been implemented or measured. WebGPU/wgpu is portable across Metal/Vulkan/D3D12 but WGSL lacks FP64; OpenCL is deprecated by Apple, and no official Kokkos Metal backend was found. Official sources and the recommended prototype sequence are recorded in `docs/SBD_METAL_OPTIMIZATION.md` §12.
+
+### 4.7 Profile-Guided Framework-Wide Numerical Acceleration
+
+The 2026-11-19 optimization pass replaced static operator prioritization with a closed loop:
+
+```text
+real workload → end-to-end and stage profile → Amdahl upper bound
+→ isolated implementation experiment → numerical/gradient/API/memory checks
+→ two independent whole-workload measurements → adopt, retain or reject
+```
+
+The common benchmark entry is `examples/numerics_acceleration_benchmark.py`. It covers MPS, `quantum_info`, EWF, LUCJ, SKQD and readout at three scales; records cold and steady-state timing, raw samples, phase costs, input metadata, Python peak memory and result checksums; and excludes `tracemalloc` overhead from timing. An optimization is adopted by default only when a representative complete workload improves by at least 5% and the result reproduces in a separate process. Operator-only speedups are insufficient.
+
+#### 4.7.1 Adopted Optimizations
+
+| Module | Root cause and adopted change | Two-round whole-workload median improvement |
+|---|---|---|
+| MPS | Engine backend was not propagated to kernels, and broad exception handling could silently move SVD to NumPy. One backend now spans initialization, gates, truncation and reconstruction; unsupported SVD fails explicitly | Medium: **8.20% / 9.55%**; large: **13.04% / 16.93%** |
+| EWF DMET | Fragment cumulant and energy work was repeated for fragment details and the total. `compute_dmet_energy` now reuses fragment contributions while preserving global DMET corrections | Medium: **5.12% / 8.30%**; large: **13.31% / 13.08%** |
+| LUCJ compressed DF | The initial objective was evaluated once for history and again by SciPy. The cached `x0` loss/gradient is consumed by SciPy's first call; restricted targets are reused across stages | **10.89–20.50%** across small/medium/large, reproduced twice |
+
+MPS NumPy/PyTorch statevector agreement was approximately `1.97e-17`; EWF energies were unchanged exactly in the benchmark; LUCJ restricted and αβ loss histories remained value-for-value identical. LUCJ retains its SciPy NumPy parameter/gradient boundary and PyTorch autograd—this is not a claim that SciPy itself runs on GPU. EWF improvements are algorithmic elimination of repeated work, not an assertion that all contractions were moved to GPU.
+
+#### 4.7.2 Rejected and Deferred Paths
+
+- **`quantum_info` RDM**: at dense dimension 256, pure and mixed RDM together took 0.330 ms of a 60.363 ms workload (0.55%). Even eliminating them cannot meet the 5% whole-workload criterion. Dominant complex128 Hermitian diagonalization remains NumPy pending same-precision CUDA evidence.
+- **EWF and LUCJ device residency**: existing large contractions already use optimized paths; local MLX/MPS precision support does not justify an FP64/complex128 migration. No hidden precision reduction was used to manufacture speedup.
+- **SKQD integral rotation**: measured 4/6/8-orbital workloads took only 0.104/0.111/0.141 ms, so no migration was started.
+- **Readout**: 16/64/256-dimensional inverse mitigation took 0.085/0.319/5.119 ms; SciPy FP64 `pinv`, host counts and pathological-matrix semantics remain explicit.
+- **Metal SQD RDM default**: the optional opposite-spin Metal 2-RDM is validated, but current whole-CAS data do not justify changing the default from CPU or accelerating the other spin blocks. The CUDA → Metal → CPU priority remains unchanged.
+
+The final affected regression suite completed with **217 passed and 3 skipped** (CuPy not installed and optional ffsim tests). The adopted MPS/EWF/LUCJ figures are local CPU measurements and must not be relabeled as GPU results. CUDA/CuPy performance, full native-memory accounting, arbitrary bond dimensions/molecules, and full iterative SQD remain outside the demonstrated boundary. Raw samples, memory data, exact reproduction commands and paper-safe conclusions are documented in `docs/NUMERICS_OPTIMIZATION_REPORT.md`.
 
 ### 3.5 Production-Ready Noise Simulation
 
@@ -1441,6 +1532,44 @@ def pvqd_step(params, H, dt):
 - Quantum Approximate Optimization Algorithm (QAOA)
 - Quantum Annealing
 - Adiabatic state preparation
+
+#### 4.4.4 Device-Independent Floquet Dynamics and Shared Observables
+
+`applications/chem/dynamics/floquet.py` adds a nearest-neighbor disordered Floquet Ising model with reproducible PCG64 disorder, Néel-state preparation and circuit construction:
+
+\[
+U_F=e^{-\frac{i}{2}\sum_i h_iZ_i}
+     e^{-\frac{i}{4}\sum_i\phi_iZ_iZ_{i+1}}
+     e^{-\frac{i}{2}\pi g\sum_iX_i}.
+\]
+
+The model helpers contain no provider, device or submission state. Physical layout, compilation and execution are supplied by the experiment layer, so the same logical model can target different simulators or QPUs subject to their gate and topology constraints. The site-averaged autocorrelator \(L^{-1}\sum_i z_i(0)\langle Z_i(t)\rangle\) is expressed as a standard Pauli sum and reduced through the common Hamiltonian grouping and counts-first postprocessing path. This avoids a second, hardware-specific interpretation of bit order.
+
+#### 4.4.5 Layered Validation and Experiment Provenance
+
+The `examples/qd/` benchmarks treat scientific validation as a sequence of separate gates rather than inferring correctness from a successful device call:
+
+| Layer | Evidence and acceptance role |
+|-------|------------------------------|
+| Analytic / exact numerics | Check state preparation, evolution and observables against known references |
+| Parameter convergence | Measure Trotter-step, kick-strength and spectral time-window errors independently |
+| Finite-shot statistics | Report standard errors and confidence intervals without requiring random pointwise errors to decrease monotonically |
+| Compile-only preflight | Check gate decomposition, depth, physical connectivity and routing before submission |
+| Pilot and reviewed batch | Require explicit hardware confirmation and a complete valid pilot before a separately confirmed batch |
+| Raw report reconstruction | Recompute observables and comparisons from saved counts without error mitigation or post-hoc selection |
+
+The raw-data contract stores source provenance and hashes, a versioned submission manifest, seeds, time/cycle grids, physical layout, per-circuit hashes, task IDs, shots and append-only JSONL records with record hashes. Batch guards bind records to the current manifest, device and shots; the Rabi workflow additionally binds the fitted-reference snapshot. Safe resume skips only complete valid records. Consequently, a nonempty but failed pilot, an old manifest, incomplete counts or records from another configuration cannot silently authorize or contaminate a report.
+
+#### 4.4.6 Recorded Hardware-Pairing Case Studies and Scientific Limits
+
+Two available QPUs were used to exercise this provider-neutral workflow. They are validation instances, not architectural dependencies of the dynamics layer.
+
+| Case | Raw observation | Interpretation boundary |
+|------|-----------------|-------------------------|
+| Single-qubit Rabi pairing (`examples/qd/q9_lqcloud_rabi_benchmark.py`) | 101 circuits and 10,100 shots; hardware–independent-experiment RMSE `0.113036`, calibrated-classical–experiment RMSE `0.097581`; preregistered `0.075` validation gate failed | The classical reference was fitted on a separate experimental repetition, and single-qubit Rabi dynamics is classically trivial. This is not a general quantum-versus-classical capability ranking |
+| 20-qubit Floquet Ising pairing (`examples/qd/q10_qz03_floquet_dtc.py`) | 8 pilot circuits plus 264 batch circuits/26,400 shots over 24 independent disorder seeds and cycles 0–10; raw hardware–experiment RMSE `0.6543865137` | Odd/even sign structure remains, but amplitude decays strongly: cycle 10 is `0.080208` on hardware versus `0.609263` in the public curve. Experimental agreement is not claimed |
+
+The public Rabi and Floquet records have documented licenses and source hashes. In particular, the Floquet archive provides a processed Fig. 3a curve rather than original experimental counts, disorder seeds or per-instance circuits; Q10 is therefore a same-model, same-observable independent pairing, not a circuit-by-circuit replay. Neither case used error mitigation, readout correction, post-hoc tuning or window selection. The 20-qubit one-dimensional Floquet run is not a quantum-advantage demonstration and cannot establish or refute a discrete-time-crystal phase; the 20-qubit same-disorder classical reference and the prospective 35-qubit two-dimensional extension have not been run. Full raw evidence is preserved in the [Rabi report](data/qd_benchmarks/electron_rabi_figshare_14871087/MQ02_RABI_RAW_REPORT.md) and [many-body dynamics report](data/qd_benchmarks/floquet_dtc_zenodo_5570676/QZ03_MANY_BODY_DYNAMICS_REPORT.md).
 
 ### 4.5 Performance Optimization Strategies
 

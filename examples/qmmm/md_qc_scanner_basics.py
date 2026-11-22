@@ -104,7 +104,7 @@ for stretch in (0.0, 0.05, 0.10, 0.15):
 # 第 3 节：换方法只改一个字符串——HEA 路径
 # ===========================================================================
 # HEA（硬件高效 ansatz）走参数化量子电路优化。注意两点：
-#   1. runtime="numeric" 让电路在 statevector 上精确求值（确定性、无采样噪声）；
+#   1. shots=0 让电路在数值引擎上精确求值（确定性、无采样噪声）；
 #   2. ansatz 表达能力有限时能量会高于 UCCSD/CASCI，这是变分上界性质，
 #      但能量面依然光滑，梯度依然可用。
 print()
@@ -114,7 +114,7 @@ print("=" * 72)
 
 scan_hea = qc_scanner(
     WATER, basis=BASIS, active_space=ACTIVE_SPACE, method="hea",
-    solver_kwargs={"runtime": "numeric", "n_layers": 1},
+    solver_kwargs={"shots": 0, "n_layers": 1},
 )
 e_hea, de_hea = scan_hea(coords0)
 print(f"HEA   E = {e_hea:.10f} Hartree")

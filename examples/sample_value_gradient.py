@@ -13,7 +13,7 @@ import tyxonq as tq
 from tyxonq.postprocessing.metrics import expectation as counts_expectation
 
 
-# Backend selection (can be changed to "pytorch" / "cupynumeric" if available)
+# Backend selection (can be changed to "pytorch" / "cupy" if available)
 nb = tq.set_backend("numpy")
 
 

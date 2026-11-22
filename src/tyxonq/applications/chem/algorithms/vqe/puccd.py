@@ -9,7 +9,8 @@ from pyscf.scf import RHF as _RHF
 
 from tyxonq.core.ir.circuit import Circuit
 from tyxonq.libs.hamiltonian_encoding.pauli_io import rdm_mo2ao
-from .ucc_base import UCC
+from .execution import optimize_vqe
+from .ucc_base import UCC, make_ucc_pyscf_solver, ucc_energy, ucc_energy_and_grad
 from tyxonq.libs.circuits_library.qubit_state_preparation import get_circuit_givens_swap
 from pyscf import fci as _fci
 from pyscf.cc.addons import spatial2spin
@@ -28,7 +29,7 @@ class PUCCD(UCC):
     # also need to add a few comment on make_rdm1/2
     # https://arxiv.org/pdf/2002.00035.pdf
     # https://arxiv.org/pdf/1503.04878.pdf
-    Paired UCC (pUCCD) aligned to new UCC base (device by default)."""
+    Paired UCC (pUCCD); shots=0 is numeric and positive shots selects circuits."""
 
     def __init__(
         self,
@@ -38,7 +39,6 @@ class PUCCD(UCC):
         active_space: Tuple[int, int] | None = None,
         active_orbital_indices: List[int] | None = None,
         mo_coeff: np.ndarray | None = None,
-        runtime: str = 'device',
         numeric_engine: str | None = None,
         run_fci: bool = False,
         classical_provider: str = 'local',
@@ -53,25 +53,44 @@ class PUCCD(UCC):
     ) -> None:
 
         super().__init__(
-            mol=mol,
-            init_method=init_method,
-            active_space=active_space,
-            active_orbital_indices=active_orbital_indices,
-            mo_coeff=mo_coeff,
-            mode="hcb",
-            runtime=runtime,
-            numeric_engine=numeric_engine,
-            run_fci=run_fci,
-            atom=atom,
-            basis=basis,
-            unit=unit,
-            charge=charge,
-            spin=spin,
-            classical_provider=classical_provider,
-            classical_device=classical_device,
+            mol=mol, init_method=init_method, active_space=active_space,
+            active_orbital_indices=active_orbital_indices, mo_coeff=mo_coeff,
+            mode="hcb", numeric_engine=numeric_engine, run_fci=run_fci,
+            atom=atom, basis=basis, unit=unit, charge=charge, spin=spin,
+            classical_provider=classical_provider, classical_device=classical_device,
             **kwargs
         )
         self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
+
+    def energy(self, params=None, *, shots=0, provider="simulator", device="statevector",
+               postprocessing=None, noise=None, numeric_engine=None, **device_opts):
+        return ucc_energy(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise,
+            numeric_engine=numeric_engine, **device_opts
+        )
+
+    def energy_and_grad(self, params=None, *, shots=0, provider="simulator",
+                        device="statevector", postprocessing=None, noise=None,
+                        numeric_engine=None, gradient_method="fd", **device_opts):
+        return ucc_energy_and_grad(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise, numeric_engine=numeric_engine,
+            gradient_method=gradient_method, **device_opts
+        )
+
+    @property
+    def e_ucc(self) -> float:
+        return float(self.energy(self._params, shots=0))
+
+    def kernel(self, **opts) -> float:
+        return optimize_vqe(self, opts, ucc=True)
+
+    @classmethod
+    def as_pyscf_solver(cls, config_function=None, device_opts=None, **kwargs):
+        return make_ucc_pyscf_solver(
+            cls, config_function=config_function, device_opts=device_opts, **kwargs
+        )
 
     # Legacy helpers not needed; excitations built in constructors
     def get_ex1_ops(self, t1: np.ndarray = None):

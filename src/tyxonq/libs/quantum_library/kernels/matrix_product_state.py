@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-from ....numerics import NumericBackend as nb
+from ....numerics.api import ArrayBackend, get_backend
 
 """Matrix Product State (MPS) minimal utilities for compressed-state simulation.
 
@@ -19,14 +19,14 @@ compressed-state simulator path:
 
 Design notes
 ------------
-- This implementation focuses on clarity and a minimal feature set that our
-  tests exercise. It uses NumPy and does not depend on the numerics backends.
-  Device engines can wrap and call these functions while selecting backends for
-  heavy kernels as needed.
+- Public operations default to the configured backend for compatibility; device
+  engines pass their own backend explicitly so state tensors never change device
+  as a side effect of an SVD or reconstruction.
 - All tensors use conventional qubit ordering; multi-qubit unitaries are
   expected in shape (2, 2, 2, 2) with index order (s0', s1', s0, s1).
-- Truncation policy is basic: hard cut to ``max_bond`` if provided. Future
-  extensions may include error-based truncation and backend-accelerated SVDs.
+- Truncation supports a hard ``max_bond`` and an absolute singular-value cutoff.
+  Unsupported backend SVD/precision combinations raise instead of falling back
+  to an implicit NumPy decomposition.
 """
 
 from dataclasses import dataclass
@@ -44,25 +44,30 @@ class MPSState:
     tensors: List[Any]
 
 
-def init_product_state(num_qubits: int, bit: int = 0) -> MPSState:
-    """Initialize a product state as an MPS.
+def init_product_state(
+    num_qubits: int,
+    bit: int = 0,
+    *,
+    backend: ArrayBackend | None = None,
+) -> MPSState:
+    """Initialize a product state on the requested numerical backend."""
 
-    Parameters
-    ----------
-    num_qubits:
-        Number of qubits in the chain.
-    bit:
-        If 0, initialize |0..0>; if 1, initialize |1..1>.
-    """
-
+    nb = backend if backend is not None else get_backend(None)
     v = nb.array([1.0, 0.0], dtype=nb.complex128) if bit == 0 else nb.array([0.0, 1.0], dtype=nb.complex128)
     tensors = [nb.reshape(v, (1, 2, 1)) for _ in range(num_qubits)]
     return MPSState(tensors)
 
 
-def apply_1q(mps: MPSState, U: np.ndarray, site: int) -> None:
+def apply_1q(
+    mps: MPSState,
+    U: np.ndarray,
+    site: int,
+    *,
+    backend: ArrayBackend | None = None,
+) -> None:
     """Apply a single-qubit unitary on the specified site in-place."""
 
+    nb = backend if backend is not None else get_backend(None)
     A = mps.tensors[site]
     U2 = nb.asarray(U)
     # U_{a s} * A_{i s j} -> A'_{i a j}
@@ -76,27 +81,17 @@ def _truncate_svd(
     Vh: Any,
     max_bond: Optional[int],
     svd_cutoff: Optional[float],
+    backend: ArrayBackend,
 ) -> Tuple[Any, Any, Any]:
-    # Start with all singular values
-    r = Sm.shape[0]
-    # Apply cutoff by absolute threshold on singular values
+    r = int(Sm.shape[0])
     if svd_cutoff is not None:
-        keep = (Sm >= float(svd_cutoff))
-        # Ensure at least rank-1 to avoid collapsing entirely
-        if not np.any(keep):
-            keep = np.zeros_like(Sm, dtype=bool)
-            keep[0] = True
-        Um = Um[:, keep]
-        Sm = Sm[keep]
-        Vh = Vh[keep, :]
-        r = Sm.shape[0]
-    # Apply hard cap
-    if max_bond is not None and max_bond < r:
-        r = max_bond
-        Um = Um[:, :r]
-        Sm = Sm[:r]
-        Vh = Vh[:r, :]
-    return Um, Sm, Vh
+        # SVD singular values are sorted. Only the scalar rank decision crosses
+        # the host boundary; the matrices and the decomposition stay on-device.
+        singular_values = backend.to_numpy(Sm)
+        r = max(1, int(np.count_nonzero(singular_values >= float(svd_cutoff))))
+    if max_bond is not None:
+        r = min(r, int(max_bond))
+    return Um[:, :r], Sm[:r], Vh[:r, :]
 
 
 def apply_2q_nn(
@@ -106,44 +101,28 @@ def apply_2q_nn(
     max_bond: Optional[int] = None,
     *,
     svd_cutoff: Optional[float] = None,
+    backend: ArrayBackend | None = None,
 ) -> None:
-    """Apply a nearest-neighbor 2-qubit unitary in-place with SVD recompression.
+    """Apply a nearest-neighbor gate and recompress with backend-native SVD.
 
-    Parameters
-    ----------
-    mps:
-        The target MPS state.
-    U4:
-        Unitary with shape (2, 2, 2, 2) in order (s0', s1', s0, s1).
-    left_site:
-        Apply between sites ``left_site`` and ``left_site + 1``.
-    max_bond:
-        Optional hard cap on the new bond dimension after applying the gate.
+    Backend failures are propagated: an implicit host SVD could otherwise mix
+    NumPy and device tensors and hide an unsupported precision or device path.
     """
 
+    nb = backend if backend is not None else get_backend(None)
     i = left_site
     A = mps.tensors[i]
     B = mps.tensors[i + 1]
-    # Merge two site tensors into theta_{Dl, s0, s1, Dr}
     theta = nb.einsum("isj, jtk -> istk", A, B)
-    # Apply gate: U_{a b s t} * theta_{i s t k} -> theta'_{i a b k}
     U4r = nb.reshape(nb.asarray(U4), (2, 2, 2, 2))
     theta2 = nb.einsum("abst, istk -> iabk", U4r, theta)
     Dl, _, _, Dr = theta2.shape
-    # Reshape to matrix for SVD: (Dl*2) x (2*Dr)
     mat = nb.reshape(theta2, (Dl * 2, 2 * Dr))
-    # Use backend SVD if available (PyTorch), else NumPy
-    try:
-        Um, Sm, Vh = nb.svd(mat, full_matrices=False)
-    except Exception:
-        Um_np = np.linalg.svd(nb.to_numpy(mat), full_matrices=False)
-        Um, Sm, Vh = Um_np
-    Um, Sm, Vh = _truncate_svd(Um, Sm, Vh, max_bond, svd_cutoff)
-    r = Sm.shape[0]
-    # Left tensor: reshape U to (Dl, 2, r)
+    Um, Sm, Vh = nb.svd(mat, full_matrices=False)
+    Um, Sm, Vh = _truncate_svd(Um, Sm, Vh, max_bond, svd_cutoff, nb)
+    r = int(Sm.shape[0])
     A_new = nb.reshape(Um, (Dl, 2, r))
-    # Right tensor: S @ Vh -> (r, 2*Dr) -> (r, 2, Dr)
-    SV = (Sm[:, None] * Vh)
+    SV = Sm[:, None] * Vh
     B_new = nb.reshape(SV, (r, 2, Dr))
     mps.tensors[i] = A_new
     mps.tensors[i + 1] = B_new
@@ -168,9 +147,10 @@ def apply_swap_nn(
     *,
     max_bond: Optional[int] = None,
     svd_cutoff: Optional[float] = None,
+    backend: ArrayBackend | None = None,
 ) -> None:
     U = _gate_swap_4x4().reshape(2, 2, 2, 2)
-    apply_2q_nn(mps, U, left_site, max_bond, svd_cutoff=svd_cutoff)
+    apply_2q_nn(mps, U, left_site, max_bond, svd_cutoff=svd_cutoff, backend=backend)
 
 
 def apply_2q(
@@ -181,47 +161,35 @@ def apply_2q(
     *,
     max_bond: Optional[int] = None,
     svd_cutoff: Optional[float] = None,
+    backend: ArrayBackend | None = None,
 ) -> None:
     """Apply a general 2-qubit unitary by routing with SWAPs if needed."""
     if q0 == q1:
         return
     if abs(q0 - q1) == 1:
         left = min(q0, q1)
-        apply_2q_nn(mps, U4, left, max_bond, svd_cutoff=svd_cutoff)
+        apply_2q_nn(mps, U4, left, max_bond, svd_cutoff=svd_cutoff, backend=backend)
         return
-    # Route: move q0 next to q1 by successive swaps, apply, then swap back
     a, b = (q0, q1) if q0 < q1 else (q1, q0)
-    # Move a rightwards until at b-1
     for s in range(a, b - 1):
-        apply_swap_nn(mps, s, max_bond=max_bond, svd_cutoff=svd_cutoff)
-    # Apply gate at (b-1, b)
-    apply_2q_nn(mps, U4, b - 1, max_bond, svd_cutoff=svd_cutoff)
-    # Move a back leftwards to original position
+        apply_swap_nn(mps, s, max_bond=max_bond, svd_cutoff=svd_cutoff, backend=backend)
+    apply_2q_nn(mps, U4, b - 1, max_bond, svd_cutoff=svd_cutoff, backend=backend)
     for s in range(b - 2, a - 1, -1):
-        apply_swap_nn(mps, s, max_bond=max_bond, svd_cutoff=svd_cutoff)
+        apply_swap_nn(mps, s, max_bond=max_bond, svd_cutoff=svd_cutoff, backend=backend)
 
 
-def to_statevector(mps: MPSState) -> Any:
-    """Reconstruct the full statevector from an MPS.
+def to_statevector(mps: MPSState, *, backend: ArrayBackend | None = None) -> Any:
+    """Reconstruct the full statevector without changing its backend."""
 
-    Intended for small systems and testing; complexity is exponential in the
-    number of qubits.
-    """
-
-    T = mps.tensors[0]
-    # T has shape (1,2,D1)
-    cur = T
+    nb = backend if backend is not None else get_backend(None)
+    cur = mps.tensors[0]
     for j in range(1, len(mps.tensors)):
         B = mps.tensors[j]
-        # cur_{L, s, M} * B_{M, t, R} -> cur_{L, s, t, R}
         cur = nb.einsum("lsm, mtr -> lstr", cur, B)
-        # merge the two physical indices into one leading physical axis (2^k) while keeping bonds on ends
         L = cur.shape[0]
         R = cur.shape[-1]
         cur = nb.reshape(cur, (L, -1, R))
-    # Now cur shape (1, 2^n, 1)
-    psi = nb.reshape(cur, (-1,))
-    return psi
+    return nb.reshape(cur, (-1,))
 
 
 def bond_dims(mps: MPSState) -> List[Tuple[int, int]]:
@@ -233,7 +201,12 @@ def bond_dims(mps: MPSState) -> List[Tuple[int, int]]:
     return dims
 
 
-def expectation_pauli_native(mps: MPSState, pauli_ops: List[Tuple[Any, List[int]]]) -> Any:
+def expectation_pauli_native(
+    mps: MPSState,
+    pauli_ops: List[Tuple[Any, List[int]]],
+    *,
+    backend: ArrayBackend | None = None,
+) -> Any:
     """Compute expectation value of Pauli operators directly on MPS.
     
     This computes ⟨ψ|O|ψ⟩ using MPS tensor network contraction without
@@ -259,8 +232,9 @@ def expectation_pauli_native(mps: MPSState, pauli_ops: List[Tuple[Any, List[int]
     >>> # ⟨ψ|Z_0 Z_1|ψ⟩
     >>> exp = expectation_pauli_native(mps, [(gate_z(), [0]), (gate_z(), [1])])
     """
+    nb = backend if backend is not None else get_backend(None)
     n = len(mps.tensors)
-    
+
     # Build operator MPS: apply Pauli operators to bra side
     # Start with identity on all sites
     op_tensors = []
@@ -273,7 +247,7 @@ def expectation_pauli_native(mps: MPSState, pauli_ops: List[Tuple[Any, List[int]
     
     # Apply each Pauli operator
     for gate, qubits in pauli_ops:
-        gate2 = nb.asarray(gate, dtype=nb.complex128)
+        gate2 = nb.cast(nb.asarray(gate), nb.complex128)
         if len(qubits) == 1:
             # Single-qubit Pauli: O_{ab} applied to bra index
             q = qubits[0]

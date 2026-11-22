@@ -11,7 +11,8 @@ from pyscf.fci import direct_spin1
 from pyscf import gto,scf
 
 import warnings as _warnings
-from .ucc_base import UCC
+from .execution import optimize_vqe
+from .ucc_base import UCC, make_ucc_pyscf_solver, ucc_energy, ucc_energy_and_grad
 from ...constants import DISCARD_EPS
 
 
@@ -35,7 +36,7 @@ class UCCSD(UCC):
         - **Amplitude screening**: Automatically filters insignificant excitations
         - **Flexible initialization**: Supports MP2, CCSD, or zero initial guesses
         - **Active space support**: Reduces computational cost via orbital selection
-        - **Runtime adaptivity**: Supports both device and numeric execution
+        - **Flexible execution**: Supports direct numerics and circuit measurement per call
         - **Chemical accuracy**: Provides systematic improvement over HF theory
 
     Algorithm Workflow:
@@ -68,9 +69,8 @@ class UCCSD(UCC):
         mode (str, optional): Symmetry handling mode:
             - "fermion": Fermionic representation (default)
             - "qubit": Direct qubit representation
-        runtime (str, optional): Execution backend:
-            - "device": Quantum device execution (default)
-            - "numeric": Classical simulation
+        Execution is selected per call: shots=0 for direct numerics, positive
+        shots with provider/device for circuit measurement.
         numeric_engine (str, optional): Numerical backend ("statevector", "pytorch", etc.).
         run_fci (bool, optional): Compute exact FCI reference for benchmarking.
             Default False.
@@ -115,13 +115,12 @@ class UCCSD(UCC):
         >>> uccsd_custom = UCCSD(h2, init_method="ccsd", epsilon=1e-8)
         >>> custom_energy = uccsd_custom.kernel()
         
-        >>> # Direct molecular specification
+        >>> # Direct molecular specification with circuit sampling
         >>> uccsd_direct = UCCSD(
         ...     atom="H 0 0 0; H 0 0 0.74",
         ...     basis="6-31g",
-        ...     runtime="device"
         ... )
-        >>> direct_energy = uccsd_direct.kernel()
+        >>> direct_energy = uccsd_direct.kernel(shots=2048)
         
         >>> # Analyze excitation operators
         >>> ex_ops, param_ids, init_params = uccsd.get_ex_ops()
@@ -136,7 +135,7 @@ class UCCSD(UCC):
     Performance Notes:
         - Amplitude screening significantly reduces parameter count for large molecules
         - Active space approximation enables treatment of systems with 10+ orbitals
-        - Device runtime supports both simulators and quantum hardware
+        - Circuit measurement supports both simulators and explicitly selected quantum hardware
         - Classical reference calculations provide benchmarking and initialization
         
     Theoretical Background:
@@ -163,7 +162,6 @@ class UCCSD(UCC):
         epsilon: float = DISCARD_EPS,
         sort_ex2: bool = True,
         mode: str = "fermion",
-        runtime: str = 'device',
         numeric_engine: str | None = None,
         run_fci: bool = False,
         classical_provider: str = "local",
@@ -216,8 +214,6 @@ class UCCSD(UCC):
             Large excitations come first. Defaults to True.
             Note this could lead to different ansatz for the same molecule at different geometry.
             The argument will be set to ``False`` if initial guesses are set to zero.
-        runtime: str, optional
-            The runtime to run the calculation (e.g., 'device').
         run_hf: bool, optional
             Whether run HF for molecule orbitals. Defaults to ``True``.
         run_mp2: bool, optional
@@ -235,35 +231,50 @@ class UCCSD(UCC):
         """
 
         super().__init__(
-            mol=mol,
-            init_method=init_method,
-            active_space=active_space,
-            active_orbital_indices=active_orbital_indices,
-            mo_coeff=mo_coeff,
-            mode=mode,
-            runtime=runtime,
-            numeric_engine=numeric_engine,
-            run_fci=run_fci,
-            atom=atom,
-            basis=basis,
-            unit=unit,
-            charge=charge,
-            spin=spin,
-            classical_provider=classical_provider,
-            classical_device=classical_device,
+            mol=mol, init_method=init_method, active_space=active_space,
+            active_orbital_indices=active_orbital_indices, mo_coeff=mo_coeff,
+            mode=mode, numeric_engine=numeric_engine, run_fci=run_fci,
+            atom=atom, basis=basis, unit=unit, charge=charge, spin=spin,
+            classical_provider=classical_provider, classical_device=classical_device,
             **kwargs
         )
-
         if self.init_method == "zeros":
             self.pick_ex2 = self.sort_ex2 = False
         else:
             self.pick_ex2 = pick_ex2
             self.sort_ex2 = sort_ex2
-        # screen out excitation operators based on t2 amplitude
         self.t2_discard_eps = epsilon
         self.ex_ops, self.param_ids, self.init_guess = self.get_ex_ops(self.t1, self.t2)
 
+    def energy(self, params=None, *, shots=0, provider="simulator", device="statevector",
+               postprocessing=None, noise=None, numeric_engine=None, **device_opts):
+        return ucc_energy(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise,
+            numeric_engine=numeric_engine, **device_opts
+        )
 
+    def energy_and_grad(self, params=None, *, shots=0, provider="simulator",
+                        device="statevector", postprocessing=None, noise=None,
+                        numeric_engine=None, gradient_method="fd", **device_opts):
+        return ucc_energy_and_grad(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise, numeric_engine=numeric_engine,
+            gradient_method=gradient_method, **device_opts
+        )
+
+    @property
+    def e_ucc(self) -> float:
+        return float(self.energy(self._params, shots=0))
+
+    def kernel(self, **opts) -> float:
+        return optimize_vqe(self, opts, ucc=True)
+
+    @classmethod
+    def as_pyscf_solver(cls, config_function=None, device_opts=None, **kwargs):
+        return make_ucc_pyscf_solver(
+            cls, config_function=config_function, device_opts=device_opts, **kwargs
+        )
 
     def get_ex_ops(self, t1: np.ndarray = None, t2: np.ndarray = None) -> Tuple[List[Tuple], List[int], List[float]]:
         """
@@ -347,16 +358,6 @@ class UCCSD(UCC):
         """
         return self.energy()
 
-    @classmethod
-    def as_pyscf_solver(cls, config_function=None, runtime: str = "numeric",
-                        device_opts: dict | None = None, **kwargs):
-        """PySCF 兼容求解器；``device_opts``（shots/provider/device）透传到真机/模拟器。"""
-        return super().as_pyscf_solver(config_function=config_function, runtime=runtime,
-                                       device_opts=device_opts, **kwargs)
-
-    # Use base class numeric path; runtime construction now injects CI Hamiltonian centrally
-
-
 class ROUCCSD(UCC):
     def __init__(
         self,
@@ -366,7 +367,6 @@ class ROUCCSD(UCC):
         mo_coeff: np.ndarray = None,
         numeric_engine: str ='civector',
         init_method: str = "zeros",
-        runtime = 'device',
         run_fci: bool = False,
         classical_provider: str = "local",
         classical_device: str = "auto",
@@ -461,9 +461,32 @@ class ROUCCSD(UCC):
         self.param_ids = list(range(len(self.ex_ops)))
         self.init_guess = np.zeros_like(self.param_ids)
 
+    def energy(self, params=None, *, shots=0, provider="simulator", device="statevector",
+               postprocessing=None, noise=None, numeric_engine=None, **device_opts):
+        return ucc_energy(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise,
+            numeric_engine=numeric_engine, **device_opts
+        )
+
+    def energy_and_grad(self, params=None, *, shots=0, provider="simulator",
+                        device="statevector", postprocessing=None, noise=None,
+                        numeric_engine=None, gradient_method="fd", **device_opts):
+        return ucc_energy_and_grad(
+            self, params, shots=shots, provider=provider, device=device,
+            postprocessing=postprocessing, noise=noise, numeric_engine=numeric_engine,
+            gradient_method=gradient_method, **device_opts
+        )
+
+    @property
+    def e_ucc(self) -> float:
+        return float(self.energy(self._params, shots=0))
+
+    def kernel(self, **opts) -> float:
+        return optimize_vqe(self, opts, ucc=True)
+
     @classmethod
-    def as_pyscf_solver(cls, config_function=None, runtime: str = "numeric",
-                        device_opts: dict | None = None, **kwargs):
-        """PySCF 兼容求解器；``device_opts``（shots/provider/device）透传到真机/模拟器。"""
-        return super().as_pyscf_solver(config_function=config_function, runtime=runtime,
-                                       device_opts=device_opts, **kwargs)
+    def as_pyscf_solver(cls, config_function=None, device_opts=None, **kwargs):
+        return make_ucc_pyscf_solver(
+            cls, config_function=config_function, device_opts=device_opts, **kwargs
+        )

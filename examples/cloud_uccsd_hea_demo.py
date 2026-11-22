@@ -31,21 +31,21 @@ def main():
 
     # UCCSD - local baseline
     u_local = UCCSD(mol)
-    e_local = u_local.kernel(shots=0, runtime="device", provider="simulator", device="statevector")
+    e_local = u_local.kernel(shots=0, provider="simulator", device="statevector")
     print("UCCSD local e:", e_local)
 
     # UCCSD - cloud HF/integrals, same kernel locally
     u_cloud = UCCSD(mol, classical_provider="tyxonq", classical_device="auto")
-    e_cloud = u_cloud.kernel(shots=0, runtime="device", provider="simulator", device="statevector")
+    e_cloud = u_cloud.kernel(shots=0, provider="simulator", device="statevector")
     print("UCCSD cloud(HF) e:", e_cloud)
 
     # HEA - init from molecule directly (new path), local baseline
-    hea_local = HEA(molecule=mol, layers=2, mapping="parity", runtime="device")
+    hea_local = HEA(molecule=mol, layers=2, mapping="parity")
     e_hea_local = hea_local.kernel(shots=0, provider="simulator", device="statevector")
     print("HEA local e:", e_hea_local)
 
     # HEA - cloud HF/integrals via molecule pathway
-    hea_cloud = HEA(molecule=mol, layers=2, mapping="parity", runtime="device", classical_provider="tyxonq", classical_device="auto")
+    hea_cloud = HEA(molecule=mol, layers=2, mapping="parity", classical_provider="tyxonq", classical_device="auto")
     e_hea_cloud = hea_cloud.kernel(shots=0, provider="simulator", device="statevector")
     print("HEA cloud(HF) e:", e_hea_cloud)
 

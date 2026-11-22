@@ -211,27 +211,11 @@ try:
             except Exception:
                 return None
 
-        # String name path with minimal fallback for cupynumeric → numpy
+        # String name path; availability is validated by the numerics factory.
         if isinstance(name_or_instance, str):
-            name = str(name_or_instance).lower()
-            if name == "cupynumeric":
-                try:
-                    bk = _get_backend(name)
-                    _set_backend(bk)  # Store instance, not name
-                    return _assign_backend_alias(bk)
-                except Exception:
-                    try:
-                        import warnings as _warnings
-                        _warnings.warn("cupynumeric not installed, falling back to numpy backend", UserWarning)
-                    except Exception:
-                        pass
-                    bk = _get_backend("numpy")
-                    _set_backend(bk)
-                    return _assign_backend_alias(bk)
-            else:
-                bk = _get_backend(name)
-                _set_backend(bk)  # Store instance, not name
-                return _assign_backend_alias(bk)
+            bk = _get_backend(str(name_or_instance).lower())
+            _set_backend(bk)  # Store instance, not name
+            return _assign_backend_alias(bk)
 
         # Instance path
         _set_backend(name_or_instance)
@@ -241,7 +225,7 @@ try:
         """Get an ArrayBackend instance.
 
         - name is optional; when None, returns the currently configured backend.
-        - name can be 'numpy' | 'pytorch' | 'cupynumeric' to explicitly fetch.
+        - name can be 'numpy' | 'pytorch' | 'cupy' to explicitly fetch.
         """
 
         return _get_backend(name)

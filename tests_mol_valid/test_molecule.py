@@ -32,7 +32,11 @@ def test_molecule():
 
     np.testing.assert_allclose(mf1.get_hcore(), mf2.get_hcore())
     np.testing.assert_allclose(mf1.get_ovlp(), mf2.get_ovlp())
-    np.testing.assert_allclose(mf1._eri, mf2._eri, atol=1e-10)
+    # RHF._eri is a private, lazy cache: after other tests select a different
+    # PySCF integral path, mf1._eri may be None. This custom in-core molecule
+    # guarantees mf2's cache in compressed s8 form, so compare it with int2e_s8
+    # rather than the full s1 int2e array or an optional cache on mf1.
+    np.testing.assert_allclose(mol.int2e_s8, mf2._eri, atol=1e-10)
     np.testing.assert_allclose(mf1.energy_nuc(), mf2.energy_nuc())
     np.testing.assert_allclose(mf1.energy_elec(), mf2.energy_elec())
     np.testing.assert_allclose(e_hf1, e_hf2)

@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms
+title: TyxonQ 量子化学算法聚合层
+scope:
+    - src/tyxonq/applications/chem/algorithms/
+source_files: []
+depends_on: []
+related_to:
+    - path: tests_applications_chem

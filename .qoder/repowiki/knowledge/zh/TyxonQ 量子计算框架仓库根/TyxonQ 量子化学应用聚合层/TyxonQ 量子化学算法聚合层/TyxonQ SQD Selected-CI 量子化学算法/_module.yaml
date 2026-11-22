@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: applications_chem/quantum_chemistry_algorithms/sqd
+title: TyxonQ SQD Selected-CI 量子化学算法
+scope:
+    - src/tyxonq/applications/chem/algorithms/sqd/
+source_files: []
+depends_on: []
+related_to:
+    - path: applications_chem/quantum_chemistry_algorithms/lucj
+    - path: devices/simulator_engines

@@ -3,6 +3,9 @@
 # 的最小 smoke 校验。（原经 schedule/device_job_plan 的骨架链已随重构删除。）
 from __future__ import annotations
 
+import numpy as np
+import pytest
+
 from tyxonq.core.ir import Circuit
 from tyxonq.devices.simulators.statevector import StatevectorEngine
 from tyxonq.devices.simulators.density_matrix import DensityMatrixEngine
@@ -38,6 +41,39 @@ def test_compressed_state_engine_max_bond_option_smoke():
     circ = Circuit(num_qubits=3, ops=[("h", 0), ("cx", 0, 1), ("cx", 1, 2), ("measure_z", 2)])
     out = eng.run(circ, shots=0)
     assert "expectations" in out and "metadata" in out
+
+
+def test_mps_engine_backend_overrides_global_backend():
+    torch = pytest.importorskip("torch")
+    from tyxonq.libs.quantum_library.kernels.matrix_product_state import to_statevector
+    from tyxonq.numerics import get_backend, use_backend
+
+    circ = Circuit(num_qubits=3, ops=[("h", 0), ("cx", 0, 1), ("rx", 1, 0.2), ("cx", 1, 2)])
+    with use_backend(get_backend("numpy")):
+        reference_engine = MatrixProductStateEngine(backend_name="numpy")
+        torch_engine = MatrixProductStateEngine(backend_name="pytorch")
+        reference = to_statevector(reference_engine.state(circ), backend=reference_engine.backend)
+        actual_mps = torch_engine.state(circ)
+        actual = torch_engine.backend.to_numpy(to_statevector(actual_mps, backend=torch_engine.backend))
+
+    assert all(torch.is_tensor(tensor) for tensor in actual_mps.tensors)
+    np.testing.assert_allclose(actual, reference, atol=1e-12, rtol=0)
+
+
+def test_mps_svd_failure_is_not_silently_moved_to_numpy(monkeypatch):
+    pytest.importorskip("torch")
+    from tyxonq.numerics import get_backend
+
+    backend = get_backend("pytorch")
+
+    def fail_svd(*args, **kwargs):
+        raise RuntimeError("SVD failure sentinel")
+
+    monkeypatch.setattr(backend, "svd", fail_svd)
+    eng = MatrixProductStateEngine(backend=backend)
+    circ = Circuit(num_qubits=2, ops=[("h", 0), ("cx", 0, 1)])
+    with pytest.raises(RuntimeError, match="SVD failure sentinel"):
+        eng.state(circ)
 
 
 def test_statevector_simulator_minimal_end_to_end():

@@ -1,24 +1,14 @@
-# numerics 测试合并：ArrayBackend/vectorize_or_fallback 的向量化策略、后端工厂
-# （numpy/pytorch/cupynumeric）、vectorization_checks 安全性检测，以及全局后端的
-# set_backend/use_backend 切换与恢复。
+# numerics 测试：ArrayBackend 工厂（numpy/pytorch/cupy）与全局后端切换。
 from __future__ import annotations
 
 import importlib
-import warnings
 from typing import Any
 
 import numpy as np
 import pytest
 
 from tyxonq.config import normalize_backend_name
-from tyxonq.numerics import (
-    ArrayBackend,
-    get_backend,
-    set_backend,
-    use_backend,
-    vectorize_or_fallback,
-)
-from tyxonq.numerics.vectorization_checks import safe_for_vectorization, warn_as_error
+from tyxonq.numerics import get_backend, set_backend, use_backend
 
 
 class NumpyBackend:
@@ -53,33 +43,6 @@ class NumpyBackend:
         return np.asarray(x)
 
 
-def _unsafe_fn(x):
-    # Simulate an in-place like pattern by emitting a warning
-    warnings.warn("AliasWarning: potential alias detected", category=UserWarning)
-    return x
-
-
-def test_vectorize_or_fallback_off_policy():
-    backend: ArrayBackend = NumpyBackend()  # type: ignore[assignment]
-
-    def add_one(x):
-        return x + 1
-
-    wrapped = vectorize_or_fallback(add_one, backend, policy="off")
-    assert wrapped(2) == 3
-
-
-def test_vectorize_or_fallback_generic_vectorization():
-    backend: ArrayBackend = NumpyBackend()  # type: ignore[assignment]
-
-    def square(x):
-        return x * x
-
-    wrapped = vectorize_or_fallback(square, backend, policy="auto")
-    out = wrapped([1, 2, 3])
-    assert out == [1, 4, 9]
-
-
 def test_factory_returns_numpy_backend_and_basic_ops():
     be = get_backend(normalize_backend_name("numpy(cpu)"))
     assert be.name == "numpy"
@@ -100,29 +63,19 @@ def test_factory_returns_numpy_backend_and_basic_ops():
 def test_factory_returns_pytorch_backend():
     be = get_backend("pytorch")
     assert be.name == "pytorch"
-    # vectorize_or_fallback is tested elsewhere; here we just smoke-test array
     t = be.asarray([1, 2, 3]) if hasattr(be, "asarray") else be.array([1, 2, 3])
     assert be.to_numpy(t).shape == (3,)
 
 
-@pytest.mark.skipif(importlib.util.find_spec("cupynumeric") is None, reason="cupynumeric not installed")
-def test_factory_returns_cunumeric_backend():
-    be = get_backend("cupynumeric")
-    assert be.name == "cupynumeric"
+@pytest.mark.skipif(importlib.util.find_spec("cupy") is None, reason="cupy not installed")
+def test_factory_returns_cupy_backend():
+    be = get_backend("cupy")
+    assert be.name == "cupy"
 
 
-def test_safe_for_vectorization_simple():
-    assert safe_for_vectorization(lambda x: x, args=(1,), kwargs={}) is True
-    assert safe_for_vectorization(_unsafe_fn, args=(1,), kwargs={}) is False
-
-
-def test_warn_as_error_context():
-    with warn_as_error(["AliasWarning"]) as caught:
-        try:
-            warnings.warn("AliasWarning: test", category=UserWarning)
-        except Warning:
-            pass
-    assert caught["raised"] is True
+def test_factory_rejects_unknown_backend():
+    with pytest.raises(ValueError, match="Unknown numerics backend"):
+        get_backend("cupynumeric")
 
 
 def test_set_backend_by_name_affects_get_backend_none():
