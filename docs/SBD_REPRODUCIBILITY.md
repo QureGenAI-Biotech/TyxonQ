@@ -48,8 +48,9 @@ python -m pip install 'tyxonq[metal]'
 1. **H@c**：PySCF `direct_spin1.absorb_h1e(..., fac=0.5)` 与 `selected_ci.contract_2e` 作为独立 FP64 golden；覆盖完整和部分 determinant 空间、alpha/beta/mixed-spin 以及不同 beta 分块。
 2. **S²**：PySCF `selected_ci.contract_ss`；检查跃迁、费米子符号和空占据边界。
 3. **能量与残差**：收敛后重新归一化，独立计算一次最终 H@c；检查 Rayleigh 能量、最终残差、CPU H@c 逐元素误差。
-4. **RDM 与自旋**：PySCF RDM 检查粒子数、能量和 S²；Metal S² 期望值必须与 CPU RDM 一致。
+4. **RDM 与自旋**：检查逐自旋块、总 RDM、粒子数、Hermiticity、能量和 S²；Metal S² 期望值必须与 CPU RDM 一致。生产 `spin_rdms` 默认 `algorithm="auto"`，但 `full_cpu` 必须强制 `algorithm="pyscf"`，直接调用原始 `make_rdm1s/make_rdm2s`，不能用共享 factorized 实现冒充独立 golden。可选 Metal RDM 只加速异自旋 2-RDM，其余块保留 CPU FP64。
 5. **真实执行**：断言 `native_metal_calls` 中 H@c gather/pair-contract 和 S² gather 均大于零，避免只注册接口的假通过。
+6. **validator 生命周期**：连续请求不得复用上次数值；覆盖异常/worker 死亡、线程变化、fork、多线程串行、close 幂等和进程退出回收。POSIX 使用持久隔离 worker，其他平台使用一次性 CLI；batch `close()` 同时释放设备池和当前进程 validator。
 
 Metal FP32 golden 使用分级容差；测试默认 H@c/S² 为 `2e-5/2e-6`，端到端最终残差、算符和 RDM 能量为 `1e-4`，S² 与 RDM 一致性为 `2e-5`。不得通过放宽容差掩盖显著算法错误。
 
@@ -125,6 +126,18 @@ for round in 1 2; do
 done
 ```
 
-历史单点中 H2O CAS(4e,16o) 附近观察到整体 break-even。新的六点双轮扫描进一步区分体系：NH3/CH4 在 18496 determinants 两轮均越过 CPU，H2O 在该规模仍反转，三种分子在 23409 determinants 全部稳定加速，整体墙钟降低约 `5.6%–9.4%`。所有 36 组配对负载正常收敛并通过残差/RDM 验收；完整比例和墙钟见 `docs/SBD_METAL_OPTIMIZATION.md` §6.12。原始归档为 `data/sbd_benchmarks/multi_molecule_break_even_2026-11-19.json`（SHA256 `ba09e50becc00a5dbbfe327fc5385e2408cb1d15496cb2b58d227e5fca54b58c`）。
+历史单点中 H2O CAS(4e,16o) 附近观察到整体 break-even。PR21 前的六点双轮扫描中，NH3/CH4 在 18496 determinants 两轮均越过 CPU，H2O 在该规模仍反转，三种分子在 23409 determinants 全部稳定加速，整体墙钟降低约 `5.6%–9.4%`。这些数字仅是历史基线；完整比例见 `docs/SBD_METAL_OPTIMIZATION.md` §6.12，原始归档为 `data/sbd_benchmarks/multi_molecule_break_even_2026-11-19.json`（SHA256 `ba09e50becc00a5dbbfe327fc5385e2408cb1d15496cb2b58d227e5fca54b58c`）。
 
-小体系正确性轨将 `--active-space 4 4 --repeats 1 --reference none --validation full_cpu`，把独立 CPU operator/RDM 验收与性能轨分开。CUDA 整体对照仍需 NVIDIA 环境。
+### PR21 后复测（2026-11-22）
+
+使用上面的同一循环、相同阈值和输入重新运行 12 个独立进程，不沿用旧 timings。固定工作量 profile 另行执行，不与正常收敛分子计时混合：
+
+```bash
+PYTHONPATH=src "$QC" examples/sqd_metal_scaling.py \
+  --norb 12 14 16 18 --max-cycles 40 --repeats 5 \
+  --metal-matmul custom --output metal_fixed40_pr21.json
+```
+
+PR21 后三种分子均从 **8281 determinants（CAS(4e,14o)）** 起双轮稳定超过 CPU。4356 determinants 第一轮仍反转，不能宣称稳定交叉；23409 determinants 的整体降低为 H2O `61.11%/62.60%`、NH3 `49.54%/54.34%`、CH4 `54.11%/55.39%`。所有 36 组配对负载通过正常收敛和残差/RDM 验收。归档 `data/sbd_benchmarks/multi_molecule_break_even_pr21_2026-11-22.json` 包含全部原始 samples、输入指纹、源码哈希、分阶段耗时和固定 profile，SHA256 为 `ff7351fb7de8055fc6deea18c6a8d95626705de65160cebfcdbc43a700fd6302`。
+
+小体系正确性轨将 `--active-space 4 4 --repeats 1 --reference none --validation full_cpu`，把独立 CPU operator/RDM 验收与性能轨分开。CUDA 整体对照仍需 NVIDIA 环境；本机 CUDA 测试跳过不能记为通过。

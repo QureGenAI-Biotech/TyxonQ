@@ -5,11 +5,11 @@
 ## 1. 当前结论
 
 1. Metal SBD 的 H@C、S² 和 Davidson 已真实提交到 Apple GPU；证据来自实际 `mx.gpu` stream、MSL 原生调用、完成后的 `mx.eval` 以及独立 CPU FP64 golden，而不是静态后端名称。
-2. 最终三组统一基准中，36–2025 determinants 的 H@C 和固定工作量 Davidson 均达到 **Metal/MPS ≤ 1.10** 的性能相当目标；实际四组 solver 比值为 0.38/0.38/0.37/0.41。H@C 仍慢于 PyTorch CPU，不能外推为快于 CPU 或 CUDA。
+2. PR21 后的固定 40-cycle FP32 profile 中，Metal H@C 在 4356–23409 determinants 均快于 CPU FP32；solver 在 4356 仍较慢（比值 1.6767），在 8281–23409 为 0.7637/0.4256/0.2652。该 profile 是单进程性能证据，不代替正常收敛或双轮分子验收，也不外推为 CUDA 性能。
 3. PySCF 的 `OpenMP is not available` warning 来自 CPU 线程设置，与 MLX/Metal 是否使用 GPU 无因果关系。CPU golden、连接表构建和 RDM 都可能触发它。
 4. 正确性、真实执行和性能是三个独立命题。`native_metal_calls > 0` 或 GPU stream 不能代替性能数据；结构更“融合”也不保证更快。
 5. 后续优化必须维持 H@C、S²、能量和残差 golden。不得通过放宽容差、减少同步、减少相同工作量或隐藏 CPU 时间来制造加速。
-6. 多分子双轮扫描表明平衡点依赖体系：NH3/CH4 在 18496 determinants 稳定越过 CPU，H2O 在本轮 23409 才稳定；三者在 23409 的整体收益均约 5.6%–9.4%。MLX 多机通信和 Mojo 跨厂商编译有官方基础，但当前 Metal SBD 仍是单设备实现。
+6. PR21 后的多分子双轮扫描中，H2O/NH3/CH4 均从 8281 determinants 起稳定越过 CPU；4356 第一轮仍反转，不能称为稳定平衡点。三者在 23409 的整体墙钟分别降低 61.11%/62.60%、49.54%/54.34%、54.11%/55.39%。MLX 多机通信和 Mojo 跨厂商编译有官方基础，但当前 Metal SBD 仍是单设备实现。
 
 ## 2. 架构与迁移边界
 
@@ -23,7 +23,7 @@ tyxonq.numerics.sbd                 公共算法出口与兼容 API
 
 通用数组后端与 SBD 算法分离。SQD 自动路径严格按 CUDA SBD → Metal SBD → PyTorch CPU 的硬件顺序选择；原生依赖或数值错误不触发降级。
 
-Metal 的范围是单设备、实数 restricted selected-CI。连接表构建和小矩阵 Hermitian FP64 `eigh` 保留主机端；长向量、H@C、S² 和 Davidson 主迭代使用 MLX/Metal。当前 RDM 是 CPU PySCF 验证路径，报告为 `rdm_backend="cpu"`。不承诺 MPI/NCCL、多节点、多 GPU 或端到端 FP64 等价迁移。
+Metal 的范围是单设备、实数 restricted selected-CI。连接表构建和小矩阵 Hermitian FP64 `eigh` 保留主机端；长向量、H@C、S² 和 Davidson 主迭代使用 MLX/Metal。RDM 默认是 CPU 路径，报告为 `rdm_backend="cpu"`；可选 Metal 仅覆盖异自旋 2-RDM。不承诺 MPI/NCCL、多节点、多 GPU 或端到端 FP64 等价迁移。
 
 ## 3. 关键时间线
 
@@ -280,7 +280,54 @@ H2O（3 atoms、24 AO、6-31g(d,p)）的整体中位墙钟如下；比值是 CPU
 | NH3 | R1/R2 | 517.318/526.030 | 550.751/567.835 | 6.07%/7.36% | 74.169/73.601 | 107.863/106.777 |
 | CH4 | R1/R2 | 499.866/501.485 | 542.909/539.862 | 7.93%/7.11% | 66.471/66.486 | 91.557/92.208 |
 
-可见 solver 加速在三种分子上都存在，但整体收益仍被 setup、CPU RDM、validation 和子进程路径稀释。该扫描与 §6.11 的历史单点水数据分开报告；跨轮系统波动必须保留，不能选取有利一轮覆盖反转点。结论仍限于正常收敛的单次固定 CAS，不外推到完整迭代 SQD、其他活性电子数或 CUDA。
+可见 solver 加速在三种分子上都存在，但整体收益仍被 setup、CPU RDM、validation 和子进程路径稀释。该扫描与 §6.11 的历史单点水数据分开报告；跨轮系统波动必须保留，不能选取有利一轮覆盖反转点。结论仍限于正常收敛的单次固定 CAS，不外推到完整迭代 SQD、其他活性电子数或 CUDA。本节全部数字是 **PR21 前基线**，不是当前内核性能。
+
+### 6.13 PR21 合并、加固与复测（2026-11-22）
+
+PR head `eb901db` 已通过普通 merge commit `f046f9c` 合并；没有把 GitHub 文本无冲突状态当作数值验收。四组结果如下：
+
+| 组别 | 采用与整改 | 验收边界 |
+| --- | --- | --- |
+| Metal/CUDA H@C 与归约 | 保留 connected-rows、pair-table、投影缓存、energy offset 和新归约；Metal 仍为确定性 FP32 自定义内核，不读取或修改 `MLX_ENABLE_TF32`。恢复 NAX 风险、研究路径启动边界和非 FP64 声明 | Metal 真实内核/golden/残差通过；CUDA `TYXONQ_SBD_CUDA_HC_LANES=0` 保持旧路径，非零路径要求单 rank 和扩展重建。本机无 CUDA，未生成推测性能 |
+| target-spin 与最低根 | `spin_tolerance=1e-4` 保持 keyword-only；按 S² 过滤目标根，无合法根显式失败；最低根在 variational-bound 失败后重试 | 报告区分最终所选根和全部尝试，尝试历史使用物理能量。该行为不承诺所有初猜都返回旧实现的同一根 |
+| RDM | 生产 `spin_rdms(..., algorithm="auto")` 保留自动 factorized 路径；`full_cpu` 强制原始 PySCF `make_rdm1s/make_rdm2s`，记录 `reference_rdm_algorithm`；Metal RDM 默认仍为 `cpu` | `rdm_backend="metal"` 仅加速异自旋 2-RDM，1-RDM/同自旋块仍为 CPU FP64；Q60 补偿、归一化、规模限制和独立拒绝测试通过，精度失败不静默换实现 |
+| CPU validator | POSIX 复用隔离解释器，但每次请求发送当前系数、积分、标签、线程数和模式；其他平台保留一次性 CLI | 异常/worker 死亡/线程变化会重建；fork 子进程不杀父 worker，多线程调用串行提交，`close()` 幂等，batch 同时释放设备池和 validator；数值错误继续向上传播 |
+
+#### 固定 40-cycle FP32 profile
+
+新内核使用 `examples/sqd_metal_scaling.py --norb 12 14 16 18 --max-cycles 40 --repeats 5 --metal-matmul custom` 单独测量。下表为 Metal/CPU FP32 中位耗时比，小于 1 表示 Metal 更快；这只是单进程 profile，不用于替代双轮分子平衡点。
+
+| determinants | H@C ratio | solver ratio | Metal H@C relative FP64 golden |
+| ---: | ---: | ---: | ---: |
+| 4356 | 0.7456 | 1.6767 | 1.11e-7 |
+| 8281 | 0.5122 | 0.7637 | 1.24e-7 |
+| 14400 | 0.4861 | 0.4256 | 1.39e-7 |
+| 23409 | 0.3382 | 0.2652 | 1.49e-7 |
+
+固定循环刻意耗尽 40 cycles，不是收敛基态结果。4356 solver 仍为负结果，不能因 H@C 已加速而宣称该规模 solver 超过 CPU。
+
+#### 正常收敛的多分子整体平衡点
+
+复测严格沿用 §6.12 的输入、数值设置和冷启动加五次稳态协议；12 个独立进程覆盖两轮×六规模，Metal/CPU 串行执行。所有 36 组配对负载通过收敛、残差和 RDM 验收，实际后端核验为 Metal FP32 + CPU RDM 与 PyTorch CPU FP64，且输入指纹与 PR21 前归档完全一致。下表为 CPU/Metal 整体中位墙钟比，R1/R2 大于 1 才表示 Metal 更快：
+
+| norb | determinants | H2O | NH3 | CH4 |
+| ---: | ---: | ---: | ---: | ---: |
+| 12 | 4356 | 0.9728/1.0778 | 0.9383/1.0599 | 0.9519/1.1793 |
+| 14 | 8281 | 1.6912/1.5854 | 1.6414/1.5674 | 1.5749/1.5407 |
+| 15 | 11025 | 1.7043/1.5639 | 1.8751/1.9206 | 1.8191/1.8605 |
+| 16 | 14400 | 1.9948/1.9162 | 2.1624/2.1570 | 2.0757/2.1295 |
+| 17 | 18496 | 2.1777/2.1447 | 2.2045/2.2367 | 2.0191/2.0251 |
+| 18 | 23409 | 2.5713/2.6740 | 1.9818/2.1899 | 2.1790/2.2414 |
+
+三种分子最早的双轮稳定交叉均为 **8281 determinants（CAS(4e,14o)）**。4356 的第一轮全部偏向 CPU，第二轮才偏向 Metal，因此必须保留反转结论，不能用第二轮覆盖第一轮。23409 的整体墙钟如下，单位 ms：
+
+| 分子 | Metal R1/R2 | CPU R1/R2 | 整体降低 R1/R2 |
+| --- | ---: | ---: | ---: |
+| H2O | 53.175/51.989 | 136.730/139.015 | 61.11%/62.60% |
+| NH3 | 63.426/58.502 | 125.696/128.114 | 49.54%/54.34% |
+| CH4 | 53.271/51.211 | 116.076/114.785 | 54.11%/55.39% |
+
+原始 samples、中位数、范围、setup/solver/RDM/validation、子进程开销、输入指纹、源码哈希以及独立固定 profile 均归档到 `data/sbd_benchmarks/multi_molecule_break_even_pr21_2026-11-22.json`，SHA256 为 `ff7351fb7de8055fc6deea18c6a8d95626705de65160cebfcdbc43a700fd6302`。该文件不删除或改写 §6.12 的 PR21 前基线。结论不覆盖完整迭代 SQD、PCM、任意活性空间或未实测 CUDA。
 
 ## 7. 测试与证据清单
 
@@ -297,7 +344,9 @@ H2O（3 atoms、24 AO、6-31g(d,p)）的整体中位墙钟如下；比值是 CPU
 - 原生 H@C gather/pair-contract 和 S² gather 调用次数；
 - eval 完成计数和调用方设备恢复。
 
-注意：这些测试是正确性和真实执行门槛，不是性能测试。最终相关测试（含 MPS、单变量分发、CPU 回退、PySCF/scanner、公共 numerics 和 SBD 适配）为 `111 passed, 29 skipped`；跳过项均因本机无 CUDA 或未安装 CuPy，不是 Metal/MPS 失败。
+PR21 另由 `test_sqd_target_spin.py` 覆盖目标子空间、无合法根和最低根重试，由 `test_sqd_factorized_rdm.py` 分离生产 auto 与纯 PySCF golden，由 `test_sqd_sbd_adapter.py`/`test_sqd_gpu_batch.py` 覆盖 validator 当前请求、异常/死亡重建、线程变化、fork、多线程串行和 close 生命周期。
+
+注意：这些测试是正确性和真实执行门槛，不是性能测试。PR21 最终完整受影响回归（全部 `test_sqd*.py`、公共 numerics GPU backend、EWF fixed/density gradient、SQD-EWF adapter 和 LUCJ closed-shell）为 **213 passed, 27 skipped**；跳过项均因本机无 CUDA 或未安装 CuPy，不是 Metal/MPS 失败。LSP 复核确认公开五位置参数、`backend="auto"`、Metal `spin_tolerance=1e-4` 和默认 RDM 后端未破坏。
 
 ## 8. 后续优化路线
 
@@ -333,9 +382,9 @@ H2O（3 atoms、24 AO、6-31g(d,p)）的整体中位墙钟如下；比值是 CPU
 6. **报告与错误语义**：新增 rank/world size、集体通信后端、H@C/Davidson 通信字节与时间、扩展效率和整体墙钟。通信失败、rank 数不符、不收敛或残差/RDM 错误必须报错，不静默退回单设备结果。
 7. **验收顺序**：先本机多进程正确性，再至少两台 Mac 的多机 golden/残差/RDM，最后比较同工作量单设备与多设备整体性能。只有实测扩展收益时才改变默认执行路径。
 
-### P1：RDM 原生化的前置条件
+### P1：可选 Metal RDM 的边界与后续扩展
 
-当前 RDM 在 CPU。只有 profiling 证明 RDM 是实际应用瓶颈时才实现 MLX RDM；否则先优化 H@C/Davidson。原生 RDM 必须另行验证 PySCF 指标约定、粒子数、能量和 S²，不得沿用 H@C 正确就推断 RDM 正确。
+PR21 已提供 `rdm_backend="metal"`，但只加速异自旋 2-RDM；默认仍为 `cpu`，1-RDM 和同自旋块继续使用 CPU FP64。不得把它写成全自旋块原生 RDM。Q60 补偿、归一化、规模上限和独立 golden 已通过；后续扩展其他块或改变默认值前，必须重新 profile 完整工作负载，并分别验证 PySCF 指标约定、粒子数、能量、S² 与 Hermiticity。任何精度失败都保持 CPU 默认并记录负结果。
 
 ## 9. 实验记录模板
 

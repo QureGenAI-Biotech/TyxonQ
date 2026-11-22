@@ -782,7 +782,7 @@ result, report = solve_sci_gpu(
 |---|---|
 | `gpu` / `auto` | Native CUDA SBD → native MLX/Metal SBD → PyTorch CPU |
 | `cuda` / `sbd` | Native CUDA SBD, FP64, including its native RDM path |
-| `metal` | Single-device MLX/MSL SBD, deterministic FP32 long-vector kernels; RDM remains CPU |
+| `metal` | Single-device MLX/MSL SBD, deterministic FP32 long-vector kernels; CPU RDM by default, optional opposite-spin Metal 2-RDM |
 | `cpu` | PyTorch CPU FP64 reference path |
 
 Dispatch checks both hardware and required native runtimes. An explicitly requested but unavailable accelerator, incompatible device, or missing runtime emits `RuntimeWarning` and falls back to PyTorch CPU with `used_cpu_fallback=True` and a structured `selection_reason`. This fallback applies **only before numerical dispatch**. Native kernel errors, non-convergence, and residual/RDM failures propagate to the caller; they never trigger a silent backend change. Reports also expose `requested_backend`, `resolved_backend`, `precision_mode`, `rdm_backend`, native Metal call counts, and stage timings.
@@ -799,42 +799,41 @@ The Metal path implements:
 - two-pass Gram–Schmidt, thick restart and an independent final H@C residual;
 - explicit local `mx.stream(mx.gpu)` scopes and `mx.eval` completion before results or timings are read.
 
-Three optimizations were retained after independent golden and performance checks: direct slot/address/sign gathering, same-spin and mixed-spin pair contraction with the correct temporary layout, and deterministic 256-lane tree reductions for Davidson long inner products. Batched evaluation of energy/norm/residual quantities removed redundant synchronization without changing the iteration trajectory. CSR scattering, four-output tiling and default reduced-precision MLX GEMM were correctness-preserving or faster in isolated cases but slower or numerically unacceptable overall, and were not adopted.
+The merged PR #21 implementation adds connected-row kernels, pair-table projection caching, energy-offset handling and new reduction tiling. These were retained only after Metal golden/residual tests; the CUDA connected-row path remains opt-in through `TYXONQ_SBD_CUDA_HC_LANES != 0`, while the default value `0` preserves the legacy CUDA layout and requires single-rank reconstruction for the new path. No CUDA performance claim is made without NVIDIA hardware.
 
-Metal connection-table setup and small projected Hermitian FP64 `eigh` remain on CPU, matching the algorithm's host boundary. The current RDM implementation is explicitly CPU/PySCF (`rdm_backend="cpu"`). The implementation is therefore **not** an end-to-end FP64, multi-GPU, MPI/NCCL or fully native RDM claim. Production Metal uses custom deterministic FP32 reductions; the research-only full-FP32 `mx.matmul` path requires `MLX_ENABLE_TF32=0` before process startup and showed no reproducible cross-process performance advantage.
+Metal connection-table setup and small projected Hermitian FP64 `eigh` remain on CPU, matching the algorithm's host boundary. RDM defaults to CPU (`rdm_backend="cpu"`). Optional `rdm_backend="metal"` accelerates only the opposite-spin 2-RDM with Q60 compensation and independent normalization/error checks; 1-RDM and same-spin blocks remain CPU FP64. The implementation is therefore **not** an end-to-end FP64, multi-GPU, MPI/NCCL or fully native RDM claim. Production Metal uses custom deterministic FP32 reductions; it neither reads nor changes `MLX_ENABLE_TF32`. The research-only full-FP32 `mx.matmul` path requires `MLX_ENABLE_TF32=0` before process startup and showed no reproducible cross-process performance advantage.
+
+For target-spin runs, `spin_tolerance` is keyword-only and defaults to `1e-4`. The solver filters roots by measured S², selects the requested target root, rejects spaces with no admissible root, and retries an unconstrained lowest-root solve after a variational-bound failure. Reports distinguish the final root from all attempted H@C/iteration histories, whose energies are physical rather than soft-penalty eigenvalues. POSIX CPU validation reuses an isolated interpreter without reusing prior numerical inputs; thread changes, worker failure and fork are handled explicitly, and batch `close()` releases both device workers and the validator. `full_cpu` forces original PySCF spin-block RDMs as an independent golden, separate from production factorized RDMs.
 
 #### 4.6.3 Measured Performance and Break-Even
 
-Correctness, actual device execution and speed were evaluated independently. H@C, S², energies and residuals were checked against CPU FP64 references; GPU stream and native-call records established real execution; steady-state timing used explicit synchronization and at least five repeats.
+Correctness, actual device execution and speed were evaluated independently. H@C, S², energies and residuals were checked against CPU FP64 references; GPU stream and native-call records established real execution; steady-state timing used explicit synchronization and at least five repeats. Fixed-workload FP32 profiles remain separate from normally converged molecular solves.
 
-For fixed-workload, 40-cycle FP32 comparisons, the earliest stable Metal/CPU solver break-even was observed at 14,400 determinants. H@C crossed CPU FP32 between 14,400 and 18,496 determinants:
+A post-PR21 fixed 40-cycle profile (one process, five samples per point) produced the following Metal/CPU FP32 median ratios; values below one favor Metal:
 
-| Determinants | Metal/CPU FP32 H@C | Metal/CPU FP32 solver | Interpretation |
-|---:|---:|---:|---|
-| 14,400 | 1.141 / 1.392 | 0.941 / 0.927 | Solver break-even reproduced; H@C still slower |
-| 18,496 | 0.915 / 0.789 | 0.880 / 0.839 | Both faster in two rounds |
-| 23,409 | 0.867 / 0.847 | 0.937 / 0.937 | Both faster in two rounds |
+| Determinants | H@C ratio | Solver ratio | Metal H@C relative FP64 golden error |
+|---:|---:|---:|---:|
+| 4,356 | 0.7456 | 1.6767 | 1.11e-7 |
+| 8,281 | 0.5122 | 0.7637 | 1.24e-7 |
+| 14,400 | 0.4861 | 0.4256 | 1.39e-7 |
+| 23,409 | 0.3382 | 0.2652 | 1.49e-7 |
 
-These large fixed-cycle runs did not converge and are performance profiles only, not ground-state energy results. At 23,409 determinants, Metal/MPS solver ratios of `1.188/1.463` also show that small-scale Metal superiority over PyTorch MPS cannot be extrapolated.
+The fixed runs intentionally exhaust 40 cycles and are not ground-state results. This single-process profile is not used to redefine the two-round molecular crossover.
 
-The application-level criterion is whole SQD wall time, including setup, normal-convergence Davidson, CPU RDM, validation and subprocess overhead. On H2O (3 atoms, 24 AO, 6-31g(d,p)):
+The application-level criterion is whole SQD wall time, including setup, normal-convergence Davidson, CPU RDM, validation and persistent-worker overhead. The post-PR21 sweep repeated H2O, NH3 and CH4 at six CAS sizes in two independent processes, with one cold and five steady runs per backend. Entries below are CPU/Metal median ratios for rounds 1/2; values above one favor Metal:
 
-| CAS / determinants | Metal wall (ms) | CPU wall (ms) | CPU/Metal | Whole-wall reduction |
-|---|---:|---:|---:|---:|
-| (4e,16o) / 14,400, round 1 | 466.265 | 469.065 | 1.006 | Approximately break-even |
-| (4e,16o) / 14,400, round 2 | 454.003 | 462.736 | 1.019 | 1.9% |
-| (4e,18o) / 23,409, round 1 | 505.262 | 541.463 | 1.071 | 6.7% |
-| (4e,18o) / 23,409, round 2 | 504.416 | 564.630 | 1.119 | 10.6% |
-
-A subsequent six-point, two-round sweep tested H2O, NH3 and CH4 independently rather than assigning the water break-even to every molecule. In that controlled sweep, NH3 and CH4 exceeded CPU in both rounds at 18,496 determinants (CAS(4e,17o)); H2O reversed across rounds at that size and became consistently faster at 23,409 determinants. All three were faster at 23,409 determinants:
-
-| Molecule | Atoms / AO | CPU/Metal, two rounds | Whole-wall reduction, two rounds |
+| CAS / determinants | H2O | NH3 | CH4 |
 |---|---:|---:|---:|
-| H2O | 3 / 24 | 1.0598 / 1.1042 | 5.64% / 9.43% |
-| NH3 | 4 / 29 | 1.0646 / 1.0795 | 6.07% / 7.36% |
-| CH4 | 5 / 34 | 1.0861 / 1.0765 | 7.93% / 7.11% |
+| (4e,12o) / 4,356 | 0.9728/1.0778 | 0.9383/1.0599 | 0.9519/1.1793 |
+| (4e,14o) / 8,281 | 1.6912/1.5854 | 1.6414/1.5674 | 1.5749/1.5407 |
+| (4e,15o) / 11,025 | 1.7043/1.5639 | 1.8751/1.9206 | 1.8191/1.8605 |
+| (4e,16o) / 14,400 | 1.9948/1.9162 | 2.1624/2.1570 | 2.0757/2.1295 |
+| (4e,17o) / 18,496 | 2.1777/2.1447 | 2.2045/2.2367 | 2.0191/2.0251 |
+| (4e,18o) / 23,409 | 2.5713/2.6740 | 1.9818/2.1899 | 2.1790/2.2414 |
 
-All 36 paired molecule/size/round workloads converged and passed residual/RDM acceptance. They remain single fixed-CAS SQD measurements, not full iterative SQD sampling/recovery benchmarks; CUDA application-level performance awaits NVIDIA measurements. Complete raw data and negative experiments are maintained in `docs/SBD_METAL_OPTIMIZATION.md` and `docs/SBD_REPRODUCIBILITY.md`.
+All three molecules have a reproduced crossover at 8,281 determinants under this protocol. At 4,356, round one still favors CPU, so the smaller size is explicitly retained as a reversal point. At 23,409, whole-wall reductions are H2O 61.11%/62.60%, NH3 49.54%/54.34%, and CH4 54.11%/55.39%.
+
+All 36 paired molecule/size/round workloads converged and passed residual/RDM acceptance; actual Metal FP32/CPU-RDM and PyTorch CPU FP64 execution plus identical pre/post-PR input fingerprints were verified. The raw archive is `data/sbd_benchmarks/multi_molecule_break_even_pr21_2026-11-22.json` (SHA256 `ff7351fb7de8055fc6deea18c6a8d95626705de65160cebfcdbc43a700fd6302`). These remain single fixed-CAS SQD measurements, not full iterative SQD sampling/recovery benchmarks; CUDA application-level performance awaits NVIDIA measurements. Pre-PR21 numbers and negative experiments remain in `docs/SBD_METAL_OPTIMIZATION.md` and `docs/SBD_REPRODUCIBILITY.md`.
 
 #### 4.6.4 Cross-Vendor Kernels and Multi-Machine Apple GPU Research
 
@@ -870,7 +869,7 @@ MPS NumPy/PyTorch statevector agreement was approximately `1.97e-17`; EWF energi
 - **EWF and LUCJ device residency**: existing large contractions already use optimized paths; local MLX/MPS precision support does not justify an FP64/complex128 migration. No hidden precision reduction was used to manufacture speedup.
 - **SKQD integral rotation**: measured 4/6/8-orbital workloads took only 0.104/0.111/0.141 ms, so no migration was started.
 - **Readout**: 16/64/256-dimensional inverse mitigation took 0.085/0.319/5.119 ms; SciPy FP64 `pinv`, host counts and pathological-matrix semantics remain explicit.
-- **Metal SQD RDM**: current whole-CAS data do not isolate RDM as the dominant stage, so the existing CPU implementation and CUDA → Metal → CPU priority remain unchanged.
+- **Metal SQD RDM default**: the optional opposite-spin Metal 2-RDM is validated, but current whole-CAS data do not justify changing the default from CPU or accelerating the other spin blocks. The CUDA → Metal → CPU priority remains unchanged.
 
 The final affected regression suite completed with **217 passed and 3 skipped** (CuPy not installed and optional ffsim tests). The adopted MPS/EWF/LUCJ figures are local CPU measurements and must not be relabeled as GPU results. CUDA/CuPy performance, full native-memory accounting, arbitrary bond dimensions/molecules, and full iterative SQD remain outside the demonstrated boundary. Raw samples, memory data, exact reproduction commands and paper-safe conclusions are documented in `docs/NUMERICS_OPTIMIZATION_REPORT.md`.
 

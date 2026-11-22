@@ -40,9 +40,21 @@ PyTorch MPS 只出现在 `examples/sqd_metal_scaling.py` 的三组性能研究�
 
 PySCF 连接表构建和 Davidson 小矩阵 Hermitian FP64 `eigh` 保留在 CPU，这与原算法的主机阶段一致。长向量矩阵收缩使用确定性 MSL FP32 累加，不依赖进程全局 MLX GEMM 精度设置。研究完整 FP32 `mx.matmul` 时必须在启动进程前设置 `MLX_ENABLE_TF32=0`；默认 NAX 降精度路径不满足 SBD golden，完整 FP32 路径虽正确但无一致性能收益。
 
-Metal 当前 RDM 使用独立 CPU PySCF 验证实现，报告明确为 `rdm_backend="cpu"`，因此不能称为全链路原生 RDM。H@c、S²、能量和残差均通过 CPU FP64 golden。
+Metal RDM 默认使用 CPU，报告明确为 `rdm_backend="cpu"`。可选 `rdm_backend="metal"` 只加速异自旋 2-RDM，1-RDM 和同自旋 2-RDM 继续使用 CPU FP64；Q60 补偿、归一化、规模上限和独立 golden 失败均显式报错，不能称为全链路原生 RDM。H@c、S²、能量和残差均通过 CPU FP64 golden。
 
 不承诺 MPI/NCCL、多节点、多 GPU determinant slide、分布式 Allreduce 或端到端 FP64 的 CUDA 全功能等价迁移。
+
+## target-spin 与最低根行为
+
+`solve_sci`/`solve_sci_gpu` 的五位置参数、返回结构和后端优先级不变。Metal 的 `spin_tolerance` 是 keyword-only，默认 `1e-4`。设置 `spin_sq` 后，求解器按实际 S² 过滤目标子空间中的收敛根并选择目标根；空间不存在合法根时显式失败。无自旋约束的最低根若在 variational-bound 检查中失败，会按内部策略重试，而不是返回已知错误根。
+
+报告区分最终所选根与全部求解尝试的 H@C、迭代和耗时；`gpu_history` 记录物理能量，不是把软自旋惩罚当作物理能量的本征值。选根与重试属于行为修正，不承诺任意初猜下都与旧实现返回同一个根。
+
+## RDM 与持久 CPU validator
+
+生产 RDM 通过 `spin_rdms(..., algorithm="auto")` 自动选择 factorized 路径，阈值外保留 PySCF 回退。`full_cpu` 独立验收强制 `algorithm="pyscf"`，直接调用原始 PySCF `make_rdm1s/make_rdm2s`，并在报告中记录实际参考算法；生产优化实现不能同时充当自己的 golden。
+
+POSIX 上，独立 CPU 验收复用一个隔离 PySCF 解释器，但每个请求重新发送当前系数、积分、标签、线程数和参考模式，不复用上次数值。线程变化、异常或 worker 死亡会重建；fork 子进程只关闭继承副本，多线程调用串行提交，进程退出由父管道守护回收。其他平台保留一次性 CLI。返回的 batch solver 调用 `close()` 时同时释放设备进程池和当前进程 validator；数值错误继续向上传播。
 
 ## 报告与兼容入口
 

@@ -570,25 +570,35 @@ pip install 'tyxonq[metal]'  # Apple Silicon; installs MLX
 The Metal path executes same-spin and mixed-spin H@C, S², and Davidson long-vector
 operations on the Apple GPU, with deterministic FP32 reductions and explicit
 completion before timing. Connection-table setup and small Hermitian FP64
-`eigh` remain on CPU; the current RDM validation path is also explicitly CPU
-(`rdm_backend="cpu"`). This is a single-device, mixed-precision implementation,
-not an MPI/multi-GPU or end-to-end FP64 port.
+`eigh` remain on CPU. RDM defaults to CPU (`rdm_backend="cpu"`); the optional
+`"metal"` mode accelerates only the opposite-spin 2-RDM, while the other blocks
+remain CPU FP64. This is a single-device, mixed-precision implementation, not an
+MPI/multi-GPU or end-to-end FP64 port.
 
-A six-point, two-round sweep over H2O, NH3, and CH4 shows that the
-whole-workflow break-even is molecule-dependent. In this controlled sweep, NH3
-and CH4 exceeded CPU in both rounds at **18,496 determinants** (CAS(4e,17o));
-H2O still reversed across rounds at that size and became consistently faster at
-**23,409 determinants**. All three were faster at 23,409 determinants:
+With `spin_sq` set, Metal filters converged roots by S² using the keyword-only
+`spin_tolerance=1e-4`, reports all attempts, and retries an unconstrained lowest-root
+solve after a variational-bound failure. Thus target-spin selection is not a promise
+that every initial guess returns the same root as the legacy solver. `full_cpu`
+validation uses an independent, pure-PySCF RDM golden rather than the production
+factorized implementation.
+
+After merging and hardening PR #21, the same six-point, two-round H2O/NH3/CH4
+protocol found a stable whole-workflow crossover at **8,281 determinants**
+(CAS(4e,14o)) for all three molecules. At 4,356 determinants the first round still
+favored CPU, so that size is not called a stable crossover. At 23,409 determinants:
 
 | Molecule | Atoms / AO | Whole-wall reduction, two rounds |
 | --- | ---: | ---: |
-| H2O | 3 / 24 | **5.64% / 9.43%** |
-| NH3 | 4 / 29 | **6.07% / 7.36%** |
-| CH4 | 5 / 34 | **7.93% / 7.11%** |
+| H2O | 3 / 24 | **61.11% / 62.60%** |
+| NH3 | 4 / 29 | **49.54% / 54.34%** |
+| CH4 | 5 / 34 | **54.11% / 55.39%** |
 
 All 36 paired molecule/size/round workloads converged and passed residual/RDM
-acceptance. These are single fixed-CAS SQD results, not claims about full
-iterative SQD, arbitrary active spaces, or unmeasured CUDA performance.
+acceptance. The archive preserves cold/steady samples, input fingerprints, source
+hashes and stage timings in
+[`data/sbd_benchmarks/multi_molecule_break_even_pr21_2026-11-22.json`](data/sbd_benchmarks/multi_molecule_break_even_pr21_2026-11-22.json).
+These are single fixed-CAS SQD results, not claims about full iterative SQD,
+arbitrary active spaces, or unmeasured CUDA performance.
 
 ### Profile-guided numerical acceleration
 
@@ -603,7 +613,7 @@ complete workloads by at least 5% in two independent processes:
 
 The numerical study also rejected or deferred migrations whose whole-workload
 share or precision support was insufficient, including `quantum_info` RDM,
-SKQD rotation, readout, and Metal SQD RDM. Raw samples,
+SKQD rotation, readout, and making Metal SQD RDM the default. Raw samples,
 memory measurements, reproduction commands, and scientific limits are in
 [`docs/NUMERICS_OPTIMIZATION_REPORT.md`](docs/NUMERICS_OPTIMIZATION_REPORT.md).
 For SBD architecture and benchmarks, see
