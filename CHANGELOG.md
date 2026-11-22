@@ -6,6 +6,8 @@ and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.
 
 
 ### [Unreleased]
+
+### [1.5.0] - 2026-11-22
 ### Added
 - **Device-agnostic quantum-dynamics validation**: exact evolution, Trotter circuits, kicked response, spectroscopy and finite-shot statistics are exercised by the offline `examples/qd/` workflow. Q8 adds analytic/ED references, discretization and time-window convergence checks, and shot standard errors/confidence intervals.
 - **Floquet Ising dynamics** (`applications/chem/dynamics/floquet.py`): reproducible disorder sampling, Néel-state preparation, nearest-neighbor Floquet circuit construction and Z-basis autocorrelators. Observable reduction reuses the common Pauli grouping and counts-first postprocessing rather than introducing provider-specific bit-order logic.
