@@ -165,9 +165,11 @@ def _make_batch_solver(kind, report_callback, device_ids, worker_timeout, option
         return results
 
     def close():
-        if pool is not None:
-            pool.close()
-        else:
+        try:
+            if pool is not None:
+                pool.close()
+        finally:
+            # 进程池只管理设备 worker；当前进程可能另有持久 CPU 验收器。
             from .validation import close_cpu_validation_worker
             close_cpu_validation_worker()
 

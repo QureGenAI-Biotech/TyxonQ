@@ -118,6 +118,21 @@ def test_batch_reports_include_hardware_resolution(monkeypatch):
     assert report["rdm_backend"] == "cpu"
 
 
+def test_batch_close_releases_pool_and_cpu_validator(monkeypatch):
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    closed = []
+    solve = batch.make_cuda_sci_solver(device_ids=[0])
+    assert solve.__closure__ is not None
+    pool = next(cell.cell_contents for cell in solve.__closure__
+                if isinstance(cell.cell_contents, batch._DeviceBatchPool))
+    monkeypatch.setattr(pool, "close", lambda: closed.append("pool"))
+    monkeypatch.setattr(validation, "close_cpu_validation_worker", lambda: closed.append("validator"))
+    getattr(solve, "close")()
+    getattr(solve, "close")()
+    assert closed == ["pool", "validator", "pool", "validator"]
+
+
 def test_pool_rejects_invalid_resource_requests():
     with pytest.raises(ValueError, match="unique"):
         batch._DeviceBatchPool([4, 4], "native", 2, 600)

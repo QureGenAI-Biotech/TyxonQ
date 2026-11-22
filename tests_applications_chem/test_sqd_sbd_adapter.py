@@ -387,6 +387,121 @@ def test_reused_cpu_validator_recomputes_each_request_and_recovers():
         validation.close_cpu_validation_worker()
 
 
+def _pair_validation(h, *, coefficients=(1.,), labels=None, threads=1, include_operator=True):
+    h = np.asarray(h, dtype=np.float64)
+    if h.ndim == 0:
+        h = h.reshape(1, 1)
+    norb = h.shape[0]
+    if labels is None:
+        labels = (np.array([1]), np.array([1]))
+    nelec = tuple(int(values[0]).bit_count() for values in labels)
+    return independent_cpu_validation(
+        np.asarray(coefficients), labels, h, np.zeros((norb,) * 4), norb, nelec,
+        spin_sq=None, spin_shift=.1, threads=threads, include_operator=include_operator)
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX persistent validator")
+def test_reused_cpu_validator_uses_current_coefficients_integrals_and_labels():
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    try:
+        _pair_validation(1.)
+        worker = validation._worker.process
+        result = _pair_validation(
+            np.diag([-1., 3.]), coefficients=(2.,),
+            labels=(np.array([1]), np.array([2])), include_operator=False)
+        assert validation._worker.process is worker
+        assert result["cpu_image"].size == 0
+        assert float(result["physical_energy"]) == pytest.approx(8.)
+    finally:
+        validation.close_cpu_validation_worker()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX persistent validator")
+def test_cpu_validator_restarts_after_thread_change_and_worker_death():
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    try:
+        _pair_validation(1., threads=1)
+        original = validation._worker
+        _pair_validation(2., threads=2)
+        assert validation._worker is not original
+        assert validation._worker.threads == 2
+        assert original.process.poll() is not None
+        previous = validation._worker.process
+        previous.kill()
+        previous.wait(timeout=5)
+        result = _pair_validation(3., threads=2)
+        assert validation._worker.process is not previous
+        assert float(result["physical_energy"]) == pytest.approx(6.)
+    finally:
+        validation.close_cpu_validation_worker()
+        validation.close_cpu_validation_worker()
+    assert validation._worker is None
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX persistent validator")
+def test_cpu_validator_serializes_threaded_callers_without_stale_results():
+    from concurrent.futures import ThreadPoolExecutor
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    requests = [(1., .5), (2., 1.), (3., 1.5), (4., 2.)]
+    try:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            results = list(executor.map(
+                lambda request: _pair_validation(request[0], coefficients=(request[1],)), requests))
+        worker = validation._worker.process
+        for (h, coefficient), result in zip(requests, results):
+            assert validation._worker.process is worker
+            assert float(result["physical_energy"]) == pytest.approx(2 * h * coefficient ** 2)
+    finally:
+        validation.close_cpu_validation_worker()
+
+
+@pytest.mark.skipif(not hasattr(os, "fork"), reason="fork validator lifecycle")
+def test_cpu_validator_fork_does_not_close_or_kill_parent_worker():
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    try:
+        _pair_validation(1.)
+        parent_worker = validation._worker.process
+        pid = os.fork()
+        if pid == 0:
+            status = 0
+            try:
+                if validation._worker is not None:
+                    status = 10
+                elif float(_pair_validation(4.)["physical_energy"]) != 8.:
+                    status = 11
+            except BaseException:
+                status = 12
+            finally:
+                try:
+                    validation.close_cpu_validation_worker()
+                except BaseException:
+                    status = status or 13
+                os._exit(status)
+        _, status = os.waitpid(pid, 0)
+        assert os.waitstatus_to_exitcode(status) == 0
+        assert parent_worker.poll() is None
+        _pair_validation(2.)
+        assert validation._worker.process is parent_worker
+    finally:
+        validation.close_cpu_validation_worker()
+
+
+def test_non_posix_validator_retains_oneshot_fallback(monkeypatch):
+    from types import SimpleNamespace
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    sentinel = object()
+    monkeypatch.setattr(validation, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(validation, "_oneshot_cpu_validation", lambda *args, **kwargs: sentinel)
+    assert validation.independent_cpu_validation(
+        None, None, None, None, 1, (1, 1), spin_sq=None, spin_shift=.1, threads=1
+    ) is sentinel
+
+
 def _blocking_cpu_validation_worker(wrapper, pid_path):
     """真实启动验证 CLI；仅测试包装器将读取输入延后以模拟长任务。"""
     from tyxonq.applications.chem.algorithms.sqd.gpu import validation
