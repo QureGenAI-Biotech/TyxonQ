@@ -378,6 +378,14 @@ class MetalSelectedCIContractor:
         self.chunk_size = int(chunk_size)
         self.native_calls = {"h_matvec": 0, "metal_gather": 0, "same_spin": 0, "mixed_spin": 0}
         self.execution: MetalExecution = {"device": None, "stream": None, "completed_evaluations": 0}
+        # Connected-row buffers are populated by update_integrals before contract.
+        self._same_a: Any = None
+        self._same_b: Any = None
+        self._diagonal: Any = None
+        self._field_a: Any = None
+        self._field_b: Any = None
+        self._mixed: Any = None
+        self._dimensions: Any = None
         cd_a, dd_a, cd_b, dd_b = link_index
         self.n_alpha, self.n_beta = int(cd_a.shape[0]), int(cd_b.shape[0])
         if strategy not in ("auto", "connected", "pair"):
