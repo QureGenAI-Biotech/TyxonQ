@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import atexit
 from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
+import socket
 import subprocess
 import sys
 import tempfile
+import threading
 from time import perf_counter
 
 import numpy as np
@@ -127,7 +130,111 @@ def project_initial_state(initial_state, ci_strings, norb, nelec):
     return None if norm == 0 else projected / norm
 
 
+def _cpu_environment(threads):
+    return {**os.environ, "CUDA_VISIBLE_DEVICES": "", "OMP_NUM_THREADS": str(threads),
+            "OPENBLAS_NUM_THREADS": str(threads), "MKL_NUM_THREADS": str(threads)}
+
+
+class _CPUValidationWorker:
+    """每个求解进程保留一个隔离的 PySCF 解释器，只复用运行环境。"""
+
+    def __init__(self, threads):
+        self.threads = threads
+        parent, child = socket.socketpair()
+        with parent, child:
+            parent.settimeout(600)
+            self.stream = parent.makefile("rwb")
+            try:
+                self.process = subprocess.Popen(
+                    [sys.executable, str(Path(__file__).with_name("cpu_validate_sci.py")),
+                     "--serve-fd", str(child.fileno()), "--threads", str(threads), "--watch-parent-stdin"],
+                    pass_fds=(child.fileno(),), stdin=subprocess.PIPE, env=_cpu_environment(threads),
+                )
+            except BaseException:
+                self.stream.close()
+                raise
+
+    def close(self, *, owner=True):
+        # stdin 唯一的写端关闭后，守护线程立即退出，包括 PySCF 正在繁重计算时。
+        self.process.stdin.close()
+        try:
+            self.stream.close()
+        except OSError:
+            pass
+        if owner:
+            try:
+                self.process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait()
+
+
+_worker_lock = threading.Lock()
+_worker = None
+
+
+def _reset_cpu_worker(*, owner=True):
+    global _worker
+    if _worker is not None:
+        _worker.close(owner=owner)
+        _worker = None
+
+
+def close_cpu_validation_worker():
+    """提前释放本进程的 CPU 验收器；下次求解按需重建。"""
+    with _worker_lock:
+        _reset_cpu_worker()
+
+
+def _after_fork():
+    # 子进程只关闭继承的套接字和管道副本，不能等待或终止父进程的验收器。
+    try:
+        _reset_cpu_worker(owner=False)
+    finally:
+        _worker_lock.release()
+
+
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(before=_worker_lock.acquire, after_in_parent=_worker_lock.release,
+                        after_in_child=_after_fork)
+atexit.register(close_cpu_validation_worker)
+
+
 def independent_cpu_validation(coefficients, ci_strings, h1e, eri, norb, nelec,
+                               *, spin_sq, spin_shift, threads, include_operator=True):
+    """使用独立无 CUDA 进程验收；同一进程中的多线程调用串行提交。"""
+    global _worker
+    if os.name != "posix":
+        # pass_fds 是 POSIX 接口；其它平台沿用独立 CLI。
+        return _oneshot_cpu_validation(coefficients, ci_strings, h1e, eri, norb, nelec,
+                                       spin_sq=spin_sq, spin_shift=spin_shift, threads=threads,
+                                       include_operator=include_operator)
+    from .cpu_validate_sci import _read_packet, _write_packet
+
+    started = perf_counter()
+    metadata = {"norb": int(norb), "nelec": list(map(int, nelec)), "spin_sq": spin_sq,
+                "spin_shift": spin_shift, "include_operator": include_operator}
+    arrays = dict(coefficients=np.asarray(coefficients).reshape(-1), ci_strs_a=ci_strings[0],
+                  ci_strs_b=ci_strings[1], h1e=h1e, eri=eri)
+    with _worker_lock:
+        if _worker is not None and (_worker.threads != threads or _worker.process.poll() is not None):
+            _reset_cpu_worker()
+        if _worker is None:
+            _worker = _CPUValidationWorker(threads)
+        try:
+            _write_packet(_worker.stream, metadata, arrays)
+            status, result = _read_packet(_worker.stream)
+            if "error" in status:
+                raise RuntimeError(f"Independent PySCF validation failed: {status['error']}")
+        except BaseException:
+            # 失败/超时后流的位置不可靠，下一次调用重新启动干净进程。
+            _reset_cpu_worker()
+            raise
+    result["seconds"] = perf_counter() - started
+    return result
+
+
+def _oneshot_cpu_validation(coefficients, ci_strings, h1e, eri, norb, nelec,
                                *, spin_sq, spin_shift, threads, include_operator=True):
     """从干净的无 CUDA 进程调用 PySCF；不复用 GPU 算符或 RDM。"""
     started = perf_counter()
@@ -138,8 +245,7 @@ def independent_cpu_validation(coefficients, ci_strings, h1e, eri, norb, nelec,
                  metadata_json=np.asarray(json.dumps({"norb": norb, "nelec": list(nelec),
                                                        "spin_sq": spin_sq, "spin_shift": spin_shift,
                                                        "include_operator": include_operator})))
-        environment = {**os.environ, "CUDA_VISIBLE_DEVICES": "", "OMP_NUM_THREADS": str(threads),
-                       "OPENBLAS_NUM_THREADS": str(threads), "MKL_NUM_THREADS": str(threads)}
+        environment = _cpu_environment(threads)
         read_fd, write_fd = os.pipe()
         try:
             # 写端仅属于当前 worker；terminate/kill 后由操作系统关闭。

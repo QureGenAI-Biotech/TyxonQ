@@ -1,5 +1,7 @@
 """SBD 相位、指标约定、独立验收及显式初猜的 CPU 回归。"""
 
+import os
+
 import numpy as np
 import pytest
 
@@ -290,7 +292,8 @@ def test_native_validation_failure_snapshot(monkeypatch, tmp_path, failure_stage
             raise RuntimeError("mock native RDM kernel failure")
         return raw
 
-    contractor = SimpleNamespace(shape=(2, 1), phase=torch.ones((2, 1), dtype=torch.float64),
+    contractor = SimpleNamespace(shape=(2, 1), device=torch.device("cuda:0"),
+                                 phase=torch.ones((2, 1), dtype=torch.float64),
                                  context=SimpleNamespace(solve=native_solve),
                                  _raw=lambda value: value)
     monkeypatch.setattr(sbd_solver, "SBDContractor", lambda *args, **kwargs: contractor)
@@ -354,16 +357,44 @@ def test_native_validation_failure_snapshot(monkeypatch, tmp_path, failure_stage
         assert not success_path.exists()
 
 
+@pytest.mark.skipif(os.name != "posix", reason="POSIX persistent validator")
+def test_reused_cpu_validator_recomputes_each_request_and_recovers():
+    from tyxonq.applications.chem.algorithms.sqd.gpu import validation
+
+    labels = (np.array([1]), np.array([1]))
+    eri = np.zeros((1, 1, 1, 1))
+
+    def validate(h, *, coefficients=(1.,), include_operator=True):
+        return independent_cpu_validation(
+            np.array(coefficients), labels, np.array([[h]]), eri, 1, (1, 1),
+            spin_sq=None, spin_shift=.1, threads=1, include_operator=include_operator)
+
+    try:
+        first = validate(1.)
+        worker = validation._worker.process
+        second = validate(3., include_operator=False)
+        assert validation._worker.process is worker
+        np.testing.assert_allclose(first["cpu_image"], [2.])
+        assert second["cpu_image"].size == 0
+        assert float(second["physical_energy"]) == pytest.approx(6.)
+        with pytest.raises(RuntimeError, match="reshape"):
+            validate(3., coefficients=(1., 0.))
+        assert worker.poll() is not None
+        assert float(validate(2.)["physical_energy"]) == pytest.approx(4.)
+    finally:
+        validation.close_cpu_validation_worker()
+
+
 def _blocking_cpu_validation_worker(wrapper, pid_path):
     """真实启动验证 CLI；仅测试包装器将读取输入延后以模拟长任务。"""
     from tyxonq.applications.chem.algorithms.sqd.gpu import validation
 
-    real_run = validation.subprocess.run
+    real_popen = validation.subprocess.Popen
 
-    def run(command, **kwargs):
-        return real_run([command[0], wrapper, pid_path, *command[1:]], **kwargs)
+    def popen(command, **kwargs):
+        return real_popen([command[0], wrapper, pid_path, *command[1:]], **kwargs)
 
-    validation.subprocess.run = run
+    validation.subprocess.Popen = popen
     validation.independent_cpu_validation(
         np.ones((1, 1)), (np.array([1]), np.array([1])), np.ones((1, 1)),
         np.zeros((1, 1, 1, 1)), 1, (1, 1), spin_sq=None, spin_shift=.1, threads=1)
@@ -422,12 +453,13 @@ def test_cpu_validation_exits_when_spawn_worker_dies(tmp_path, stop):
     wrapper.write_text('''import os, pathlib, runpy, sys, time
 import numpy as np
 pid_path, command = sys.argv[1], sys.argv[2:]
-real_load = np.load
+real_load = np.lib.format.read_array
 def delayed_load(*args, **kwargs):
     pathlib.Path(pid_path).write_text(str(os.getpid()))
     time.sleep(60)
     return real_load(*args, **kwargs)
-np.load = delayed_load
+np.lib.format.read_array = delayed_load
+sys.path.insert(0, str(pathlib.Path(command[0]).parent))
 sys.argv = command
 runpy.run_path(command[0], run_name="__main__")
 ''')

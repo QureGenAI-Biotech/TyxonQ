@@ -4,6 +4,10 @@ The host builds PySCF connection tables and solves only the small Davidson
 projected eigenproblem. Long vectors, all three H@c spin contributions, S²,
 orthogonalization, and residual vectors remain MLX arrays on the Metal GPU.
 
+The row-wise kernel visits only connected determinants. The pair-table path
+bounds setup cost when the same-spin connection matrix would be too large.
+Hardware crossover and final accuracy are measured separately for each workload.
+
 IMPORTANT — FP32 MLX GEMM precision switch:
     MLX 0.32.4 may silently use reduced-precision NAX arithmetic for FP32
     ``mx.matmul`` on supported Apple hardware. Set ``MLX_ENABLE_TF32=0`` before
@@ -11,12 +15,15 @@ IMPORTANT — FP32 MLX GEMM precision switch:
     deliberately uses deterministic FP32 kernels and neither reads nor changes
     this process-global setting. Full-FP32 MLX GEMM passed the SBD golden tests,
     but showed no reproducible performance advantage and is not the default.
+    The connected-rows, dot-tiles and projected-reduction kernels are still FP32,
+    not FP64; each new path requires CPU FP64 golden, fresh-residual and normal-
+    convergence validation before its performance can be adopted.
 
-Measured CPU FP32 break-even (fixed 40-cycle profiles, not converged energies):
-    Davidson is stably faster from 14,400 determinants; H@c is faster at 18,496
-    and 23,409 determinants. Smaller cases remain slower than CPU, and the MPS
-    ranking changes at large sizes. See docs/SBD_METAL_OPTIMIZATION.md §6.9–6.10
-    for the dual-run samples and numerical limitations.
+Historical pre-PR21 CPU FP32 break-even (fixed 40 cycles, not converged energies):
+    Davidson was stably faster from 14,400 determinants; H@c was faster at 18,496
+    and 23,409 determinants. Smaller cases remained slower than CPU, and the MPS
+    ranking changed at large sizes. These are pre-connected-rows/pre-dot-tiles
+    results; see docs/SBD_METAL_OPTIMIZATION.md for post-merge measurements.
 
 TODO — multi-Apple-GPU SBD (planned; not active in this single-device module):
     Use MLX-native distribution only: ``mx.distributed`` plus ``mlx.launch``,
@@ -95,6 +102,17 @@ def _kernels() -> dict[str, Any]:
     if name is not None:
         sections[name] = "\n".join(body).strip()
     return {
+        "mixed_rdm_q60": mx.fast.metal_kernel(
+            name="tyxonq_sbd_mixed_rdm_q60", input_names=["hi", "lo", "al", "ao", "bl", "bo", "shape"],
+            output_names=["out"], source=sections["mixed_rdm_q60"],
+        ),
+        "connected_rows": mx.fast.metal_kernel(
+            name="tyxonq_sbd_connected_rows",
+            input_names=["c", "diag", "a_offset", "a_single", "b_offset", "b_single",
+                         "aa_offset", "aa_col", "aa_val", "bb_offset", "bb_col", "bb_val",
+                         "a_field", "b_field", "mixed", "dimensions"],
+            output_names=["out"], source=sections["connected_rows"],
+        ),
         "gather_slots": mx.fast.metal_kernel(
             name="tyxonq_sbd_gather_slots",
             input_names=["coefficients", "address", "signs", "width"],
@@ -119,17 +137,21 @@ def _kernels() -> dict[str, Any]:
             output_names=["out"],
             source=sections["pair_contract"],
         ),
+        "dot_tiles": mx.fast.metal_kernel(
+            name="tyxonq_sbd_dot_tiles", input_names=["left", "right_t", "shape"],
+            output_names=["out"], source=sections["dot_tiles"],
+        ),
         "projected_reduce": mx.fast.metal_kernel(
             name="tyxonq_sbd_projected_reduce",
             input_names=["matrix", "temporary", "inner_dimension", "width"],
             output_names=["out"],
             source=sections["projected_reduce"],
         ),
-        "gather_spin": mx.fast.metal_kernel(
-            name="tyxonq_sbd_gather_spin",
-            input_names=["coefficients", "rows", "columns", "signs", "column_count", "determinant_columns"],
-            output_names=["out"],
-            source=sections["gather_spin"],
+        "spin_exchange": mx.fast.metal_kernel(
+            name="tyxonq_sbd_spin_exchange",
+            input_names=["c", "alpha_bits", "beta_bits", "offsets", "alpha_moves",
+                         "beta_lookup", "dimensions", "diagonal_constant"],
+            output_names=["out"], source=sections["spin_exchange"],
         ),
     }
 
@@ -161,6 +183,15 @@ def _metal_matmul(left: Any, right: Any) -> Any:
     width = int(right.shape[1])
     total = rows * width
     inputs = [left, right, mx.array([inner], dtype=mx.int32), mx.array([width], dtype=mx.int32)]
+    if inner >= 16384 and total <= 1024:
+        # 将长向量内积分配给多个线程组，再归约各个等长块，提高带宽利用率。
+        tiles = (inner + 1023) // 1024
+        tile_sums = _kernels()["dot_tiles"](
+            inputs=[left, right.T, mx.array([inner, width, tiles], dtype=mx.uint32)],
+            grid=(total * tiles * 256, 1, 1), threadgroup=(256, 1, 1),
+            output_shapes=[(rows, width, tiles)], output_dtypes=[mx.float32],
+        )[0]
+        return mx.sum(tile_sums, axis=2)
     if inner >= 128 and total <= 1024:
         return _kernels()["projected_reduce"](
             inputs=inputs, template=[("T", mx.float32)],
@@ -271,12 +302,73 @@ def make_hdiag(h1e: Any, eri: Any, ci_strings: tuple[np.ndarray, np.ndarray]) ->
     return energy_a[:, None] + energy_b[None, :] + opposite
 
 
+def _single_connections(cd: np.ndarray, norb: int):
+    """将单激发按输出串压缩。对角连接另存为轨道占据，用于预收缩。"""
+    mx = _mlx()
+    row, slot = np.nonzero(cd[..., 3])
+    entries = cd[row, slot]
+    same = row == entries[:, 2]
+    orbitals = np.arange(norb)
+    diag_pairs = orbitals * (orbitals + 3) // 2
+    occ = np.zeros((len(cd), norb))
+    occ[row[same], np.searchsorted(diag_pairs, entries[same, 0])] = 1
+    off = entries[~same]
+    degree = np.bincount(row[~same], minlength=len(cd))
+    offsets = np.r_[0, np.cumsum(degree)].astype(np.int32)
+    links = np.column_stack([off[:, 2], off[:, 3] * (off[:, 0] + 1)]).astype(np.int32)
+    # Metal 要求每个输入有可绑定的非空缓冲；空连接的 offset 均为零。
+    return occ, (mx.array(offsets), mx.array(links if links.size else np.zeros((1, 2), np.int32)))
+
+
+def _compress_double_links(dd):
+    """只保存非空的双湮灭连接，避免在每次更新积分时复制补零的大表。"""
+    if dd is None:
+        return None
+    valid = dd[..., 3] != 0
+    degree = np.count_nonzero(valid, axis=1)
+    offsets = np.r_[0, np.cumsum(degree)]
+    return degree, offsets, dd[valid]
+
+
+def _same_spin_csr(dd, pairs: np.ndarray, size: int):
+    """对具有相同双湮灭中间态的连接求积并累加，得到单自旋 CSR 矩阵。"""
+    from scipy.sparse import coo_matrix, csr_matrix
+
+    mx = _mlx()
+    matrix = csr_matrix((size, size), dtype=np.float64)
+    if dd is not None:
+        degree, offsets, entries = dd
+        # 按行长度分组并分块，避免将所有中间态补齐到最大连接数。
+        for width in np.unique(degree):
+            if width == 0:
+                continue
+            rows = np.flatnonzero(degree == width)
+            step = max(1, 262144 // int(width * width))
+            for start in range(0, len(rows), step):
+                starts = offsets[rows[start:start + step]]
+                links = entries[starts[:, None] + np.arange(width)]
+                address, pair, sign = links[:, :, 2], links[:, :, 0], links[:, :, 3]
+                values = pairs[pair[:, :, None], pair[:, None, :]] * sign[:, :, None] * sign[:, None, :]
+                left = np.broadcast_to(address[:, :, None], values.shape)
+                right = np.broadcast_to(address[:, None, :], values.shape)
+                matrix += coo_matrix((values.ravel(), (left.ravel(), right.ravel())), shape=matrix.shape).tocsr()
+    diagonal = matrix.diagonal()
+    matrix.setdiag(0)
+    matrix.eliminate_zeros()
+    columns = matrix.indices if matrix.nnz else np.zeros(1, np.int32)
+    values = matrix.data if matrix.nnz else np.zeros(1)
+    return diagonal, (mx.array(matrix.indptr.astype(np.int32)), mx.array(columns.astype(np.int32)),
+                      mx.array(values.astype(np.float32)))
+
+
 class MetalSelectedCIContractor:
     """Restricted selected-CI H@c with alpha, beta, and mixed-spin excitations."""
 
     @metal_gpu_execution
-    def __init__(self, h2e: np.ndarray, link_index: Any, nelec: tuple[int, int], *, chunk_size: int = 32) -> None:
+    def __init__(self, h2e: np.ndarray, link_index: Any, nelec: tuple[int, int], *, chunk_size: int = 32, strategy: str = "auto") -> None:
         mx = _mlx()
+        if h2e.ndim != 4 or len(set(h2e.shape)) != 1:
+            raise ValueError("h2e must be a full (norb, norb, norb, norb) tensor")
         if min(nelec) < 1:
             raise ValueError("MetalSelectedCIContractor requires nonempty spin sectors")
         if chunk_size < 1:
@@ -288,6 +380,25 @@ class MetalSelectedCIContractor:
         self.execution: MetalExecution = {"device": None, "stream": None, "completed_evaluations": 0}
         cd_a, dd_a, cd_b, dd_b = link_index
         self.n_alpha, self.n_beta = int(cd_a.shape[0]), int(cd_b.shape[0])
+        if strategy not in ("auto", "connected", "pair"):
+            raise ValueError("Metal contraction strategy must be auto, connected, or pair")
+        # 每项对应一对经过同一双湮灭中间态的连接。限制 CPU 建表开销。
+        self.strategy = strategy
+        if strategy == "auto":
+            terms = sum(int(np.square(np.count_nonzero(dd[..., 3], axis=1)).sum())
+                        for dd in (dd_a, dd_b) if dd is not None)
+            pair_count = self.norb * (self.norb - 1) // 2
+            max_buffer_bytes = max(
+                (0 if dd is None else len(dd)) * min(width, self.chunk_size) * pair_count * 4
+                for dd, width in ((dd_a, self.n_beta), (dd_b, self.n_alpha)))
+            # 若单个补零缓冲就超过 256 MiB，即使建 CSR 较慢仍采用压缩连接。
+            self.strategy = "connected" if terms <= 4_000_000 or max_buffer_bytes > 256 * 2**20 else "pair"
+        if self.strategy == "connected":
+            self._occup_a, self._single_a = _single_connections(cd_a, self.norb)
+            self._occup_b, self._single_b = _single_connections(cd_b, self.norb)
+            self._dd = _compress_double_links(dd_a), _compress_double_links(dd_b)
+            self.update_integrals(h2e)
+            return
         self.cd_a = _convert_link_table(cd_a, self.n_alpha)
         self.dd_a = _convert_link_table(dd_a, 0 if dd_a is None else int(dd_a.shape[0]))
         self.cd_b = _convert_link_table(cd_b, self.n_beta)
@@ -304,6 +415,9 @@ class MetalSelectedCIContractor:
     @metal_gpu_execution
     def update_integrals(self, h2e: np.ndarray) -> None:
         mx = _mlx()
+        if self.strategy == "connected":
+            self._prepare_connected(np.asarray(h2e, dtype=np.float64))
+            return
         h2e_mx = mx.array(np.asarray(h2e, dtype=np.float32))
         n2 = self.norb * self.norb
         rows, columns = np.tril_indices(self.norb, -1)
@@ -322,6 +436,42 @@ class MetalSelectedCIContractor:
         mixed_2d = mx.reshape(mixed_full, (n2, n2))
         self.mixed_spin_matrix = mixed_2d[lower[:, None], lower[None, :]]
         mx.eval(self.same_spin_matrix, self.mixed_spin_matrix)
+
+    def _prepare_connected(self, h2e: np.ndarray) -> None:
+        """将同自旋双激发、对角占据的贡献预收缩；不构造乘积空间矩阵。"""
+        mx = _mlx()
+        p, q = np.tril_indices(self.norb, -1)
+        antisym = 2 * (h2e[p[:, None], p, q[:, None], q] - h2e[p[:, None], q, q[:, None], p])
+        da, self._same_a = _same_spin_csr(self._dd[0], antisym, self.n_alpha)
+        db, self._same_b = _same_spin_csr(self._dd[1], antisym, self.n_beta)
+        p, q = np.tril_indices(self.norb)
+        diagonal_pairs = np.flatnonzero(p == q)
+        mixed = 2 * h2e[p[:, None], q[:, None], p, q]
+        trace = np.einsum("pqqs->ps", h2e)[p, q]
+        mixed[diagonal_pairs, :] += trace[None, :] / self.nelec[1]
+        mixed[:, diagonal_pairs] += trace[:, None] / self.nelec[0]
+        # 旧核的左乘行属于 beta、列属于 alpha。在此转为先 alpha 后 beta。
+        mixed = np.ascontiguousarray(mixed.T)
+        field_a = self._occup_a @ mixed[diagonal_pairs, :]
+        field_b = self._occup_b @ mixed[:, diagonal_pairs].T
+        diagonal = da[:, None] + db[None, :] + field_a[:, diagonal_pairs] @ self._occup_b.T
+        self._diagonal = mx.array(diagonal.astype(np.float32))
+        self._field_a = mx.array(field_a.astype(np.float32))
+        self._field_b = mx.array(field_b.astype(np.float32))
+        self._mixed = mx.array(mixed.astype(np.float32))
+        self._dimensions = mx.array([self.n_beta, len(p)], dtype=mx.uint32)
+        mx.eval(self._diagonal, self._field_a, self._field_b, self._mixed, *self._same_a, *self._same_b)
+
+    def _connected_product(self, coefficients: Any) -> Any:
+        """每个 SIMD 组负责一个输出行列式，组内归约，不需要原子写回。"""
+        mx = _mlx()
+        self.native_calls["metal_connected_rows"] = self.native_calls.get("metal_connected_rows", 0) + 1
+        return _kernels()["connected_rows"](
+            inputs=[coefficients, self._diagonal, *self._single_a, *self._single_b,
+                    *self._same_a, *self._same_b, self._field_a, self._field_b, self._mixed, self._dimensions],
+            grid=(32 * self.n_beta, self.n_alpha, 1), threadgroup=(32 * min(8, self.n_beta), 1, 1),
+            output_shapes=[(self.n_alpha, self.n_beta)], output_dtypes=[mx.float32],
+        )[0]
 
     def _build_mixed_chunks(self) -> tuple[MetalMixedChunk, ...]:
         mx = _mlx()
@@ -422,127 +572,63 @@ class MetalSelectedCIContractor:
             raise ValueError(f"coefficients must have shape {(self.n_alpha, self.n_beta)}")
         self.native_calls["h_matvec"] += 1
         _record_execution(self, mx)
-        result = self._mixed_spin(coefficients)
-        if self.nelec[0] > 1:
-            result = result + self._same_spin(coefficients, self.dd_a, self._alpha_slots)
-        if self.nelec[1] > 1:
-            result = result + self._same_spin(coefficients.T, self.dd_b, self._beta_slots).T
+        if self.strategy == "connected":
+            result = self._connected_product(coefficients)
+        else:
+            result = self._mixed_spin(coefficients)
+            if self.nelec[0] > 1:
+                result = result + self._same_spin(coefficients, self.dd_a, self._alpha_slots)
+            if self.nelec[1] > 1:
+                result = result + self._same_spin(coefficients.T, self.dd_b, self._beta_slots).T
         mx.eval(result)
         self.execution["completed_evaluations"] += 1
         return result
 
 
-@dataclass(frozen=True)
-class MetalSpinTransition:
-    source_rows: Any
-    source_columns: Any
-    target_rows: Any
-    target_columns: Any
-    signs: Any
-
-
-def _link_map(generator: Any, strings: np.ndarray, norb: int, nelec: int, *, destroy: bool) -> np.ndarray:
-    links = generator(strings, norb, nelec)
-    mapping = np.zeros((links.shape[0], norb, 2), dtype=np.int32)
-    orbital_column = 1 if destroy else 0
-    for index, table in enumerate(links):
-        table = table[table[:, 3] != 0]
-        mapping[index, table[:, orbital_column]] = table[:, 2:]
-    return mapping
-
-
-def _spin_transitions(row_map: np.ndarray | None, column_map: np.ndarray | None, norb: int) -> tuple[Any, ...]:
-    mx = _mlx()
-    if row_map is None or column_map is None:
-        return (None,) * norb
-    result = []
-    for orbital in range(norb):
-        rows = np.flatnonzero(row_map[:, orbital, 1])
-        columns = np.flatnonzero(column_map[:, orbital, 1])
-        if not rows.size or not columns.size:
-            result.append(None)
-            continue
-        signs = (row_map[rows, orbital, 1, None] * column_map[columns, orbital, 1, None].T).astype(np.float32)
-        result.append(MetalSpinTransition(
-            source_rows=mx.array(rows.astype(np.int32)),
-            source_columns=mx.array(columns.astype(np.int32)),
-            target_rows=mx.array(row_map[rows, orbital, 0].astype(np.int32)),
-            target_columns=mx.array(column_map[columns, orbital, 0].astype(np.int32)),
-            signs=mx.array(signs),
-        ))
-    return tuple(result)
-
-
 class MetalSelectedS2Contractor:
-    """Native selected-CI S² transitions with cached addresses and phases."""
+    """只遍历在选定基内交换两个轨道自旋产生的连接，计算投影 S²c。"""
 
     @metal_gpu_execution
     def __init__(self, ci_strings: tuple[np.ndarray, np.ndarray], norb: int, nelec: tuple[int, int]) -> None:
-        self.shape = tuple(map(len, ci_strings))
-        self.native_calls = {"spin_matvec": 0, "metal_gather": 0}
+        mx = _mlx()
+        alpha, beta = (np.ascontiguousarray(x, dtype=np.int64) for x in ci_strings)
+        self.shape = len(alpha), len(beta)
+        self.native_calls = {"spin_matvec": 0, "metal_spin_exchange": 0}
         self.execution: MetalExecution = {"device": None, "stream": None, "completed_evaluations": 0}
-        a, b = (np.asarray(x, dtype=np.int64) for x in ci_strings)
-        na, nb = nelec
-        destroy_a = _link_map(selected_ci.gen_des_linkstr, a, norb, na, destroy=True) if na > 0 else None
-        destroy_b = _link_map(selected_ci.gen_des_linkstr, b, norb, nb, destroy=True) if nb > 0 else None
-        create_a = _link_map(selected_ci.gen_cre_linkstr, a, norb, na, destroy=False) if na < norb else None
-        create_b = _link_map(selected_ci.gen_cre_linkstr, b, norb, nb, destroy=False) if nb < norb else None
-        self._plus_minus_shape = None if destroy_a is None or create_b is None else (len(destroy_a), len(create_b))
-        self._minus_plus_shape = None if create_a is None or destroy_b is None else (len(create_a), len(destroy_b))
-        self._plus_minus = _spin_transitions(destroy_a, create_b, norb)
-        self._minus_plus = _spin_transitions(create_a, destroy_b, norb)
-        self._sz_square = 0.25 * float((na - nb) ** 2)
-
-    def _gather(self, matrix: Any, transition: MetalSpinTransition) -> Any:
-        mx = _mlx()
-        rows = int(transition.target_rows.size)
-        columns = int(transition.target_columns.size)
-        total = rows * columns
-        self.native_calls["metal_gather"] += 1
-        return _kernels()["gather_spin"](
-            inputs=[matrix, transition.target_rows, transition.target_columns, transition.signs,
-                    mx.array([columns], dtype=mx.int32), mx.array([matrix.shape[1]], dtype=mx.int32)],
-            template=[("T", mx.float32)], grid=(total, 1, 1), threadgroup=(min(256, total), 1, 1),
-            output_shapes=[(rows, columns)], output_dtypes=[mx.float32],
-        )[0]
-
-    @staticmethod
-    def _scatter(destination: Any, rows: Any, columns: Any, values: Any) -> Any:
-        linear = (rows[:, None] * destination.shape[1] + columns[None, :]).reshape(-1)
-        return destination.reshape(-1).at[linear].add(values.reshape(-1)).reshape(destination.shape)
-
-    def _apply(self, matrix: Any, transitions: tuple[Any, ...], shape: tuple[int, int] | None) -> Any:
-        mx = _mlx()
-        if shape is None:
-            return mx.zeros_like(matrix)
-        intermediate = mx.zeros(shape, dtype=mx.float32)
-        for transition in transitions:
-            if transition is not None:
-                values = self._gather(matrix, transition)
-                intermediate = self._scatter(intermediate, transition.source_rows, transition.source_columns, values)
-        output = mx.zeros_like(matrix)
-        for transition in transitions:
-            if transition is not None:
-                rows, columns = transition.source_rows, transition.source_columns
-                total = int(rows.size * columns.size)
-                reverse = MetalSpinTransition(
-                    source_rows=transition.target_rows, source_columns=transition.target_columns,
-                    target_rows=rows, target_columns=columns, signs=transition.signs,
-                )
-                values = self._gather(intermediate, reverse)
-                output = self._scatter(output, transition.target_rows, transition.target_columns, values)
-        return output
+        self._alpha_bits = mx.array(alpha.view(np.uint32))
+        self._beta_bits = mx.array(beta.view(np.uint32))
+        # 对 alpha 的 q→p 单激发，beta 必须恰好有反向 p→q 连接。
+        alpha_table = selected_ci.cre_des_linkstr(alpha, norb, nelec[0])
+        beta_table = selected_ci.cre_des_linkstr(beta, norb, nelec[1])
+        row, slot = np.nonzero((alpha_table[..., 3] != 0) & (alpha_table[..., 0] != alpha_table[..., 1]))
+        moves = alpha_table[row, slot]
+        reverse = moves[:, 1] * norb + moves[:, 0]
+        packed = np.column_stack(((moves[:, 2] + 1) * moves[:, 3], reverse))
+        self._moves = mx.array(packed.astype(np.int32) if moves.size else np.zeros((1, 2), np.int32))
+        self._offsets = mx.array(np.r_[0, np.cumsum(np.bincount(row, minlength=len(alpha)))].astype(np.int32))
+        row, slot = np.nonzero((beta_table[..., 3] != 0) & (beta_table[..., 0] != beta_table[..., 1]))
+        moves = beta_table[row, slot]
+        lookup = np.zeros((len(beta), norb * norb), dtype=np.int32)
+        lookup[row, moves[:, 0] * norb + moves[:, 1]] = (moves[:, 2] + 1) * moves[:, 3]
+        self._lookup = mx.array(lookup)
+        self._dimensions = mx.array([len(beta), norb * norb], dtype=mx.uint32)
+        self._constant = mx.array([.25 * (nelec[0] - nelec[1]) ** 2 + .5 * sum(nelec)], dtype=mx.float32)
 
     @metal_gpu_execution
     def contract(self, coefficients: Any) -> Any:
         mx = _mlx()
         matrix = coefficients.reshape(self.shape)
-        self.native_calls["spin_matvec"] += 1
         _record_execution(self, mx)
-        flips = self._apply(matrix, self._plus_minus, self._plus_minus_shape)
-        flips = flips + self._apply(matrix, self._minus_plus, self._minus_plus_shape)
-        result = 0.5 * flips + self._sz_square * matrix
+        total = int(matrix.size)
+        result = _kernels()["spin_exchange"](
+            inputs=[matrix, self._alpha_bits, self._beta_bits, self._offsets, self._moves,
+                    self._lookup, self._dimensions, self._constant],
+            grid=(total, 1, 1), threadgroup=(min(total, 256), 1, 1),
+            output_shapes=[self.shape], output_dtypes=[mx.float32],
+        )[0]
         mx.eval(result)
+        self.native_calls["spin_matvec"] += 1
+        self.native_calls["metal_spin_exchange"] += 1
         self.execution["completed_evaluations"] += 1
         return result
 
@@ -595,6 +681,8 @@ def davidson_lowest(
         initial = initial_vector / norm
     capacity = min(max_space, int(diagonal.size))
     basis, images = [initial], []
+    projection_cache = np.empty((capacity, capacity))
+    cached = 0
     h_matvecs = 0
     coefficients = initial
     energy, residual_norm = float("nan"), float("inf")
@@ -605,32 +693,27 @@ def davidson_lowest(
             h_matvecs += 1
         basis_matrix = mx.stack(basis, axis=1)
         image_matrix = mx.stack(images, axis=1)
-        projected = _metal_matmul(basis_matrix.T, image_matrix)
-        projected = 0.5 * (projected + projected.T)
-        eigenvalues, eigenvectors = np.linalg.eigh(_to_numpy(projected).astype(np.float64))
+        nvec = len(basis)
+        if cached and nvec == cached + 1:
+            # 原有 Ritz 子矩阵不变；只计算新列及其厄米共轭，保持显式对称化。
+            last_col = _metal_matmul(basis_matrix.T, images[-1][:, None])
+            last_row = _metal_matmul(image_matrix.T, basis[-1][:, None])
+            edge = _to_numpy(0.5 * (last_col + last_row)).reshape(-1)
+            projection_cache[:nvec, cached] = edge
+            projection_cache[cached, :nvec] = edge
+        else:
+            projected = _metal_matmul(basis_matrix.T, image_matrix)
+            projection_cache[:nvec, :nvec] = _to_numpy(0.5 * (projected + projected.T))
+        cached = nvec
+        eigenvalues, eigenvectors = np.linalg.eigh(projection_cache[:nvec, :nvec])
         energy = float(eigenvalues[0])
         weights = mx.array(eigenvectors[:, 0].astype(np.float32))
         coefficients = _metal_matmul(basis_matrix, weights[:, None]).reshape(-1)
         image = _metal_matmul(image_matrix, weights[:, None]).reshape(-1)
         residual = image - float(energy) * coefficients
         residual_norm_value = mx.linalg.norm(residual)
-        denominator = float(energy) - diagonal
-        signs = mx.where(denominator >= 0, mx.ones_like(denominator), -mx.ones_like(denominator))
-        denominator = mx.where(mx.abs(denominator) < denominator_floor, signs * denominator_floor, denominator)
-        correction = residual / denominator
         subspace_dimension = len(basis)
-        if len(basis) >= capacity:
-            retained_count = min(max(2, capacity // 4), 8, capacity - 1)
-            retained = mx.array(eigenvectors[:, :retained_count].astype(np.float32))
-            retained_basis = _metal_matmul(basis_matrix, retained)
-            retained_images = _metal_matmul(image_matrix, retained)
-            basis = [retained_basis[:, i] for i in range(retained_count)]
-            images = [retained_images[:, i] for i in range(retained_count)]
-            basis_matrix = mx.stack(basis, axis=1)
-        correction = _orthogonalize(correction, basis_matrix)
-        correction_norm = mx.linalg.norm(correction)
-        mx.eval(residual_norm_value, correction_norm)
-        residual_norm = float(residual_norm_value.item())
+        residual_norm = _eval_scalar(residual_norm_value)
         record: dict[str, float | int] = {
             "cycle": cycle, "subspace_dimension": subspace_dimension,
             "energy": energy, "residual_norm": residual_norm,
@@ -641,6 +724,21 @@ def davidson_lowest(
         if residual_norm <= tolerance:
             return MetalDavidsonResult(energy, coefficients / mx.linalg.norm(coefficients), residual_norm,
                                        True, cycle, h_matvecs, history)
+        denominator = float(energy) - diagonal
+        signs = mx.where(denominator >= 0, mx.ones_like(denominator), -mx.ones_like(denominator))
+        denominator = mx.where(mx.abs(denominator) < denominator_floor, signs * denominator_floor, denominator)
+        correction = residual / denominator
+        if len(basis) >= capacity:
+            retained_count = min(max(2, capacity // 4), 8, capacity - 1)
+            retained = mx.array(eigenvectors[:, :retained_count].astype(np.float32))
+            retained_basis = _metal_matmul(basis_matrix, retained)
+            retained_images = _metal_matmul(image_matrix, retained)
+            cached = 0
+            basis = [retained_basis[:, i] for i in range(retained_count)]
+            images = [retained_images[:, i] for i in range(retained_count)]
+            basis_matrix = mx.stack(basis, axis=1)
+        correction = _orthogonalize(correction, basis_matrix)
+        correction_norm = mx.linalg.norm(correction)
         if float(correction_norm.item()) <= 1e-12:
             correction = _orthogonalize(residual, basis_matrix)
             correction_norm = mx.linalg.norm(correction)

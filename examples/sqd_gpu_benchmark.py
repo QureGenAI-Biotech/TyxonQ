@@ -341,13 +341,15 @@ def _worker(problem, options, backend, messages):
         if not modern:
             config["device_text"] = "cuda:0"
         effective_backend = backend
-        if backend in ("auto", "gpu"):
+        if backend in ("auto", "gpu", "metal", "sbd"):
             from tyxonq.numerics.accelerator import resolve_sqd_backend
             effective_backend = resolve_sqd_backend(backend).resolved
+            if backend != "auto" and effective_backend == "pytorch":
+                raise RuntimeError(f"Requested {backend} benchmark resolved to CPU")
         if effective_backend == "metal":
-            config.update(spin_backend="metal", tolerance=max(config["tolerance"], 2e-5),
-                          operator_residual_tolerance=max(config["operator_residual_tolerance"], 1e-4),
-                          rdm_energy_tolerance=max(config["rdm_energy_tolerance"], 1e-4))
+            config["spin_backend"] = "metal"
+            if options["rdm_backend"] in ("cpu", "metal"):
+                config["rdm_backend"] = options["rdm_backend"]
         elif backend != "native":
             config["spin_backend"] = options["spin_backend"]
         if modern:
@@ -356,7 +358,7 @@ def _worker(problem, options, backend, messages):
             factory = make_cuda_sci_solver if backend == "torch" else make_sbd_sci_solver
             if backend != "torch":
                 config["mode"] = backend
-            elif options["rdm_backend"]:
+            elif options["rdm_backend"] in ("cpu", "sbd"):
                 config["rdm_backend"] = options["rdm_backend"]
         solver = factory(report_callback=reports.append,
                          device_ids=options["devices"] if len(options["devices"]) > 1 else None,
@@ -375,8 +377,7 @@ def _worker(problem, options, backend, messages):
                     check = {"energy_abs_error": abs(result.energy - reference["energy"]),
                              "rdm1_max_abs_error": float(np.max(np.abs(result.rdm1 - reference["rdm1"]))),
                              "rdm2_max_abs_error": float(np.max(np.abs(result.rdm2 - reference["rdm2"])))}
-                    is_metal = any(item["report"].get("resolved_backend") == "metal" for item in reports)
-                    check["pass"] = (check["energy_abs_error"] <= (1e-4 if is_metal else 1e-8) and
+                    check["pass"] = (check["energy_abs_error"] <= 1e-8 and
                                      max(check["rdm1_max_abs_error"], check["rdm2_max_abs_error"]) <= 1e-6)
                     checks.append(check)
             record = {"repeat": repeat, "cold": repeat == 0, "wall_seconds": elapsed,
@@ -594,9 +595,7 @@ def _mpi_worker(payload_path):
     import numpy as np
     from mpi4py import MPI
     import torch
-    from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import (
-        _load_extension, convert_raw_rdms, interleaved_phase,
-    )
+    from tyxonq.numerics.sbd.cuda import convert_raw_rdms, interleaved_phase, load_extension
     from tyxonq.applications.chem.algorithms.sqd.gpu.validation import (
         assemble_result, compare_cpu, independent_cpu_validation, project_initial_state, validate_rdms,
     )
@@ -623,7 +622,7 @@ def _mpi_worker(payload_path):
                 _save(Path(result_path), report)
             comm.Barrier()
             started = time.perf_counter()
-            context = _load_extension().TPBContext(
+            context = load_extension().TPBContext(
                 problem["h1e"], problem["eri"], *problem["strings"], problem["norb"], problem["nelec"],
                 device_id=rank, comm=comm, grid=tuple(config["mpi_grid"]),
             )
@@ -889,7 +888,7 @@ def parse_args():
     parser.add_argument("--mpi-grid", nargs=2, type=int, metavar=("ALPHA", "BETA"), help="单任务原生 SBD MPI 网格；由本入口启动 mpiexec")
     parser.add_argument("--mpiexec", default="mpiexec")
     parser.add_argument("--validation", choices=["full_cpu", "gpu"], default="full_cpu")
-    parser.add_argument("--rdm-backend", choices=["cpu", "sbd"], help="仅覆盖 torch 路径的 RDM 后端")
+    parser.add_argument("--rdm-backend", choices=["cpu", "sbd", "metal"], help="覆盖相应后端的 RDM；metal 将异自旋 2-RDM 放在 Apple GPU 上")
     parser.add_argument("--npz", help="固定积分和组态输入，不执行 SCF")
     parser.add_argument("--active-space", nargs=2, type=int, metavar=("NELEC", "NORB"),
                         help="从 canonical HF 轨道构造真实 CAS 积分和完整 CAS 组态空间")
@@ -902,11 +901,11 @@ def parse_args():
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--seed", type=int, default=20261013)
     parser.add_argument("--chunk-size", type=int, default=16)
-    parser.add_argument("--tolerance", type=float, default=1e-10)
+    parser.add_argument("--tolerance", type=float)
     parser.add_argument("--max-cycles", type=int, default=100)
     parser.add_argument("--max-space", type=int, default=20)
-    parser.add_argument("--operator-residual-tolerance", type=float, default=1e-7)
-    parser.add_argument("--rdm-energy-tolerance", type=float, default=1e-8)
+    parser.add_argument("--operator-residual-tolerance", type=float)
+    parser.add_argument("--rdm-energy-tolerance", type=float)
     parser.add_argument("--spin-sq", type=float)
     parser.add_argument("--spin-shift", type=float, default=0.1)
     parser.add_argument("--spin-backend", choices=["torch", "cuda_fused"], default="torch")
@@ -921,6 +920,17 @@ def parse_args():
         if args.output.resolve() in [path.resolve() for path in args.summarize]:
             parser.error("Summary output must not overwrite an input benchmark JSON")
         return args
+    # 混合后端必须使用同一组阈值；用户显式传入的任何阈值均直接生效。
+    has_metal = "metal" in args.backend
+    if not has_metal and any(key in args.backend for key in ("auto", "gpu")):
+        from tyxonq.numerics.accelerator import resolve_sqd_backend
+        has_metal = resolve_sqd_backend("auto").resolved == "metal"
+    defaults = (2e-6, 1e-5, 2e-5) if has_metal else (1e-10, 1e-7, 1e-8)
+    for key, standard in zip(("tolerance", "operator_residual_tolerance", "rdm_energy_tolerance"), defaults):
+        if getattr(args, key) is None:
+            setattr(args, key, standard)
+        elif not 0 < getattr(args, key) < float("inf"):
+            parser.error(f"{key} must be finite and positive")
     if min(args.batches, args.threads, args.max_cycles) < 1 or args.repeats < 0 or args.timeout <= 0:
         parser.error("batches/threads/max_cycles/timeout must be positive; repeats must be nonnegative")
     if args.spin_sq is not None and "native" in args.backend:
