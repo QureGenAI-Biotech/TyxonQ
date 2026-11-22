@@ -587,11 +587,14 @@ protocol found a stable whole-workflow crossover at **8,281 determinants**
 (CAS(4e,14o)) for all three molecules. At 4,356 determinants the first round still
 favored CPU, so that size is not called a stable crossover. At 23,409 determinants:
 
-| Molecule | Atoms / AO | Whole-wall reduction, two rounds |
+| Molecule | Atoms / AO | Whole-workflow speedup vs CPU, two rounds |
 | --- | ---: | ---: |
-| H2O | 3 / 24 | **61.11% / 62.60%** |
-| NH3 | 4 / 29 | **49.54% / 54.34%** |
-| CH4 | 5 / 34 | **54.11% / 55.39%** |
+| H2O | 3 / 24 | **2.57× / 2.67×** |
+| NH3 | 4 / 29 | **1.98× / 2.19×** |
+| CH4 | 5 / 34 | **2.18× / 2.24×** |
+
+At the largest measured size, Metal delivers up to **2.67× faster whole-workflow
+execution** than PyTorch CPU, including setup, solver, RDM and validation.
 
 All 36 paired molecule/size/round workloads converged and passed residual/RDM
 acceptance. The archive preserves cold/steady samples, input fingerprints, source
