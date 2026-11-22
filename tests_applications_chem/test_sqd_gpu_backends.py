@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import inspect
+
 import numpy as np
 import pytest
 
@@ -26,6 +28,26 @@ def _solve_with(monkeypatch, backend, target):
         (np.array([1]), np.array([1])), np.zeros((1, 1)),
         np.zeros((1, 1, 1, 1)), 1, (1, 1),
     )
+
+
+def test_core_sci_public_signatures_remain_compatible():
+    from tyxonq.applications.chem.algorithms.sqd.fermion import solve_sci
+    from tyxonq.applications.chem.algorithms.sqd.gpu.sbd_solver import (
+        solve_sci_metal, solve_sci_sbd,
+    )
+
+    expected = ["ci_strings", "one_body_tensor", "two_body_tensor", "norb", "nelec"]
+    assert list(inspect.signature(solve_sci).parameters)[:5] == expected
+    gpu = inspect.signature(api.solve_sci_gpu)
+    assert list(gpu.parameters)[:5] == ["ci_strings", "h1e", "eri", "norb", "nelec"]
+    assert gpu.parameters["backend"].default == "auto"
+    assert gpu.parameters["device"].default is None
+
+    metal = inspect.signature(solve_sci_metal)
+    assert metal.parameters["spin_tolerance"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert metal.parameters["spin_tolerance"].default == 1e-4
+    assert metal.parameters["rdm_backend"].default == "cpu"
+    assert inspect.signature(solve_sci_sbd).parameters["rdm_backend"].default == "sbd"
 
 
 def test_solve_sci_gpu_dispatches_to_sbd(monkeypatch):
