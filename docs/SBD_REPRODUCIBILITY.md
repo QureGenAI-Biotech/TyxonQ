@@ -39,7 +39,7 @@ Metal 不需要独立 C++ 扩展或 metallib 构建：
 python -m pip install 'tyxonq[metal]'
 ```
 
-运行时由 `mlx.core.fast.metal_kernel` JIT 编译随包提供的 `numerics/sbd/metal/kernels.metal`。MLX 缺失、Metal 不可用或 JIT 失败会显式报错，不回退 PyTorch。
+运行时由 `mlx.core.fast.metal_kernel` JIT 编译随包提供的 `numerics/sbd/metal/kernels.metal`。直接调用原生 Metal 入口时，MLX/Metal 不可用会显式报错；通过公共 `backend="gpu"/"metal"` 分发时，环境不可用会警告并记录 CPU 回退。JIT 或原生数值内核失败始终报错，不触发数值回退。
 
 ## 固定 golden 协议
 
@@ -110,6 +110,21 @@ MLX_ENABLE_TF32=0 /opt/homebrew/Caskroom/miniconda/base/envs/qc/bin/python \
   --validation gpu --tolerance 2e-5 --operator-residual-tolerance 1e-4 \
   --rdm-energy-tolerance 1e-4 --max-cycles 100 --max-space 20 \
   --output molecule_cas4e16_overall.json
+
+# 多分子平衡点：六个规模、两种后端、两个独立轮次，串行执行。
+QC=/opt/homebrew/Caskroom/miniconda/base/envs/qc/bin/python
+for round in 1 2; do
+  for norb in 12 14 15 16 17 18; do
+    PYTHONPATH=src "$QC" examples/sqd_gpu_benchmark.py \
+      --case water_pol ammonia_pol methane_pol --active-space 4 "$norb" \
+      --backend gpu cpu --repeats 5 --reference none --validation gpu \
+      --tolerance 2e-5 --operator-residual-tolerance 1e-4 \
+      --rdm-energy-tolerance 1e-4 --max-cycles 100 --max-space 20 \
+      --output "molecule_n${norb}_round${round}.json" || exit 1
+  done
+done
 ```
 
-H2O CAS(4e,16o) 附近观察到整体 break-even；CAS(4e,18o) 双轮整体墙钟降低 `6.7%/10.6%`，所有点正常收敛并通过残差/RDM 验收。小体系正确性轨将 `--active-space 4 4 --repeats 1 --reference none --validation full_cpu`，把独立 CPU operator/RDM 验收与性能轨分开。CUDA 整体对照仍需 NVIDIA 环境。
+历史单点中 H2O CAS(4e,16o) 附近观察到整体 break-even。新的六点双轮扫描进一步区分体系：NH3/CH4 在 18496 determinants 两轮均越过 CPU，H2O 在该规模仍反转，三种分子在 23409 determinants 全部稳定加速，整体墙钟降低约 `5.6%–9.4%`。所有 36 组配对负载正常收敛并通过残差/RDM 验收；完整比例和墙钟见 `docs/SBD_METAL_OPTIMIZATION.md` §6.12。原始归档为 `data/sbd_benchmarks/multi_molecule_break_even_2026-11-19.json`（SHA256 `ba09e50becc00a5dbbfe327fc5385e2408cb1d15496cb2b58d227e5fca54b58c`）。
+
+小体系正确性轨将 `--active-space 4 4 --repeats 1 --reference none --validation full_cpu`，把独立 CPU operator/RDM 验收与性能轨分开。CUDA 整体对照仍需 NVIDIA 环境。

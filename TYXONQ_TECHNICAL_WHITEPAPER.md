@@ -826,7 +826,21 @@ The application-level criterion is whole SQD wall time, including setup, normal-
 | (4e,18o) / 23,409, round 1 | 505.262 | 541.463 | 1.071 | 6.7% |
 | (4e,18o) / 23,409, round 2 | 504.416 | 564.630 | 1.119 | 10.6% |
 
-At CAS(4e,16o), the measured CPU/Metal ratios for H2O, NH3 and CH4 were `1.019`, `1.022` and `1.045`, respectively. These real-molecule runs converged and passed independent residual/RDM acceptance. They remain single fixed-CAS SQD measurements, not full iterative SQD sampling/recovery benchmarks; CUDA application-level performance awaits NVIDIA measurements. Complete raw data and negative experiments are maintained in `docs/SBD_METAL_OPTIMIZATION.md` and `docs/SBD_REPRODUCIBILITY.md`.
+A subsequent six-point, two-round sweep tested H2O, NH3 and CH4 independently rather than assigning the water break-even to every molecule. In that controlled sweep, NH3 and CH4 exceeded CPU in both rounds at 18,496 determinants (CAS(4e,17o)); H2O reversed across rounds at that size and became consistently faster at 23,409 determinants. All three were faster at 23,409 determinants:
+
+| Molecule | Atoms / AO | CPU/Metal, two rounds | Whole-wall reduction, two rounds |
+|---|---:|---:|---:|
+| H2O | 3 / 24 | 1.0598 / 1.1042 | 5.64% / 9.43% |
+| NH3 | 4 / 29 | 1.0646 / 1.0795 | 6.07% / 7.36% |
+| CH4 | 5 / 34 | 1.0861 / 1.0765 | 7.93% / 7.11% |
+
+All 36 paired molecule/size/round workloads converged and passed residual/RDM acceptance. They remain single fixed-CAS SQD measurements, not full iterative SQD sampling/recovery benchmarks; CUDA application-level performance awaits NVIDIA measurements. Complete raw data and negative experiments are maintained in `docs/SBD_METAL_OPTIMIZATION.md` and `docs/SBD_REPRODUCIBILITY.md`.
+
+#### 4.6.4 Cross-Vendor Kernels and Multi-Machine Apple GPU Research
+
+Two portability questions require different architectures. For single-source custom kernels across NVIDIA, AMD and Apple, **Mojo/MAX** is currently the closest nvcc-like candidate: its official compatibility matrix covers Apple M1–M5 and NVIDIA/AMD GPUs, and its `DeviceContext` supports Metal/CUDA/HIP with explicit kernel compilation and synchronization. AdaptiveCpp provides an experimental SYCL→LLVM IR→MSL route, while `triton-msl` provides an alpha Triton IR→MSL route. Neither experimental route supports the required production FP64 semantics on Apple, and neither justifies rewriting validated SBD kernels without new golden and performance evidence.
+
+For multiple physical Apple machines, MLX 0.32.4 already documents `mlx.launch`, MPI, Ring and Thunderbolt RDMA/JACCL communication. This makes MLX the natural first candidate for future multi-Mac SBD orchestration, but the current TyxonQ Metal solver remains single-device: determinant partitioning, H@C communication and Davidson global reductions have not been implemented or measured. WebGPU/wgpu is portable across Metal/Vulkan/D3D12 but WGSL lacks FP64; OpenCL is deprecated by Apple, and no official Kokkos Metal backend was found. Official sources and the recommended prototype sequence are recorded in `docs/SBD_METAL_OPTIMIZATION.md` §12.
 
 ### 4.7 Profile-Guided Framework-Wide Numerical Acceleration
 

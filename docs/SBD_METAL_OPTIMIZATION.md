@@ -9,6 +9,7 @@
 3. PySCF 的 `OpenMP is not available` warning 来自 CPU 线程设置，与 MLX/Metal 是否使用 GPU 无因果关系。CPU golden、连接表构建和 RDM 都可能触发它。
 4. 正确性、真实执行和性能是三个独立命题。`native_metal_calls > 0` 或 GPU stream 不能代替性能数据；结构更“融合”也不保证更快。
 5. 后续优化必须维持 H@C、S²、能量和残差 golden。不得通过放宽容差、减少同步、减少相同工作量或隐藏 CPU 时间来制造加速。
+6. 多分子双轮扫描表明平衡点依赖体系：NH3/CH4 在 18496 determinants 稳定越过 CPU，H2O 在本轮 23409 才稳定；三者在 23409 的整体收益均约 5.6%–9.4%。MLX 多机通信和 Mojo 跨厂商编译有官方基础，但当前 Metal SBD 仍是单设备实现。
 
 ## 2. 架构与迁移边界
 
@@ -250,6 +251,37 @@ H2O（3 atoms、24 AO、6-31g(d,p)）的整体中位墙钟如下；比值是 CPU
 
 这些结果说明在真实分子单次固定 CAS 的 SQD 求解中，14400 determinants 附近已观察到整体 break-even，23409 determinants 的整体墙钟两轮降低约 `6.7%/10.6%`。分子系列的积分和迭代数并不完全相同，不能把差异 solely 归因于原子数。当前结果不覆盖完整迭代 SQD 采样/恢复、PCM 或 CUDA；CUDA 对应整体数据仍需在 NVIDIA 环境补测。
 
+### 6.12 多分子独立平衡点扫描（2026-11-19）
+
+为回答“平衡点是否只适用于水分子”，新增 H2O、NH3、CH4 的同协议六点双轮扫描。三者分别含 3/4/5 atoms、24/29/34 AO，均使用 6-31g(d,p)、canonical HF 连续 CAS 窗口和 CAS(4e,n)。每点分别运行 Metal/PyTorch CPU，每后端 1 次冷启动加 5 次稳态，正常收敛并通过残差/RDM 验收。36 组分子×规模×轮次的配对负载全部通过。原始 samples、输入指纹、源码哈希和分阶段报告归档于 `data/sbd_benchmarks/multi_molecule_break_even_2026-11-19.json`，SHA256 为 `ba09e50becc00a5dbbfe327fc5385e2408cb1d15496cb2b58d227e5fca54b58c`。
+
+下表为 **CPU/Metal 整体中位墙钟比**，每格是 R1/R2；大于 1 才表示 Metal 更快：
+
+| norb | determinants | H2O | NH3 | CH4 |
+| ---: | ---: | ---: | ---: | ---: |
+| 12 | 4356 | 0.9746/0.8563 | 0.9767/0.9736 | 0.9476/0.9483 |
+| 14 | 8281 | 0.9817/0.9822 | 1.0285/0.9434 | 0.9407/0.9145 |
+| 15 | 11025 | 0.9219/0.9608 | 0.9658/0.9526 | 0.9547/0.9537 |
+| 16 | 14400 | 0.9860/1.0448 | 0.9793/1.0159 | 0.9924/1.0311 |
+| 17 | 18496 | 1.0480/0.9717 | 1.0445/1.0684 | 1.0088/1.0427 |
+| 18 | 23409 | 1.0598/1.1042 | 1.0646/1.0795 | 1.0861/1.0765 |
+
+本轮受控扫描的稳定平衡点不能统一写成一个 determinant 数：
+
+- **NH3、CH4**：18496 determinants（CAS(4e,17o)）两轮均超过 CPU，属于整体 break-even；但 CH4 的整体收益只有 0.87%/4.10%，未达到 5% 优化门槛。
+- **H2O**：18496 determinants 两轮一正一负，不能认定为稳定交叉；23409 determinants 才在本轮双轮稳定超过 CPU。
+- **三种分子在 23409 determinants 全部稳定加速**。14400 及以下的单轮正收益不作为平衡点证据。
+
+23409 determinants 的整体与 solver 阶段如下，时间单位 ms：
+
+| 分子 | 轮次 | Metal wall | CPU wall | 整体降低 | Metal solver | CPU solver |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| H2O | R1/R2 | 513.533/512.340 | 544.223/565.705 | 5.64%/9.43% | 73.067/74.219 | 102.671/108.164 |
+| NH3 | R1/R2 | 517.318/526.030 | 550.751/567.835 | 6.07%/7.36% | 74.169/73.601 | 107.863/106.777 |
+| CH4 | R1/R2 | 499.866/501.485 | 542.909/539.862 | 7.93%/7.11% | 66.471/66.486 | 91.557/92.208 |
+
+可见 solver 加速在三种分子上都存在，但整体收益仍被 setup、CPU RDM、validation 和子进程路径稀释。该扫描与 §6.11 的历史单点水数据分开报告；跨轮系统波动必须保留，不能选取有利一轮覆盖反转点。结论仍限于正常收敛的单次固定 CAS，不外推到完整迭代 SQD、其他活性电子数或 CUDA。
+
 ## 7. 测试与证据清单
 
 `tests_applications_chem/test_sqd_metal_backend.py` 当前覆盖：
@@ -289,6 +321,18 @@ H2O（3 atoms、24 AO、6-31g(d,p)）的整体中位墙钟如下；比值是 CPU
 - 自定义 Metal 的固定 solver 从 14400 determinants 起稳定达到 CPU FP32 break-even；H@C 从 18496 determinants 起经双轮确认超过 CPU FP32。
 - 若继续扩大规模，必须保持相同协议并记录内存、原始 samples 和收敛状态；不得把当前交叉点外推到未测规模。
 
+### TODO：多 Apple GPU SBD——采用 MLX 原生分布式方案
+
+**技术路线已经选定：使用 MLX 原生 `mx.distributed` 与 `mlx.launch`，不引入 Mojo/MAX、WebGPU 或另一套通信运行时。** 当前代码仍为单设备实现，本 TODO 不代表功能已经可用。
+
+1. **进程与设备拓扑**：每个 rank 持有一个 Apple GPU 和现有 MLX/MSL 内核；显式选择 Ring/MPI/JACCL。`mx.distributed.init(backend="any")` 可能退化为 singleton，产品入口必须校验实际 `world.size` 等于请求规模，不能把未通信误报为多机成功。
+2. **determinant/link 划分**：为每个 rank 分配明确的 alpha/beta determinant 与输出 ownership；连接表记录本地/远程源地址，先以 Ring/MPI 实现 H@C halo 或源系数交换，再评估 JACCL。不得复制全量数据后仍宣称分片节省内存。
+3. **H@C 通信**：保留每 rank 已验证的 same-spin/mixed-spin 内核，分别记录本地收缩、远程系数交换、输出归并和同步时间。数值布局继续执行逐阶段 CPU FP64 golden。
+4. **Davidson 全局归约**：范数、长向量点积和投影矩阵使用 MLX `all_sum` 等原生集合通信；小矩阵 FP64 `eigh` 保留 host，所有 rank 必须获得一致的本征值/方向。禁止各 rank 独立求解出不同子空间后继续迭代。
+5. **通信后端顺序**：Ring 作为最易复现基线，MPI 作为通用兼容路径，JACCL 作为 Thunderbolt 5 RDMA 低延迟路径。JACCL 的 macOS 26.2+、全连接和恢复模式启用要求必须显式记录。
+6. **报告与错误语义**：新增 rank/world size、集体通信后端、H@C/Davidson 通信字节与时间、扩展效率和整体墙钟。通信失败、rank 数不符、不收敛或残差/RDM 错误必须报错，不静默退回单设备结果。
+7. **验收顺序**：先本机多进程正确性，再至少两台 Mac 的多机 golden/残差/RDM，最后比较同工作量单设备与多设备整体性能。只有实测扩展收益时才改变默认执行路径。
+
 ### P1：RDM 原生化的前置条件
 
 当前 RDM 在 CPU。只有 profiling 证明 RDM 是实际应用瓶颈时才实现 MLX RDM；否则先优化 H@C/Davidson。原生 RDM 必须另行验证 PySCF 指标约定、粒子数、能量和 S²，不得沿用 H@C 正确就推断 RDM 正确。
@@ -313,7 +357,7 @@ H2O（3 atoms、24 AO、6-31g(d,p)）的整体中位墙钟如下；比值是 CPU
 - 量化了 slot/link 融合对 Metal 自身耗时的影响，并记录了 CSR 和四输出方案的负结果。
 - 在 36–2025 determinants 的统一 FP32 固定工作量基准中，原生 Metal 的 H@C 与 Davidson 均达到预设的 MPS 性能相当目标；该结论不外推到更大规模或未收敛能量。
 - 自定义 Metal 的固定 40-cycle solver 在 14400 determinants 经双轮确认快于 CPU FP32，H@C 在 18496/23409 determinants 经双轮确认快于 CPU FP32；这些大规格能量均未收敛。
-- 真实分子正常收敛的单次固定 CAS SQD 求解中，H2O CAS(4e,16o) 附近观察到整体 break-even；CAS(4e,18o) 的整体墙钟两轮降低 `6.7%/10.6%`。H2O/NH3/CH4 的分子系列和分阶段耗时见 §6.11。
+- 真实分子正常收敛的单次固定 CAS SQD 求解中，多分子双轮扫描显示 NH3/CH4 在 18496 determinants 稳定越过 CPU，H2O 在本轮 23409 才稳定；三者在 23409 的整体墙钟降低约 `5.6%–9.4%`。完整比例、墙钟和分阶段数据见 §6.11–6.12。
 - 完整 FP32 MLX GEMM 可通过全部实测 golden，但性能收益不稳定，当前没有采用。
 
 当前不能说：
@@ -356,5 +400,42 @@ MLX_ENABLE_TF32=0 /opt/homebrew/Caskroom/miniconda/base/envs/qc/bin/python \
   --rdm-energy-tolerance 1e-4 --max-cycles 100 --max-space 20 \
   --output molecule_cas4e16_overall.json
 ```
+
+## 12. 跨平台与多机 Apple GPU 架构调研（2026-11-19）
+
+这里必须区分两个问题：**单个 kernel 能否用一套源码跨 NVIDIA/AMD/Apple 编译**，以及**多台 Apple 机器能否参与同一计算**。nvcc 本身只解决 NVIDIA 编译，并不自动提供多机分布式；不能把两类能力混为一谈。
+
+### 12.1 官方支持矩阵与 SBD 适配判断
+
+| 架构 | Apple GPU 与其他平台证据 | 成熟度/精度边界 | 对 TyxonQ SBD 的判断 |
+| --- | --- | --- | --- |
+| [Mojo/MAX](https://max.modular.com/gpu/hardware-compatibility/) | 官方列出 Apple M1–M5、NVIDIA Turing–Blackwell、AMD CDNA/RDNA；`DeviceContext(api="metal"/"cuda"/"hip")` 和 Mojo kernel 提供跨厂商抽象 | macOS 15+/Xcode 16+；Apple FP64 受硬件限制；性能不自动可移植 | **最接近“跨厂商 nvcc”角色**，适合未来单源码 H@C/Davidson 原型；不是现有 CUDA/MSL 源码的直接翻译器 |
+| [AdaptiveCpp Metal](https://adaptivecpp.github.io/AdaptiveCpp/install-metal) | SYCL → LLVM IR → MSL，复用 generic SSCP 流程，在 Apple GPU 执行 | 官方明确为 experimental；只在 macOS 26/M 系列测试；不支持 `double`，event 可能拆散 command buffer | 可研究 C++ 单源路径，但当前不适合直接替换生产 SBD |
+| [MLX](https://github.com/ml-explore/mlx) | 当前已有 Apple GPU 与 Linux CUDA 安装路径，统一数组 API、统一内存和自动微分 | Metal/CUDA 自定义内核仍需各自实现；FP64/complex128 限制不因跨平台消失 | **继续作为当前 Metal 数组/MSL 运行时**； CUDA 自定义内核不能复用 MSL |
+| [triton-msl](https://github.com/bledden/triton-msl) | `@triton.jit → Triton IR → MSL`；同一源码可再交给 Triton 的 NVIDIA/AMD 后端 | 0.3.0 明确为 alpha；FP64 通常不可用；dtype/layout/tile 和支持范围受限，不保证通用正确性或性能 | 适合研究原型，不作为当前生产依赖 |
+| [wgpu/WebGPU](https://docs.rs/wgpu) | 原生 Metal/Vulkan/D3D12/OpenGL，WGSL 是统一 shader 路径；Dawn 是另一套原生 WebGPU 实现 | WGSL 官方类型列出 f32/f16 而非 f64；偏向通用图形/计算部署而非 FP64 HPC | 可覆盖 Apple/桌面/Web，但 SBD 重写成本高，不满足 CUDA FP64 统一语义 |
+| OpenCL | 曾是跨平台计算标准 | Apple 官方自 macOS 10.14 起弃用并建议转 Metal | 不作为新架构方向 |
+| Kokkos | 2024 官方 issue 明确 Apple GPU 尚不支持；本次未找到之后正式 Metal 后端证据 | 不能将 Apple CPU 支持误写成 Apple GPU 支持 | 暂不纳入 Metal 路线 |
+
+Mojo/MAX 的[编程模型](https://max.modular.com/gpu/fundamentals/)已经包含设备缓冲区、grid/block/thread、kernel 编译缓存、异步入队和显式同步，功能上确实覆盖自定义科学计算 kernel，而不只是模型 serving。但“同一 Mojo 源码可编译”不等于现有 CUDA C++ 或 MSL 可以零成本复用，也不保证跨硬件同性能。
+
+### 12.2 多台 Apple 机器：MLX 已有通信层，但 SBD 尚未分布式化
+
+[MLX 0.32.4 Distributed Communication](https://ml-explore.github.io/mlx/build/html/usage/distributed.html) 明确支持跨物理机器：
+
+- `mlx.launch --hosts ...` 通过 SSH 启动多机进程；
+- Ring 通过 TCP/Ethernet 或 Thunderbolt 执行 all-reduce/all-gather；
+- MPI 提供通用成熟通信；
+- JACCL 在 macOS 26.2+ 利用 Thunderbolt 5 RDMA，要求 Mac 间全连接拓扑，并需要在恢复模式启用 RDMA；
+- CUDA 环境使用 NCCL，形成另一套多 GPU/多节点通信路径。
+
+这回答了“有没有跨机器 Apple GPU 架构”：**有，MLX 已提供多机通信和启动层，JACCL 是面向 Apple/Thunderbolt 的低延迟集合通信路径。** 但当前 TyxonQ Metal SBD 仍是单设备实现，没有 determinant 分片、跨 rank 长向量同步、H@C 通信或 Davidson Allreduce。不能直接宣称多机 SBD 已可用，也不能把 MLX distributed 的支持当作性能证据。
+
+### 12.3 建议路线
+
+1. **生产路径保持现状**：保留原生 CUDA SBD 与 MLX/MSL Metal SBD，不为追求“统一”立即重写已通过 golden 的内核。
+2. **多 Mac SBD（路线已选定）**：采用 MLX 原生 `mx.distributed`/`mlx.launch`，按 §8 的 TODO 实现 determinant/link 划分、H@C 输出归并和 Davidson 全局内积通信；Ring 易起步，JACCL 是低延迟候选。通信耗时必须与求解耗时同表报告。
+3. **若目标是单源码跨厂商 kernel**：用 Mojo/MAX 实现一个小规模 H@C 原型，分别通过 Apple FP32 与 NVIDIA FP64 golden，再决定是否扩大。AdaptiveCpp 和 triton-msl 作为实验对照，不进入默认后端。
+4. **验收不变**：真实设备、精度、收敛、独立残差、RDM、多机通信量和整体墙钟分别验收；没有多机实测前，本节只是有官方来源的架构调研，不是 TyxonQ 功能声明。
 
 继续工作前先阅读当前 `metal/solver.py` 和 `metal/kernels.metal`，不要从已回退的 CSR 实验重新起步。固定 CUDA 构建和论文来源见 `docs/SBD_REPRODUCIBILITY.md`。

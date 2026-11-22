@@ -17,6 +17,16 @@ Measured CPU FP32 break-even (fixed 40-cycle profiles, not converged energies):
     and 23,409 determinants. Smaller cases remain slower than CPU, and the MPS
     ranking changes at large sizes. See docs/SBD_METAL_OPTIMIZATION.md §6.9–6.10
     for the dual-run samples and numerical limitations.
+
+TODO — multi-Apple-GPU SBD (planned; not active in this single-device module):
+    Use MLX-native distribution only: ``mx.distributed`` plus ``mlx.launch``,
+    with Ring/MPI as portable baselines and JACCL for Thunderbolt RDMA. Keep the
+    validated per-rank MLX/MSL kernels. Partition determinant/link ownership and
+    exchange H@c halo contributions; use distributed all-sum for Davidson norms,
+    dot products and projected matrices. Require the requested world size rather
+    than accepting a silent singleton fallback. Report rank/world size, collective
+    backend, communication time and scaling alongside golden/residual/RDM checks.
+    Do not claim multi-host support until multi-process and multi-Mac runs pass.
 """
 
 from __future__ import annotations

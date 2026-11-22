@@ -574,13 +574,21 @@ completion before timing. Connection-table setup and small Hermitian FP64
 (`rdm_backend="cpu"`). This is a single-device, mixed-precision implementation,
 not an MPI/multi-GPU or end-to-end FP64 port.
 
-On the measured Apple Silicon host, real-molecule, single-CAS SQD runs reached
-whole-workflow break-even near 14,400 determinants. For H2O CAS(4e,18o),
-23,409 determinants, two independent runs reduced median wall time by
-**6.7% and 10.6%** (CPU/Metal ratios `1.071/1.119`). At CAS(4e,16o), H2O, NH3,
-and CH4 measured CPU/Metal ratios of `1.019`, `1.022`, and `1.045`. These are
-converged, residual/RDM-validated single-CAS results; they are not claims about
-full iterative SQD, arbitrary molecule sizes, or unmeasured CUDA performance.
+A six-point, two-round sweep over H2O, NH3, and CH4 shows that the
+whole-workflow break-even is molecule-dependent. In this controlled sweep, NH3
+and CH4 exceeded CPU in both rounds at **18,496 determinants** (CAS(4e,17o));
+H2O still reversed across rounds at that size and became consistently faster at
+**23,409 determinants**. All three were faster at 23,409 determinants:
+
+| Molecule | Atoms / AO | Whole-wall reduction, two rounds |
+| --- | ---: | ---: |
+| H2O | 3 / 24 | **5.64% / 9.43%** |
+| NH3 | 4 / 29 | **6.07% / 7.36%** |
+| CH4 | 5 / 34 | **7.93% / 7.11%** |
+
+All 36 paired molecule/size/round workloads converged and passed residual/RDM
+acceptance. These are single fixed-CAS SQD results, not claims about full
+iterative SQD, arbitrary active spaces, or unmeasured CUDA performance.
 
 ### Profile-guided numerical acceleration
 
