@@ -567,6 +567,8 @@ pip install 'tyxonq[metal]'  # Apple Silicon; installs MLX
 
 ### Native Metal scope and measured performance
 
+The Metal GPU implementation is integrated from the implementation provided by the QubeChip organization at [QubeChip/sqd-gpu-metal](https://github.com/QubeChip/sqd-gpu-metal).
+
 The Metal path executes same-spin and mixed-spin H@C, S², and Davidson long-vector
 operations on the Apple GPU, with deterministic FP32 reductions and explicit
 completion before timing. Connection-table setup and small Hermitian FP64
