@@ -950,6 +950,64 @@ class Circuit:
                 shots=dev_shots,
                 **dev_opts,
             )
+        # SpinQ provider：IR 核心编译 + 可选拓扑路由 + SpinQit 原生 lowering。
+        # physical_qubits 是编译期映射，在 lowering 中落入原生 qubit 下标，不下发到驱动。
+        elif dev_provider == "spinq":
+            compile_options = dict(self._compile_opts)
+            device_rule: Dict[str, Any] = dict(compile_options.pop("device_rule", None) or {})
+            route = bool(compile_options.pop("route", False))
+            if not device_rule.get("coupling_map"):
+                try:
+                    from ...devices.hardware.topology import get_device_rule
+
+                    topology_opts = {
+                        key: dev_opts[key]
+                        for key in ("username", "keyfile", "host")
+                        if dev_opts.get(key) is not None
+                    }
+                    discovered = get_device_rule(
+                        "spinq", dev_device, token=dev_opts.get("token"), **topology_opts
+                    )
+                except Exception as exc:
+                    warnings.warn(
+                        f"spinq::{dev_device} 拓扑发现失败（{exc}）；跳过路由，按原生直译提交。",
+                        RuntimeWarning,
+                    )
+                    discovered = {}
+                if discovered:
+                    device_rule.update(discovered)
+            # 无论是用户离线提供还是在线发现，只要有可靠耦合图就启用核心路由。
+            route = bool(device_rule.get("coupling_map"))
+            if "spinq_optimization_level" in dev_opts:
+                compile_options["spinq_optimization_level"] = dev_opts.pop(
+                    "spinq_optimization_level"
+                )
+            user_layout = dev_opts.pop("physical_qubits", None)
+            if user_layout is not None:
+                compile_options["physical_qubits"] = [int(q) for q in user_layout]
+                if not device_rule.get("initial_layout"):
+                    device_rule["initial_layout"] = [int(q) for q in user_layout]
+            from ...compiler.platforms.spinq.topology import supports_runtime_layout
+
+            compile_options.setdefault(
+                "spinq_runtime_layout", supports_runtime_layout(dev_device)
+            )
+            compiled_result = compile_api(
+                self,
+                platform="spinq",
+                output="spinq",
+                route=route,
+                device_rule=device_rule or None,  # type: ignore[arg-type]
+                options=compile_options,
+            )
+            dev_opts["compile_metadata"] = compiled_result.get("metadata", {})
+            tasks = device_base.run(
+                provider=dev_provider,
+                device=dev_device,
+                source=compiled_result.get("compiled_source"),
+                shots=dev_shots,
+                **dev_opts,
+            )
         # Guodun provider 固定使用本地 QCIS 编译链；不复用其他 provider 的旧产物。
         elif dev_provider == "guodun":
             physical_qubits = dev_opts.pop("physical_qubits", None)

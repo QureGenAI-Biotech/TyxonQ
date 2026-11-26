@@ -174,6 +174,10 @@ def fetch_topology(
         from ...compiler.platforms.lqcloud import get_topology
 
         return get_topology(device, token=token, **opts)
+    if prov == "spinq":
+        from ...compiler.platforms.spinq import get_topology
+
+        return get_topology(device, token=token, **opts)
     return None
 
 
@@ -184,6 +188,7 @@ def get_device_rule(
     *,
     max_age_days: float = DEFAULT_MAX_AGE_DAYS,
     force_refresh: bool = False,
+    **opts: Any,
 ) -> "DeviceRule":
     """取得设备拓扑规则（内存缓存 → 磁盘 TTL 缓存 → 联网抓取）。
 
@@ -224,7 +229,7 @@ def get_device_rule(
     error: Optional[BaseException] = None
     topology: Optional[Dict[str, Any]] = None
     try:
-        topology = fetch_topology(prov, name, token=token)
+        topology = fetch_topology(prov, name, token=token, **opts)
     except Exception as exc:  # 无网络 / 无凭证 / SDK 缺失 / 设备不存在
         error = exc
         logger.warning("%s::%s 拓扑抓取失败：%s", prov, name, exc)

@@ -396,7 +396,7 @@ class Routing:
             return circuit
 
         k = int(circuit.num_qubits)
-        if k <= 1:
+        if k < 1:
             return circuit
         num_physical = rule.get("num_qubits") or rule.get("max_qubits")
         num_physical = int(num_physical) if num_physical else (
@@ -428,8 +428,17 @@ class Routing:
         local_cm = _induced_coupling_map(edges, layout)
         local_edges = _undirected_edges(local_cm)
 
-        # 2) 相邻性检查：所选布局下已全部相邻 → 原样返回（不做任何改动）。
+        # 2) 相邻性检查：无两比特冲突时不需要 SWAP，但稀疏拓扑下仍须避开
+        # 未出现在 coupling_map 中的未激活物理比特，并回填有效布局给运行期驱动。
         if not _has_adjacency_conflict(circuit.ops, local_edges):
+            active_qubits = set(_adjacency(edges))
+            if explicit_layout is None and any(q not in active_qubits for q in layout):
+                picked = _pick_layout(edges, num_physical, k)
+                if len(picked) != k:
+                    raise ValueError(
+                        f"设备耦合图只有 {len(picked)} 个活跃物理比特，无法容纳 {k} 比特线路。"
+                    )
+                rule["initial_layout"] = list(picked)
             return circuit
 
         # 3) 需要路由：恒等布局的诱导子图若残缺（孤立比特 / 不连通），自动挑一块

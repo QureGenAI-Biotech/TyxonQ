@@ -321,6 +321,19 @@ def compile(
         )  # type: ignore[arg-type]
         circuit._compiled_source = result["compiled_source"]
         return result
+    if platform == "spinq":
+        # 一等原生平台：IR -> 核心编译 IR -> SpinQit native executable，无 Qiskit/QASM 中间层。
+        from .platforms.spinq import SpinQCompiler
+
+        result = SpinQCompiler().compile(
+            circuit=circuit,
+            decompose=decompose,
+            route=route,
+            device_rule=device_rule,
+            options=opts,
+        )  # type: ignore[arg-type]
+        circuit._compiled_source = result["compiled_source"]
+        return result
     # Fallback：委托 gate_compiler 公用核心（TyxonQ 平台）
     from .platforms.tyxonq import TyxonQCompiler
     result = TyxonQCompiler().compile(

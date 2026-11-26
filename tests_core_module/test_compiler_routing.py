@@ -68,6 +68,25 @@ def test_single_qubit_circuit_skips_routing():
     assert Routing().apply(c, device_rule={"coupling_map": CM4, "num_qubits": 4}) is c
 
 
+def test_sparse_topology_backfills_active_layout_without_swap():
+    # 单比特/纯单比特门线路不需要 SWAP，但物理 0 未激活，仍需选择有效布局。
+    c = Circuit(num_qubits=1, ops=[("x", 0), ("measure_z", 0)])
+    rule = {"coupling_map": [[2, 3], [3, 2]], "num_qubits": 5}
+    assert Routing().apply(c, device_rule=rule) is c
+    assert rule["initial_layout"] == [2]
+
+    multi = Circuit(
+        3,
+        ops=[("x", 0), ("x", 1), ("x", 2), ("measure_z", 0), ("measure_z", 1), ("measure_z", 2)],
+    )
+    rule = {
+        "coupling_map": [[2, 3], [3, 2], [3, 4], [4, 3]],
+        "num_qubits": 5,
+    }
+    assert Routing().apply(multi, device_rule=rule) is multi
+    assert rule["initial_layout"] == [2, 3, 4]
+
+
 # ---------------------------------------------------------------------------
 # 2. 路由正确性（结构）
 # ---------------------------------------------------------------------------

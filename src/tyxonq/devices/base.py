@@ -256,6 +256,14 @@ def resolve_driver(provider: str, device: str):
         from .hardware.guodun import driver as drv
 
         return drv
+    if provider == "spinq":
+        from .hardware.spinq import driver as drv
+
+        return drv
+    if provider == "spinqlab":
+        from .hardware.spinq import spinqlab_driver as drv
+
+        return drv
     raise ValueError(f"Unsupported provider: {provider}")
 
 

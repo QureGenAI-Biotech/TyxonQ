@@ -80,6 +80,8 @@ dev = [
 guodun = [
     "cqlib==1.3.11",
 ]
+# SpinQit 0.3.0 声明 numpy<2.0.0，与本项目 numpy>=2.0.2 冲突。
+# 不新增会强制降级的 spinq extra；隔离安装候选流程见 docs/spinq_provider.md。
 # 分子动力学接口（interfaces/）：ASE 枢纽 + OpenMM 直连。
 # i-PI 与 MDI 为可选专线，需单独安装（`pip install -U ipi` / `pip install 'pymdi>=1.4'`，
 # 见 examples/qmmm/ 下各教程的文件头说明）。

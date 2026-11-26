@@ -7,6 +7,10 @@ and this project adheres to Semantic Versioning (https://semver.org/spec/v2.0.0.
 
 ### [Unreleased]
 
+### Added
+- **SpinQ provider**: direct TyxonQ IR → core compile/topology routing → SpinQit native Circuit/executable lowering, with independent credentials, platform availability, counts-first results, offline/mock tests and opt-in live smoke tests. Qiskit/QASM are not used as SpinQ circuit intermediates.
+- **SpinQLab pulse feasibility**: JSON-friendly waveform/rectangular-pulse parameter adaptation and fake SDK lifecycle tests. Only native rectangular pulses are accepted by the driver; arbitrary sampled waveforms remain explicitly unsupported pending device validation.
+
 ### [1.5.0] - 2026-11-22
 ### Added
 - **Device-agnostic quantum-dynamics validation**: exact evolution, Trotter circuits, kicked response, spectroscopy and finite-shot statistics are exercised by the offline `examples/qd/` workflow. Q8 adds analytic/ED references, discretization and time-window convergence checks, and shot standard errors/confidence intervals.
